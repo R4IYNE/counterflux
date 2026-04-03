@@ -44,7 +44,7 @@ Deliver the foundational infrastructure for Counterflux: Scryfall Default Cards 
 ### Mila (System Familiar)
 - **D-19:** Mila appears as a **small avatar** (~40px circular) pinned to the bottom of the sidebar. User will provide the avatar asset (corgi illustration already exists in Stitch export).
 - **D-20:** Loading states use an **animated Mila sprite** — multi-frame sprite animation (running/fetching). Requires sprite sheet artwork to be provided by user.
-- **D-21:** Mila illustration is the base corgi from the Stitch export (`gemini_image_clean_234w541_edited.png/screen.png`) — cute corgi with red collar and "A" tag. Izzet goggles variant may be provided separately.
+- **D-21:** Mila illustration is the **Izzet engineer variant** (`assets/assetsmila-izzet.png`) — corgi with brass goggles, red scarf, leather utility harness, and glowing blue aether vials on black background. Base corgi without gear also available in Stitch export (`gemini_image_clean_234w541_edited.png/screen.png`).
 
 ### Colour Palette (from Stitch code)
 - **D-22:** Primary colour tokens confirmed from Stitch HTML implementation:
@@ -69,8 +69,8 @@ Deliver the foundational infrastructure for Counterflux: Scryfall Default Cards 
 - Scanline animation (present in Stitch HTML — optional decorative effect)
 
 ### Asset Dependencies (User-Provided)
-- Mila avatar image for sidebar (base corgi available in Stitch export)
-- Mila sprite sheet for loading animation (not yet created)
+- Mila avatar image for sidebar — Izzet engineer variant provided (`assets/assetsmila-izzet.png`), needs transparent background version
+- Mila sprite sheet for loading animation (not yet created — based on Izzet engineer variant)
 - Izzet guild logo / Counterflux wordmark (Izzet logo available in Stitch export)
 
 </decisions>
@@ -91,8 +91,9 @@ Deliver the foundational infrastructure for Counterflux: Scryfall Default Cards 
 - `assets/stitch/stitch_izzet_arcana_app_corgi_izzet_companion_mtg_izzet_forge_darkmode_izzet_hub/vandalblast_game_tracker_v5_enhanced_setup/screen.png` — Game Tracker mockup (Phase 5 reference)
 
 ### Brand Assets
+- `assets/assetsmila-izzet.png` — Mila the Corgi, Izzet engineer variant (goggles, scarf, harness, aether vials) — primary mascot asset
 - `assets/stitch/stitch_izzet_arcana_app_corgi_izzet_companion_mtg_izzet_forge_darkmode_izzet_hub/61hy93au63l._ac_uf894_1000_ql80.jpg/screen.png` — Izzet guild logo (red drake symbol on dark blue)
-- `assets/stitch/stitch_izzet_arcana_app_corgi_izzet_companion_mtg_izzet_forge_darkmode_izzet_hub/gemini_image_clean_234w541_edited.png/screen.png` — Mila the Corgi base illustration
+- `assets/stitch/stitch_izzet_arcana_app_corgi_izzet_companion_mtg_izzet_forge_darkmode_izzet_hub/gemini_image_clean_234w541_edited.png/screen.png` — Mila the Corgi base illustration (no gear)
 
 ### PRD
 - `assets/stitch/stitch_izzet_arcana_app_corgi_izzet_companion_mtg_izzet_forge_darkmode_izzet_hub/counterflux_prd.md` — Full Product Requirements Document with data architecture, user data model, Scryfall API details, UI screen specifications
