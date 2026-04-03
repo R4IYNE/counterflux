@@ -158,13 +158,102 @@ Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| (populated by roadmapper) | | |
+| DATA-01 | Phase 1 | Pending |
+| DATA-02 | Phase 1 | Pending |
+| DATA-03 | Phase 1 | Pending |
+| DATA-04 | Phase 1 | Pending |
+| DATA-05 | Phase 1 | Pending |
+| DATA-06 | Phase 1 | Pending |
+| DATA-07 | Phase 1 | Pending |
+| DATA-08 | Phase 1 | Pending |
+| SHELL-01 | Phase 1 | Pending |
+| SHELL-02 | Phase 1 | Pending |
+| SHELL-03 | Phase 1 | Pending |
+| SHELL-04 | Phase 1 | Pending |
+| SHELL-05 | Phase 1 | Pending |
+| SHELL-06 | Phase 1 | Pending |
+| SHELL-07 | Phase 1 | Pending |
+| MILA-01 | Phase 1 | Pending |
+| MILA-02 | Phase 1 | Pending |
+| MILA-03 | Phase 1 | Pending |
+| PERF-01 | Phase 1 | Pending |
+| COLL-01 | Phase 2 | Pending |
+| COLL-02 | Phase 2 | Pending |
+| COLL-03 | Phase 2 | Pending |
+| COLL-04 | Phase 2 | Pending |
+| COLL-05 | Phase 2 | Pending |
+| COLL-06 | Phase 2 | Pending |
+| COLL-07 | Phase 2 | Pending |
+| COLL-08 | Phase 2 | Pending |
+| COLL-09 | Phase 2 | Pending |
+| COLL-10 | Phase 2 | Pending |
+| COLL-11 | Phase 2 | Pending |
+| COLL-12 | Phase 2 | Pending |
+| COLL-13 | Phase 2 | Pending |
+| DECK-01 | Phase 3 | Pending |
+| DECK-02 | Phase 3 | Pending |
+| DECK-03 | Phase 3 | Pending |
+| DECK-04 | Phase 3 | Pending |
+| DECK-05 | Phase 3 | Pending |
+| DECK-06 | Phase 3 | Pending |
+| DECK-07 | Phase 3 | Pending |
+| DECK-08 | Phase 3 | Pending |
+| DECK-09 | Phase 3 | Pending |
+| DECK-10 | Phase 3 | Pending |
+| DECK-11 | Phase 3 | Pending |
+| DECK-12 | Phase 3 | Pending |
+| DECK-13 | Phase 3 | Pending |
+| DECK-14 | Phase 3 | Pending |
+| DECK-15 | Phase 3 | Pending |
+| DECK-16 | Phase 3 | Pending |
+| DECK-17 | Phase 3 | Pending |
+| DECK-18 | Phase 3 | Pending |
+| DECK-19 | Phase 3 | Pending |
+| INTEL-01 | Phase 4 | Pending |
+| INTEL-02 | Phase 4 | Pending |
+| INTEL-03 | Phase 4 | Pending |
+| INTEL-04 | Phase 4 | Pending |
+| INTEL-05 | Phase 4 | Pending |
+| INTEL-06 | Phase 4 | Pending |
+| MRKT-01 | Phase 5 | Pending |
+| MRKT-02 | Phase 5 | Pending |
+| MRKT-03 | Phase 5 | Pending |
+| MRKT-04 | Phase 5 | Pending |
+| MRKT-05 | Phase 5 | Pending |
+| MRKT-06 | Phase 5 | Pending |
+| GAME-01 | Phase 5 | Pending |
+| GAME-02 | Phase 5 | Pending |
+| GAME-03 | Phase 5 | Pending |
+| GAME-04 | Phase 5 | Pending |
+| GAME-05 | Phase 5 | Pending |
+| GAME-06 | Phase 5 | Pending |
+| GAME-07 | Phase 5 | Pending |
+| GAME-08 | Phase 5 | Pending |
+| GAME-09 | Phase 5 | Pending |
+| GAME-10 | Phase 5 | Pending |
+| GAME-11 | Phase 5 | Pending |
+| GAME-12 | Phase 5 | Pending |
+| GAME-13 | Phase 5 | Pending |
+| PERF-03 | Phase 5 | Pending |
+| DASH-01 | Phase 6 | Pending |
+| DASH-02 | Phase 6 | Pending |
+| DASH-03 | Phase 6 | Pending |
+| DASH-04 | Phase 6 | Pending |
+| DASH-05 | Phase 6 | Pending |
+| DASH-06 | Phase 6 | Pending |
+| DASH-07 | Phase 6 | Pending |
+| UX-01 | Phase 6 | Pending |
+| UX-02 | Phase 6 | Pending |
+| UX-03 | Phase 6 | Pending |
+| PERF-02 | Phase 6 | Pending |
+| PERF-04 | Phase 6 | Pending |
+| PERF-05 | Phase 6 | Pending |
 
 **Coverage:**
-- v1 requirements: 78 total
-- Mapped to phases: 0
-- Unmapped: 78
+- v1 requirements: 90 total
+- Mapped to phases: 90
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-04-03*
-*Last updated: 2026-04-03 after initial definition*
+*Last updated: 2026-04-03 after roadmap creation*
