@@ -5,6 +5,7 @@ status: draft
 shadcn_initialized: false
 preset: none
 created: 2026-04-03
+revised: 2026-04-03
 ---
 
 # Phase 1 — UI Design Contract
@@ -22,12 +23,14 @@ created: 2026-04-03
 | Component library | none (custom components, Organic Brutalism system) |
 | Icon library | Material Symbols Outlined (font, `FILL` 0, `wght` 400, `opsz` 24) |
 | Specialty icon fonts | mana-font (mana symbols), keyrune (set symbols) |
-| Display font | Syne (self-hosted .woff2, 600/700/800) |
-| Body font | Space Grotesk (self-hosted .woff2, 300/400/500/700) |
-| Mono font | JetBrains Mono (self-hosted .woff2, 400/500/700) |
-| Serif accent | Crimson Pro (self-hosted .woff2, 400/600/700) |
+| Display font | Syne (self-hosted .woff2, 400/700) |
+| Body font | Space Grotesk (self-hosted .woff2, 400/700) |
+| Mono font | JetBrains Mono (self-hosted .woff2, 400/700) |
+| Serif accent | Crimson Pro (self-hosted .woff2, 400/700) — reserved for future phases |
 | CSS framework | Tailwind CSS v4 (CSS-first config via `@theme`, no `tailwind.config.js`) |
 | Border radius | 0px everywhere (Organic Brutalism, no exceptions) |
+
+**Font weight rationale:** All font families ship exactly 2 weights — 400 (regular) and 700 (bold). The original Stitch mockup used 800 for Syne display text; this is consolidated to 700 for weight budget compliance. Visual impact is maintained through 48px size and -0.02em letter-spacing. The original 13px body-sm at JetBrains Mono 700 is absorbed into the label tier at 11px/700, and the original 10px label-sm is absorbed into label at 11px/700. The original 9px caption tier is absorbed into label at 11px/400.
 
 **Source:** CONTEXT.md D-13, D-16, D-17; RESEARCH.md Standard Stack; DESIGN.md sections 1, 3, 5
 
@@ -40,16 +43,16 @@ Declared values (multiples of 4):
 | Token | Value | Usage |
 |-------|-------|-------|
 | xs | 4px | Icon gaps, inline element padding, indicator dots |
-| sm | 8px | Compact element spacing, stack monitor item gaps |
+| sm | 8px | Compact element spacing, sidebar nav item vertical padding, stack monitor item gaps |
 | md | 16px | Default element spacing, card content separation |
 | lg | 24px | Section padding, card-to-card vertical spacing |
 | xl | 32px | Layout column gaps, main content padding |
 | 2xl | 48px | Major section breaks, sidebar top padding |
 | 3xl | 64px | Page-level vertical spacing |
 
-Exceptions: Sidebar nav items use 12px vertical padding (py-3) per Stitch HTML pattern. Touch target minimum not applicable (desktop-first).
+Exceptions: none. Sidebar nav items use 8px vertical padding (py-2), replacing the original Stitch 12px (py-3) which fell outside the standard scale. Touch target minimum not applicable (desktop-first).
 
-**Source:** DESIGN.md sections 4, 5; Stitch code.html spacing patterns
+**Source:** DESIGN.md sections 4, 5; Stitch code.html spacing patterns (12px adjusted to 8px for scale compliance)
 
 ---
 
@@ -59,24 +62,30 @@ Exceptions: Sidebar nav items use 12px vertical padding (py-3) per Stitch HTML p
 
 | Token | Size | Font | Weight | Line Height | Letter Spacing | Transform | Usage |
 |-------|------|------|--------|-------------|----------------|-----------|-------|
-| display | 48px | Syne | 800 | 1.1 | -0.02em | none | Portfolio totals, hero numbers |
-| heading-lg | 24px | Syne | 700 | 1.2 | 0.01em | none | Section titles ("Deck Quick-Launch") |
-| heading-sm | 20px | Syne | 700 | 1.2 | 0.01em | none | Panel headers, app bar title |
+| display | 48px | Syne | 700 | 1.1 | -0.02em | none | Portfolio totals, hero numbers |
+| heading | 20px | Syne | 700 | 1.2 | 0.01em | none | Section titles, panel headers, app bar title |
 | body | 14px | Space Grotesk | 400 | 1.5 | normal | none | Oracle text, descriptions, Mila messages |
-| body-sm | 13px | JetBrains Mono | 700 | 1.4 | 0.05em | uppercase | Card names in deck grid, list titles |
-| label | 11px | JetBrains Mono | 400 | 1.3 | 0.15em | uppercase | Sidebar nav items, search input, activity log body, data values |
-| label-sm | 10px | JetBrains Mono | 700 | 1.3 | 0.4em | uppercase | Section overline labels ("PORTFOLIO STATUS // AETHERFLOW"), button text |
-| caption | 9px | JetBrains Mono | 400 | 1.3 | 0.2em | uppercase | Timestamps, version strings, stat labels, metadata |
+| label | 11px | JetBrains Mono | 400 or 700 | 1.3 | 0.15em | uppercase | Sidebar nav items, search input, overline labels, section labels, button text, timestamps, version strings, stat labels, metadata, card names in lists |
+
+### Label Weight Guidance
+
+The label tier uses both declared weights contextually:
+
+| Context | Weight | Example |
+|---------|--------|---------|
+| Data values, nav items, timestamps, metadata | 400 | Sidebar labels, activity log body, search input text |
+| Overline labels, button text, section headers, card names | 700 | "PORTFOLIO STATUS // AETHERFLOW", "RETRY DOWNLOAD", deck grid titles |
 
 ### Rules
 
 - JetBrains Mono is ALWAYS uppercase when used for labels, metadata, and navigation (D-18)
 - Space Grotesk is the only font used in sentence case (body text, Mila dialogue)
-- Syne is used sparingly -- display numbers and section headings only
+- Syne is used sparingly — display numbers and section headings only
 - Crimson Pro reserved for future serif accent (flavour text quotes in later phases)
-- No font size smaller than 9px
+- No font size smaller than 11px
+- Maximum 2 weights across the entire scale: 400 and 700
 
-**Source:** CONTEXT.md D-16, D-18; DESIGN.md section 3; Stitch code.html extracted sizes (9px/10px/11px/13px/14px/20px/24px/48px)
+**Source:** CONTEXT.md D-16, D-18; DESIGN.md section 3; Stitch code.html extracted sizes (consolidated from 8 tiers to 4)
 
 ---
 
@@ -155,7 +164,7 @@ Boundaries are defined by tonal shifting, NOT borders:
 |---------|------|
 | App title (topbar) | `AETHERIC TERMINAL V3` (Syne, uppercase) |
 | Sidebar brand | `ARCHIVE` (mono, tracking-[0.3em]) |
-| Version string | `V.03.0-AETHERIC` (caption size, text-dim) |
+| Version string | `V.03.0-AETHERIC` (label size, text-dim) |
 
 ### Splash Screen (First Load)
 
@@ -181,7 +190,7 @@ Boundaries are defined by tonal shifting, NOT borders:
 |---------|------|
 | No results | `No cards match your query.` |
 | Loading | `Searching archive...` |
-| Result count | `{count} results` (caption, text-dim) |
+| Result count | `{count} results` (label size, text-dim) |
 
 ### Empty States (Placeholder Screens)
 
@@ -197,11 +206,11 @@ Boundaries are defined by tonal shifting, NOT borders:
 
 | Element | Copy |
 |---------|------|
-| Panel title | `CARD DETAIL` (label-sm, overline) |
+| Panel title | `CARD DETAIL` (label, weight 700, overline) |
 | Action button 1 | `Add to Collection` (disabled in Phase 1, tooltip: "Available in Phase 2") |
 | Action button 2 | `View on Scryfall` (opens external link) |
-| Price label | `MARKET PRICE` (caption) |
-| Legalities header | `FORMAT LEGALITIES` (label-sm) |
+| Price label | `MARKET PRICE` (label) |
+| Legalities header | `FORMAT LEGALITIES` (label, weight 700) |
 
 ### Toast Notifications
 
@@ -236,7 +245,7 @@ Components the executor must build for this phase:
 | Component | Alpine Store | Key Interactions |
 |-----------|-------------|-----------------|
 | `splash-screen` | `bulkdata` | Progress bar, download stats, rotating flavour text. Blocks all interaction until complete. Fades out on completion. |
-| `sidebar` | `app` | 5 nav items (1 active, 4 locked/greyed). Cyclone icon + "ARCHIVE" brand. Version string. Mila avatar at bottom. Collapse to 64px icon rail below 1024px viewport. Active item: `bg-primary/10 text-primary border-r-4 border-primary`. Locked items: `text-text-dim cursor-not-allowed opacity-50`. |
+| `sidebar` | `app` | 5 nav items (1 active, 4 locked/greyed). Cyclone icon + "ARCHIVE" brand. Version string. Mila avatar at bottom. Collapse to 64px icon rail below 1024px viewport. Active item: `bg-primary/10 text-primary border-r-4 border-primary`. Locked items: `text-text-dim cursor-not-allowed opacity-50`. **Collapsed state accessibility:** Each nav icon has an `aria-label` attribute matching its full label text (e.g. `aria-label="Epic Experiment"`). A CSS tooltip appears on hover showing the label text — implemented via `::after` pseudo-element with `content: attr(aria-label)`, positioned right of the icon, styled with `surface-hover` background and `text-primary` colour. Tooltip uses `label` typography (11px JetBrains Mono 400 uppercase). |
 | `topbar` | `app`, `search` | Glass overlay (`backdrop-filter: blur(12px)`, `bg-background/85`). Syne title left. Search input centre. Notification bell + Mila avatar right. Fixed position, `h-16`, `z-40`. |
 | `autocomplete` | `search` | Debounced input (150ms). Dropdown below search bar. Each result: card name + thumbnail (32px) + set icon (keyrune) + mana cost (mana-font). Max 8 results visible. Keyboard navigation (arrow keys + Enter). `Escape` closes. |
 | `card-flyout` | `search` | Slide-in from right, 400px wide. Full card image (Scryfall `normal` size, 488x680). Oracle text, type line, mana cost, price, legalities grid. "View on Scryfall" button. Close via X button or `Escape`. Glass overlay backdrop. |
@@ -257,7 +266,7 @@ Components the executor must build for this phase:
 | Click locked nav item | No-op, cursor shows `not-allowed` |
 | Hover unlocked nav item | Background shifts to `primary/5`, text shifts to primary |
 | Route change | Instant content swap, no transition animation (D-11). Hash URL updates. Scroll resets to top. |
-| Sidebar collapse | Below 1024px viewport width, sidebar collapses to 64px. Labels hidden, icons only. Mila avatar shrinks to 32px. |
+| Sidebar collapse | Below 1024px viewport width, sidebar collapses to 64px. Labels hidden, icons only. Mila avatar shrinks to 32px. Each icon displays `aria-label` and CSS tooltip on hover (see Component Inventory). |
 
 ### Search
 
@@ -328,7 +337,7 @@ NPM packages are vetted in RESEARCH.md. All are established open-source librarie
 | Breakpoint | Sidebar | Topbar | Content |
 |------------|---------|--------|---------|
 | >= 1024px | 240px expanded, labels visible | Left offset 240px | `ml-64` |
-| < 1024px | 64px collapsed, icons only | Left offset 64px | `ml-16` |
+| < 1024px | 64px collapsed, icons only with `aria-label` + CSS tooltip on hover | Left offset 64px | `ml-16` |
 
 Desktop-first. No mobile layout required for Phase 1 (GAME-13 mobile layout is Phase 5 only).
 
