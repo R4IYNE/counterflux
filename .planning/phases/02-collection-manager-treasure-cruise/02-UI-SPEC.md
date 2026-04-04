@@ -71,6 +71,16 @@ Exceptions: none
 | Data values, table cell text, card prices, set names, timestamps | 400 | `EUR 48.20`, `MODERN HORIZONS 2`, `4,210 CARDS` |
 | Overline labels, button text, column headers, filter labels, view mode labels | 700 | `ARCHIVE MANIFEST`, `EXPORT CSV`, `GALLERY`, `TABLE`, `SETS`, `FILTER:` |
 
+### Body Weight Guidance (Phase 2 Specific)
+
+Card tile names and set completion row names use the `body` token (Space Grotesk 14px) at weight 700 for emphasis. This avoids introducing a 5th font size while providing visual hierarchy within compact card and list layouts.
+
+| Context | Font | Size | Weight | Example |
+|---------|------|------|--------|---------|
+| Card tile name (gallery) | Space Grotesk | 14px | 700 | `Lightning Bolt` (truncated with ellipsis) |
+| Set name in completion view | Space Grotesk | 14px | 700 | `Modern Horizons 2` |
+| Body prose, help text, descriptions | Space Grotesk | 14px | 400 | `Mila here! Your collection is empty...` |
+
 **Source:** Phase 1 UI-SPEC (unchanged)
 
 ---
@@ -326,9 +336,9 @@ Components the executor must build for this phase:
 | `view-toggle` | `collection` | Three toggle buttons: Gallery / Table / Sets. Active button: `bg-primary/10 text-primary border-b-2 border-primary`. Inactive: `text-text-muted hover:text-text-primary`. JetBrains Mono 11px 700 uppercase. |
 | `filter-bar` | `collection` | Horizontal bar on surface-hover background. Contains: sort dropdown, colour filter pips (WUBRG square buttons with `aria-label` and `title` per Copywriting Contract), category filter, action buttons (Add Card, Mass Entry, Import CSV, Export CSV). |
 | `gallery-view` | `collection` | Responsive grid of card tiles. `grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6`. Gap: 24px. Virtual scrolling at 1,000+ items. Each tile: card image (aspect-[63/88]), name, price, set, foil badge, qty badge. Hover: border shifts to `primary/50`, image scales to 110%, opacity to 100%. |
-| `card-tile` | `collection` | Individual gallery card. Surface background. Image area with gradient overlay bottom-to-transparent. Metadata below: name (Syne 16px 700 truncated), price (JetBrains Mono 11px 400 primary), set (JetBrains Mono 11px 400 text-dim). Foil badge: `FOIL` on secondary/20 background. Qty badge: `x{n}` top-right if >1. Click opens card detail flyout. Right-click opens context menu. |
+| `card-tile` | `collection` | Individual gallery card. Surface background. Image area with gradient overlay bottom-to-transparent. Metadata below: name (Space Grotesk 14px 700 truncated — body tier, bold weight), price (JetBrains Mono 11px 400 primary), set (JetBrains Mono 11px 400 text-dim). Foil badge: `FOIL` on secondary/20 background. Qty badge: `x{n}` top-right if >1. Click opens card detail flyout. Right-click opens context menu. |
 | `table-view` | `collection` | Data table with ghost-border row separators. Columns: Name, Set, Qty, Foil, Price, Category. Sortable columns show sort arrow icon. Active sort column header in primary colour. Row hover: surface-hover background. Virtual scrolling at 1,000+ rows. Row click opens card detail flyout. |
-| `set-completion-view` | `collection` | List of sets with progress bars. Each row: set name (Syne 16px 700), set icon (keyrune), progress bar (1px height, primary fill with glow shadow), fraction label, percentage. Rarity tier filter buttons above. |
+| `set-completion-view` | `collection` | List of sets with progress bars. Each row: set name (Space Grotesk 14px 700 — body tier, bold weight), set icon (keyrune), progress bar (1px height, primary fill with glow shadow), fraction label, percentage. Rarity tier filter buttons above. |
 | `add-card-modal` | `collection` | Modal overlay with glass backdrop. Card search autocomplete (reuses Phase 1 search). Quantity input (number, default 1). Foil toggle checkbox. Category radio (Owned/Wishlist). Confirm/cancel buttons. |
 | `mass-entry-terminal` | `collection` | Full-width panel or modal. Monospace textarea (JetBrains Mono 14px 400) for batch input. Parse button triggers resolution. Results list below: each entry shows resolved card image thumbnail + name + set, or unresolved flag with dropdown to pick printing. Confirm commits all resolved entries. |
 | `csv-import-modal` | `collection` | Modal overlay. File picker. Auto-detect format from headers. Preview table of first 10 rows. Column mapping dropdowns for generic format. Import button with count. Progress indicator during import. |
