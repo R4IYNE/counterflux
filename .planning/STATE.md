@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: verifying
-stopped_at: Completed 01-01-PLAN.md
-last_updated: "2026-04-04T08:00:22.334Z"
+stopped_at: Completed 01-02-PLAN.md
+last_updated: "2026-04-04T08:18:28.472Z"
 last_activity: 2026-04-04
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 4
-  completed_plans: 1
+  completed_plans: 2
   percent: 0
 ---
 
@@ -53,6 +53,7 @@ Progress: [░░░░░░░░░░] 0%
 
 *Updated after each plan completion*
 | Phase 01 P01 | 8min | 2 tasks | 26 files |
+| Phase 01 P02 | 6min | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -68,6 +69,8 @@ Recent decisions affecting current work:
 - [Phase 01]: Material Symbols Outlined-only import (3.9MB vs 12.6MB)
 - [Phase 01]: Vite 8 manualChunks uses function form for Rolldown compatibility
 - [Phase 01]: Storage utils use dependency injection for browser API testability
+- [Phase 01]: Extracted pipeline core into bulk-data-pipeline.js for testability (Worker is thin shell)
+- [Phase 01]: Used @streamparser/json-whatwg TransformStream pipeThrough API for streaming JSON parsing
 
 ### Pending Todos
 
@@ -81,6 +84,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-04T08:00:22.332Z
-Stopped at: Completed 01-01-PLAN.md
+Last session: 2026-04-04T08:18:28.470Z
+Stopped at: Completed 01-02-PLAN.md
 Resume file: None
