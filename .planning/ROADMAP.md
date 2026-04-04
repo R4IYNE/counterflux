@@ -31,7 +31,12 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. User can navigate between all five screen placeholders via the sidebar, which collapses to icons on narrow viewports and shows Mila at the bottom
   4. The full Izzet visual identity is present: colour palette, ghost borders, active glow, aether gradient, Crimson Pro/Space Grotesk/JetBrains Mono typography, toast notifications
   5. Initial page load completes in under 3 seconds on broadband
-**Plans**: TBD
+**Plans:** 4 plans
+Plans:
+- [ ] 01-01-PLAN.md — Project scaffold, Vite+Tailwind+fonts, Dexie schema, card accessor, search module, test infra
+- [ ] 01-02-PLAN.md — Web Worker bulk data pipeline, streaming parser, splash screen, Alpine bulkdata store
+- [ ] 01-03-PLAN.md — Navigation shell (sidebar, topbar, routing, toast, Mila, empty states)
+- [ ] 01-04-PLAN.md — Search autocomplete, card detail flyout, visual checkpoint
 **UI hint**: yes
 
 ### Phase 2: Collection Manager (Treasure Cruise)
@@ -98,11 +103,11 @@ Decimal phases appear between their surrounding integers in numeric order.
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
+Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation + Data Layer | 0/0 | Not started | - |
+| 1. Foundation + Data Layer | 0/4 | Planning complete | - |
 | 2. Collection Manager (Treasure Cruise) | 0/0 | Not started | - |
 | 3. Deck Builder (Thousand-Year Storm) | 0/0 | Not started | - |
 | 4. Intelligence Layer | 0/0 | Not started | - |
