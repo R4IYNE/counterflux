@@ -58,11 +58,13 @@ created: 2026-04-04
 
 ## Wave 0 Requirements
 
-- [ ] `src/__tests__/collection-store.test.js` — stubs for COLL-01, COLL-07, COLL-12
-- [ ] `src/__tests__/collection-views.test.js` — stubs for COLL-02, COLL-03, COLL-04, COLL-11
-- [ ] `src/__tests__/mass-entry.test.js` — stubs for COLL-05, COLL-06
-- [ ] `src/__tests__/csv-import-export.test.js` — stubs for COLL-09, COLL-10
-- [ ] `src/__tests__/collection-analytics.test.js` — stubs for COLL-08, COLL-13
+- [ ] `tests/collection-store.test.js` — stubs for COLL-01, COLL-07, COLL-12
+- [ ] `tests/virtual-scroller.test.js` — stubs for COLL-11 (window calculation logic)
+- [ ] `tests/set-completion.test.js` — stubs for COLL-04
+- [ ] `tests/mass-entry.test.js` — stubs for COLL-05, COLL-06
+- [ ] `tests/csv-import.test.js` — stubs for COLL-09
+- [ ] `tests/csv-export.test.js` — stubs for COLL-10
+- [ ] `tests/analytics.test.js` — stubs for COLL-08, COLL-13
 
 *Existing infrastructure (vitest) covers framework needs. Only test file stubs needed.*
 
