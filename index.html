@@ -8,7 +8,7 @@
   <link rel="preload" href="/src/styles/fonts/JetBrainsMono-Variable.woff2" as="font" type="font/woff2" crossorigin>
   <style>[x-cloak] { display: none !important; }</style>
 </head>
-<body x-data>
+<body x-data @keydown.escape.window="$store.search.flyoutOpen ? $store.search.closeFlyout() : $store.search.clear()" @keydown.slash.window="if (!['INPUT','TEXTAREA','SELECT'].includes($event.target.tagName)) { $event.preventDefault(); document.getElementById('global-search-input')?.focus(); }">
 
   <!-- Splash Screen: blocks all interaction until bulk data is ready -->
   <div
@@ -156,15 +156,77 @@
         AETHERIC TERMINAL V3
       </h1>
 
-      <!-- Search input -->
+      <!-- Search input + autocomplete -->
       <div class="flex-1 flex justify-center px-xl">
         <div class="relative w-full max-w-lg">
-          <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-dim text-xl">search</span>
+          <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-dim text-xl z-10">search</span>
           <input
+            id="global-search-input"
             type="text"
             placeholder="QUERY DATABASE..."
+            :value="$store.search.query"
+            @input="$store.search.search($event.target.value)"
+            @keydown.arrow-down.prevent="$store.search.moveSelection(1)"
+            @keydown.arrow-up.prevent="$store.search.moveSelection(-1)"
+            @keydown.enter.prevent="$store.search.confirmSelection()"
+            @keydown.escape="$store.search.clear(); $el.blur()"
             class="w-full bg-surface border border-border-ghost text-text-primary placeholder-text-dim pl-10 pr-4 py-2 font-mono uppercase text-[11px] tracking-[0.15em] focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-colors"
+            autocomplete="off"
           >
+
+          <!-- Autocomplete dropdown -->
+          <div
+            x-show="$store.search.results.length > 0 || ($store.search.loading && $store.search.query.length >= 2) || (!$store.search.loading && $store.search.query.length >= 2 && $store.search.results.length === 0)"
+            x-transition:enter="transition ease-out duration-150"
+            x-transition:enter-start="opacity-0 -translate-y-1"
+            x-transition:enter-end="opacity-100 translate-y-0"
+            x-transition:leave="transition ease-in duration-100"
+            x-transition:leave-start="opacity-100"
+            x-transition:leave-end="opacity-0"
+            class="absolute top-full left-0 right-0 mt-1 bg-surface ghost-border aether-glow z-50 max-h-[400px] overflow-y-auto"
+            @click.outside="$store.search.clear()"
+          >
+            <!-- Loading state -->
+            <div x-show="$store.search.loading" class="px-4 py-3 flex items-center gap-sm">
+              <span class="material-symbols-outlined text-primary text-lg animate-spin">progress_activity</span>
+              <span class="font-mono uppercase text-[11px] tracking-[0.15em] font-normal text-text-muted">Searching archive...</span>
+            </div>
+
+            <!-- No results -->
+            <div
+              x-show="!$store.search.loading && $store.search.query.length >= 2 && $store.search.results.length === 0"
+              class="px-4 py-3"
+            >
+              <span class="font-mono uppercase text-[11px] tracking-[0.15em] font-normal text-text-muted">No cards match your query.</span>
+            </div>
+
+            <!-- Results list -->
+            <template x-for="(result, index) in $store.search.results" :key="result.id">
+              <button
+                @click="$store.search.selectResult(result)"
+                @mouseenter="$store.search.selectedIndex = index"
+                :class="$store.search.selectedIndex === index ? 'bg-surface-hover' : ''"
+                class="w-full flex items-center gap-sm px-4 py-2 text-left transition-colors duration-100 hover:bg-surface-hover cursor-pointer"
+              >
+                <!-- Thumbnail -->
+                <div class="w-8 h-8 flex-shrink-0 bg-surface-hover overflow-hidden">
+                  <img
+                    :src="result._thumbnail"
+                    :alt="result._name"
+                    class="w-full h-full object-cover"
+                    loading="lazy"
+                    onerror="this.style.display='none'"
+                  >
+                </div>
+                <!-- Card name -->
+                <span class="font-mono uppercase text-[11px] tracking-[0.15em] font-bold text-text-primary flex-1 truncate" x-text="result._name"></span>
+                <!-- Set icon -->
+                <i class="ss" :class="'ss-' + result.set" style="font-size: 14px; color: var(--color-text-dim);"></i>
+                <!-- Mana cost -->
+                <span class="flex items-center gap-[2px] flex-shrink-0" x-html="window.renderManaCost(result._manaCost)"></span>
+              </button>
+            </template>
+          </div>
         </div>
       </div>
 
@@ -191,6 +253,128 @@
     </main>
 
   </div>
+
+  <!-- Card Detail Flyout -->
+  <template x-if="$store.search.flyoutOpen && $store.search.selectedCard">
+    <div>
+      <!-- Backdrop -->
+      <div
+        class="fixed inset-0 z-40"
+        style="background-color: rgba(11, 12, 16, 0.6);"
+        @click="$store.search.closeFlyout()"
+        x-transition:enter="transition ease-out duration-200"
+        x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100"
+        x-transition:leave="transition ease-in duration-150"
+        x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0"
+      ></div>
+
+      <!-- Flyout panel -->
+      <aside
+        class="fixed top-0 right-0 bottom-0 w-[400px] z-45 bg-surface border-l border-border-ghost overflow-y-auto"
+        style="box-shadow: -4px 0 20px rgba(13, 82, 189, 0.15);"
+        x-transition:enter="transition ease-out duration-300 transform"
+        x-transition:enter-start="translate-x-full"
+        x-transition:enter-end="translate-x-0"
+        x-transition:leave="transition ease-in duration-200 transform"
+        x-transition:leave-start="translate-x-0"
+        x-transition:leave-end="translate-x-full"
+      >
+        <!-- Close button -->
+        <button
+          @click="$store.search.closeFlyout()"
+          class="absolute top-4 right-4 text-text-muted hover:text-text-primary transition-colors z-10 cursor-pointer"
+          aria-label="Close card detail"
+        >
+          <span class="material-symbols-outlined text-2xl">close</span>
+        </button>
+
+        <!-- Overline -->
+        <div class="px-md pt-lg pb-sm">
+          <span class="font-mono uppercase text-[11px] tracking-[0.15em] font-bold text-primary">CARD DETAIL</span>
+        </div>
+
+        <!-- Card image -->
+        <div class="px-md pb-md">
+          <img
+            :src="$store.search.selectedCard._image"
+            :alt="$store.search.selectedCard._name"
+            class="w-full object-contain"
+            style="aspect-ratio: 488/680;"
+            loading="eager"
+          >
+        </div>
+
+        <!-- Card info -->
+        <div class="px-md flex flex-col gap-md pb-lg">
+          <!-- Name -->
+          <h2 class="font-header text-[20px] font-bold leading-[1.2] tracking-[0.01em] text-text-primary" x-text="$store.search.selectedCard._name"></h2>
+
+          <!-- Type line -->
+          <p class="font-mono uppercase text-[11px] tracking-[0.15em] font-normal text-text-muted" x-text="$store.search.selectedCard._typeLine"></p>
+
+          <!-- Mana cost -->
+          <div class="flex items-center gap-[2px]" x-html="window.renderManaCost($store.search.selectedCard._manaCost)"></div>
+
+          <!-- Oracle text -->
+          <div class="font-body text-[14px] leading-[1.5] text-text-primary whitespace-pre-line" x-text="$store.search.selectedCard._oracleText" style="font-family: 'Space Grotesk', sans-serif;"></div>
+
+          <!-- Price section -->
+          <div class="pt-sm">
+            <span class="font-mono uppercase text-[11px] tracking-[0.15em] font-bold text-primary block mb-sm">MARKET PRICE</span>
+            <div class="flex items-baseline gap-md">
+              <span
+                class="font-header text-[28px] font-bold text-text-primary"
+                x-text="$store.search.selectedCard.prices?.usd ? '$' + $store.search.selectedCard.prices.usd : 'N/A'"
+              ></span>
+              <span
+                x-show="$store.search.selectedCard.prices?.usd_foil"
+                class="font-mono uppercase text-[11px] tracking-[0.15em] font-normal text-text-muted"
+                x-text="$store.search.selectedCard.prices?.usd_foil ? 'Foil: $' + $store.search.selectedCard.prices.usd_foil : ''"
+              ></span>
+            </div>
+          </div>
+
+          <!-- Legalities section -->
+          <div class="pt-sm">
+            <span class="font-mono uppercase text-[11px] tracking-[0.15em] font-bold text-primary block mb-sm">FORMAT LEGALITIES</span>
+            <div class="grid grid-cols-2 gap-sm">
+              <template x-for="format in ['commander', 'standard', 'modern', 'legacy', 'vintage', 'pauper', 'pioneer']" :key="format">
+                <div
+                  :class="{
+                    'bg-success/20 text-success': $store.search.selectedCard.legalities?.[format] === 'legal',
+                    'bg-secondary/20 text-secondary': $store.search.selectedCard.legalities?.[format] === 'banned',
+                    'bg-surface-hover text-text-dim': $store.search.selectedCard.legalities?.[format] !== 'legal' && $store.search.selectedCard.legalities?.[format] !== 'banned'
+                  }"
+                  class="px-3 py-1 font-mono uppercase text-[11px] tracking-[0.15em] font-normal text-center"
+                >
+                  <span x-text="format"></span>
+                </div>
+              </template>
+            </div>
+          </div>
+
+          <!-- Action buttons -->
+          <div class="pt-md flex flex-col gap-sm">
+            <button
+              class="w-full px-4 py-3 font-mono uppercase text-[11px] tracking-[0.15em] font-bold text-text-dim bg-surface-hover opacity-50 cursor-not-allowed"
+              disabled
+              title="Available in Phase 2"
+            >
+              Add to Collection
+            </button>
+            <button
+              @click="window.open($store.search.selectedCard.scryfall_uri, '_blank')"
+              class="w-full px-4 py-3 font-mono uppercase text-[11px] tracking-[0.15em] font-bold text-text-primary bg-primary hover:bg-primary/80 transition-colors cursor-pointer"
+            >
+              View on Scryfall
+            </button>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </template>
 
   <!-- Toast container -->
   <div class="fixed bottom-4 right-4 z-50 flex flex-col gap-sm" style="max-width: 400px;">

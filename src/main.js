@@ -6,13 +6,19 @@ import 'material-symbols/outlined.css';
 
 import Alpine from 'alpinejs';
 import { initAppStore } from './stores/app.js';
+import { initSearchStore } from './stores/search.js';
 import { initBulkDataStore, startBulkDataPipeline } from './stores/bulkdata.js';
 import { splashScreen } from './components/splash-screen.js';
 import { initRouter } from './router.js';
+import { renderManaCost } from './utils/mana.js';
 
 // Initialize stores before Alpine starts
 initAppStore();
+initSearchStore();
 initBulkDataStore();
+
+// Expose renderManaCost globally for Alpine template usage
+window.renderManaCost = renderManaCost;
 
 // Register Alpine components
 Alpine.data('splashScreen', splashScreen);

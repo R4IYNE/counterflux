@@ -10,15 +10,13 @@
  */
 export function topbarComponent() {
   return {
-    searchQuery: '',
-
     /**
-     * Handle search input. Placeholder for Phase 1 -- autocomplete wired in Plan 04.
+     * Handle search input -- delegates to Alpine search store with debounce.
      * @param {Event} event - Input event
      */
     handleSearch(event) {
-      this.searchQuery = event.target.value;
-      // Autocomplete will be wired in Plan 04
+      const query = event.target.value;
+      Alpine.store('search').search(query);
     },
 
     /**
