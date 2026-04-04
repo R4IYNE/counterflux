@@ -18,18 +18,18 @@
 
 ### UI Shell
 
-- [ ] **SHELL-01**: Persistent left sidebar with navigation to all 5 screens (Epic Experiment, Thousand-Year Storm, Treasure Cruise, Preordain, Vandalblast)
-- [ ] **SHELL-02**: Sidebar collapses to icons on smaller viewports
-- [ ] **SHELL-03**: Persistent top app bar with Counterflux wordmark, global card search, and notification bell
-- [ ] **SHELL-04**: Hash-based SPA routing between screens with lazy loading
+- [x] **SHELL-01**: Persistent left sidebar with navigation to all 5 screens (Epic Experiment, Thousand-Year Storm, Treasure Cruise, Preordain, Vandalblast)
+- [x] **SHELL-02**: Sidebar collapses to icons on smaller viewports
+- [x] **SHELL-03**: Persistent top app bar with Counterflux wordmark, global card search, and notification bell
+- [x] **SHELL-04**: Hash-based SPA routing between screens with lazy loading
 - [x] **SHELL-05**: Full Izzet visual identity applied: colour palette (12 CSS custom properties), ghost borders, active glow effects, aether gradient background
 - [x] **SHELL-06**: Typography system: Crimson Pro (headings), Space Grotesk (body), JetBrains Mono (data/stats)
-- [ ] **SHELL-07**: Toast notification system (info/success/warning/error, bottom-right, auto-dismiss 5s)
+- [x] **SHELL-07**: Toast notification system (info/success/warning/error, bottom-right, auto-dismiss 5s)
 
 ### Mila (System Familiar)
 
-- [ ] **MILA-01**: Mila avatar displayed at bottom of sidebar navigation
-- [ ] **MILA-02**: Empty states across all screens show Mila with contextual onboarding message
+- [x] **MILA-01**: Mila avatar displayed at bottom of sidebar navigation
+- [x] **MILA-02**: Empty states across all screens show Mila with contextual onboarding message
 - [ ] **MILA-03**: Loading states show Mila icon with subtle animation
 
 ### Dashboard (Epic Experiment)
@@ -166,15 +166,15 @@ Updated during roadmap creation.
 | DATA-06 | Phase 1 | Complete |
 | DATA-07 | Phase 1 | Complete |
 | DATA-08 | Phase 1 | Complete |
-| SHELL-01 | Phase 1 | Pending |
-| SHELL-02 | Phase 1 | Pending |
-| SHELL-03 | Phase 1 | Pending |
-| SHELL-04 | Phase 1 | Pending |
+| SHELL-01 | Phase 1 | Complete |
+| SHELL-02 | Phase 1 | Complete |
+| SHELL-03 | Phase 1 | Complete |
+| SHELL-04 | Phase 1 | Complete |
 | SHELL-05 | Phase 1 | Complete |
 | SHELL-06 | Phase 1 | Complete |
-| SHELL-07 | Phase 1 | Pending |
-| MILA-01 | Phase 1 | Pending |
-| MILA-02 | Phase 1 | Pending |
+| SHELL-07 | Phase 1 | Complete |
+| MILA-01 | Phase 1 | Complete |
+| MILA-02 | Phase 1 | Complete |
 | MILA-03 | Phase 1 | Pending |
 | PERF-01 | Phase 1 | Complete |
 | COLL-01 | Phase 2 | Pending |

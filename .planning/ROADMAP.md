@@ -35,7 +35,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 Plans:
 - [x] 01-01-PLAN.md — Project scaffold, Vite+Tailwind+fonts, Dexie schema, card accessor, search module, test infra
 - [ ] 01-02-PLAN.md — Web Worker bulk data pipeline, streaming parser, splash screen, Alpine bulkdata store
-- [ ] 01-03-PLAN.md — Navigation shell (sidebar, topbar, routing, toast, Mila, empty states)
+- [x] 01-03-PLAN.md — Navigation shell (sidebar, topbar, routing, toast, Mila, empty states)
 - [ ] 01-04-PLAN.md — Search autocomplete, card detail flyout, visual checkpoint
 **UI hint**: yes
 
