@@ -8,7 +8,7 @@
   <link rel="preload" href="/src/styles/fonts/JetBrainsMono-Variable.woff2" as="font" type="font/woff2" crossorigin>
   <style>[x-cloak] { display: none !important; }</style>
 </head>
-<body x-data @keydown.escape.window="$store.search.flyoutOpen ? $store.search.closeFlyout() : $store.search.clear()" @keydown.slash.window="if (!['INPUT','TEXTAREA','SELECT'].includes($event.target.tagName)) { $event.preventDefault(); document.getElementById('global-search-input')?.focus(); }">
+<body x-data @keydown.escape.window="$store.search.flyoutOpen ? $store.search.closeFlyout() : $store.search.clear()" @keydown.slash.window="if (!['INPUT','TEXTAREA','SELECT'].includes($event.target.tagName)) { $event.preventDefault(); (document.getElementById('global-search-input') || document.querySelector('header input[type=text]'))?.focus(); }">
 
   <!-- Splash Screen: blocks all interaction until bulk data is ready -->
   <div
@@ -155,6 +155,60 @@
       <h1 class="font-header text-xl font-bold text-text-primary whitespace-nowrap" style="font-size: 20px; line-height: 1.2; letter-spacing: 0.01em;">
         COUNTERFLUX
       </h1>
+
+      <!-- Topbar search -->
+      <div class="flex-1 flex justify-center px-xl">
+        <div style="position: relative; width: 100%; max-width: 480px;">
+          <span class="material-symbols-outlined" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 18px; color: var(--color-text-dim);">search</span>
+          <input
+            type="text"
+            placeholder="QUERY DATABASE..."
+            :value="$store.search.query"
+            @input="$store.search.search($event.target.value)"
+            @keydown.arrow-down.prevent="$store.search.moveSelection(1)"
+            @keydown.arrow-up.prevent="$store.search.moveSelection(-1)"
+            @keydown.enter.prevent="$store.search.confirmSelection()"
+            @keydown.escape="$store.search.clear(); $el.blur()"
+            @focus="$store.search._topbarFocused = true"
+            @blur="setTimeout(() => $store.search._topbarFocused = false, 200)"
+            autocomplete="off"
+            style="width: 100%; background: var(--color-surface, #14161C); border: 1px solid var(--color-border-ghost, #2A2D3A); color: var(--color-text-primary, #E8E6E3); padding: 8px 12px 8px 36px; font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; outline: none; box-sizing: border-box;"
+            onfocus="this.style.borderColor='var(--color-primary, #0D52BD)'"
+            onblur="this.style.borderColor='var(--color-border-ghost, #2A2D3A)'"
+          >
+          <!-- Topbar autocomplete dropdown -->
+          <div
+            x-show="($store.search._topbarFocused || false) && ($store.search.results.length > 0 || ($store.search.loading && $store.search.query.length >= 2) || (!$store.search.loading && $store.search.query.length >= 2 && $store.search.results.length === 0))"
+            @click.outside="$store.search.clear()"
+            style="position: absolute; top: 100%; left: 0; right: 0; margin-top: 4px; background: var(--color-surface, #14161C); border: 1px solid var(--color-border-ghost, #2A2D3A); max-height: 360px; overflow-y: auto; z-index: 50; box-shadow: 0 0 20px rgba(13, 82, 189, 0.1);"
+          >
+            <div x-show="$store.search.loading" style="padding: 10px 14px; display: flex; align-items: center; gap: 8px;">
+              <span class="material-symbols-outlined text-primary" style="font-size: 16px;">progress_activity</span>
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--color-text-muted, #8A8F98);">Searching archive...</span>
+            </div>
+            <div x-show="!$store.search.loading && $store.search.query.length >= 2 && $store.search.results.length === 0" style="padding: 10px 14px;">
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--color-text-muted, #8A8F98);">No cards match your query.</span>
+            </div>
+            <template x-for="(result, index) in $store.search.results" :key="result.id">
+              <button
+                @click="$store.search.selectResult(result)"
+                @mouseenter="$store.search.selectedIndex = index"
+                :style="$store.search.selectedIndex === index ? 'background: var(--color-surface-hover, #1C1F28);' : ''"
+                style="width: 100%; display: flex; align-items: center; gap: 10px; padding: 8px 14px; text-align: left; border: none; cursor: pointer; background: transparent;"
+                onmouseenter="this.style.background='var(--color-surface-hover, #1C1F28)'"
+                onmouseleave="this.style.background='transparent'"
+              >
+                <div style="width: 32px; height: 32px; flex-shrink: 0; overflow: hidden; background: var(--color-surface-hover, #1C1F28);">
+                  <img :src="result._thumbnail" :alt="result._name" style="width: 100%; height: 100%; object-fit: cover;" loading="lazy" onerror="this.style.display='none'">
+                </div>
+                <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; color: var(--color-text-primary, #E8E6E3); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" x-text="result._name"></span>
+                <i class="ss" :class="'ss-' + result.set" style="font-size: 14px; color: var(--color-text-dim); flex-shrink: 0;"></i>
+                <span style="display: flex; align-items: center; gap: 2px; flex-shrink: 0;" x-html="window.renderManaCost(result._manaCost)"></span>
+              </button>
+            </template>
+          </div>
+        </div>
+      </div>
 
       <!-- Right section -->
       <div class="flex items-center gap-md">
