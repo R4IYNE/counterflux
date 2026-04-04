@@ -180,7 +180,7 @@ These are display-only colours for filter pips and chart segments. They do NOT r
 |---------|------|
 | Sort label | `SORT:` |
 | Sort options | `PRICE DESCENDING` / `PRICE ASCENDING` / `NAME A-Z` / `NAME Z-A` / `SET RELEASE` / `DATE ADDED` |
-| Colour filter pips | `W` / `U` / `B` / `R` / `G` (single letter, no label) |
+| Colour filter pips | `W` / `U` / `B` / `R` / `G` (single letter visual label). Each pip must include `aria-label="Filter by {colour name}"` (e.g. `aria-label="Filter by White"`, `aria-label="Filter by Blue"`, etc.) and a `title="{colour name}"` attribute for hover tooltip. |
 | Category filter label | `CATEGORY:` |
 | Category options | `ALL` / `OWNED` / `WISHLIST` |
 
@@ -231,7 +231,7 @@ These are display-only colours for filter pips and chart segments. They do NOT r
 | Syntax help (body text) | `Format: {qty}x {card name} [{set code}] {foil?}. One entry per line. Set code and foil are optional.` |
 | Parse button | `PARSE ENTRIES` |
 | Confirm button | `COMMIT TO COLLECTION` |
-| Cancel button | `DISCARD` |
+| Cancel button | `DISCARD ENTRIES` |
 | Resolved item label | `RESOLVED` (label, 700, success colour) |
 | Unresolved item label | `UNRESOLVED` (label, 700, secondary colour) |
 | Unresolved help | `Could not match this entry. Select the correct printing below or edit the name.` |
@@ -248,7 +248,7 @@ These are display-only colours for filter pips and chart segments. They do NOT r
 | Category label | `CATEGORY` |
 | Category options | `OWNED` / `WISHLIST` |
 | Confirm button | `ADD CARD` |
-| Cancel button | `CANCEL` |
+| Cancel button | `CLOSE PANEL` |
 
 ### Analytics Panel
 
@@ -272,7 +272,7 @@ These are display-only colours for filter pips and chart segments. They do NOT r
 | Column mapping heading | `COLUMN MAPPING` |
 | Preview heading | `IMPORT PREVIEW` |
 | Import button | `IMPORT {count} CARDS` |
-| Cancel button | `CANCEL` |
+| Cancel button | `CLOSE IMPORT` |
 
 ### Empty State
 
@@ -295,8 +295,8 @@ These are display-only colours for filter pips and chart segments. They do NOT r
 | Action | Confirmation Copy |
 |--------|-------------------|
 | Delete single card | `Remove {card name} ({qty}x) from your collection? This cannot be undone.` |
-| Delete with confirmation button | `REMOVE` (secondary colour background) |
-| Cancel deletion | `CANCEL` |
+| Delete with confirmation button | `REMOVE CARD` (secondary colour background) |
+| Cancel deletion | `KEEP CARD` |
 | Clear entire collection | `Delete your entire collection ({count} cards)? This cannot be undone. Type DELETE to confirm.` |
 | Clear confirmation button | `DELETE COLLECTION` (secondary colour background, disabled until "DELETE" typed) |
 
@@ -324,7 +324,7 @@ Components the executor must build for this phase:
 | `collection-screen` | `collection` | Main screen layout: stats header + filter bar + view area + analytics panel. Replaces placeholder `treasure-cruise.js`. |
 | `stats-header` | `collection` | Horizontal stats bar: total cards (display size, primary), unique cards, estimated value (EUR), wishlist count. Surface background with left primary border accent. |
 | `view-toggle` | `collection` | Three toggle buttons: Gallery / Table / Sets. Active button: `bg-primary/10 text-primary border-b-2 border-primary`. Inactive: `text-text-muted hover:text-text-primary`. JetBrains Mono 11px 700 uppercase. |
-| `filter-bar` | `collection` | Horizontal bar on surface-hover background. Contains: sort dropdown, colour filter pips (WUBRG square buttons), category filter, action buttons (Add Card, Mass Entry, Import CSV, Export CSV). |
+| `filter-bar` | `collection` | Horizontal bar on surface-hover background. Contains: sort dropdown, colour filter pips (WUBRG square buttons with `aria-label` and `title` per Copywriting Contract), category filter, action buttons (Add Card, Mass Entry, Import CSV, Export CSV). |
 | `gallery-view` | `collection` | Responsive grid of card tiles. `grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6`. Gap: 24px. Virtual scrolling at 1,000+ items. Each tile: card image (aspect-[63/88]), name, price, set, foil badge, qty badge. Hover: border shifts to `primary/50`, image scales to 110%, opacity to 100%. |
 | `card-tile` | `collection` | Individual gallery card. Surface background. Image area with gradient overlay bottom-to-transparent. Metadata below: name (Syne 16px 700 truncated), price (JetBrains Mono 11px 400 primary), set (JetBrains Mono 11px 400 text-dim). Foil badge: `FOIL` on secondary/20 background. Qty badge: `x{n}` top-right if >1. Click opens card detail flyout. Right-click opens context menu. |
 | `table-view` | `collection` | Data table with ghost-border row separators. Columns: Name, Set, Qty, Foil, Price, Category. Sortable columns show sort arrow icon. Active sort column header in primary colour. Row hover: surface-hover background. Virtual scrolling at 1,000+ rows. Row click opens card detail flyout. |
@@ -414,7 +414,7 @@ Components the executor must build for this phase:
 | Click "Parse Entries" | Parse each line. Query Dexie for card resolution. Display results list. Resolved: green check + card thumbnail + name + set. Unresolved: red flag + original text + dropdown to pick from similar cards. |
 | Fix unresolved entry | User selects correct printing from dropdown. Entry status changes to resolved. |
 | Click "Commit to Collection" | All resolved entries added to IndexedDB in batch. Toast success with count. Unresolved entries remain in textarea for re-editing. |
-| Click "Discard" | Close panel. Confirmation if entries exist: "Discard {count} unparsed entries?" |
+| Click "Discard Entries" | Close panel. Confirmation if entries exist: "Discard {count} unparsed entries?" |
 
 ### CSV Import
 
@@ -477,8 +477,8 @@ Custom utility classes to add alongside Phase 1 utilities:
 |-------|-----|-------|
 | `.card-tile-hover` | `transition: all 500ms; &:hover { border-color: rgba(13,82,189,0.5); } &:hover img { transform: scale(1.1); opacity: 1; }` | Gallery card tile hover effect |
 | `.progress-glow` | `box-shadow: 0 0 15px rgba(13, 82, 189, 0.5);` | Set completion progress bar fill |
-| `.foil-badge` | `background: rgba(226, 56, 56, 0.2); color: #E23838; font-family: 'JetBrains Mono'; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; padding: 2px 4px;` | Foil indicator on card tiles |
-| `.qty-badge` | `background: rgba(13, 82, 189, 0.8); color: #EAECEE; font-family: 'JetBrains Mono'; font-size: 11px; font-weight: 700; padding: 2px 6px; position: absolute; top: 8px; right: 8px;` | Quantity indicator overlay |
+| `.foil-badge` | `background: rgba(226, 56, 56, 0.2); color: #E23838; font-family: 'JetBrains Mono'; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; padding: 4px 8px;` | Foil indicator on card tiles |
+| `.qty-badge` | `background: rgba(13, 82, 189, 0.8); color: #EAECEE; font-family: 'JetBrains Mono'; font-size: 11px; font-weight: 700; padding: 4px 8px; position: absolute; top: 8px; right: 8px;` | Quantity indicator overlay |
 | `.terminal-input` | `font-family: 'JetBrains Mono'; font-size: 14px; background: #0B0C10; border: 1px solid #2A2D3A; color: #EAECEE; padding: 16px; resize: vertical;` | Mass entry textarea |
 
 ---
