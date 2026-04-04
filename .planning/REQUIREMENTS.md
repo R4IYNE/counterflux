@@ -51,9 +51,9 @@
 - [x] **COLL-05**: Mass entry terminal accepts batch syntax: `{qty}x {name} [{set}] {condition} {foil?} {@price?}` with Scryfall auto-resolution
 - [x] **COLL-06**: Unresolved mass entry items flagged for manual matching with confirmation modal
 - [x] **COLL-07**: Inventory categories: Collection, Trade Binder, Wishlist, Lent Out (with borrower tracking)
-- [ ] **COLL-08**: Collection analytics: total value with historical chart, breakdown by set/colour/rarity, top 10 most valuable, price gainers/losers, cost basis vs market P&L
-- [ ] **COLL-09**: CSV import supporting Deckbox, Moxfield, Archidekt, and generic formats with column mapping
-- [ ] **COLL-10**: CSV export of collection data
+- [x] **COLL-08**: Collection analytics: total value with historical chart, breakdown by set/colour/rarity, top 10 most valuable, price gainers/losers, cost basis vs market P&L
+- [x] **COLL-09**: CSV import supporting Deckbox, Moxfield, Archidekt, and generic formats with column mapping
+- [x] **COLL-10**: CSV export of collection data
 - [x] **COLL-11**: Collection view virtualised for smooth scrolling at 1,000+ cards
 - [x] **COLL-12**: User can edit and delete existing collection entries
 - [x] **COLL-13**: Cards in collection show which decks they appear in
@@ -184,9 +184,9 @@ Updated during roadmap creation.
 | COLL-05 | Phase 2 | Complete |
 | COLL-06 | Phase 2 | Complete |
 | COLL-07 | Phase 2 | Complete |
-| COLL-08 | Phase 2 | Pending |
-| COLL-09 | Phase 2 | Pending |
-| COLL-10 | Phase 2 | Pending |
+| COLL-08 | Phase 2 | Complete |
+| COLL-09 | Phase 2 | Complete |
+| COLL-10 | Phase 2 | Complete |
 | COLL-11 | Phase 2 | Complete |
 | COLL-12 | Phase 2 | Complete |
 | COLL-13 | Phase 2 | Complete |

@@ -54,7 +54,7 @@ Plans:
 - [x] 02-01-PLAN.md — Dexie schema v2, Alpine collection store, dependency install, test scaffolds
 - [ ] 02-02-PLAN.md — Screen layout, stats header, filter bar, gallery/table/set views, virtual scrolling
 - [x] 02-03-PLAN.md — Add card modal, mass entry terminal, context menu, edit/delete, flyout enhancements
-- [ ] 02-04-PLAN.md — CSV import/export, Chart.js analytics panel
+- [x] 02-04-PLAN.md — CSV import/export, Chart.js analytics panel
 - [ ] 02-05-PLAN.md — Visual and functional verification checkpoint
 **UI hint**: yes
 
