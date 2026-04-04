@@ -3,7 +3,9 @@ import { renderAddCardModal } from '../components/add-card-modal.js';
 import { renderMassEntryPanel } from '../components/mass-entry-panel.js';
 import { renderEditInline } from '../components/edit-card-inline.js';
 import { renderDeleteConfirm } from '../components/delete-confirm.js';
+import { renderCSVImportModal } from '../components/csv-import-modal.js';
 import { initContextMenu } from '../components/context-menu.js';
+import { exportCollection } from '../services/csv-export.js';
 
 /**
  * Treasure Cruise -- Collection Manager.
@@ -48,6 +50,18 @@ export function mount(container) {
             class="px-md py-sm font-mono text-[11px] uppercase tracking-[0.15em] font-bold bg-surface-hover text-text-primary cursor-pointer hover:bg-border-ghost transition-colors"
             style="font-family: 'JetBrains Mono', monospace;">
             MASS ENTRY
+          </button>
+          <button
+            @click="$store.collection.importOpen = true"
+            class="px-md py-sm font-mono text-[11px] uppercase tracking-[0.15em] font-bold bg-surface-hover text-text-primary cursor-pointer hover:bg-border-ghost transition-colors"
+            style="font-family: 'JetBrains Mono', monospace;">
+            IMPORT CSV
+          </button>
+          <button
+            @click="document.dispatchEvent(new CustomEvent('export-csv'))"
+            class="px-md py-sm font-mono text-[11px] uppercase tracking-[0.15em] font-bold bg-surface-hover text-text-primary cursor-pointer hover:bg-border-ghost transition-colors"
+            style="font-family: 'JetBrains Mono', monospace;">
+            EXPORT CSV
           </button>
         </div>
       </div>
@@ -145,10 +159,23 @@ export function mount(container) {
     <!-- Modals (rendered outside main flow for z-index) -->
     ${renderAddCardModal()}
     ${renderMassEntryPanel()}
+    ${renderCSVImportModal()}
     ${renderEditInline()}
     ${renderDeleteConfirm()}
   `;
 
   // Initialize context menu (imperative, attaches to DOM)
   initContextMenu(container);
+
+  // Wire export-csv event
+  const handleExportCSV = () => {
+    const entries = Alpine.store('collection')?.entries || [];
+    exportCollection(entries);
+    const count = entries.reduce((sum, e) => sum + e.quantity, 0);
+    Alpine.store('toast')?.show(`Collection exported as CSV (${count} cards).`, 'success');
+  };
+  document.addEventListener('export-csv', handleExportCSV);
+
+  // Cleanup on unmount (Navigo calls mount again on re-navigation)
+  container._cleanupExportCSV = () => document.removeEventListener('export-csv', handleExportCSV);
 }
