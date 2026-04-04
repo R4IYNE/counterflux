@@ -1,0 +1,253 @@
+[
+  {
+    "id": "e2d1f9fb-1dec-44d0-8eb3-241e83b3e9bb",
+    "oracle_id": "bceab6e4-01ed-4a5e-88c3-4b2a5b00e4f3",
+    "name": "Lightning Bolt",
+    "layout": "normal",
+    "mana_cost": "{R}",
+    "cmc": 1,
+    "type_line": "Instant",
+    "oracle_text": "Lightning Bolt deals 3 damage to any target.",
+    "color_identity": ["R"],
+    "set": "m10",
+    "collector_number": "146",
+    "image_uris": {
+      "small": "https://cards.scryfall.io/small/front/e/2/e2d1f9fb.jpg",
+      "normal": "https://cards.scryfall.io/normal/front/e/2/e2d1f9fb.jpg",
+      "large": "https://cards.scryfall.io/large/front/e/2/e2d1f9fb.jpg"
+    },
+    "prices": { "usd": "1.50" }
+  },
+  {
+    "id": "11bf83bb-c95b-4b4f-9a56-ce7a1816e5db",
+    "oracle_id": "ab01a23b-4567-89cd-ef01-234567890abc",
+    "name": "Delver of Secrets // Insectile Aberration",
+    "layout": "transform",
+    "mana_cost": null,
+    "cmc": 1,
+    "type_line": "Creature — Human Wizard // Creature — Human Insect",
+    "oracle_text": null,
+    "color_identity": ["U"],
+    "set": "isd",
+    "collector_number": "51",
+    "image_uris": null,
+    "card_faces": [
+      {
+        "name": "Delver of Secrets",
+        "mana_cost": "{U}",
+        "type_line": "Creature — Human Wizard",
+        "oracle_text": "At the beginning of your upkeep, look at the top card of your library. You may reveal that card. If an instant or sorcery card is revealed this way, transform Delver of Secrets.",
+        "image_uris": {
+          "small": "https://cards.scryfall.io/small/front/1/1/11bf83bb-front.jpg",
+          "normal": "https://cards.scryfall.io/normal/front/1/1/11bf83bb-front.jpg",
+          "large": "https://cards.scryfall.io/large/front/1/1/11bf83bb-front.jpg"
+        }
+      },
+      {
+        "name": "Insectile Aberration",
+        "mana_cost": "",
+        "type_line": "Creature — Human Insect",
+        "oracle_text": "Flying",
+        "image_uris": {
+          "small": "https://cards.scryfall.io/small/back/1/1/11bf83bb-back.jpg",
+          "normal": "https://cards.scryfall.io/normal/back/1/1/11bf83bb-back.jpg",
+          "large": "https://cards.scryfall.io/large/back/1/1/11bf83bb-back.jpg"
+        }
+      }
+    ],
+    "prices": { "usd": "2.00" }
+  },
+  {
+    "id": "bc7239ea-f8aa-4a6f-87bd-c35359635673",
+    "oracle_id": "cc02d34e-5678-90ab-cdef-012345678901",
+    "name": "Shatterskull Smashing // Shatterskull, the Hammer Pass",
+    "layout": "modal_dfc",
+    "mana_cost": null,
+    "cmc": 2,
+    "type_line": "Sorcery // Land",
+    "oracle_text": null,
+    "color_identity": ["R"],
+    "set": "znr",
+    "collector_number": "161",
+    "image_uris": null,
+    "card_faces": [
+      {
+        "name": "Shatterskull Smashing",
+        "mana_cost": "{X}{R}{R}",
+        "type_line": "Sorcery",
+        "oracle_text": "Shatterskull Smashing deals X damage divided as you choose among up to two target creatures and/or planeswalkers. If X is 6 or more, Shatterskull Smashing deals twice X damage divided as you choose among them instead.",
+        "image_uris": {
+          "small": "https://cards.scryfall.io/small/front/b/c/bc7239ea-front.jpg",
+          "normal": "https://cards.scryfall.io/normal/front/b/c/bc7239ea-front.jpg",
+          "large": "https://cards.scryfall.io/large/front/b/c/bc7239ea-front.jpg"
+        }
+      },
+      {
+        "name": "Shatterskull, the Hammer Pass",
+        "mana_cost": "",
+        "type_line": "Land",
+        "oracle_text": "As Shatterskull, the Hammer Pass enters, you may pay 3 life. If you don't, it enters tapped.\n{T}: Add {R}.",
+        "image_uris": {
+          "small": "https://cards.scryfall.io/small/back/b/c/bc7239ea-back.jpg",
+          "normal": "https://cards.scryfall.io/normal/back/b/c/bc7239ea-back.jpg",
+          "large": "https://cards.scryfall.io/large/back/b/c/bc7239ea-back.jpg"
+        }
+      }
+    ],
+    "prices": { "usd": "5.00" }
+  },
+  {
+    "id": "a4c04098-abf0-4dd4-b277-871d8f3ad261",
+    "oracle_id": "dd03e45f-6789-01bc-def0-123456789012",
+    "name": "Fire // Ice",
+    "layout": "split",
+    "mana_cost": "{1}{R} // {1}{U}",
+    "cmc": 4,
+    "type_line": "Instant // Instant",
+    "oracle_text": null,
+    "color_identity": ["R", "U"],
+    "set": "uma",
+    "collector_number": "225",
+    "image_uris": {
+      "small": "https://cards.scryfall.io/small/front/a/4/a4c04098.jpg",
+      "normal": "https://cards.scryfall.io/normal/front/a/4/a4c04098.jpg",
+      "large": "https://cards.scryfall.io/large/front/a/4/a4c04098.jpg"
+    },
+    "card_faces": [
+      {
+        "name": "Fire",
+        "mana_cost": "{1}{R}",
+        "type_line": "Instant",
+        "oracle_text": "Fire deals 2 damage divided as you choose among one or two targets."
+      },
+      {
+        "name": "Ice",
+        "mana_cost": "{1}{U}",
+        "type_line": "Instant",
+        "oracle_text": "Tap target permanent.\nDraw a card."
+      }
+    ],
+    "prices": { "usd": "0.50" }
+  },
+  {
+    "id": "09fd2d9c-1793-4bef-853b-b5e96d2229ca",
+    "oracle_id": "ee04f56g-7890-12cd-ef01-234567890123",
+    "name": "Bonecrusher Giant // Stomp",
+    "layout": "adventure",
+    "mana_cost": "{2}{R}",
+    "cmc": 3,
+    "type_line": "Creature — Giant // Instant — Adventure",
+    "oracle_text": null,
+    "color_identity": ["R"],
+    "set": "eld",
+    "collector_number": "115",
+    "image_uris": {
+      "small": "https://cards.scryfall.io/small/front/0/9/09fd2d9c.jpg",
+      "normal": "https://cards.scryfall.io/normal/front/0/9/09fd2d9c.jpg",
+      "large": "https://cards.scryfall.io/large/front/0/9/09fd2d9c.jpg"
+    },
+    "card_faces": [
+      {
+        "name": "Bonecrusher Giant",
+        "mana_cost": "{2}{R}",
+        "type_line": "Creature — Giant",
+        "oracle_text": "Whenever Bonecrusher Giant becomes the target of a spell, Bonecrusher Giant deals 2 damage to that spell's controller."
+      },
+      {
+        "name": "Stomp",
+        "mana_cost": "{1}{R}",
+        "type_line": "Instant — Adventure",
+        "oracle_text": "Damage can't be prevented this turn. Stomp deals 2 damage to any target."
+      }
+    ],
+    "prices": { "usd": "0.75" }
+  },
+  {
+    "id": "0b61d772-2d8b-4acf-9b2a-c7c64ae0ce32",
+    "oracle_id": "ff05g67h-8901-23de-f012-345678901234",
+    "name": "Erayo, Soratami Ascendant // Erayo's Essence",
+    "layout": "flip",
+    "mana_cost": "{1}{U}",
+    "cmc": 2,
+    "type_line": "Legendary Creature — Moonfolk Monk // Legendary Enchantment",
+    "oracle_text": null,
+    "color_identity": ["U"],
+    "set": "sok",
+    "collector_number": "35",
+    "image_uris": {
+      "small": "https://cards.scryfall.io/small/front/0/b/0b61d772.jpg",
+      "normal": "https://cards.scryfall.io/normal/front/0/b/0b61d772.jpg",
+      "large": "https://cards.scryfall.io/large/front/0/b/0b61d772.jpg"
+    },
+    "card_faces": [
+      {
+        "name": "Erayo, Soratami Ascendant",
+        "mana_cost": "{1}{U}",
+        "type_line": "Legendary Creature — Moonfolk Monk",
+        "oracle_text": "Flying\nWhenever the fourth spell of a turn is cast, flip Erayo, Soratami Ascendant."
+      },
+      {
+        "name": "Erayo's Essence",
+        "mana_cost": "",
+        "type_line": "Legendary Enchantment",
+        "oracle_text": "Whenever an opponent casts a spell for the first time each turn, counter that spell."
+      }
+    ],
+    "prices": { "usd": "15.00" }
+  },
+  {
+    "id": "27907985-b5f6-4098-ab43-d5e8e0d4b1c4",
+    "oracle_id": "gg06h78i-9012-34ef-0123-456789012345",
+    "name": "Bruna, the Fading Light",
+    "layout": "meld",
+    "mana_cost": "{5}{W}{W}",
+    "cmc": 7,
+    "type_line": "Legendary Creature — Angel Horror",
+    "oracle_text": "When you cast this spell, you may return target Angel or Human creature card from your graveyard to the battlefield.\nFlying, vigilance\n(Melds with Gisela, the Broken Blade.)",
+    "color_identity": ["W"],
+    "set": "emn",
+    "collector_number": "15",
+    "image_uris": {
+      "small": "https://cards.scryfall.io/small/front/2/7/27907985.jpg",
+      "normal": "https://cards.scryfall.io/normal/front/2/7/27907985.jpg",
+      "large": "https://cards.scryfall.io/large/front/2/7/27907985.jpg"
+    },
+    "all_parts": [
+      {
+        "id": "27907985-b5f6-4098-ab43-d5e8e0d4b1c4",
+        "name": "Bruna, the Fading Light",
+        "component": "meld_part"
+      },
+      {
+        "id": "c75c035a-7349-4571-9bec-4ad36e11ed5c",
+        "name": "Gisela, the Broken Blade",
+        "component": "meld_part"
+      },
+      {
+        "id": "587c325a-d3f0-11e6-bf26-cec0c932ce01",
+        "name": "Brisela, Voice of Nightmares",
+        "component": "meld_result"
+      }
+    ],
+    "prices": { "usd": "3.00" }
+  },
+  {
+    "id": "c8318f40-ecd5-429e-8fe2-b84f5e9e3e1b",
+    "oracle_id": "hh07i89j-0123-45f0-1234-567890123456",
+    "name": "The Eldest Reborn",
+    "layout": "saga",
+    "mana_cost": "{4}{B}",
+    "cmc": 5,
+    "type_line": "Enchantment — Saga",
+    "oracle_text": "(As this Saga enters and after your draw step, add a lore counter. Sacrifice after III.)\nI — Each opponent sacrifices a creature or planeswalker.\nII — Each opponent discards a card.\nIII — Put target creature or planeswalker card from a graveyard onto the battlefield under your control.",
+    "color_identity": ["B"],
+    "set": "dom",
+    "collector_number": "90",
+    "image_uris": {
+      "small": "https://cards.scryfall.io/small/front/c/8/c8318f40.jpg",
+      "normal": "https://cards.scryfall.io/normal/front/c/8/c8318f40.jpg",
+      "large": "https://cards.scryfall.io/large/front/c/8/c8318f40.jpg"
+    },
+    "prices": { "usd": "0.25" }
+  }
+]
