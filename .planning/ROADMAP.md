@@ -51,7 +51,7 @@ Plans:
   5. User can view collection analytics (total value chart, breakdown by set/colour/rarity, top 10 most valuable, P&L) and see which decks each card appears in
 **Plans:** 5 plans
 Plans:
-- [ ] 02-01-PLAN.md — Dexie schema v2, Alpine collection store, dependency install, test scaffolds
+- [x] 02-01-PLAN.md — Dexie schema v2, Alpine collection store, dependency install, test scaffolds
 - [ ] 02-02-PLAN.md — Screen layout, stats header, filter bar, gallery/table/set views, virtual scrolling
 - [ ] 02-03-PLAN.md — Add card modal, mass entry terminal, context menu, edit/delete, flyout enhancements
 - [ ] 02-04-PLAN.md — CSV import/export, Chart.js analytics panel

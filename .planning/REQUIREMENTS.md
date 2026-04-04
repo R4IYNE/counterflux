@@ -44,18 +44,18 @@
 
 ### Collection Manager (Treasure Cruise)
 
-- [ ] **COLL-01**: User can add cards to collection with quantity, condition (NM/LP/MP/HP/DMG), foil status, and acquired price
+- [x] **COLL-01**: User can add cards to collection with quantity, condition (NM/LP/MP/HP/DMG), foil status, and acquired price
 - [ ] **COLL-02**: Gallery view displays card images in a filterable, sortable grid (by name, set, price, date, colour)
 - [ ] **COLL-03**: Table view displays spreadsheet-style rows (name, set, collector #, condition, foil, qty, location, market price, cost basis, P&L) with sortable/filterable columns
 - [ ] **COLL-04**: Set completion view shows per-set progress bars (owned/total), filterable by rarity tier
 - [ ] **COLL-05**: Mass entry terminal accepts batch syntax: `{qty}x {name} [{set}] {condition} {foil?} {@price?}` with Scryfall auto-resolution
 - [ ] **COLL-06**: Unresolved mass entry items flagged for manual matching with confirmation modal
-- [ ] **COLL-07**: Inventory categories: Collection, Trade Binder, Wishlist, Lent Out (with borrower tracking)
+- [x] **COLL-07**: Inventory categories: Collection, Trade Binder, Wishlist, Lent Out (with borrower tracking)
 - [ ] **COLL-08**: Collection analytics: total value with historical chart, breakdown by set/colour/rarity, top 10 most valuable, price gainers/losers, cost basis vs market P&L
 - [ ] **COLL-09**: CSV import supporting Deckbox, Moxfield, Archidekt, and generic formats with column mapping
 - [ ] **COLL-10**: CSV export of collection data
-- [ ] **COLL-11**: Collection view virtualised for smooth scrolling at 1,000+ cards
-- [ ] **COLL-12**: User can edit and delete existing collection entries
+- [x] **COLL-11**: Collection view virtualised for smooth scrolling at 1,000+ cards
+- [x] **COLL-12**: User can edit and delete existing collection entries
 - [ ] **COLL-13**: Cards in collection show which decks they appear in
 
 ### Deck Builder (Thousand-Year Storm)
@@ -177,18 +177,18 @@ Updated during roadmap creation.
 | MILA-02 | Phase 1 | Complete |
 | MILA-03 | Phase 1 | Pending |
 | PERF-01 | Phase 1 | Complete |
-| COLL-01 | Phase 2 | Pending |
+| COLL-01 | Phase 2 | Complete |
 | COLL-02 | Phase 2 | Pending |
 | COLL-03 | Phase 2 | Pending |
 | COLL-04 | Phase 2 | Pending |
 | COLL-05 | Phase 2 | Pending |
 | COLL-06 | Phase 2 | Pending |
-| COLL-07 | Phase 2 | Pending |
+| COLL-07 | Phase 2 | Complete |
 | COLL-08 | Phase 2 | Pending |
 | COLL-09 | Phase 2 | Pending |
 | COLL-10 | Phase 2 | Pending |
-| COLL-11 | Phase 2 | Pending |
-| COLL-12 | Phase 2 | Pending |
+| COLL-11 | Phase 2 | Complete |
+| COLL-12 | Phase 2 | Complete |
 | COLL-13 | Phase 2 | Pending |
 | DECK-01 | Phase 3 | Pending |
 | DECK-02 | Phase 3 | Pending |
