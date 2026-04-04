@@ -4,6 +4,7 @@ import { renderMassEntryPanel } from '../components/mass-entry-panel.js';
 import { renderEditInline } from '../components/edit-card-inline.js';
 import { renderDeleteConfirm } from '../components/delete-confirm.js';
 import { renderCSVImportModal } from '../components/csv-import-modal.js';
+import { renderAnalyticsPanel, analyticsPanel } from '../components/analytics-panel.js';
 import { initContextMenu } from '../components/context-menu.js';
 import { exportCollection } from '../services/csv-export.js';
 
@@ -94,6 +95,9 @@ export function mount(container) {
         </div>
       </div>
 
+      <!-- Analytics panel -->
+      ${renderAnalyticsPanel()}
+
       <!-- Empty state -->
       <template x-if="$store.collection.entries.length === 0 && !$store.collection.loading">
         <div class="flex flex-col items-center justify-center py-3xl gap-md">
@@ -163,6 +167,11 @@ export function mount(container) {
     ${renderEditInline()}
     ${renderDeleteConfirm()}
   `;
+
+  // Register Alpine component for analytics panel
+  if (Alpine && typeof Alpine.data === 'function') {
+    Alpine.data('analyticsPanel', analyticsPanel);
+  }
 
   // Initialize context menu (imperative, attaches to DOM)
   initContextMenu(container);
