@@ -312,11 +312,19 @@ describe('Collection Store', () => {
       expect(names[0]).toBe('Sol Ring'); // EUR 2.00
     });
 
-    it('sorts by date-desc returns newest added_at first', () => {
+    it('sorts by date-desc returns newest added_at first', async () => {
+      // Manually set distinct added_at timestamps for deterministic ordering
+      const entries = await db.collection.toArray();
+      await db.collection.update(entries[0].id, { added_at: '2025-01-01T00:00:00Z' });
+      await db.collection.update(entries[1].id, { added_at: '2025-06-01T00:00:00Z' });
+      await db.collection.update(entries[2].id, { added_at: '2025-12-01T00:00:00Z' });
+      await store.loadEntries();
+
       store.sortBy = 'date-desc';
       const result = store.sorted;
-      // Last added should be first
-      expect(result[0].card.name).toBe('Counterspell');
+      // Last date should be first (Counterspell got Dec 2025)
+      expect(result[0].added_at).toBe('2025-12-01T00:00:00Z');
+      expect(result[2].added_at).toBe('2025-01-01T00:00:00Z');
     });
   });
 
