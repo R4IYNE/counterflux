@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>COUNTERFLUX: THE AETHERIC ARCHIVE - GAME TRACKER</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&amp;family=JetBrains+Mono:wght@400;700&amp;family=Plus+Jakarta+Sans:wght@400;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "on-secondary-container": "#ffb3ac",
+                        "surface-container-highest": "#333539",
+                        "surface-variant": "#333539",
+                        "tertiary-fixed": "#bce9ff",
+                        "on-tertiary-container": "#83daff",
+                        "on-error": "#690005",
+                        "inverse-on-surface": "#2f3035",
+                        "on-primary": "#002c70",
+                        "on-error-container": "#ffdad6",
+                        "surface-container-high": "#282a2e",
+                        "secondary-fixed": "#ffdad6",
+                        "surface-bright": "#37393e",
+                        "secondary-container": "#a90316",
+                        "primary-fixed": "#dae2ff",
+                        "on-tertiary-fixed-variant": "#004d63",
+                        "outline": "#8d909f",
+                        "inverse-primary": "#1b58c3",
+                        "secondary": "#ffb3ad",
+                        "on-surface-variant": "#c3c6d5",
+                        "on-primary-fixed": "#001946",
+                        "surface": "#111318",
+                        "on-secondary-fixed-variant": "#930011",
+                        "on-tertiary-fixed": "#001f2a",
+                        "primary-fixed-dim": "#b1c5ff",
+                        "secondary-fixed-dim": "#ffb3ad",
+                        "on-background": "#e2e2e8",
+                        "on-secondary": "#680009",
+                        "surface-container-low": "#1a1c20",
+                        "tertiary-container": "#00607b",
+                        "on-primary-fixed-variant": "#00419d",
+                        "inverse-surface": "#e2e2e8",
+                        "on-secondary-fixed": "#410003",
+                        "on-surface": "#e2e2e8",
+                        "tertiary-fixed-dim": "#6cd3fc",
+                        "error": "#ffb4ab",
+                        "on-tertiary": "#003545",
+                        "on-primary-container": "#bdceff",
+                        "error-container": "#93000a",
+                        "surface-container": "#1e2024",
+                        "primary": "#b1c5ff",
+                        "outline-variant": "#434653",
+                        "surface-container-lowest": "#0c0e12",
+                        "background": "#111318",
+                        "primary-container": "#0d52bd",
+                        "surface-tint": "#b1c5ff",
+                        "tertiary": "#6cd3fc",
+                        "surface-dim": "#111318"
+                    },
+                    fontFamily: {
+                        syne: ['Syne', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                        body: ['Plus Jakarta Sans', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #111318;
+            color: #e2e2e8;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        .izzet-glow-blue { box-shadow: 0 0 20px rgba(13, 82, 189, 0.4); }
+        .izzet-glow-red { box-shadow: 0 0 20px rgba(169, 3, 22, 0.4); }
+        .izzet-glow-green { box-shadow: 0 0 20px rgba(34, 197, 94, 0.2); }
+        .izzet-glow-white { box-shadow: 0 0 20px rgba(255, 255, 255, 0.1); }
+        
+        .active-turn-border {
+            outline: 2px solid #b1c5ff;
+            outline-offset: -2px;
+            animation: pulse-border 2s infinite;
+        }
+        @keyframes pulse-border {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        .ghost-border {
+            border: 1px solid rgba(141, 144, 159, 0.2);
+            transition: all 0.3s ease;
+        }
+        .ghost-border:hover {
+            border-color: #b1c5ff;
+        }
+    </style>
+</head>
+<body class="overflow-hidden">
+<!-- Top Navigation Bar -->
+<header class="fixed top-0 w-full z-50 flex justify-between items-center px-6 h-16 bg-[#111318] border-b border-outline-variant/10">
+<div class="flex items-center gap-8">
+<h1 class="text-lg font-bold tracking-tighter text-[#B1C5FF] font-syne uppercase">COUNTERFLUX: THE AETHERIC ARCHIVE</h1>
+<nav class="hidden md:flex gap-6 items-center">
+<a class="text-[#c3c6d5] font-mono hover:bg-[#1e2024] transition-colors duration-150 px-2 py-1" href="#">Dashboard</a>
+<a class="text-[#c3c6d5] font-mono hover:bg-[#1e2024] transition-colors duration-150 px-2 py-1" href="#">Deck Builder</a>
+<a class="text-[#B1C5FF] border-b-2 border-[#0D52BD] pb-1 font-mono" href="#">Game Tracker</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-[#B1C5FF] cursor-pointer" data-icon="notifications">notifications</span>
+<span class="material-symbols-outlined text-[#B1C5FF] cursor-pointer" data-icon="settings">settings</span>
+<div class="w-8 h-8 bg-surface-container-high border border-outline-variant flex items-center justify-center">
+<img alt="Izzet Corgi Mascot" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCGpGGoOpgytmrkMnKEnr-3TYm4mr5VWsAeiZdaeeCqB9vzpzg8i6c7Uy2o264tCI7wYJnqa9N9O6u-nwu6qJDLOAGsRcT988GSi9KYeA7vW3VNGbMiTSlD1cEP8rK3iCT_T2NPS5MtJp_Eh6HHpFtXbG8Sr_u1X51Ijnj5ShJl8R-j8CppHW-MQIwgatMgqCSQaK-_-6GJ9z5l187iag-_sxV3VBDyouYGXNOEk3Jfk7AnzE464IMkm6sKBfFs7md3A9KUxQlVZwY"/>
+</div>
+</div>
+</header>
+<!-- Side Navigation Bar -->
+<aside class="fixed left-0 top-16 h-[calc(100vh-64px)] w-64 flex flex-col z-40 bg-[#1a1c20] border-r border-outline-variant/10">
+<div class="p-6 border-b border-outline-variant/10">
+<p class="text-[10px] font-mono text-primary opacity-50 tracking-widest uppercase">USER_SESSION</p>
+<h2 class="font-syne font-bold text-on-surface uppercase">ARCHIVIST_01</h2>
+<p class="text-[10px] font-mono text-[#0D52BD]">V-LEVEL ACCESS</p>
+</div>
+<nav class="flex-1 py-4">
+<div class="flex flex-col">
+<a class="text-[#c3c6d5] px-4 py-3 font-mono opacity-70 hover:bg-[#282a2e] hover:opacity-100 transition-all flex items-center gap-3" href="#"><span class="material-symbols-outlined" data-icon="shutter_speed">shutter_speed</span> Epic Experiment</a>
+<a class="text-[#c3c6d5] px-4 py-3 font-mono opacity-70 hover:bg-[#282a2e] hover:opacity-100 transition-all flex items-center gap-3" href="#"><span class="material-symbols-outlined" data-icon="auto_fix_high">auto_fix_high</span> Thousand-Year Storm</a>
+<a class="text-[#c3c6d5] px-4 py-3 font-mono opacity-70 hover:bg-[#282a2e] hover:opacity-100 transition-all flex items-center gap-3" href="#"><span class="material-symbols-outlined" data-icon="waves">waves</span> Treasure Cruise</a>
+<a class="text-[#c3c6d5] px-4 py-3 font-mono opacity-70 hover:bg-[#282a2e] hover:opacity-100 transition-all flex items-center gap-3" href="#"><span class="material-symbols-outlined" data-icon="visibility">visibility</span> Preordain</a>
+<a class="px-4 py-3 font-mono hover:bg-[#282a2e] hover:opacity-100 transition-all flex items-center gap-3 bg-[#0D52BD]/20 text-[#B1C5FF] border-l-4 border-[#0D52BD]" href="#"><span class="material-symbols-outlined" data-icon="local_fire_department">local_fire_department</span> Vandalblast</a>
+</div>
+</nav>
+<!-- Integrated Dice Roller & Global Counters -->
+<div class="p-4 border-t border-outline-variant/10 space-y-4">
+<div>
+<p class="text-[10px] font-mono text-primary opacity-50 tracking-widest mb-2 uppercase">GLOBAL_COUNTERS</p>
+<div class="grid grid-cols-2 gap-2">
+<div class="bg-surface-container-lowest p-2 border border-outline-variant/20">
+<p class="text-[9px] font-mono opacity-60">STORM</p>
+<p class="text-xl font-syne text-primary">0</p>
+</div>
+<div class="bg-surface-container-lowest p-2 border border-outline-variant/20 flex flex-col items-center justify-center">
+<span class="material-symbols-outlined text-sm opacity-50" data-icon="wb_sunny">wb_sunny</span>
+<p class="text-[9px] font-mono mt-1 uppercase">DAY</p>
+</div>
+</div>
+<div class="mt-2 flex gap-2">
+<button class="flex-1 bg-surface-container-highest py-1 text-[9px] font-mono hover:bg-primary/20">MONARCH</button>
+<button class="flex-1 bg-surface-container-highest py-1 text-[9px] font-mono hover:bg-primary/20">INITIATIVE</button>
+</div>
+</div>
+<div>
+<p class="text-[10px] font-mono text-secondary opacity-50 tracking-widest mb-2 uppercase">RANDOMIZER</p>
+<div class="grid grid-cols-3 gap-1">
+<button class="bg-surface-container-highest hover:bg-secondary/20 p-2 text-xs font-mono">D4</button>
+<button class="bg-surface-container-highest hover:bg-secondary/20 p-2 text-xs font-mono">D6</button>
+<button class="bg-surface-container-highest hover:bg-secondary/20 p-2 text-xs font-mono">D20</button>
+</div>
+<div class="mt-2 bg-surface-container-lowest p-2 text-center border border-outline-variant/20">
+<span class="text-2xl font-syne text-secondary tracking-tighter">12</span>
+</div>
+</div>
+</div>
+<div class="p-4 bg-surface-container-lowest flex flex-col gap-2">
+<button class="flex items-center gap-3 text-[#c3c6d5] font-mono text-sm opacity-70 hover:opacity-100">
+<span class="material-symbols-outlined text-sm" data-icon="terminal">terminal</span> Terminal
+        </button>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="ml-64 pt-16 h-screen bg-[#111318]">
+<div class="h-full p-6 grid grid-cols-2 grid-rows-2 gap-4">
+<!-- Player 1 - Blue/Izzet - ACTIVE -->
+<div class="bg-surface-container-low relative ghost-border active-turn-border group overflow-hidden">
+<div class="absolute top-0 left-0 w-1.5 h-full bg-primary izzet-glow-blue"></div>
+<div class="absolute top-2 right-2 flex items-center gap-2">
+<span class="bg-primary/20 text-primary px-2 py-0.5 text-[10px] font-mono font-bold tracking-widest">ACTIVE_TURN</span>
+</div>
+<div class="p-6 flex flex-col h-full justify-between">
+<div>
+<div class="flex justify-between items-start mb-4">
+<div class="space-y-1">
+<span class="font-mono text-xs text-primary-fixed-dim tracking-[0.2em] uppercase">PLAYER_01 // JACE</span>
+<input class="block w-full bg-transparent border-none p-0 font-syne text-sm text-on-surface-variant focus:ring-0 placeholder:opacity-30 uppercase" placeholder="COMMANDER_NAME" type="text" value="Niv-Mizzet, Parun"/>
+</div>
+<div class="flex flex-col gap-2 items-end">
+<div class="flex items-center gap-2 bg-surface-container-highest px-3 py-1">
+<span class="material-symbols-outlined text-sm text-tertiary" data-icon="skull">skull</span>
+<span class="font-mono text-sm">00</span>
+</div>
+<div class="flex items-center gap-2 bg-surface-container-highest px-3 py-1 border-r-2 border-primary">
+<span class="material-symbols-outlined text-sm text-primary" data-icon="shield">shield</span>
+<span class="font-mono text-sm">00</span>
+</div>
+</div>
+</div>
+</div>
+<div class="flex items-center justify-center gap-12">
+<button class="material-symbols-outlined text-4xl text-on-surface-variant hover:text-primary transition-colors" data-icon="remove">remove</button>
+<span class="text-[120px] font-syne font-extrabold text-on-surface tracking-tighter leading-none">40</span>
+<button class="material-symbols-outlined text-4xl text-on-surface-variant hover:text-primary transition-colors" data-icon="add">add</button>
+</div>
+<div class="flex justify-between items-end">
+<div class="font-mono text-[10px] text-primary/40 uppercase">AETHER_LINK: STABLE</div>
+<div class="flex gap-4">
+<span class="material-symbols-outlined text-xl opacity-30 hover:opacity-100 cursor-pointer" data-icon="history">history</span>
+<span class="material-symbols-outlined text-xl opacity-30 hover:opacity-100 cursor-pointer" data-icon="edit">edit</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Player 2 - Red -->
+<div class="bg-surface-container-low relative ghost-border group overflow-hidden">
+<div class="absolute top-0 right-0 w-1.5 h-full bg-secondary-container izzet-glow-red"></div>
+<div class="p-6 flex flex-col h-full justify-between">
+<div>
+<div class="flex justify-between items-start mb-4">
+<div class="flex flex-col gap-2 items-start">
+<div class="flex items-center gap-2 bg-surface-container-highest px-3 py-1">
+<span class="material-symbols-outlined text-sm text-tertiary" data-icon="skull">skull</span>
+<span class="font-mono text-sm">02</span>
+</div>
+<div class="flex items-center gap-2 bg-surface-container-highest px-3 py-1 border-l-2 border-secondary-container">
+<span class="material-symbols-outlined text-sm text-secondary-container" data-icon="shield">shield</span>
+<span class="font-mono text-sm">00</span>
+</div>
+</div>
+<div class="text-right space-y-1">
+<span class="font-mono text-xs text-secondary tracking-[0.2em] uppercase">PLAYER_02 // CHANDRA</span>
+<input class="block w-full bg-transparent border-none p-0 font-syne text-sm text-on-surface-variant focus:ring-0 placeholder:opacity-30 uppercase text-right" placeholder="COMMANDER_NAME" type="text" value="Torbran, Thane"/>
+</div>
+</div>
+</div>
+<div class="flex items-center justify-center gap-12">
+<button class="material-symbols-outlined text-4xl text-on-surface-variant hover:text-secondary transition-colors" data-icon="remove">remove</button>
+<span class="text-[120px] font-syne font-extrabold text-on-surface tracking-tighter leading-none">32</span>
+<button class="material-symbols-outlined text-4xl text-on-surface-variant hover:text-secondary transition-colors" data-icon="add">add</button>
+</div>
+<div class="flex flex-row-reverse justify-between items-end">
+<div class="font-mono text-[10px] text-secondary/40 uppercase">EMBER_PULSE: ACTIVE</div>
+<div class="flex gap-4">
+<span class="material-symbols-outlined text-xl opacity-30 hover:opacity-100 cursor-pointer" data-icon="history">history</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Player 3 - Green -->
+<div class="bg-surface-container-low relative ghost-border group overflow-hidden">
+<div class="absolute top-0 left-0 w-1.5 h-full bg-green-500 izzet-glow-green"></div>
+<div class="p-6 flex flex-col h-full justify-between">
+<div>
+<div class="flex justify-between items-start mb-4">
+<div class="space-y-1">
+<span class="font-mono text-xs text-green-400 tracking-[0.2em] uppercase">PLAYER_03 // VIVIEN</span>
+<input class="block w-full bg-transparent border-none p-0 font-syne text-sm text-on-surface-variant focus:ring-0 placeholder:opacity-30 uppercase" placeholder="COMMANDER_NAME" type="text" value="Toski, Bearer"/>
+</div>
+<div class="flex flex-col gap-2 items-end">
+<div class="flex items-center gap-2 bg-surface-container-highest px-3 py-1">
+<span class="material-symbols-outlined text-sm text-tertiary" data-icon="skull">skull</span>
+<span class="font-mono text-sm">00</span>
+</div>
+<div class="flex items-center gap-2 bg-surface-container-highest px-3 py-1 border-r-2 border-green-500">
+<span class="material-symbols-outlined text-sm text-green-500" data-icon="shield">shield</span>
+<span class="font-mono text-sm">04</span>
+</div>
+</div>
+</div>
+</div>
+<div class="flex items-center justify-center gap-12">
+<button class="material-symbols-outlined text-4xl text-on-surface-variant hover:text-green-500 transition-colors" data-icon="remove">remove</button>
+<span class="text-[120px] font-syne font-extrabold text-on-surface tracking-tighter leading-none">48</span>
+<button class="material-symbols-outlined text-4xl text-on-surface-variant hover:text-green-500 transition-colors" data-icon="add">add</button>
+</div>
+<div class="flex justify-between items-end">
+<div class="font-mono text-[10px] text-green-500/40 uppercase">WILD_RESONANCE</div>
+</div>
+</div>
+</div>
+<!-- Player 4 - White/Black (Tonal) -->
+<div class="bg-surface-container-low relative ghost-border group overflow-hidden">
+<div class="absolute top-0 right-0 w-1.5 h-full bg-outline-variant izzet-glow-white"></div>
+<div class="p-6 flex flex-col h-full justify-between">
+<div>
+<div class="flex justify-between items-start mb-4">
+<div class="flex flex-col gap-2 items-start">
+<div class="flex items-center gap-2 bg-surface-container-highest px-3 py-1">
+<span class="material-symbols-outlined text-sm text-tertiary" data-icon="skull">skull</span>
+<span class="font-mono text-sm">00</span>
+</div>
+<div class="flex items-center gap-2 bg-surface-container-highest px-3 py-1 border-l-2 border-outline-variant">
+<span class="material-symbols-outlined text-sm text-outline-variant" data-icon="shield">shield</span>
+<span class="font-mono text-sm">00</span>
+</div>
+</div>
+<div class="text-right space-y-1">
+<span class="font-mono text-xs text-outline tracking-[0.2em] uppercase">PLAYER_04 // LILIANA</span>
+<input class="block w-full bg-transparent border-none p-0 font-syne text-sm text-on-surface-variant focus:ring-0 placeholder:opacity-30 uppercase text-right" placeholder="COMMANDER_NAME" type="text" value="Sheoldred, Whispering"/>
+</div>
+</div>
+</div>
+<div class="flex items-center justify-center gap-12">
+<button class="material-symbols-outlined text-4xl text-on-surface-variant hover:text-outline transition-colors" data-icon="remove">remove</button>
+<span class="text-[120px] font-syne font-extrabold text-on-surface tracking-tighter leading-none">24</span>
+<button class="material-symbols-outlined text-4xl text-on-surface-variant hover:text-outline transition-colors" data-icon="add">add</button>
+</div>
+<div class="flex flex-row-reverse justify-between items-end">
+<div class="font-mono text-[10px] text-outline/40 uppercase">VOID_STASIS: NULL</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Unified Bottom Action Bar -->
+<div class="fixed bottom-6 right-6 flex flex-col gap-3">
+<button class="w-14 h-14 bg-surface-container-highest text-primary border border-outline-variant/30 shadow-2xl flex items-center justify-center group hover:bg-primary/20 transition-all">
+<span class="material-symbols-outlined text-2xl group-hover:rotate-180 transition-transform" data-icon="refresh">refresh</span>
+</button>
+<button class="w-14 h-14 bg-primary-container text-on-primary-container shadow-2xl flex items-center justify-center group">
+<span class="material-symbols-outlined text-3xl group-hover:scale-110 transition-transform" data-icon="bolt">bolt</span>
+</button>
+</div>
+</body></html>

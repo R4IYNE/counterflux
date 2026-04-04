@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: Phase 1 planned — 4 plans in 3 waves, verification passed
-last_updated: "2026-04-04T07:49:00.674Z"
-last_activity: 2026-04-04 -- Phase 01 execution started
+status: verifying
+stopped_at: Completed 01-02-PLAN.md
+last_updated: "2026-04-04T08:18:28.472Z"
+last_activity: 2026-04-04
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 4
-  completed_plans: 0
+  completed_plans: 2
   percent: 0
 ---
 
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-03)
 
 **Core value:** The deck builder knows what you own, and the collection knows what's in your decks — one interconnected data layer
-**Current focus:** Phase 01 — foundation-data-layer
+**Current focus:** Phase 1: Foundation + Data Layer
 
 ## Current Position
 
-Phase: 01 (foundation-data-layer) — EXECUTING
-Plan: 1 of 4
-Status: Executing Phase 01
-Last activity: 2026-04-04 -- Phase 01 execution started
+Phase: 1 of 6 (Foundation + Data Layer)
+Plan: 0 of 0 in current phase
+Status: Phase complete — ready for verification
+Last activity: 2026-04-04
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -52,6 +52,8 @@ Progress: [░░░░░░░░░░] 0%
 - Trend: -
 
 *Updated after each plan completion*
+| Phase 01 P01 | 8min | 2 tasks | 26 files |
+| Phase 01 P02 | 6min | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -63,6 +65,12 @@ Recent decisions affecting current work:
 - Stack: Alpine.js 3.15 + Dexie.js 4 + Chart.js 4 + Vite 8 + Tailwind CSS v4 + SortableJS + Navigo + mana-font (~99KB JS gzipped)
 - Scryfall bulk data must be stream-parsed in Web Worker (300MB JSON will crash tab if parsed with JSON.parse)
 - EDHREC API access needs research when Phase 4 approaches (no official public API)
+- [Phase 01]: Used fontsource npm packages for self-hosted .woff2 fonts
+- [Phase 01]: Material Symbols Outlined-only import (3.9MB vs 12.6MB)
+- [Phase 01]: Vite 8 manualChunks uses function form for Rolldown compatibility
+- [Phase 01]: Storage utils use dependency injection for browser API testability
+- [Phase 01]: Extracted pipeline core into bulk-data-pipeline.js for testability (Worker is thin shell)
+- [Phase 01]: Used @streamparser/json-whatwg TransformStream pipeThrough API for streaming JSON parsing
 
 ### Pending Todos
 
@@ -76,6 +84,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-04T07:44:11.997Z
-Stopped at: Phase 1 planned — 4 plans in 3 waves, verification passed
-Resume file: .planning/phases/01-foundation-data-layer/01-01-PLAN.md
+Last session: 2026-04-04T08:18:28.470Z
+Stopped at: Completed 01-02-PLAN.md
+Resume file: None

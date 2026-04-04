@@ -7,10 +7,10 @@
 
 ### Data Layer
 
-- [ ] **DATA-01**: App downloads and caches Scryfall Oracle Cards bulk data (~80MB) in IndexedDB via Web Worker stream parsing
-- [ ] **DATA-02**: App refreshes bulk data cache daily (background, non-blocking)
-- [ ] **DATA-03**: User can search cards using Scryfall full-text syntax (type, colour, CMC, oracle text, set, rarity)
-- [ ] **DATA-04**: Card search autocomplete returns suggestions within 200ms as user types
+- [x] **DATA-01**: App downloads and caches Scryfall Oracle Cards bulk data (~80MB) in IndexedDB via Web Worker stream parsing
+- [x] **DATA-02**: App refreshes bulk data cache daily (background, non-blocking)
+- [x] **DATA-03**: User can search cards using Scryfall full-text syntax (type, colour, CMC, oracle text, set, rarity)
+- [x] **DATA-04**: Card search autocomplete returns suggestions within 200ms as user types
 - [x] **DATA-05**: App handles all Scryfall card layouts correctly (normal, transform, modal_dfc, split, flip, meld, adventure, reversible_card) via unified card accessor
 - [x] **DATA-06**: App respects Scryfall rate limits (50-100ms between requests, User-Agent header, no paywalling)
 - [x] **DATA-07**: All user data (collection, decks, games) persists in IndexedDB via Dexie.js with schema versioning
@@ -30,7 +30,7 @@
 
 - [ ] **MILA-01**: Mila avatar displayed at bottom of sidebar navigation
 - [ ] **MILA-02**: Empty states across all screens show Mila with contextual onboarding message
-- [ ] **MILA-03**: Loading states show Mila icon with subtle animation
+- [x] **MILA-03**: Loading states show Mila icon with subtle animation
 
 ### Dashboard (Epic Experiment)
 
@@ -158,10 +158,10 @@ Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DATA-01 | Phase 1 | Pending |
-| DATA-02 | Phase 1 | Pending |
-| DATA-03 | Phase 1 | Pending |
-| DATA-04 | Phase 1 | Pending |
+| DATA-01 | Phase 1 | Complete |
+| DATA-02 | Phase 1 | Complete |
+| DATA-03 | Phase 1 | Complete |
+| DATA-04 | Phase 1 | Complete |
 | DATA-05 | Phase 1 | Complete |
 | DATA-06 | Phase 1 | Complete |
 | DATA-07 | Phase 1 | Complete |
@@ -175,7 +175,7 @@ Updated during roadmap creation.
 | SHELL-07 | Phase 1 | Pending |
 | MILA-01 | Phase 1 | Pending |
 | MILA-02 | Phase 1 | Pending |
-| MILA-03 | Phase 1 | Pending |
+| MILA-03 | Phase 1 | Complete |
 | PERF-01 | Phase 1 | Complete |
 | COLL-01 | Phase 2 | Pending |
 | COLL-02 | Phase 2 | Pending |

@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Counterflux: The Aetheric Archive - Deck Builder</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@400;500;700&amp;family=Plus+Jakarta+Sans:wght@400;500;700&amp;family=Space+Grotesk:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">tailwind.config = {darkMode: "class", theme: {extend: {colors: {tertiary: "#6cd3fc", "surface-bright": "#37393e", secondary: "#ffb3ad", "on-error-container": "#ffdad6", primary: "#b1c5ff", "surface-dim": "#111318", "surface-container-highest": "#333539", "on-primary": "#002c70", "surface-container-high": "#282a2e", "on-surface-variant": "#c3c6d5", "secondary-fixed": "#ffdad6", background: "#111318", "on-surface": "#e2e2e8", outline: "#8d909f", "inverse-surface": "#e2e2e8", "tertiary-fixed": "#bce9ff", "outline-variant": "#434653", "on-secondary-fixed-variant": "#930011", "surface-variant": "#333539", "primary-fixed": "#dae2ff", "inverse-on-surface": "#2f3035", surface: "#111318", "tertiary-fixed-dim": "#6cd3fc", error: "#ffb4ab", "on-error": "#690005", "on-background": "#e2e2e8", "on-tertiary-fixed": "#001f2a", "on-tertiary-fixed-variant": "#004d63", "surface-container": "#1e2024", "on-tertiary": "#003545", "on-primary-fixed": "#001946", "secondary-container": "#a90316", "primary-fixed-dim": "#b1c5ff", "primary-container": "#0d52bd", "on-primary-fixed-variant": "#00419d", "inverse-primary": "#1b58c3", "tertiary-container": "#00607b", "on-primary-container": "#bdceff", "surface-container-low": "#1a1c20", "on-secondary-container": "#ffb3ac", "on-tertiary-container": "#83daff", "secondary-fixed-dim": "#ffb3ad", "on-secondary-fixed": "#410003", "error-container": "#93000a", "on-secondary": "#680009", "surface-container-lowest": "#0c0e12", "surface-tint": "#b1c5ff"}, borderRadius: {DEFAULT: "0px", lg: "0px", xl: "0px", full: "0px"}, fontFamily: {headline: ["Epilogue"], body: ["Plus Jakarta Sans"], label: ["Space Grotesk"], mono: ["JetBrains Mono", "monospace"], display: "Epilogue"}}}};</script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .ghost-border {
+            border: 1px solid rgba(141, 144, 159, 0.2);
+        }
+        .primary-glow:hover {
+            box-shadow: 0 0 20px rgba(13, 82, 189, 0.4);
+        }
+        .secondary-glow {
+            box-shadow: 0 0 15px rgba(169, 3, 22, 0.3);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #121317;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #343439;
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body selection:bg-primary-container selection:text-on-primary-container">
+<!-- Left: SideNavBar -->
+<aside class="fixed left-0 top-0 bottom-0 w-64 flex flex-col py-8 bg-[#0D0E12] border-r border-[#343439]/20 z-50">
+<div class="px-6 mb-12">
+<div class="flex items-center space-x-3 mb-1">
+<div class="w-8 h-8 bg-secondary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-white text-sm" data-icon="science">science</span>
+</div>
+<h1 class="text-xs font-mono tracking-widest uppercase text-on-surface">ARCHIVE</h1>
+</div>
+<p class="text-[10px] font-mono text-outline">V.01.2-BETA</p>
+</div>
+<nav class="flex-1">
+<ul class="space-y-1">
+<li>
+<a class="text-[#343439] hover:text-[#0D52BD] px-4 py-3 flex items-center space-x-3 transition-all hover:bg-[#343439]/10" href="#">
+<span class="material-symbols-outlined" data-icon="science">science</span>
+<span class="text-xs font-mono tracking-widest uppercase">Epic Experiment</span>
+</a>
+</li>
+<li>
+<a class="bg-[#0D52BD]/20 text-[#0D52BD] border-l-4 border-[#0D52BD] px-4 py-3 flex items-center space-x-3 brightness-125" href="#">
+<span class="material-symbols-outlined" data-icon="cyclone">cyclone</span>
+<span class="text-xs font-mono tracking-widest uppercase">Thousand-Year Storm</span>
+</a>
+</li>
+<li>
+<a class="text-[#343439] hover:text-[#0D52BD] px-4 py-3 flex items-center space-x-3 transition-all hover:bg-[#343439]/10" href="#">
+<span class="material-symbols-outlined" data-icon="diamond">diamond</span>
+<span class="text-xs font-mono tracking-widest uppercase">Treasure Cruise</span>
+</a>
+</li>
+<li>
+<a class="text-[#343439] hover:text-[#0D52BD] px-4 py-3 flex items-center space-x-3 transition-all hover:bg-[#343439]/10" href="#">
+<span class="material-symbols-outlined" data-icon="crystal_ball">glass_cup</span>
+<span class="text-xs font-mono tracking-widest uppercase">Preordain</span>
+</a>
+</li>
+<li>
+<a class="text-[#343439] hover:text-[#0D52BD] px-4 py-3 flex items-center space-x-3 transition-all hover:bg-[#343439]/10" href="#">
+<span class="material-symbols-outlined" data-icon="explosion">explosion</span>
+<span class="text-xs font-mono tracking-widest uppercase">Vandalblast</span>
+</a>
+</li>
+</ul>
+</nav>
+<div class="px-6 mt-auto">
+<button class="w-full bg-primary-container text-on-primary-container py-3 text-xs font-mono tracking-widest uppercase hover:brightness-110 transition-all">
+                INITIATE PROTOCOL
+            </button>
+</div>
+</aside>
+<!-- Top Bar -->
+<header class="fixed top-0 right-0 left-64 h-16 flex justify-between items-center px-6 bg-[#121317] border-b border-[#343439]/20 backdrop-blur-md z-40">
+<div class="flex items-center gap-8">
+<span class="text-2xl font-bold tracking-tighter text-[#0D52BD] uppercase font-headline">Counterflux: The Aetheric Archive</span>
+</div>
+<div class="flex items-center space-x-6">
+<div class="relative">
+<span class="material-symbols-outlined text-outline hover:text-primary transition-colors cursor-pointer" data-icon="notifications">notifications</span>
+<span class="absolute -top-1 -right-1 w-2 h-2 bg-secondary-container"></span>
+</div>
+<div class="w-8 h-8 ghost-border overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Mila the Izzet corgi avatar, hyper-realistic, wearing a brass mechanical monocle and small spark-emitting goggles" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD-O0SWUpyQQD99565wJILzw3L3Hy0Ev9jTKqAmDKZLAbZIlEm9FJqwxUR2el7Pmv_dkk3T2Xec0029-0LJ3DPubMRHUttocZhK2ZCvTwuGAQ8_q-Kr7o-v64nIbZG8Yy3OjGdagwrnx3FVVY_2Wx2sXdhSKFoDRmTrOfkItpbCXYaaBnvK0PKbc-u9Q45qDF4Lf72dZNXf0xlhnMKvb6n0xhFF9L4BWtAGSz8RJns5vCgc3dU8J9RNrdh1eTa7Jw-qMmvvOaZBm8E"/>
+</div>
+</div>
+</header>
+<!-- Main Content Layout -->
+<main class="ml-64 mt-16 flex h-[calc(100vh-64px)] overflow-hidden">
+<!-- Panel 1: Card Search -->
+<section class="w-1/4 min-w-[320px] bg-surface-container-lowest border-r border-[#343439]/20 flex flex-col">
+<div class="p-6 space-y-6">
+<div>
+<h2 class="font-headline text-xl text-primary mb-4 tracking-tight">CARD RETRIEVAL</h2>
+<div class="space-y-4">
+<div class="relative">
+<input class="w-full bg-surface-container border-none ghost-border text-on-surface font-mono text-sm px-4 py-3 focus:ring-1 focus:ring-primary focus:outline-none transition-all placeholder:text-outline/40" placeholder="id:izzet f:commander ..." type="text"/>
+<span class="absolute right-3 top-3 material-symbols-outlined text-outline text-sm" data-icon="terminal">terminal</span>
+</div>
+<div class="flex items-center justify-between px-2">
+<label class="text-[10px] font-mono tracking-widest uppercase text-outline">In Collection Only</label>
+<button class="w-10 h-5 bg-surface-container-highest relative flex items-center px-1">
+<div class="w-3 h-3 bg-primary"></div>
+</button>
+</div>
+</div>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto custom-scrollbar px-6 space-y-4 pb-6">
+<!-- Search Result Items -->
+<div class="ghost-border p-3 bg-surface-container-low group cursor-pointer hover:bg-surface-container-high transition-colors">
+<div class="flex gap-3">
+<div class="w-16 h-22 bg-surface-container relative">
+<img class="w-full h-full object-cover opacity-80" data-alt="Magical storm clouds with blue lightning in a dark purple sky aesthetic" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDaqud8OcqnBc5FAwKhknSpK5ITsNCWjK0Lw8_51i89xXXab8jS6b2nJcArwT_VYOlTOpDad4ZCKXwxzfH9ORESEVLnbQz0vpLo9yeiit5LTJIfwsTaRXeXARBFFLbw22uOTiJs6MtnPZrxxJeFQzfKbPOjADuAyZVtEAly0-2nxmYaUy5iNVTsF6-In1sOLBQPGgVi8fFLcmaKuOhYma39NTLC8hwHQbH40cm7oU5H5Ly4PxW8B37-SOu2AimPXbNKxuCknpesCUA"/>
+<div class="absolute top-1 right-1 w-2 h-2 bg-green-500 shadow-[0_0_5px_rgba(34,197,94,0.6)]"></div>
+</div>
+<div class="flex-1 py-1">
+<h4 class="text-sm font-bold font-headline leading-none mb-1">BRAINSTORM</h4>
+<div class="flex gap-1 mb-2">
+<span class="text-[9px] font-mono text-primary bg-primary/10 px-1">U</span>
+</div>
+<p class="text-[10px] text-outline line-clamp-2 italic font-serif">"Draw three cards, then put two cards from your hand..."</p>
+</div>
+</div>
+</div>
+<div class="ghost-border p-3 bg-surface-container-low group cursor-pointer hover:bg-surface-container-high transition-colors">
+<div class="flex gap-3">
+<div class="w-16 h-22 bg-surface-container relative">
+<img class="w-full h-full object-cover opacity-80" data-alt="Golden ornate mystical artifact glowing with white heat on a dark background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDSAuDicJ19IGdHBxs8sy5WETH_LqZ_mtgerqtZLtbxPGoSVKJKEPfwsa3q84OxvKwcKnxu94zkVUaIQEdcQH1_D8qr0oSeQw0cNF_LOXVAezxv4QPGVopKoyh_a-nrj79UfjO8YcZgnTUjMZNQPTo1x9F2XQ2DS2Q1zOFQoKijLEbOI_KKCJvTb3HNOreeMMp1s2_gA-fd2JQcbkK7MQwOngxp1T0jrlg-8EQm8JvBekud79eqSdHs21wOvFqiFPIZc4Xj85iZ1BA"/>
+<div class="absolute top-1 right-1 w-2 h-2 bg-red-500 shadow-[0_0_5px_rgba(239,68,68,0.6)]"></div>
+</div>
+<div class="flex-1 py-1">
+<h4 class="text-sm font-bold font-headline leading-none mb-1">SOL RING</h4>
+<div class="flex gap-1 mb-2">
+<span class="text-[9px] font-mono text-outline bg-surface-container-highest px-1">1</span>
+</div>
+<p class="text-[10px] text-outline line-clamp-2 italic font-serif">"Add {C}{C}."</p>
+</div>
+</div>
+</div>
+<div class="ghost-border p-3 bg-surface-container-low group cursor-pointer hover:bg-surface-container-high transition-colors">
+<div class="flex gap-3">
+<div class="w-16 h-22 bg-surface-container relative">
+<img class="w-full h-full object-cover opacity-80" data-alt="Mechanical copper gear work with blue sparks of electricity in a dark lab" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAT800DypFzk9X8-VGxYF6KO41gkFYYX2BnBgKW_6AegcFZ4QMqJEHyjXBf62T0z0Cgnt_x-aG22TdQ71w18FWHFXq2vejM14mQrw6bikLMjy9Awjl-8iPYJfH_qjjeIHaF3L1YTrmaSznbYXqy_d6UEKmnTS7_UDp0cqx5edDLQ3sgxd-eYY1bE-Ko6UYxACf7l1Qxx2zIDNiwnv9Nz5DExwwQpC-n8HEFRgszM92zlirpKWiw2JCJoDV5XxDZlXjgzOaUzJrUazc"/>
+<div class="absolute top-1 right-1 w-2 h-2 bg-green-500 shadow-[0_0_5px_rgba(34,197,94,0.6)]"></div>
+</div>
+<div class="flex-1 py-1">
+<h4 class="text-sm font-bold font-headline leading-none mb-1">ARCANE SIGNET</h4>
+<div class="flex gap-1 mb-2">
+<span class="text-[9px] font-mono text-outline bg-surface-container-highest px-1">2</span>
+</div>
+<p class="text-[10px] text-outline line-clamp-2 italic font-serif">"Add one mana of any color in your commander's color..."</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Panel 2: The Deck Grid -->
+<section class="flex-1 bg-surface flex flex-col relative">
+<!-- Grid Header -->
+<div class="p-6 flex justify-between items-end border-b border-[#343439]/10">
+<div>
+<h1 class="text-3xl font-headline font-bold text-on-surface uppercase tracking-tight">Thousand-Year Storm</h1>
+<p class="font-mono text-xs text-outline mt-1 uppercase tracking-widest">Constructed // Commander Prototype</p>
+</div>
+<div class="text-right">
+<span class="text-4xl font-mono font-bold text-primary">67<span class="text-outline/40">/99</span></span>
+<p class="text-[10px] font-mono text-outline uppercase tracking-widest">Active Stability</p>
+</div>
+</div>
+<!-- Categories and Grid -->
+<div class="flex-1 overflow-y-auto p-8 custom-scrollbar space-y-12">
+<!-- Category: Ramp -->
+<div>
+<div class="flex items-center gap-4 mb-6">
+<h3 class="text-xs font-mono font-bold tracking-widest text-primary uppercase">01 // RAMP</h3>
+<div class="h-[1px] flex-1 bg-gradient-to-r from-primary/30 to-transparent"></div>
+</div>
+<div class="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-6">
+<div class="aspect-[2/3] ghost-border group relative cursor-crosshair">
+<img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" data-alt="Ornate silver fantasy ring with a glowing blue core resting on ancient paper" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDCP3gOGzppFFU3uwzI2jf9xhVvQwVpKuiEX-26nlAAZoQ7wFcsMdbYddi3oUYi3SUJ_xfb0YNBKy7BoXHGbFwYrv7CLpomQ7bch4HyYSGq49Sjl73fzNE8smMNrUBcE3OsKfwkWLFsm0AD4XJ_e0k_5nctKhDKTzDS-pWBso55sZFyhoDEIThL41SbZZRkCzfZepjPV9gobb-0E27T08zB_2KU_T4sEYVMeW2Y8j9eRq1KbNvlcg78ttKtMlpUumagN818ixg0DDE"/>
+<div class="absolute inset-0 bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+<div class="absolute bottom-0 left-0 right-0 p-2 bg-surface-container-highest/80 backdrop-blur-sm">
+<p class="text-[9px] font-mono uppercase tracking-tighter truncate">Sol Ring</p>
+</div>
+</div>
+<div class="aspect-[2/3] ghost-border group relative">
+<img class="w-full h-full object-cover" data-alt="Mechanical compass with brass gears and blue glowing pointer" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDoBwdJqRZ6PYpHZMKm1g6d8uijVfOQpwHAJXI8uocNZxxUghJeJbjmnljp8FaMKQm2GdDJD511yhfeNDX8QoqiEseDAEvB5-7nn4pRj9XLmN3kPMKK2uNp7bqfKtwLDIq3SF01HSoS_k2cOJkBgPrigKScvMqUiMWOkqKBGNb1v7MjJwz7HSD06XtgXXVmSyFb1uTcwL39o0-rRK7sV0roUG1JEjShe17J-Yil-R0aIife8I0Viw0pxVNpGjmkYdJGevcJ4ZHObpI"/>
+<div class="absolute bottom-0 left-0 right-0 p-2 bg-surface-container-highest/80 backdrop-blur-sm">
+<p class="text-[9px] font-mono uppercase tracking-tighter truncate">Arcane Signet</p>
+</div>
+</div>
+<div class="aspect-[2/3] ghost-border group relative">
+<div class="w-full h-full bg-surface-container-lowest flex items-center justify-center">
+<span class="material-symbols-outlined text-outline/20 text-3xl" data-icon="add">add</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Category: Win Cons -->
+<div>
+<div class="flex items-center gap-4 mb-6">
+<h3 class="text-xs font-mono font-bold tracking-widest text-secondary uppercase">02 // WIN CONS</h3>
+<div class="h-[1px] flex-1 bg-gradient-to-r from-secondary/30 to-transparent"></div>
+</div>
+<div class="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-6">
+<div class="aspect-[2/3] ghost-border group relative secondary-glow">
+<img class="w-full h-full object-cover" data-alt="Violent storm with multiple red and blue lightning bolts striking a high-tech spire" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAuCsXKHW7QeF5W8yM6tMKieQkN8G_vDdkCC7XugCD443JnhDeFfzdsSRgNB5gQMKzporMFBRajgGLCMpe3jMPSacgyGOh0jmza1Jw8JAFUFrxlGrTZd0qlXr2LGbJO8SeJneyIQlvRQO1ihZsIc74ZdMMrndWfL4U0bjSyaHyqc8JbyLe036OCyV5EUyPfoBT0tuSfWOJ7PreJjGzDRO5uzQQMmwyGCr-JD03Pk9727M7JAshgOK11kKd2WqY9lHFZCjJr7ZQwRa0"/>
+<div class="absolute bottom-0 left-0 right-0 p-2 bg-secondary-container/80 backdrop-blur-sm">
+<p class="text-[9px] font-mono uppercase tracking-tighter truncate">Thousand-Year Storm</p>
+</div>
+</div>
+<div class="aspect-[2/3] ghost-border group relative">
+<img class="w-full h-full object-cover" data-alt="Abstract energy flow with swirls of vibrant red and blue neon light trails" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDzQ2cUPjH8O4YaV6D11BhGbKAlMwx-PjhkZDWoJpNFmoOiVg537IkCqOx4FtfIotgWcLUrpKmgrUUzAcfPUpXkR1lwpiSEVqvhJw3iDRbH8Oc90zqIqRuv6M8lqwEvsAuG55My7q5vpW7BrtzoWX18fPzd3SOHsXP1W_UMY3WzshRBLbvSFyrmMaU5rjZ-RnTsvCeh8702zmeRecj8FX1Gwy9I0mIvks5YHaJfBmENQqnRCd_TCE-5fsgJb3Fz_ktHL7lNnXUj44E"/>
+<div class="absolute bottom-0 left-0 right-0 p-2 bg-surface-container-highest/80 backdrop-blur-sm">
+<p class="text-[9px] font-mono uppercase tracking-tighter truncate">Aetherflux Reservoir</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Category: Removal -->
+<div>
+<div class="flex items-center gap-4 mb-6">
+<h3 class="text-xs font-mono font-bold tracking-widest text-on-surface-variant uppercase">03 // REMOVAL</h3>
+<div class="h-[1px] flex-1 bg-gradient-to-r from-outline/30 to-transparent"></div>
+</div>
+<div class="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-6">
+<div class="aspect-[2/3] ghost-border group relative">
+<img class="w-full h-full object-cover" data-alt="Blue arcane fire engulfing a shadowy figure silhouette" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBnuML_sfkwcFhL6ryVxUURiZBdggvHj51yiWQ5W8yA6WxwEEWH1netaOwBpA_Jif1LXGGD80CI71palDq18n0tWiFAK6tWnHBv1ica5m45HlzL20J23ctYq5FykkReT0H6fMGkYNS-1PHKHCDypHURqt3gynHzJJBXUsZ0kA1qfntG13WzuMD_dJxM-xq4DJ4U9Mzl9S5j0xPCuL2O0_-w6Fg9-FukxPCe8esnFF7joBzeIT6kFhZSCjVUqClEdzt_smGo31mGdJQ"/>
+<div class="absolute bottom-0 left-0 right-0 p-2 bg-surface-container-highest/80 backdrop-blur-sm">
+<p class="text-[9px] font-mono uppercase tracking-tighter truncate">Reality Shift</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Panel 3: Live Analytics -->
+<section class="w-1/4 min-w-[300px] bg-[#0D0E12] p-8 border-l border-[#343439]/20 flex flex-col space-y-12 overflow-y-auto custom-scrollbar">
+<div>
+<h3 class="text-xs font-mono font-bold tracking-widest text-outline uppercase mb-8">ARCHIVE ANALYTICS</h3>
+<!-- Mana Curve Bar Chart -->
+<div class="space-y-6">
+<div class="flex justify-between items-center">
+<p class="text-[10px] font-mono text-on-surface-variant uppercase tracking-widest">Mana Curve</p>
+<p class="text-[10px] font-mono text-primary uppercase">AVG: 2.84</p>
+</div>
+<div class="flex items-end gap-2 h-24">
+<div class="w-full bg-primary/20 h-[20%] transition-all hover:bg-primary cursor-help"></div>
+<div class="w-full bg-primary/40 h-[85%] transition-all hover:bg-primary cursor-help"></div>
+<div class="w-full bg-primary h-[100%] transition-all hover:bg-primary cursor-help"></div>
+<div class="w-full bg-primary/60 h-[45%] transition-all hover:bg-primary cursor-help"></div>
+<div class="w-full bg-primary/30 h-[15%] transition-all hover:bg-primary cursor-help"></div>
+<div class="w-full bg-primary/10 h-[5%] transition-all hover:bg-primary cursor-help"></div>
+</div>
+<div class="flex justify-between px-1">
+<span class="text-[9px] font-mono text-outline">1</span>
+<span class="text-[9px] font-mono text-outline">2</span>
+<span class="text-[9px] font-mono text-outline">3</span>
+<span class="text-[9px] font-mono text-outline">4</span>
+<span class="text-[9px] font-mono text-outline">5</span>
+<span class="text-[9px] font-mono text-outline">6+</span>
+</div>
+</div>
+</div>
+<!-- Color Pie Doughnut (Simulated) -->
+<div>
+<p class="text-[10px] font-mono text-on-surface-variant uppercase tracking-widest mb-6">Chromatic Distribution</p>
+<div class="relative w-40 h-40 mx-auto">
+<!-- Custom SVG "Doughnut" -->
+<svg class="w-full h-full transform rotate-[-90deg]" viewbox="0 0 36 36">
+<circle class="opacity-100" cx="18" cy="18" fill="transparent" r="16" stroke="#0D52BD" stroke-dasharray="60, 100" stroke-width="4"></circle>
+<circle class="opacity-100" cx="18" cy="18" fill="transparent" r="16" stroke="#A90316" stroke-dasharray="35, 100" stroke-dashoffset="-60" stroke-width="4"></circle>
+<circle class="opacity-100" cx="18" cy="18" fill="transparent" r="16" stroke="#343439" stroke-dasharray="5, 100" stroke-dashoffset="-95" stroke-width="4"></circle>
+</svg>
+<div class="absolute inset-0 flex flex-col items-center justify-center">
+<span class="text-lg font-mono font-bold">100%</span>
+<span class="text-[8px] font-mono text-outline uppercase">Purity</span>
+</div>
+</div>
+<div class="mt-6 space-y-2">
+<div class="flex justify-between items-center text-[10px] font-mono">
+<span class="flex items-center gap-2"><div class="w-2 h-2 bg-[#0D52BD]"></div> BLUE</span>
+<span class="text-outline">60%</span>
+</div>
+<div class="flex justify-between items-center text-[10px] font-mono">
+<span class="flex items-center gap-2"><div class="w-2 h-2 bg-[#A90316]"></div> RED</span>
+<span class="text-outline">35%</span>
+</div>
+<div class="flex justify-between items-center text-[10px] font-mono">
+<span class="flex items-center gap-2"><div class="w-2 h-2 bg-[#343439]"></div> COLORLESS</span>
+<span class="text-outline">5%</span>
+</div>
+</div>
+</div>
+<!-- Salt Score Gauge -->
+<div class="pt-8">
+<div class="flex justify-between items-center mb-4">
+<p class="text-[10px] font-mono text-on-surface-variant uppercase tracking-widest">Salt Score</p>
+<span class="text-xs font-mono text-secondary">CRITICAL</span>
+</div>
+<div class="bg-surface-container-lowest ghost-border h-4 w-full overflow-hidden relative">
+<div class="absolute top-0 left-0 h-full bg-secondary-container secondary-glow w-[70%]"></div>
+<!-- Indicator markers -->
+<div class="absolute top-0 left-[10%] w-[1px] h-full bg-outline/20"></div>
+<div class="absolute top-0 left-[20%] w-[1px] h-full bg-outline/20"></div>
+<div class="absolute top-0 left-[30%] w-[1px] h-full bg-outline/20"></div>
+<div class="absolute top-0 left-[40%] w-[1px] h-full bg-outline/20"></div>
+<div class="absolute top-0 left-[50%] w-[1px] h-full bg-outline/20"></div>
+<div class="absolute top-0 left-[60%] w-[1px] h-full bg-outline/20"></div>
+<div class="absolute top-0 left-[70%] w-[1px] h-full bg-outline/20"></div>
+<div class="absolute top-0 left-[80%] w-[1px] h-full bg-outline/20"></div>
+<div class="absolute top-0 left-[90%] w-[1px] h-full bg-outline/20"></div>
+</div>
+<div class="flex justify-between mt-2">
+<span class="text-[20px] font-mono font-bold text-secondary">7<span class="text-outline/20">.0</span></span>
+<span class="text-[10px] font-mono text-outline self-center uppercase">Out of 10</span>
+</div>
+<p class="text-[10px] font-serif italic text-outline/60 mt-4 leading-tight">"This configuration is statistically likely to terminate friendships in 3.4 playgroups."</p>
+</div>
+</section>
+</main>
+</body></html>

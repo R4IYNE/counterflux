@@ -7,8 +7,125 @@
   <link rel="preload" href="/src/styles/fonts/SpaceGrotesk-Variable.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/src/styles/fonts/JetBrainsMono-Variable.woff2" as="font" type="font/woff2" crossorigin>
 </head>
-<body>
-  <div id="app"></div>
+<body x-data>
+
+  <!-- Splash Screen: blocks all interaction until bulk data is ready -->
+  <div
+    x-data="splashScreen"
+    x-show="isVisible"
+    x-transition:leave="transition ease-in duration-300"
+    x-transition:leave-start="opacity-100"
+    x-transition:leave-end="opacity-0"
+    class="fixed inset-0 z-50 flex items-center justify-center"
+    style="background-color: var(--color-background, #0B0C10);"
+  >
+    <div class="flex flex-col items-center gap-8 max-w-[480px] w-full px-8">
+
+      <!-- Title -->
+      <h1 class="syne-header text-[48px] font-bold tracking-[-0.02em] leading-[1.1] text-center"
+          style="color: var(--color-text-primary, #EAECEE);">
+        AETHERIC TERMINAL V3
+      </h1>
+
+      <!-- Mila image with CSS pulse animation (MILA-03 placeholder per D-20) -->
+      <img
+        src="/assets/assetsmila-izzet.png"
+        alt="Mila the Corgi, Izzet Engineer"
+        class="w-32 h-32 object-contain animate-pulse"
+      >
+
+      <!-- Heading -->
+      <h2 class="syne-header text-[20px] font-bold leading-[1.2] tracking-[0.01em] text-center"
+          style="color: var(--color-text-primary, #EAECEE);">
+        Initializing Aetheric Archive...
+      </h2>
+
+      <!-- Progress bar -->
+      <div class="w-full h-1 ghost-border" style="background-color: var(--color-border-ghost, #2A2D3A);">
+        <div
+          class="h-full transition-all duration-300"
+          style="background-color: var(--color-primary, #0D52BD);"
+          :style="{ width: $store.bulkdata.progress + '%' }"
+        ></div>
+      </div>
+
+      <!-- Status labels -->
+      <div class="w-full text-center">
+        <!-- Downloading label -->
+        <p
+          x-show="$store.bulkdata.status === 'downloading'"
+          class="mono-data text-[11px] font-normal uppercase tracking-[0.15em]"
+          style="color: var(--color-text-muted, #7A8498);"
+        >
+          DOWNLOADING BULK DATA:
+          <span x-text="$store.bulkdata.downloadedMB"></span>MB /
+          <span x-text="$store.bulkdata.totalMB"></span>MB
+        </p>
+
+        <!-- Parsing label -->
+        <p
+          x-show="$store.bulkdata.status === 'parsing'"
+          class="mono-data text-[11px] font-normal uppercase tracking-[0.15em]"
+          style="color: var(--color-text-muted, #7A8498);"
+        >
+          PARSING CARD DATABASE: <span x-text="$store.bulkdata.parsed.toLocaleString()"></span> CARDS
+        </p>
+
+        <!-- Checking label -->
+        <p
+          x-show="$store.bulkdata.status === 'checking' || $store.bulkdata.status === 'idle'"
+          class="mono-data text-[11px] font-normal uppercase tracking-[0.15em]"
+          style="color: var(--color-text-muted, #7A8498);"
+        >
+          CHECKING FOR UPDATES...
+        </p>
+
+        <!-- Ready label -->
+        <p
+          x-show="$store.bulkdata.status === 'ready'"
+          class="mono-data text-[11px] font-bold uppercase tracking-[0.15em]"
+          style="color: var(--color-success, #2ECC71);"
+        >
+          ARCHIVE READY. <span x-text="$store.bulkdata.totalCards.toLocaleString()"></span> CARDS INDEXED.
+        </p>
+
+        <!-- Error state -->
+        <template x-if="$store.bulkdata.status === 'error'">
+          <div class="flex flex-col items-center gap-4">
+            <p class="mono-data text-[11px] font-normal uppercase tracking-[0.15em]"
+               style="color: var(--color-secondary, #E23838);"
+               x-text="$store.bulkdata.error">
+            </p>
+            <button
+              @click="$store.bulkdata.retry()"
+              class="mono-data text-[11px] font-bold uppercase tracking-[0.15em] px-6 py-2 cursor-pointer"
+              style="background-color: var(--color-secondary, #E23838); color: var(--color-text-primary, #EAECEE);"
+            >
+              RETRY DOWNLOAD
+            </button>
+          </div>
+        </template>
+      </div>
+
+      <!-- Rotating flavour text -->
+      <p
+        x-show="$store.bulkdata.status !== 'error'"
+        class="text-[14px] italic text-center leading-[1.5] max-w-[400px]"
+        style="color: var(--color-text-muted, #7A8498); font-family: 'Space Grotesk', sans-serif;"
+        x-text="flavourText"
+      ></p>
+
+      <!-- Scanline decoration -->
+      <div class="scanline"></div>
+
+    </div>
+  </div>
+
+  <!-- Main application content -->
+  <div id="app">
+    <div id="main-content"></div>
+  </div>
+
   <script type="module" src="/src/main.js"></script>
 </body>
 </html>

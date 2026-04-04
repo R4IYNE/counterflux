@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Counterflux: The Aetheric Archive - Collection Manager</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@400;500;700&amp;family=Plus+Jakarta+Sans:wght@400;500;700&amp;family=Space+Grotesk:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">tailwind.config = {darkMode: "class", theme: {extend: {colors: {tertiary: "#6cd3fc", "surface-bright": "#37393e", secondary: "#ffb3ad", "on-error-container": "#ffdad6", primary: "#b1c5ff", "surface-dim": "#111318", "surface-container-highest": "#333539", "on-primary": "#002c70", "surface-container-high": "#282a2e", "on-surface-variant": "#c3c6d5", "secondary-fixed": "#ffdad6", background: "#111318", "on-surface": "#e2e2e8", outline: "#8d909f", "inverse-surface": "#e2e2e8", "tertiary-fixed": "#bce9ff", "outline-variant": "#434653", "on-secondary-fixed-variant": "#930011", "surface-variant": "#333539", "primary-fixed": "#dae2ff", "inverse-on-surface": "#2f3035", surface: "#111318", "tertiary-fixed-dim": "#6cd3fc", error: "#ffb4ab", "on-error": "#690005", "on-background": "#e2e2e8", "on-tertiary-fixed": "#001f2a", "on-tertiary-fixed-variant": "#004d63", "surface-container": "#1e2024", "on-tertiary": "#003545", "on-primary-fixed": "#001946", "secondary-container": "#a90316", "primary-fixed-dim": "#b1c5ff", "primary-container": "#0d52bd", "on-primary-fixed-variant": "#00419d", "inverse-primary": "#1b58c3", "tertiary-container": "#00607b", "on-primary-container": "#bdceff", "surface-container-low": "#1a1c20", "on-secondary-container": "#ffb3ac", "on-tertiary-container": "#83daff", "secondary-fixed-dim": "#ffb3ad", "on-secondary-fixed": "#410003", "error-container": "#93000a", "on-secondary": "#680009", "surface-container-lowest": "#0c0e12", "surface-tint": "#b1c5ff"}, borderRadius: {DEFAULT: "0px", lg: "0px", xl: "0px", full: "0px"}, fontFamily: {headline: ["Epilogue"], body: ["Plus Jakarta Sans"], label: ["Space Grotesk"], mono: ["JetBrains Mono", "monospace"], display: "Epilogue"}}}};</script>
+<style>
+    body {
+      background-color: #121317;
+      color: #e3e2e8;
+      font-family: 'Space Grotesk', sans-serif;
+    }
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: #0d0e12; }
+    ::-webkit-scrollbar-thumb { background: #343439; }
+    ::-webkit-scrollbar-thumb:hover { background: #0d52bd; }
+  </style>
+</head>
+<body class="overflow-hidden">
+<!-- SideNavBar Component -->
+<aside class="fixed left-0 top-0 bottom-0 w-64 bg-[#0D0E12] border-r border-[#343439]/20 flex flex-col py-8 z-50">
+<div class="px-6 mb-10">
+<div class="flex items-center gap-3 mb-2">
+<div class="w-8 h-8 bg-primary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-on-primary-container" style="font-variation-settings: 'FILL' 1;">bolt</span>
+</div>
+<div>
+<div class="text-xs font-mono tracking-widest uppercase text-on-surface opacity-60 leading-none">ARCHIVE</div>
+<div class="text-[10px] font-mono text-primary leading-none mt-1">V.01.2-BETA</div>
+</div>
+</div>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="text-[#343439] hover:text-[#0D52BD] px-4 py-3 flex items-center space-x-3 transition-all hover:bg-[#343439]/10" href="#">
+<span class="material-symbols-outlined" data-icon="science">science</span>
+<span class="text-xs font-mono tracking-widest uppercase">Epic Experiment</span>
+</a>
+<a class="text-[#343439] hover:text-[#0D52BD] px-4 py-3 flex items-center space-x-3 transition-all hover:bg-[#343439]/10" href="#">
+<span class="material-symbols-outlined" data-icon="cyclone">cyclone</span>
+<span class="text-xs font-mono tracking-widest uppercase">Thousand-Year Storm</span>
+</a>
+<a class="px-4 py-3 flex items-center space-x-3 transition-all hover:bg-[#343439]/10 bg-[#0D52BD]/20 text-[#0D52BD] border-l-4 border-[#0D52BD] brightness-125" href="#">
+<span class="material-symbols-outlined" data-icon="diamond" style="font-variation-settings: 'FILL' 1;">diamond</span>
+<span class="text-xs font-mono tracking-widest uppercase">Treasure Cruise</span>
+</a>
+<a class="px-4 py-3 flex items-center space-x-3 text-[#343439] hover:text-[#0D52BD] transition-all hover:bg-[#343439]/10" href="#">
+<span class="material-symbols-outlined" data-icon="crystal_ball">crystal_ball</span>
+<span class="text-xs font-mono tracking-widest uppercase">Preordain</span>
+</a>
+<a class="text-[#343439] hover:text-[#0D52BD] px-4 py-3 flex items-center space-x-3 transition-all hover:bg-[#343439]/10" href="#">
+<span class="material-symbols-outlined" data-icon="explosion">explosion</span>
+<span class="text-xs font-mono tracking-widest uppercase">Vandalblast</span>
+</a>
+</nav>
+<div class="px-6 mt-auto">
+<button class="w-full bg-primary-container text-on-primary-container py-3 font-mono text-xs tracking-tighter hover:brightness-110 transition-all active:ring-1 active:ring-primary">
+        INITIATE PROTOCOL
+      </button>
+</div>
+</aside>
+<!-- TopAppBar Component -->
+<header class="fixed top-0 right-0 left-64 h-16 bg-[#121317] border-b border-[#343439]/20 flex justify-between items-center px-6 z-40 backdrop-blur-md bg-opacity-80">
+<div class="flex items-center gap-8">
+<h1 class="text-2xl font-bold tracking-tighter text-[#0D52BD] uppercase font-body">Counterflux: The Aetheric Archive</h1>
+<!-- Command Line Interface (CLI) for Mass Entry -->
+<div class="hidden lg:flex items-center bg-surface-container-lowest px-4 py-2 border border-outline-variant/20 w-[400px]">
+<span class="text-primary font-mono mr-2 text-sm">&gt;</span>
+<input class="bg-transparent border-none focus:ring-0 text-sm font-mono w-full placeholder:text-outline/30 placeholder:uppercase" placeholder="MASS_ENTRY_PROTOCOL::4x Ragavan, Nimble Pilferer..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 hover:bg-[#0D52BD]/10 transition-colors duration-150">
+<span class="material-symbols-outlined text-[#343439]" data-icon="notifications">notifications</span>
+</button>
+<div class="h-8 w-8 bg-surface-container-highest overflow-hidden border border-outline-variant/30">
+<img alt="Mila avatar" class="w-full h-full object-cover grayscale hover:grayscale-0 transition-all" data-alt="close up of a smart looking corgi dog with a tech-inspired scarf in a high-contrast dark room" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBpOnSeR3_Gr3nHVqV6NFJEEgEHA-7sTMhuF90khXY88LokPpMJvoP1tam0CiRdcghwDrpMYvzZ1NjxdbfsaSVGfZLkIWJ3En9L7btbg3UVBW3Xn4qrXOhK_opRztINQyveqExMJ6vxepYJ4O-TeEhpR9Czz4spek15wLIcLOpw2mX9euFh8ArRMpi9DRvmlu6BCgCnzyai3jibc1655hOeyU9bGqCtTiLkUiTKvtNNMQr1qtczBGTdCzwps-gevSdzrtY8-u_7wLA"/>
+</div>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="fixed inset-0 left-64 top-16 overflow-y-auto p-8 bg-background">
+<div class="max-w-[1600px] mx-auto space-y-8 pb-12">
+<!-- Stats Panel & Hero Section -->
+<div class="grid grid-cols-12 gap-6">
+<!-- Collection Analytics -->
+<div class="col-span-12 lg:col-span-8 bg-surface-container-low p-6 border-l-2 border-primary">
+<div class="flex justify-between items-start mb-8">
+<div>
+<h2 class="font-headline text-3xl text-on-surface mb-1">Archive Manifest</h2>
+<p class="text-xs font-mono text-outline uppercase tracking-widest">Master Repository Summary</p>
+</div>
+<div class="flex gap-12">
+<div class="text-right">
+<div class="text-3xl font-mono text-primary">4,210</div>
+<div class="text-[10px] font-mono text-outline uppercase">Total_Assets</div>
+</div>
+<div class="text-right">
+<div class="text-3xl font-mono text-on-surface">1,840</div>
+<div class="text-[10px] font-mono text-outline uppercase">Unique_Identifiers</div>
+</div>
+</div>
+</div>
+<!-- Progress / Set View -->
+<div class="space-y-4">
+<div class="flex justify-between items-end">
+<span class="font-headline text-xl italic text-on-surface">Modern Horizons 2</span>
+<span class="font-mono text-sm text-primary">84% CALIBRATED</span>
+</div>
+<div class="h-1 bg-surface-container-lowest">
+<div class="h-full bg-primary-container shadow-[0_0_15px_rgba(13,82,189,0.5)] w-[84%]"></div>
+</div>
+</div>
+</div>
+<!-- High Value Assets -->
+<div class="col-span-12 lg:col-span-4 bg-surface-container-lowest p-6 border-l-2 border-secondary-container">
+<h3 class="text-xs font-mono text-secondary tracking-widest uppercase mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-sm" data-icon="warning">warning</span> Critical_Assets_Detected
+          </h3>
+<div class="space-y-3">
+<div class="flex justify-between items-center group cursor-crosshair">
+<span class="font-headline text-lg group-hover:text-primary transition-colors">Gaea's Cradle</span>
+<span class="font-mono text-sm text-outline">$942.00</span>
+</div>
+<div class="flex justify-between items-center group cursor-crosshair">
+<span class="font-headline text-lg group-hover:text-primary transition-colors">Lion's Eye Diamond</span>
+<span class="font-mono text-sm text-outline">$580.00</span>
+</div>
+<div class="flex justify-between items-center group cursor-crosshair">
+<span class="font-headline text-lg group-hover:text-primary transition-colors">Mox Diamond</span>
+<span class="font-mono text-sm text-outline">$425.00</span>
+</div>
+<div class="flex justify-between items-center group cursor-crosshair border-t border-outline-variant/10 pt-3 mt-3">
+<span class="font-mono text-[10px] uppercase text-outline">ESTIMATED_VALUE</span>
+<span class="font-mono text-lg text-on-surface">$12,492.50</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Filters & Sorting Bar -->
+<div class="flex flex-wrap items-center justify-between gap-4 bg-surface-container p-4">
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-2">
+<span class="text-[10px] font-mono text-outline uppercase">Filter:</span>
+<select class="bg-surface-container-lowest border-none text-xs font-mono text-on-surface focus:ring-1 focus:ring-primary uppercase py-1 px-3">
+<option>Price_Descending</option>
+<option>Price_Ascending</option>
+<option>Set_Release</option>
+<option>Rarity_Tier</option>
+</select>
+</div>
+<div class="flex gap-2">
+<button class="w-6 h-6 bg-surface-container-highest flex items-center justify-center hover:bg-primary hover:text-on-primary transition-all">
+<span class="text-[10px] font-mono">W</span>
+</button>
+<button class="w-6 h-6 bg-primary-container text-on-primary-container flex items-center justify-center ring-1 ring-primary">
+<span class="text-[10px] font-mono">U</span>
+</button>
+<button class="w-6 h-6 bg-surface-container-highest flex items-center justify-center hover:bg-primary hover:text-on-primary transition-all">
+<span class="text-[10px] font-mono">B</span>
+</button>
+<button class="w-6 h-6 bg-secondary-container text-white flex items-center justify-center ring-1 ring-secondary">
+<span class="text-[10px] font-mono">R</span>
+</button>
+<button class="w-6 h-6 bg-surface-container-highest flex items-center justify-center hover:bg-primary hover:text-on-primary transition-all">
+<span class="text-[10px] font-mono">G</span>
+</button>
+</div>
+</div>
+<div class="flex gap-2">
+<button class="bg-surface-container-high px-4 py-2 text-xs font-mono uppercase tracking-tighter hover:bg-surface-bright transition-colors">Export_CSV</button>
+<button class="bg-primary-container px-4 py-2 text-xs font-mono uppercase tracking-tighter text-on-primary-container hover:brightness-110">Sync_Database</button>
+</div>
+</div>
+<!-- Gallery Grid -->
+<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-6">
+<!-- Card 1 -->
+<div class="group bg-surface-container-low border border-transparent hover:border-primary/50 transition-all relative overflow-hidden">
+<div class="aspect-[63/88] w-full bg-surface-container-lowest relative overflow-hidden">
+<img alt="Card art" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all duration-500" data-alt="A fantasy illustration of a blue mystical creature with glowing runes on a dark card border" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAeD_jUJyaJahT0Mcojh8rSf1QXOCa_ItUb9bKl9cN5pjRiY1iVQkB6ArCm_f4nGRkxEB8NbZvvBfp8Tx7UkX0hLbHr-XROR9nn8VryjZHQvzct9IOzohgdX_sGsC3VsmnJ1DKT_D6kcEwE117rHuWT7BN76Nn_O0yG4ZsFgH3t5x1MLZ2anp_h41kLdZgtPaONp8jZ3XbEN8gsLW14YCSgKX06enXodFa6t7bXDhtnj4Pc2iu4z-aGgy89zK8TJJtLklNu7O1f4jo"/>
+<div class="absolute inset-0 bg-gradient-to-t from-background to-transparent opacity-60"></div>
+<div class="absolute bottom-2 left-2 flex gap-1">
+<span class="bg-surface-container-highest/90 px-1 text-[8px] font-mono text-primary">NM</span>
+<span class="bg-secondary-container/90 px-1 text-[8px] font-mono text-white">FOIL</span>
+</div>
+</div>
+<div class="p-3">
+<div class="flex justify-between items-start mb-1">
+<h4 class="font-headline text-base truncate pr-2">Ragavan, Nimble Pilferer</h4>
+<span class="font-mono text-xs text-primary">$48.20</span>
+</div>
+<div class="flex justify-between items-center">
+<p class="text-[10px] font-mono text-outline uppercase">Modern Horizons 2</p>
+<div class="flex gap-1">
+<div class="w-1.5 h-1.5 bg-secondary-container"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="group bg-surface-container-low border border-transparent hover:border-primary/50 transition-all relative overflow-hidden">
+<div class="aspect-[63/88] w-full bg-surface-container-lowest relative overflow-hidden">
+<img alt="Card art" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all duration-500" data-alt="A dark forest with glowing blue ethereal lights and ancient stones, mystical atmosphere" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDibel0XKs4aFKHwM38WEUZ5JxC95kxjEpymjPYWrZgrxSWkBWteTFO3c9qinygJF1eU8X7JxfvNzpw8pxxJ2Hfqhs9S_Ke_bHzKQWokWurcFxsXnSq2x9bsTp3HqRcaJz-IHKUq0MG5tLrO3tOQvnPo6Myhs67B6p4T0eWNrbR_eqooDmpZssTZ2gu6nerg5gLicdrWsffU0p2sDw4-RlzX3hneepWbIYd18-CaY-Sh1-ZtK9_t1ffQnBlMcpjlaKeKtXAnMwFLOs"/>
+<div class="absolute inset-0 bg-gradient-to-t from-background to-transparent opacity-60"></div>
+<div class="absolute bottom-2 left-2 flex gap-1">
+<span class="bg-surface-container-highest/90 px-1 text-[8px] font-mono text-primary">LP</span>
+</div>
+</div>
+<div class="p-3">
+<div class="flex justify-between items-start mb-1">
+<h4 class="font-headline text-base truncate pr-2">Misty Rainforest</h4>
+<span class="font-mono text-xs text-primary">$22.50</span>
+</div>
+<div class="flex justify-between items-center">
+<p class="text-[10px] font-mono text-outline uppercase">Modern Horizons 2</p>
+<div class="flex gap-1">
+<div class="w-1.5 h-1.5 bg-tertiary"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="group bg-surface-container-low border border-transparent hover:border-primary/50 transition-all relative overflow-hidden">
+<div class="aspect-[63/88] w-full bg-surface-container-lowest relative overflow-hidden">
+<img alt="Card art" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all duration-500" data-alt="A futuristic energy blast of red and blue mana clashing in a dark void" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBGLd3uy4aSfJEPSr7JoDL8hL7aMOox5pCxgq2Dr0AN7h8k23p9shhQlF7yd8s0W4uvYQF2KQNFildLyrzk-uMqus9hB5nZT0TrI6fvMjO8I0PjbzrqupURbBlS36yrG4-4mJ-eGPPpV1qX_o19vemvhR4SslJ5UXJxPtIV8HnDkbNY6CO9NKGmG_uigEcsX95wlAH3a940vWcq5fdEuObZ896--WH2uhvfh3bss5WdX2lAAJfOcbEX0MvRx-m1jXtOlWYoShHfiIw"/>
+<div class="absolute inset-0 bg-gradient-to-t from-background to-transparent opacity-60"></div>
+<div class="absolute bottom-2 left-2 flex gap-1">
+<span class="bg-surface-container-highest/90 px-1 text-[8px] font-mono text-primary">NM</span>
+</div>
+</div>
+<div class="p-3">
+<div class="flex justify-between items-start mb-1">
+<h4 class="font-headline text-base truncate pr-2">Counterspell</h4>
+<span class="font-mono text-xs text-primary">$1.50</span>
+</div>
+<div class="flex justify-between items-center">
+<p class="text-[10px] font-mono text-outline uppercase">Modern Horizons 2</p>
+<div class="flex gap-1">
+<div class="w-1.5 h-1.5 bg-outline"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Card 4 (Gaea's Cradle - Valued Item) -->
+<div class="group bg-surface-container-low border border-secondary-container/30 hover:border-secondary transition-all relative overflow-hidden">
+<div class="aspect-[63/88] w-full bg-surface-container-lowest relative overflow-hidden">
+<img alt="Card art" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all duration-500" data-alt="Sunlight filtering through a dense ancient forest canopy, hyper-realistic, golden lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA1zP4CCC-hzrHe2HJ3kvxImT24sP042teqij6tR6UAZ-jmm9J1edHthkLkKSC5pl5I2YZqcp_2QqWimOtPD3FPrAZHQJ0ElC-uNQl1_Mu3YipZoms-UDJPKyKgCzkRs9UR5obZYRQha8p2Q-mYxQpVh0aOgjMqoljRFvJZxhnb4bwx9krDdHwZXUwT-iwDpvrAaqJiq_gwmg1vrTm7jRNJlNWfDS5hpc5z2CZU3wycFL2XVbJ0vOw2CKdCIXpZYpfcqBxSLvKEcto"/>
+<div class="absolute inset-0 bg-gradient-to-t from-background to-transparent opacity-60"></div>
+<div class="absolute top-2 right-2 flex gap-1">
+<div class="w-2 h-2 bg-secondary animate-pulse"></div>
+</div>
+<div class="absolute bottom-2 left-2 flex gap-1">
+<span class="bg-secondary-container/90 px-1 text-[8px] font-mono text-white tracking-widest uppercase">RESERVED_LIST</span>
+</div>
+</div>
+<div class="p-3">
+<div class="flex justify-between items-start mb-1">
+<h4 class="font-headline text-base truncate pr-2">Gaea's Cradle</h4>
+<span class="font-mono text-xs text-secondary font-bold">$942.00</span>
+</div>
+<div class="flex justify-between items-center">
+<p class="text-[10px] font-mono text-outline uppercase">Urza's Saga</p>
+<div class="flex gap-1">
+<div class="w-1.5 h-1.5 bg-secondary-container"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Repeating Grid Items for Visual Density -->
+<div class="group bg-surface-container-low border border-transparent hover:border-primary/50 transition-all relative overflow-hidden">
+<div class="aspect-[63/88] w-full bg-surface-container-lowest relative overflow-hidden">
+<img alt="Card art" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all duration-500" data-alt="A mechanical hand holding a glowing blue orb, industrial steampunk laboratory setting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDyQvmRo6HXNEcmwRT-ivcQwlDD7d2tAMip_mLg8I_hPLg2J0IXsyFRorYGRPyF5N70iHyzd0Gwm_SYZwvJ4SZ9dTDOBak-qZ9_UCDfPMHS2V07gB_hs78lnyTJ94vVIV-JiS_P7VPalPiuJF-Frp9PvkAEBXvI3GfWJwaW7jsGuh9yAhH5-vV0XSmvQi8XVjeUWwktl9sFe7iad3q0C1qBQDc9ZNI7Hai4-q9OUHuJRAmFWYG60ACRrtWAQH390PMpC_ISDWgJNOM"/>
+<div class="absolute inset-0 bg-gradient-to-t from-background to-transparent opacity-60"></div>
+</div>
+<div class="p-3">
+<div class="flex justify-between items-start mb-1">
+<h4 class="font-headline text-base truncate pr-2">Sol Ring</h4>
+<span class="font-mono text-xs text-primary">$1.95</span>
+</div>
+<div class="flex justify-between items-center">
+<p class="text-[10px] font-mono text-outline uppercase">Commander 2021</p>
+<div class="flex gap-1">
+<div class="w-1.5 h-1.5 bg-outline"></div>
+</div>
+</div>
+</div>
+</div>
+<div class="group bg-surface-container-low border border-transparent hover:border-primary/50 transition-all relative overflow-hidden">
+<div class="aspect-[63/88] w-full bg-surface-container-lowest relative overflow-hidden">
+<img alt="Card art" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all duration-500" data-alt="Dramatic lighting on an ancient stone monolith in a desert, epic scale" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAlq_9U47_hStEShnQz1IBDjJluH5snwtcUwqUyXG5nMoa4l57vCWnmlc8gwTT4d0YmKDW99GaNcBOANDXIo22l73sj9LlfbelyVoQg9nunOom_VJrg6rrKFCg9wzTj9gp5EA_FmJzDxBX2c43vdyDeKvKznYU0gV6rJOAPCKfBvCvZVpLiZJFmUJfZrwZOQXe8_XgVnsPgZvl6_VZF89CfK62ZLLbmw0wOY6aHdjJTMVxwMal-lonYcErDpROLl4OqpQUi-VHO-xY"/>
+<div class="absolute inset-0 bg-gradient-to-t from-background to-transparent opacity-60"></div>
+</div>
+<div class="p-3">
+<div class="flex justify-between items-start mb-1">
+<h4 class="font-headline text-base truncate pr-2">Urza's Saga (Land)</h4>
+<span class="font-mono text-xs text-primary">$34.00</span>
+</div>
+<div class="flex justify-between items-center">
+<p class="text-[10px] font-mono text-outline uppercase">Modern Horizons 2</p>
+<div class="flex gap-1">
+<div class="w-1.5 h-1.5 bg-tertiary"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Add Card Placeholder -->
+<div class="group aspect-[63/88] border border-dashed border-outline-variant/30 flex flex-col items-center justify-center cursor-pointer hover:bg-primary/5 hover:border-primary/50 transition-all">
+<span class="material-symbols-outlined text-4xl text-outline group-hover:text-primary mb-2" data-icon="add">add</span>
+<span class="text-[10px] font-mono text-outline tracking-widest uppercase">Append_Record</span>
+</div>
+</div>
+</div>
+</main>
+<!-- Contextual Footer (Status Bar) -->
+<footer class="fixed bottom-0 left-64 right-0 h-8 bg-surface-container-lowest border-t border-outline-variant/10 px-6 flex items-center justify-between z-40">
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-primary shadow-[0_0_8px_rgba(13,82,189,1)]"></div>
+<span class="text-[9px] font-mono text-outline uppercase tracking-tighter">System_Online</span>
+</div>
+<span class="text-[9px] font-mono text-outline uppercase tracking-tighter">Last_Sync: 02:14:59 UTC</span>
+</div>
+<div class="flex items-center gap-4">
+<span class="text-[9px] font-mono text-outline uppercase tracking-tighter">Latency: 14ms</span>
+<span class="text-[9px] font-mono text-primary uppercase tracking-tighter font-bold">Counterflux_Core_Active</span>
+</div>
+</footer>
+</body></html>
