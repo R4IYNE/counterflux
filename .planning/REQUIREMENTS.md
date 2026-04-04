@@ -9,8 +9,8 @@
 
 - [ ] **DATA-01**: App downloads and caches Scryfall Oracle Cards bulk data (~80MB) in IndexedDB via Web Worker stream parsing
 - [ ] **DATA-02**: App refreshes bulk data cache daily (background, non-blocking)
-- [ ] **DATA-03**: User can search cards using Scryfall full-text syntax (type, colour, CMC, oracle text, set, rarity)
-- [ ] **DATA-04**: Card search autocomplete returns suggestions within 200ms as user types
+- [x] **DATA-03**: User can search cards using Scryfall full-text syntax (type, colour, CMC, oracle text, set, rarity)
+- [x] **DATA-04**: Card search autocomplete returns suggestions within 200ms as user types
 - [x] **DATA-05**: App handles all Scryfall card layouts correctly (normal, transform, modal_dfc, split, flip, meld, adventure, reversible_card) via unified card accessor
 - [x] **DATA-06**: App respects Scryfall rate limits (50-100ms between requests, User-Agent header, no paywalling)
 - [x] **DATA-07**: All user data (collection, decks, games) persists in IndexedDB via Dexie.js with schema versioning
@@ -160,8 +160,8 @@ Updated during roadmap creation.
 |-------------|-------|--------|
 | DATA-01 | Phase 1 | Pending |
 | DATA-02 | Phase 1 | Pending |
-| DATA-03 | Phase 1 | Pending |
-| DATA-04 | Phase 1 | Pending |
+| DATA-03 | Phase 1 | Complete |
+| DATA-04 | Phase 1 | Complete |
 | DATA-05 | Phase 1 | Complete |
 | DATA-06 | Phase 1 | Complete |
 | DATA-07 | Phase 1 | Complete |
