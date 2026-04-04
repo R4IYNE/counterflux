@@ -97,10 +97,10 @@ describe('Screen content', () => {
     expect(container.textContent).toContain('Deck Builder Coming Soon');
   });
 
-  it('treasure-cruise shows "Collection Manager Coming Soon"', async () => {
+  it('treasure-cruise shows "Archive Manifest" heading', async () => {
     const { mount } = await import('../src/screens/treasure-cruise.js');
     mount(container);
-    expect(container.textContent).toContain('Collection Manager Coming Soon');
+    expect(container.textContent).toContain('Archive Manifest');
   });
 
   it('preordain shows "Market Intel Coming Soon"', async () => {
