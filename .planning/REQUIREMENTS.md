@@ -7,10 +7,10 @@
 
 ### Data Layer
 
-- [x] **DATA-01**: App downloads and caches Scryfall Oracle Cards bulk data (~80MB) in IndexedDB via Web Worker stream parsing
-- [x] **DATA-02**: App refreshes bulk data cache daily (background, non-blocking)
-- [x] **DATA-03**: User can search cards using Scryfall full-text syntax (type, colour, CMC, oracle text, set, rarity)
-- [x] **DATA-04**: Card search autocomplete returns suggestions within 200ms as user types
+- [ ] **DATA-01**: App downloads and caches Scryfall Oracle Cards bulk data (~80MB) in IndexedDB via Web Worker stream parsing
+- [ ] **DATA-02**: App refreshes bulk data cache daily (background, non-blocking)
+- [ ] **DATA-03**: User can search cards using Scryfall full-text syntax (type, colour, CMC, oracle text, set, rarity)
+- [ ] **DATA-04**: Card search autocomplete returns suggestions within 200ms as user types
 - [x] **DATA-05**: App handles all Scryfall card layouts correctly (normal, transform, modal_dfc, split, flip, meld, adventure, reversible_card) via unified card accessor
 - [x] **DATA-06**: App respects Scryfall rate limits (50-100ms between requests, User-Agent header, no paywalling)
 - [x] **DATA-07**: All user data (collection, decks, games) persists in IndexedDB via Dexie.js with schema versioning
@@ -18,19 +18,19 @@
 
 ### UI Shell
 
-- [ ] **SHELL-01**: Persistent left sidebar with navigation to all 5 screens (Epic Experiment, Thousand-Year Storm, Treasure Cruise, Preordain, Vandalblast)
-- [ ] **SHELL-02**: Sidebar collapses to icons on smaller viewports
-- [ ] **SHELL-03**: Persistent top app bar with Counterflux wordmark, global card search, and notification bell
-- [ ] **SHELL-04**: Hash-based SPA routing between screens with lazy loading
+- [x] **SHELL-01**: Persistent left sidebar with navigation to all 5 screens (Epic Experiment, Thousand-Year Storm, Treasure Cruise, Preordain, Vandalblast)
+- [x] **SHELL-02**: Sidebar collapses to icons on smaller viewports
+- [x] **SHELL-03**: Persistent top app bar with Counterflux wordmark, global card search, and notification bell
+- [x] **SHELL-04**: Hash-based SPA routing between screens with lazy loading
 - [x] **SHELL-05**: Full Izzet visual identity applied: colour palette (12 CSS custom properties), ghost borders, active glow effects, aether gradient background
 - [x] **SHELL-06**: Typography system: Crimson Pro (headings), Space Grotesk (body), JetBrains Mono (data/stats)
-- [ ] **SHELL-07**: Toast notification system (info/success/warning/error, bottom-right, auto-dismiss 5s)
+- [x] **SHELL-07**: Toast notification system (info/success/warning/error, bottom-right, auto-dismiss 5s)
 
 ### Mila (System Familiar)
 
-- [ ] **MILA-01**: Mila avatar displayed at bottom of sidebar navigation
-- [ ] **MILA-02**: Empty states across all screens show Mila with contextual onboarding message
-- [x] **MILA-03**: Loading states show Mila icon with subtle animation
+- [x] **MILA-01**: Mila avatar displayed at bottom of sidebar navigation
+- [x] **MILA-02**: Empty states across all screens show Mila with contextual onboarding message
+- [ ] **MILA-03**: Loading states show Mila icon with subtle animation
 
 ### Dashboard (Epic Experiment)
 
@@ -158,24 +158,24 @@ Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DATA-01 | Phase 1 | Complete |
-| DATA-02 | Phase 1 | Complete |
-| DATA-03 | Phase 1 | Complete |
-| DATA-04 | Phase 1 | Complete |
+| DATA-01 | Phase 1 | Pending |
+| DATA-02 | Phase 1 | Pending |
+| DATA-03 | Phase 1 | Pending |
+| DATA-04 | Phase 1 | Pending |
 | DATA-05 | Phase 1 | Complete |
 | DATA-06 | Phase 1 | Complete |
 | DATA-07 | Phase 1 | Complete |
 | DATA-08 | Phase 1 | Complete |
-| SHELL-01 | Phase 1 | Pending |
-| SHELL-02 | Phase 1 | Pending |
-| SHELL-03 | Phase 1 | Pending |
-| SHELL-04 | Phase 1 | Pending |
+| SHELL-01 | Phase 1 | Complete |
+| SHELL-02 | Phase 1 | Complete |
+| SHELL-03 | Phase 1 | Complete |
+| SHELL-04 | Phase 1 | Complete |
 | SHELL-05 | Phase 1 | Complete |
 | SHELL-06 | Phase 1 | Complete |
-| SHELL-07 | Phase 1 | Pending |
-| MILA-01 | Phase 1 | Pending |
-| MILA-02 | Phase 1 | Pending |
-| MILA-03 | Phase 1 | Complete |
+| SHELL-07 | Phase 1 | Complete |
+| MILA-01 | Phase 1 | Complete |
+| MILA-02 | Phase 1 | Complete |
+| MILA-03 | Phase 1 | Pending |
 | PERF-01 | Phase 1 | Complete |
 | COLL-01 | Phase 2 | Pending |
 | COLL-02 | Phase 2 | Pending |

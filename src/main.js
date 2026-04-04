@@ -1,14 +1,17 @@
-import Alpine from 'alpinejs';
 import './styles/main.css';
 import './styles/utilities.css';
 import 'mana-font/css/mana.min.css';
 import 'keyrune/css/keyrune.min.css';
 import 'material-symbols/outlined.css';
 
+import Alpine from 'alpinejs';
+import { initAppStore } from './stores/app.js';
 import { initBulkDataStore, startBulkDataPipeline } from './stores/bulkdata.js';
 import { splashScreen } from './components/splash-screen.js';
+import { initRouter } from './router.js';
 
-// Register Alpine stores
+// Initialize stores before Alpine starts
+initAppStore();
 initBulkDataStore();
 
 // Register Alpine components
@@ -19,6 +22,9 @@ window.Alpine = Alpine;
 
 // Start Alpine (must be called after stores and components are registered)
 Alpine.start();
+
+// Initialize router after Alpine is ready
+initRouter();
 
 // Start the bulk data pipeline (runs after Alpine is ready)
 startBulkDataPipeline().catch((err) => {
