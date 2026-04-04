@@ -5,5 +5,6 @@ export default defineConfig({
     environment: 'node',
     globals: true,
     setupFiles: ['./tests/setup.js'],
+    exclude: ['**/node_modules/**', '**/.claude/**'],
   }
 });
