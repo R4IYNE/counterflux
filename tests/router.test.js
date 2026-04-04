@@ -82,7 +82,7 @@ describe('Screen content', () => {
   it('welcome screen renders greeting text', async () => {
     const { mount } = await import('../src/screens/welcome.js');
     mount(container);
-    expect(container.textContent).toContain('Welcome to the Aetheric Archive');
+    expect(container.textContent).toContain('COUNTERFLUX');
   });
 
   it('epic-experiment shows "Dashboard Coming Soon"', async () => {
