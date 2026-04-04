@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: planning
-stopped_at: Phase 1 UI-SPEC approved
-last_updated: "2026-04-03T22:28:21.098Z"
-last_activity: 2026-04-03 — Roadmap created
+status: verifying
+stopped_at: Completed 01-01-PLAN.md
+last_updated: "2026-04-04T08:00:22.334Z"
+last_activity: 2026-04-04
 progress:
   total_phases: 6
   completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
+  total_plans: 4
+  completed_plans: 1
   percent: 0
 ---
 
@@ -27,8 +27,8 @@ See: .planning/PROJECT.md (updated 2026-04-03)
 
 Phase: 1 of 6 (Foundation + Data Layer)
 Plan: 0 of 0 in current phase
-Status: Ready to plan
-Last activity: 2026-04-03 — Roadmap created
+Status: Phase complete — ready for verification
+Last activity: 2026-04-04
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -52,6 +52,7 @@ Progress: [░░░░░░░░░░] 0%
 - Trend: -
 
 *Updated after each plan completion*
+| Phase 01 P01 | 8min | 2 tasks | 26 files |
 
 ## Accumulated Context
 
@@ -63,6 +64,10 @@ Recent decisions affecting current work:
 - Stack: Alpine.js 3.15 + Dexie.js 4 + Chart.js 4 + Vite 8 + Tailwind CSS v4 + SortableJS + Navigo + mana-font (~99KB JS gzipped)
 - Scryfall bulk data must be stream-parsed in Web Worker (300MB JSON will crash tab if parsed with JSON.parse)
 - EDHREC API access needs research when Phase 4 approaches (no official public API)
+- [Phase 01]: Used fontsource npm packages for self-hosted .woff2 fonts
+- [Phase 01]: Material Symbols Outlined-only import (3.9MB vs 12.6MB)
+- [Phase 01]: Vite 8 manualChunks uses function form for Rolldown compatibility
+- [Phase 01]: Storage utils use dependency injection for browser API testability
 
 ### Pending Todos
 
@@ -76,6 +81,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-03T22:28:21.096Z
-Stopped at: Phase 1 UI-SPEC approved
-Resume file: .planning/phases/01-foundation-data-layer/01-UI-SPEC.md
+Last session: 2026-04-04T08:00:22.332Z
+Stopped at: Completed 01-01-PLAN.md
+Resume file: None
