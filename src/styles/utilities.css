@@ -1,0 +1,36 @@
+.ghost-border {
+  border: 1px solid #2A2D3A;
+}
+
+.mono-data {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.syne-header {
+  font-family: 'Syne', sans-serif;
+}
+
+.glass-overlay {
+  backdrop-filter: blur(12px);
+  background-color: rgba(11, 12, 16, 0.85);
+}
+
+.aether-glow {
+  box-shadow: 0 0 15px rgba(13, 82, 189, 0.15);
+}
+
+.scanline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 100px;
+  background: linear-gradient(180deg, transparent 0%, rgba(13, 82, 189, 0.08) 50%, transparent 100%);
+  animation: scanline-sweep 8s linear infinite;
+  opacity: 0.1;
+  pointer-events: none;
+}
+
+@keyframes scanline-sweep {
+  0% { top: -100px; }
+  100% { top: 100%; }
+}
