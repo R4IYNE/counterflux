@@ -49,7 +49,13 @@ Plans:
   3. User can paste batch syntax into the mass entry terminal and have cards auto-resolved against Scryfall, with unresolved items flagged for manual matching
   4. User can import a CSV from Deckbox/Moxfield/Archidekt and export their collection as CSV
   5. User can view collection analytics (total value chart, breakdown by set/colour/rarity, top 10 most valuable, P&L) and see which decks each card appears in
-**Plans**: TBD
+**Plans:** 5 plans
+Plans:
+- [ ] 02-01-PLAN.md — Dexie schema v2, Alpine collection store, dependency install, test scaffolds
+- [ ] 02-02-PLAN.md — Screen layout, stats header, filter bar, gallery/table/set views, virtual scrolling
+- [ ] 02-03-PLAN.md — Add card modal, mass entry terminal, context menu, edit/delete, flyout enhancements
+- [ ] 02-04-PLAN.md — CSV import/export, Chart.js analytics panel
+- [ ] 02-05-PLAN.md — Visual and functional verification checkpoint
 **UI hint**: yes
 
 ### Phase 3: Deck Builder (Thousand-Year Storm)
@@ -108,7 +114,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation + Data Layer | 1/4 | In Progress|  |
-| 2. Collection Manager (Treasure Cruise) | 0/0 | Not started | - |
+| 2. Collection Manager (Treasure Cruise) | 0/5 | Planned | - |
 | 3. Deck Builder (Thousand-Year Storm) | 0/0 | Not started | - |
 | 4. Intelligence Layer | 0/0 | Not started | - |
 | 5. Market Intel + Game Tracker | 0/0 | Not started | - |
