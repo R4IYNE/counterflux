@@ -41,31 +41,26 @@ export function mount(container) {
 
       <!-- Empty state (shown when no entries) -->
       <template x-if="$store.collection.entries.length === 0 && !$store.collection.loading">
-        <div class="flex flex-col items-center justify-center min-h-[60vh] gap-[24px] text-center">
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; gap: 24px; text-align: center;">
           <img
             src="/assets/assetsmila-izzet.png"
             alt="Mila -- Izzet Familiar"
-            class="w-24 h-24 object-cover"
-            style="filter: grayscale(1) opacity(0.5);"
+            style="width: 96px; height: 96px; object-fit: cover; filter: grayscale(1) opacity(0.5);"
           >
-          <h2 class="syne-header text-[20px] font-bold leading-[1.2] tracking-[0.01em]"
-              style="color: #EAECEE;">No Treasures Catalogued</h2>
-          <p class="max-w-md" style="font-family: 'Space Grotesk', sans-serif; font-size: 14px; line-height: 1.5; color: #7A8498;">
+          <h2 class="syne-header" style="font-size: 20px; font-weight: 700; line-height: 1.2; letter-spacing: 0.01em; color: #EAECEE; margin: 0;">No Treasures Catalogued</h2>
+          <p style="font-family: 'Space Grotesk', sans-serif; font-size: 14px; line-height: 1.5; color: #7A8498; max-width: 28rem; width: 100%; margin: 0;">
             Mila here! Your collection is empty. Add cards one at a time, paste a batch into the Mass Entry Terminal, or import a CSV from Deckbox, Moxfield, or Archidekt.
           </p>
-          <div class="flex items-center gap-[8px]">
+          <div style="display: flex; align-items: center; gap: 8px;">
             <button
               @click="$store.collection.addCardOpen = true"
-              class="font-mono text-[11px] uppercase tracking-[0.15em] font-bold cursor-pointer px-[16px] py-[8px]"
-              style="background: #0D52BD; color: #EAECEE; border: none;">ADD CARD</button>
+              style="font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; cursor: pointer; padding: 8px 16px; background: #0D52BD; color: #EAECEE; border: none;">ADD CARD</button>
             <button
               @click="$store.collection.massEntryOpen = true"
-              class="font-mono text-[11px] uppercase tracking-[0.15em] font-bold cursor-pointer px-[16px] py-[8px]"
-              style="background: #1C1F28; color: #EAECEE; border: 1px solid #2A2D3A;">MASS ENTRY</button>
+              style="font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; cursor: pointer; padding: 8px 16px; background: #1C1F28; color: #EAECEE; border: 1px solid #2A2D3A;">MASS ENTRY</button>
             <button
               @click="$store.collection.importOpen = true"
-              class="font-mono text-[11px] uppercase tracking-[0.15em] font-bold cursor-pointer px-[16px] py-[8px]"
-              style="background: #1C1F28; color: #EAECEE; border: 1px solid #2A2D3A;">IMPORT CSV</button>
+              style="font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; cursor: pointer; padding: 8px 16px; background: #1C1F28; color: #EAECEE; border: 1px solid #2A2D3A;">IMPORT CSV</button>
           </div>
         </div>
       </template>
@@ -160,6 +155,8 @@ export function mount(container) {
   `;
 
   // Append modals to document.body so fixed positioning works correctly
+  // Remove previous modal container if it exists (e.g., from previous mount)
+  document.getElementById('tc-modals')?.remove();
   const modalContainer = document.createElement('div');
   modalContainer.id = 'tc-modals';
   modalContainer.innerHTML = `
@@ -170,6 +167,11 @@ export function mount(container) {
     ${renderDeleteConfirm()}
   `;
   document.body.appendChild(modalContainer);
+
+  // Initialize Alpine on the newly appended modal elements
+  if (Alpine?.initTree) {
+    Alpine.initTree(modalContainer);
+  }
 
   // Register Alpine component for analytics panel
   if (Alpine && typeof Alpine.data === 'function') {
