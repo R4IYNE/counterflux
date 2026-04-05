@@ -49,7 +49,7 @@ export function renderAddCardModal() {
               }
             }
             this.searching = false;
-          }, 150);
+          }, 50);
         },
 
         selectCard(card) {

@@ -5,11 +5,14 @@ export async function searchCards(query, limit = 12) {
 
   const normalised = query.toLowerCase();
 
-  // Fetch more than limit to account for duplicate printings
+  // Use case-sensitive startsWith with title-cased query for the indexed lookup
+  // (MTG card names are title-cased, so this hits the B-tree index directly)
+  const titleCased = normalised.charAt(0).toUpperCase() + normalised.slice(1);
+
   const raw = await db.cards
     .where('name')
-    .startsWithIgnoreCase(normalised)
-    .limit(limit * 4)
+    .startsWith(titleCased)
+    .limit(limit * 3)
     .toArray();
 
   // Deduplicate by oracle_id (keep first printing per unique card)
@@ -23,11 +26,12 @@ export async function searchCards(query, limit = 12) {
     if (results.length >= limit) break;
   }
 
-  // Fallback: substring match for cards that don't start with the query
+  // Fallback: substring match for cards that contain the query anywhere
   if (results.length < limit) {
+    const remaining = limit - results.length;
     const additional = await db.cards
       .filter(card => card.name.toLowerCase().includes(normalised) && !seen.has(card.oracle_id || card.id))
-      .limit((limit - results.length) * 4)
+      .limit(remaining * 3)
       .toArray();
     for (const card of additional) {
       const key = card.oracle_id || card.id;
