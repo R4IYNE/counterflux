@@ -6,19 +6,23 @@ import { parseCSV, resolveImportEntries } from '../services/csv-import.js';
  * @returns {string} HTML string
  */
 export function renderCSVImportModal() {
+  // Expose functions on window so Alpine x-data templates can access them
+  window.__cf_parseCSV = parseCSV;
+  window.__cf_resolveImportEntries = resolveImportEntries;
+
   return `
     <div
       x-show="$store.collection.importOpen"
       x-cloak
-      class="fixed inset-0 z-50 flex items-center justify-center"
-      @keydown.escape.window="$store.collection.importOpen = false"
+      style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9999; display: flex; align-items: center; justify-content: center;"
+      @keydown.escape.window="$store.collection.importOpen && close()"
     >
       <!-- Backdrop -->
-      <div class="absolute inset-0 bg-background/80 backdrop-blur-sm" @click="$store.collection.importOpen = false"></div>
+      <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6);" @click="$store.collection.importOpen = false"></div>
 
       <!-- Modal -->
       <div
-        class="relative bg-surface border border-border-ghost w-full max-w-xl mx-md p-lg flex flex-col gap-md z-10"
+        style="position: relative; z-index: 10; width: 100%; max-width: 580px; background: #14161C; border: 1px solid #2A2D3A; padding: 24px; display: flex; flex-direction: column; gap: 16px;"
         x-data="{
           file: null,
           format: null,
@@ -38,19 +42,18 @@ export function renderCSVImportModal() {
             this.file = f;
             this.imported = false;
             try {
-              const result = await parseCSV(f);
+              const result = await window.__cf_parseCSV(f);
               this.format = result.format;
               this.entries = result.entries;
               this.headers = result.headers || [];
               this.errors = result.errors || [];
               this.preview = result.entries.slice(0, 10);
-              // Auto-set column mapping for generic
               if (this.format === 'generic' && this.headers.length) {
                 this.columnMap.name = this.headers.find(h => /name/i.test(h)) || this.headers[0];
                 this.columnMap.quantity = this.headers.find(h => /quantity|count|qty/i.test(h)) || '';
               }
             } catch (err) {
-              Alpine.store('toast').show('Could not parse this CSV file. Check the format and try again. Supported formats: Deckbox, Moxfield, Archidekt, or generic CSV with Name and Quantity columns.', 'error');
+              Alpine.store('toast').show('Could not parse this CSV file.', 'error');
               this.entries = [];
               this.format = null;
             }
@@ -59,7 +62,7 @@ export function renderCSVImportModal() {
           async doImport() {
             this.importing = true;
             try {
-              const resolved = await resolveImportEntries(this.entries);
+              const resolved = await window.__cf_resolveImportEntries(this.entries);
               const toImport = resolved.filter(e => e.resolved && e.card);
               const unresolved = resolved.filter(e => !e.resolved);
 
@@ -103,32 +106,29 @@ export function renderCSVImportModal() {
             this.unresolvedCount = 0;
           }
         }"
+        @click.stop
       >
         <!-- Heading -->
-        <h2 class="text-[20px] font-bold text-text-primary tracking-[0.01em]"
-            style="font-family: 'Syne', sans-serif;">
+        <h2 style="font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; line-height: 1.2; letter-spacing: 0.01em; color: #EAECEE; margin: 0;">
           IMPORT COLLECTION
         </h2>
 
         <!-- File picker -->
-        <label class="flex items-center gap-sm cursor-pointer px-md py-sm bg-surface-hover border border-border-ghost hover:bg-border-ghost transition-colors">
-          <span class="material-symbols-outlined text-text-muted" style="font-size: 20px;">upload_file</span>
-          <span class="font-mono text-[11px] uppercase tracking-[0.15em] font-bold text-text-primary"
-                style="font-family: 'JetBrains Mono', monospace;">
+        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 8px 16px; background: #1C1F28; border: 1px solid #2A2D3A;">
+          <span class="material-symbols-outlined" style="font-size: 20px; color: #7A8498;">upload_file</span>
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; color: #EAECEE;">
             SELECT CSV FILE
           </span>
-          <input type="file" accept=".csv" class="hidden" @change="handleFile($event)">
+          <input type="file" accept=".csv" style="display: none;" @change="handleFile($event)">
         </label>
 
         <!-- Detected format -->
         <template x-if="format">
-          <div class="flex items-center gap-sm">
-            <span class="font-mono text-[11px] uppercase tracking-[0.15em] font-bold text-text-muted"
-                  style="font-family: 'JetBrains Mono', monospace;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; color: #7A8498;">
               DETECTED FORMAT:
             </span>
-            <span class="font-mono text-[11px] uppercase tracking-[0.15em] font-bold text-primary"
-                  style="font-family: 'JetBrains Mono', monospace;"
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; color: #0D52BD;"
                   x-text="format === 'generic' ? 'GENERIC CSV' : format.toUpperCase()">
             </span>
           </div>
@@ -136,29 +136,24 @@ export function renderCSVImportModal() {
 
         <!-- Column mapping for generic format -->
         <template x-if="format === 'generic' && headers.length > 0">
-          <div class="flex flex-col gap-sm p-md bg-surface-hover border border-border-ghost">
-            <span class="font-mono text-[11px] uppercase tracking-[0.15em] font-bold text-text-muted"
-                  style="font-family: 'JetBrains Mono', monospace;">
+          <div style="display: flex; flex-direction: column; gap: 8px; padding: 16px; background: #1C1F28; border: 1px solid #2A2D3A;">
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; color: #7A8498;">
               COLUMN MAPPING
             </span>
-            <div class="flex gap-md">
-              <div class="flex flex-col gap-xs">
-                <label class="font-mono text-[11px] uppercase tracking-[0.15em] text-text-muted"
-                       style="font-family: 'JetBrains Mono', monospace;">Name (required)</label>
+            <div style="display: flex; gap: 16px;">
+              <div style="display: flex; flex-direction: column; gap: 4px;">
+                <label style="font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; color: #7A8498;">Name (required)</label>
                 <select x-model="columnMap.name"
-                        class="bg-background border border-border-ghost text-text-primary px-sm py-xs font-mono text-[11px]"
-                        style="font-family: 'JetBrains Mono', monospace;">
+                        style="background: #0B0C10; border: 1px solid #2A2D3A; color: #EAECEE; padding: 4px 8px; font-family: 'JetBrains Mono', monospace; font-size: 11px;">
                   <template x-for="h in headers" :key="h">
                     <option :value="h" x-text="h"></option>
                   </template>
                 </select>
               </div>
-              <div class="flex flex-col gap-xs">
-                <label class="font-mono text-[11px] uppercase tracking-[0.15em] text-text-muted"
-                       style="font-family: 'JetBrains Mono', monospace;">Quantity (required)</label>
+              <div style="display: flex; flex-direction: column; gap: 4px;">
+                <label style="font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; color: #7A8498;">Quantity (required)</label>
                 <select x-model="columnMap.quantity"
-                        class="bg-background border border-border-ghost text-text-primary px-sm py-xs font-mono text-[11px]"
-                        style="font-family: 'JetBrains Mono', monospace;">
+                        style="background: #0B0C10; border: 1px solid #2A2D3A; color: #EAECEE; padding: 4px 8px; font-family: 'JetBrains Mono', monospace; font-size: 11px;">
                   <template x-for="h in headers" :key="h">
                     <option :value="h" x-text="h"></option>
                   </template>
@@ -170,71 +165,63 @@ export function renderCSVImportModal() {
 
         <!-- Preview table -->
         <template x-if="preview.length > 0">
-          <div class="flex flex-col gap-sm">
-            <span class="font-mono text-[11px] uppercase tracking-[0.15em] font-bold text-text-muted"
-                  style="font-family: 'JetBrains Mono', monospace;">
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; color: #7A8498;">
               IMPORT PREVIEW
             </span>
-            <div class="overflow-x-auto max-h-48 overflow-y-auto border border-border-ghost">
-              <table class="w-full text-left">
+            <div style="overflow-x: auto; max-height: 192px; overflow-y: auto; border: 1px solid #2A2D3A;">
+              <table style="width: 100%; text-align: left; border-collapse: collapse;">
                 <thead>
-                  <tr class="border-b border-border-ghost">
-                    <th class="font-mono text-[11px] uppercase tracking-[0.15em] font-bold text-text-muted px-sm py-xs"
-                        style="font-family: 'JetBrains Mono', monospace;">Name</th>
-                    <th class="font-mono text-[11px] uppercase tracking-[0.15em] font-bold text-text-muted px-sm py-xs"
-                        style="font-family: 'JetBrains Mono', monospace;">Qty</th>
-                    <th class="font-mono text-[11px] uppercase tracking-[0.15em] font-bold text-text-muted px-sm py-xs"
-                        style="font-family: 'JetBrains Mono', monospace;">Foil</th>
+                  <tr style="border-bottom: 1px solid #2A2D3A;">
+                    <th style="font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; color: #7A8498; padding: 4px 8px;">Name</th>
+                    <th style="font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; color: #7A8498; padding: 4px 8px;">Qty</th>
+                    <th style="font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; color: #7A8498; padding: 4px 8px;">Foil</th>
                   </tr>
                 </thead>
                 <tbody>
                   <template x-for="(row, i) in preview" :key="i">
-                    <tr class="border-b border-border-ghost/50">
-                      <td class="font-mono text-[11px] text-text-primary px-sm py-xs"
-                          style="font-family: 'JetBrains Mono', monospace;"
+                    <tr style="border-bottom: 1px solid rgba(42,45,58,0.5);">
+                      <td style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #EAECEE; padding: 4px 8px;"
                           x-text="row.name || '—'"></td>
-                      <td class="font-mono text-[11px] text-text-primary px-sm py-xs"
-                          style="font-family: 'JetBrains Mono', monospace;"
+                      <td style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #EAECEE; padding: 4px 8px;"
                           x-text="row.quantity"></td>
-                      <td class="font-mono text-[11px] text-text-primary px-sm py-xs"
-                          style="font-family: 'JetBrains Mono', monospace;"
+                      <td style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #EAECEE; padding: 4px 8px;"
                           x-text="row.foil ? 'FOIL' : ''"></td>
                     </tr>
                   </template>
                 </tbody>
               </table>
             </div>
-            <span class="font-mono text-[11px] text-text-muted" style="font-family: 'JetBrains Mono', monospace;"
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #7A8498;"
                   x-text="entries.length + ' total rows'"></span>
           </div>
         </template>
 
         <!-- Import result -->
         <template x-if="imported">
-          <div class="p-md bg-surface-hover border border-border-ghost">
-            <span class="font-mono text-[11px] text-success" style="font-family: 'JetBrains Mono', monospace;"
+          <div style="padding: 16px; background: #1C1F28; border: 1px solid #2A2D3A;">
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #2ECC71;"
                   x-text="importCount + ' cards imported.'"></span>
             <template x-if="unresolvedCount > 0">
-              <span class="font-mono text-[11px] text-warning ml-sm" style="font-family: 'JetBrains Mono', monospace;"
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #F39C12; margin-left: 8px;"
                     x-text="unresolvedCount + ' unresolved.'"></span>
             </template>
           </div>
         </template>
 
         <!-- Actions -->
-        <div class="flex justify-end gap-sm mt-sm">
+        <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px;">
           <button
             @click="close()"
-            class="px-md py-sm font-mono text-[11px] uppercase tracking-[0.15em] font-bold text-text-muted bg-surface-hover border border-border-ghost cursor-pointer hover:text-text-primary transition-colors"
-            style="font-family: 'JetBrains Mono', monospace;">
+            style="padding: 8px 16px; font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; color: #7A8498; background: #1C1F28; border: 1px solid #2A2D3A; cursor: pointer;">
             CLOSE IMPORT
           </button>
           <button
             x-show="entries.length > 0 && !imported"
             :disabled="importing"
             @click="doImport()"
-            class="px-md py-sm font-mono text-[11px] uppercase tracking-[0.15em] font-bold bg-primary text-text-primary cursor-pointer hover:bg-primary/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            style="font-family: 'JetBrains Mono', monospace;"
+            :style="importing ? 'opacity: 0.5; cursor: not-allowed;' : 'cursor: pointer;'"
+            style="padding: 8px 16px; font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; background: #0D52BD; color: #EAECEE; border: none;"
             x-text="importing ? 'IMPORTING...' : ('IMPORT ' + entries.length + ' CARDS')">
           </button>
         </div>

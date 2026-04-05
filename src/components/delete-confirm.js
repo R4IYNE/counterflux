@@ -40,33 +40,30 @@ export function renderDeleteConfirm() {
       <div
         x-show="deleteVisible"
         x-cloak
-        class="fixed inset-0 z-50 flex items-center justify-center"
+        style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9999; display: flex; align-items: center; justify-content: center;"
       >
         <!-- Glass backdrop -->
-        <div class="absolute inset-0 bg-black/60" @click="closeDelete()"></div>
+        <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6);" @click="closeDelete()"></div>
 
         <!-- Modal panel -->
-        <div class="relative z-10 w-full max-w-sm bg-surface border border-border-ghost p-lg flex flex-col gap-md"
+        <div style="position: relative; z-index: 10; width: 100%; max-width: 400px; background: #14161C; border: 1px solid #2A2D3A; padding: 24px; display: flex; flex-direction: column; gap: 16px;"
              @click.stop>
           <!-- Heading -->
-          <h3 class="font-header text-[20px] font-bold leading-[1.2] tracking-[0.01em] text-text-primary"
-              style="font-family: 'Syne', sans-serif;">
+          <h3 style="font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; line-height: 1.2; letter-spacing: 0.01em; color: #EAECEE; margin: 0;">
             CONFIRM REMOVAL
           </h3>
 
           <!-- Confirmation text -->
-          <p class="text-[14px] leading-[1.5] text-text-primary"
-             style="font-family: 'Space Grotesk', sans-serif;">
-            Remove <span class="font-bold" x-text="deleteEntry?.card?.name || 'this card'"></span>
+          <p style="font-family: 'Space Grotesk', sans-serif; font-size: 14px; line-height: 1.5; color: #EAECEE; margin: 0;">
+            Remove <span style="font-weight: 700;" x-text="deleteEntry?.card?.name || 'this card'"></span>
             (<span x-text="deleteEntry?.quantity || 0"></span>x) from your collection? This cannot be undone.
           </p>
 
           <!-- Action buttons -->
-          <div class="flex gap-sm pt-sm">
+          <div style="display: flex; gap: 8px; padding-top: 8px;">
             <button
               @click="confirmDelete()"
-              class="flex-1 px-md py-sm font-mono text-[11px] uppercase tracking-[0.15em] font-bold cursor-pointer transition-colors"
-              style="font-family: 'JetBrains Mono', monospace; background: var(--color-secondary, #E23838); color: var(--color-text-primary, #EAECEE);"
+              style="flex: 1; padding: 8px 16px; font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; background: #E23838; color: #EAECEE; border: none; cursor: pointer;"
               onmouseenter="this.style.opacity='0.8'"
               onmouseleave="this.style.opacity='1'"
             >
@@ -74,8 +71,7 @@ export function renderDeleteConfirm() {
             </button>
             <button
               @click="closeDelete()"
-              class="flex-1 px-md py-sm font-mono text-[11px] uppercase tracking-[0.15em] font-bold bg-surface-hover text-text-primary cursor-pointer hover:bg-border-ghost transition-colors"
-              style="font-family: 'JetBrains Mono', monospace;"
+              style="flex: 1; padding: 8px 16px; font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; background: #1C1F28; color: #EAECEE; border: 1px solid #2A2D3A; cursor: pointer;"
             >
               KEEP CARD
             </button>

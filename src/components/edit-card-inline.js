@@ -5,7 +5,6 @@
 
 /**
  * Render inline edit HTML for an Alpine x-data context.
- * This returns the HTML to be injected where inline editing is needed.
  * @returns {string} HTML string for inline edit component
  */
 export function renderEditInline() {
@@ -50,13 +49,10 @@ export function renderEditInline() {
       <div
         x-show="editVisible"
         x-cloak
-        class="fixed z-50 bg-surface border border-border-ghost p-sm flex items-center gap-sm"
-        :style="'left: ' + editX + 'px; top: ' + editY + 'px;'"
-        style="box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);"
+        :style="'position: fixed; z-index: 9999; left: ' + editX + 'px; top: ' + editY + 'px; background: #14161C; border: 1px solid #2A2D3A; padding: 8px; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.4);'"
         @click.outside="closeEdit()"
       >
-        <label class="font-mono text-[11px] uppercase tracking-[0.15em] font-bold text-text-muted"
-               style="font-family: 'JetBrains Mono', monospace;">
+        <label style="font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; color: #7A8498;">
           QTY
         </label>
         <input
@@ -67,8 +63,9 @@ export function renderEditInline() {
           max="999"
           @keydown.enter="saveEdit()"
           @blur="saveEdit()"
-          class="w-16 bg-background border border-border-ghost text-text-primary px-sm py-xs font-mono text-[11px] uppercase tracking-[0.15em] outline-none focus:border-primary text-center"
-          style="font-family: 'JetBrains Mono', monospace;"
+          style="width: 64px; background: #0B0C10; border: 1px solid #2A2D3A; color: #EAECEE; padding: 4px 8px; font-family: 'JetBrains Mono', monospace; font-size: 11px; text-align: center; outline: none;"
+          onfocus="this.style.borderColor='#0D52BD'"
+          onblur="this.style.borderColor='#2A2D3A'"
         >
       </div>
     </div>

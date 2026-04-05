@@ -86,18 +86,17 @@ export function renderMassEntryPanel() {
       }"
       x-show="$store.collection.massEntryOpen"
       x-cloak
-      class="fixed inset-0 z-50 flex items-center justify-center"
+      style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9999; display: flex; align-items: center; justify-content: center;"
       @keydown.escape.window="$store.collection.massEntryOpen && discard()"
     >
       <!-- Glass backdrop -->
-      <div class="absolute inset-0 bg-black/60" @click="discard()"></div>
+      <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6);" @click="discard()"></div>
 
       <!-- Panel -->
-      <div class="relative z-10 w-full max-w-2xl bg-surface border border-border-ghost p-lg flex flex-col gap-md max-h-[80vh] overflow-y-auto"
+      <div style="position: relative; z-index: 10; width: 100%; max-width: 680px; background: #14161C; border: 1px solid #2A2D3A; padding: 24px; display: flex; flex-direction: column; gap: 16px; max-height: 80vh; overflow-y: auto;"
            @click.stop>
         <!-- Heading -->
-        <h2 class="font-header text-[20px] font-bold leading-[1.2] tracking-[0.01em] text-text-primary"
-            style="font-family: 'Syne', sans-serif;">
+        <h2 style="font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; line-height: 1.2; letter-spacing: 0.01em; color: #EAECEE; margin: 0;">
           MASS ENTRY TERMINAL
         </h2>
 
@@ -106,15 +105,13 @@ export function renderMassEntryPanel() {
           x-model="inputText"
           rows="10"
           placeholder="ENTER BATCH SYNTAX: 4x Lightning Bolt [2XM] foil"
-          class="terminal-input w-full"
-          style="font-family: 'JetBrains Mono', monospace; font-size: 14px; background: var(--color-background, #0B0C10); border: 1px solid var(--color-border-ghost, #2A2D3A); color: var(--color-text-primary, #EAECEE); padding: 16px; resize: vertical; outline: none;"
-          @focus="$el.style.borderColor = 'var(--color-primary, #0D52BD)'"
-          @blur="$el.style.borderColor = 'var(--color-border-ghost, #2A2D3A)'"
+          style="width: 100%; box-sizing: border-box; font-family: 'JetBrains Mono', monospace; font-size: 14px; background: #0B0C10; border: 1px solid #2A2D3A; color: #EAECEE; padding: 16px; resize: vertical; outline: none;"
+          onfocus="this.style.borderColor='#0D52BD'"
+          onblur="this.style.borderColor='#2A2D3A'"
         ></textarea>
 
         <!-- Help text -->
-        <p class="text-[14px] leading-[1.5] text-text-muted"
-           style="font-family: 'Space Grotesk', sans-serif;">
+        <p style="font-family: 'Space Grotesk', sans-serif; font-size: 14px; line-height: 1.5; color: #7A8498; margin: 0;">
           Format: {qty}x {card name} [{set code}] {foil?}. One entry per line. Set code and foil are optional.
         </p>
 
@@ -122,67 +119,59 @@ export function renderMassEntryPanel() {
         <button
           @click="parseEntries()"
           :disabled="!inputText.trim() || resolving"
-          :class="inputText.trim() && !resolving ? 'bg-primary text-text-primary cursor-pointer hover:bg-primary/80' : 'bg-surface-hover text-text-dim cursor-not-allowed opacity-50'"
-          class="px-md py-sm font-mono text-[11px] uppercase tracking-[0.15em] font-bold transition-colors"
-          style="font-family: 'JetBrains Mono', monospace;">
+          :style="inputText.trim() && !resolving ? 'background: #0D52BD; color: #EAECEE; cursor: pointer;' : 'background: #1C1F28; color: #4A5064; cursor: not-allowed; opacity: 0.5;'"
+          style="padding: 8px 16px; font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; border: none;"
+        >
           <span x-show="!resolving">PARSE ENTRIES</span>
           <span x-show="resolving">RESOLVING...</span>
         </button>
 
         <!-- Results list -->
         <template x-if="parsed && entries.length > 0">
-          <div class="flex flex-col gap-sm">
+          <div style="display: flex; flex-direction: column; gap: 8px;">
             <!-- Summary -->
-            <div class="font-mono text-[11px] uppercase tracking-[0.15em] font-bold text-text-primary"
-                 style="font-family: 'JetBrains Mono', monospace;">
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; color: #EAECEE;">
               <span x-text="resolvedCount"></span>/<span x-text="totalCount"></span> ENTRIES RESOLVED
             </div>
 
             <!-- Entry list -->
             <template x-for="(entry, idx) in entries" :key="idx">
-              <div class="flex items-center gap-sm p-sm border border-border-ghost"
-                   :class="entry.resolved ? '' : 'border-secondary/30'">
+              <div style="display: flex; align-items: center; gap: 8px; padding: 8px; border: 1px solid #2A2D3A;"
+                   :style="entry.resolved ? '' : 'border-color: rgba(226,56,56,0.3);'">
                 <!-- Status badge -->
                 <span x-show="entry.resolved"
-                      class="font-mono text-[11px] uppercase tracking-[0.15em] font-bold px-sm py-xs flex-shrink-0"
-                      style="font-family: 'JetBrains Mono', monospace; color: var(--color-success, #2ECC71); background: rgba(46, 204, 113, 0.1);">
+                      style="font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; padding: 4px 8px; flex-shrink: 0; color: #2ECC71; background: rgba(46,204,113,0.1);">
                   RESOLVED
                 </span>
                 <span x-show="!entry.resolved"
-                      class="font-mono text-[11px] uppercase tracking-[0.15em] font-bold px-sm py-xs flex-shrink-0"
-                      style="font-family: 'JetBrains Mono', monospace; color: var(--color-secondary, #E23838); background: rgba(226, 56, 56, 0.1);">
+                      style="font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; padding: 4px 8px; flex-shrink: 0; color: #E23838; background: rgba(226,56,56,0.1);">
                   UNRESOLVED
                 </span>
 
                 <!-- Card info (resolved) -->
                 <template x-if="entry.resolved && entry.card">
-                  <div class="flex items-center gap-sm flex-1 min-w-0">
-                    <img :src="entry.card.image_uris?.small || ''" class="w-8 h-8 object-cover flex-shrink-0" loading="lazy" onerror="this.style.display='none'">
-                    <span class="font-mono text-[11px] uppercase tracking-[0.15em] text-text-primary truncate"
-                          style="font-family: 'JetBrains Mono', monospace;"
+                  <div style="display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0;">
+                    <img :src="entry.card.image_uris?.small || ''" style="width: 32px; height: 32px; object-fit: cover; flex-shrink: 0;" loading="lazy" onerror="this.style.display='none'">
+                    <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; color: #EAECEE; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"
                           x-text="(entry.quantity || 1) + 'x ' + entry.card.name"></span>
-                    <span class="font-mono text-[11px] uppercase tracking-[0.15em] text-text-dim flex-shrink-0"
-                          style="font-family: 'JetBrains Mono', monospace;"
+                    <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; color: #4A5064; flex-shrink: 0;"
                           x-text="entry.card.set?.toUpperCase()"></span>
                   </div>
                 </template>
 
                 <!-- Unresolved info -->
                 <template x-if="!entry.resolved">
-                  <div class="flex flex-col gap-xs flex-1 min-w-0">
-                    <span class="font-mono text-[11px] uppercase tracking-[0.15em] text-text-muted truncate"
-                          style="font-family: 'JetBrains Mono', monospace;"
+                  <div style="display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0;">
+                    <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; color: #7A8498; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"
                           x-text="entry.raw"></span>
                     <template x-if="entry.candidates && entry.candidates.length > 0">
-                      <div class="flex flex-col gap-xs">
-                        <span class="text-[11px] text-text-dim"
-                              style="font-family: 'Space Grotesk', sans-serif;">
+                      <div style="display: flex; flex-direction: column; gap: 4px;">
+                        <span style="font-family: 'Space Grotesk', sans-serif; font-size: 11px; color: #4A5064;">
                           Could not match this entry. Select the correct printing below or edit the name.
                         </span>
                         <select
                           @change="updateCandidate(idx, $event.target.value)"
-                          class="bg-background border border-border-ghost text-text-primary px-sm py-xs font-mono text-[11px] uppercase tracking-[0.15em] outline-none"
-                          style="font-family: 'JetBrains Mono', monospace;">
+                          style="background: #0B0C10; border: 1px solid #2A2D3A; color: #EAECEE; padding: 4px 8px; font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; outline: none;">
                           <option value="">SELECT PRINTING...</option>
                           <template x-for="cand in entry.candidates" :key="cand.id">
                             <option :value="cand.id" x-text="cand.name + ' [' + cand.set?.toUpperCase() + ']'"></option>
@@ -196,19 +185,17 @@ export function renderMassEntryPanel() {
             </template>
 
             <!-- Action buttons -->
-            <div class="flex gap-sm pt-sm">
+            <div style="display: flex; gap: 8px; padding-top: 8px;">
               <button
                 @click="commitToCollection()"
                 :disabled="resolvedCount === 0"
-                :class="resolvedCount > 0 ? 'bg-primary text-text-primary cursor-pointer hover:bg-primary/80' : 'bg-surface-hover text-text-dim cursor-not-allowed opacity-50'"
-                class="flex-1 px-md py-sm font-mono text-[11px] uppercase tracking-[0.15em] font-bold transition-colors"
-                style="font-family: 'JetBrains Mono', monospace;">
+                :style="resolvedCount > 0 ? 'background: #0D52BD; color: #EAECEE; cursor: pointer;' : 'background: #1C1F28; color: #4A5064; cursor: not-allowed; opacity: 0.5;'"
+                style="flex: 1; padding: 8px 16px; font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; border: none;">
                 COMMIT TO COLLECTION
               </button>
               <button
                 @click="discard()"
-                class="flex-1 px-md py-sm font-mono text-[11px] uppercase tracking-[0.15em] font-bold bg-surface-hover text-text-primary cursor-pointer hover:bg-border-ghost transition-colors"
-                style="font-family: 'JetBrains Mono', monospace;">
+                style="flex: 1; padding: 8px 16px; font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; background: #1C1F28; color: #EAECEE; border: 1px solid #2A2D3A; cursor: pointer;">
                 DISCARD ENTRIES
               </button>
             </div>
