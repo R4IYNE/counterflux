@@ -5,9 +5,8 @@ export async function searchCards(query, limit = 12) {
 
   const normalised = query.toLowerCase();
 
-  // Use case-sensitive startsWith with title-cased query for the indexed lookup
-  // (MTG card names are title-cased, so this hits the B-tree index directly)
-  const titleCased = normalised.charAt(0).toUpperCase() + normalised.slice(1);
+  // Title-case each word to match MTG card name format for indexed lookup
+  const titleCased = normalised.replace(/\b\w/g, c => c.toUpperCase());
 
   const raw = await db.cards
     .where('name')
