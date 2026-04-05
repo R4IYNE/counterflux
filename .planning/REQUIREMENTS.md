@@ -64,17 +64,17 @@
 - [ ] **DECK-02**: Card search powered by Scryfall with full syntax, autocomplete, and filter toggles (colour identity locked to commander, card type, CMC, rarity)
 - [ ] **DECK-03**: "In Collection" toggle filters search results to cards user owns; unowned cards show ghost border with price
 - [ ] **DECK-04**: The 99 toggles between visual grid (card images, drag-and-drop) and list view (compact table)
-- [ ] **DECK-05**: User-defined category sorting (Ramp, Card Draw, Removal, etc.) with custom category creation
+- [x] **DECK-05**: User-defined category sorting (Ramp, Card Draw, Removal, etc.) with custom category creation
 - [ ] **DECK-06**: Drag-and-drop cards between categories via SortableJS
-- [ ] **DECK-07**: Persistent card count tracker: `67/99 — 32 slots remaining`
-- [ ] **DECK-08**: Owned/missing indicators (green/red dots) with summary: "You own 72 of 99 cards. Remaining cost: £47.30"
+- [x] **DECK-07**: Persistent card count tracker: `67/99 — 32 slots remaining`
+- [x] **DECK-08**: Owned/missing indicators (green/red dots) with summary: "You own 72 of 99 cards. Remaining cost: £47.30"
 - [ ] **DECK-09**: Live mana curve bar chart (CMC 0-7+, colour-coded) with average CMC
 - [ ] **DECK-10**: Live colour pie doughnut chart (mana symbol distribution vs land colour production)
 - [ ] **DECK-11**: Live type breakdown (creatures/instants/sorceries/enchantments/artifacts/planeswalkers/lands)
 - [ ] **DECK-12**: Live category breakdown with card counts and target fill indicator
 - [ ] **DECK-13**: Price summary (total cost, cost of unowned, most expensive card)
-- [ ] **DECK-14**: Initialize Ritual flow: enter commander (autocomplete), auto-populate colour identity, lock filters, open canvas
-- [ ] **DECK-15**: Support partner commanders and companions
+- [x] **DECK-14**: Initialize Ritual flow: enter commander (autocomplete), auto-populate colour identity, lock filters, open canvas
+- [x] **DECK-15**: Support partner commanders and companions
 - [ ] **DECK-16**: Import decklists from Moxfield, Archidekt, MTGGoldfish, and plain text formats
 - [ ] **DECK-17**: Export as plain text, MTGO format, Arena format, and CSV
 - [ ] **DECK-18**: Right-click context menu on cards: Add to Deck, Add to Collection, Add to Wishlist, View Details, View on Scryfall
@@ -194,17 +194,17 @@ Updated during roadmap creation.
 | DECK-02 | Phase 3 | Pending |
 | DECK-03 | Phase 3 | Pending |
 | DECK-04 | Phase 3 | Pending |
-| DECK-05 | Phase 3 | Pending |
+| DECK-05 | Phase 3 | Complete |
 | DECK-06 | Phase 3 | Pending |
-| DECK-07 | Phase 3 | Pending |
-| DECK-08 | Phase 3 | Pending |
+| DECK-07 | Phase 3 | Complete |
+| DECK-08 | Phase 3 | Complete |
 | DECK-09 | Phase 3 | Pending |
 | DECK-10 | Phase 3 | Pending |
 | DECK-11 | Phase 3 | Pending |
 | DECK-12 | Phase 3 | Pending |
 | DECK-13 | Phase 3 | Pending |
-| DECK-14 | Phase 3 | Pending |
-| DECK-15 | Phase 3 | Pending |
+| DECK-14 | Phase 3 | Complete |
+| DECK-15 | Phase 3 | Complete |
 | DECK-16 | Phase 3 | Pending |
 | DECK-17 | Phase 3 | Pending |
 | DECK-18 | Phase 3 | Pending |

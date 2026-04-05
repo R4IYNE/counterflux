@@ -70,7 +70,7 @@ Plans:
   5. User can import decklists from Moxfield/Archidekt/MTGGoldfish/plain text and export as plain text, MTGO, Arena, or CSV formats
 **Plans:** 6 plans
 Plans:
-- [ ] 03-01-PLAN.md — Dexie schema v3, deck store, type classifier, tag heuristics, commander detection, tests
+- [x] 03-01-PLAN.md — Dexie schema v3, deck store, type classifier, tag heuristics, commander detection, tests
 - [ ] 03-02-PLAN.md — Deck landing page, Initialize Ritual modal, deck management context menu, SortableJS install
 - [ ] 03-03-PLAN.md — Three-panel editor layout, search panel, centre panel, card tiles, drag-and-drop, context menu, tags
 - [ ] 03-04-PLAN.md — Analytics sidebar: mana curve, colour pie, type/tag breakdown, price summary
