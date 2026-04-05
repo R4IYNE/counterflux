@@ -91,10 +91,10 @@ describe('Screen content', () => {
     expect(container.textContent).toContain('Dashboard Coming Soon');
   });
 
-  it('thousand-year shows "Deck Builder Coming Soon"', async () => {
+  it('thousand-year shows deck landing with "DECK ARCHIVE"', async () => {
     const { mount } = await import('../src/screens/thousand-year.js');
     mount(container);
-    expect(container.textContent).toContain('Deck Builder Coming Soon');
+    expect(container.textContent).toContain('DECK ARCHIVE');
   });
 
   it('treasure-cruise shows "Archive Manifest" heading', async () => {

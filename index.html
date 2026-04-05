@@ -335,12 +335,43 @@
             </div>
           </div>
 
-          <!-- Deck Usage placeholder (D-18) -->
-          <div class="pt-sm border-t border-border-ghost mt-md">
-            <span class="font-mono uppercase text-[11px] tracking-[0.15em] font-bold text-primary block mb-sm">DECK USAGE</span>
-            <p class="text-[14px] leading-[1.5] text-text-muted" style="font-family: 'Space Grotesk', sans-serif;">
-              This card is not in any decks.
-            </p>
+          <!-- Deck Usage (COLL-13 cross-reference) -->
+          <div class="pt-sm border-t border-border-ghost mt-md" x-data="{
+            deckUsages: [],
+            async loadDeckUsage() {
+              this.deckUsages = [];
+              const card = $store.search.selectedCard;
+              if (!card || !card.id) return;
+              try {
+                const { db } = await import('./src/db/schema.js');
+                const deckCards = await db.deck_cards.where('scryfall_id').equals(card.id).toArray();
+                if (!deckCards.length) return;
+                const deckIds = [...new Set(deckCards.map(dc => dc.deck_id))];
+                const decks = await Promise.all(deckIds.map(id => db.decks.get(id)));
+                this.deckUsages = decks.filter(Boolean).map(d => ({ id: d.id, name: d.name }));
+              } catch (e) {
+                console.error('[Counterflux] Deck usage lookup error:', e);
+              }
+            }
+          }" x-init="$watch('$store.search.selectedCard', () => loadDeckUsage()); loadDeckUsage()">
+            <span class="font-mono uppercase text-[11px] tracking-[0.15em] font-bold text-primary block mb-sm">USED IN DECKS</span>
+            <template x-if="deckUsages.length === 0">
+              <p class="text-[14px] leading-[1.5] text-text-muted" style="font-family: 'Space Grotesk', sans-serif;">
+                Not used in any deck.
+              </p>
+            </template>
+            <template x-if="deckUsages.length > 0">
+              <div class="flex flex-col gap-xs">
+                <template x-for="deck in deckUsages" :key="deck.id">
+                  <button
+                    class="text-left text-[14px] leading-[1.5] text-primary hover:text-text-primary transition-colors cursor-pointer bg-transparent border-none p-0"
+                    style="font-family: 'Space Grotesk', sans-serif;"
+                    x-text="deck.name"
+                    @click="$store.search.closeFlyout(); document.dispatchEvent(new CustomEvent('deck-open', { detail: { deckId: deck.id } }))"
+                  ></button>
+                </template>
+              </div>
+            </template>
           </div>
 
           <!-- Add to Collection -->

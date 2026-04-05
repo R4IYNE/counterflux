@@ -1,5 +1,6 @@
 import { searchCards } from '../db/search.js';
 import { getCardImage, getCardName, getCardManaCost } from '../db/card-accessor.js';
+import Sortable from 'sortablejs';
 
 /**
  * Deck editor search panel.
@@ -20,6 +21,7 @@ export function renderDeckSearchPanel(container) {
   let rarityFilter = 'All';
   let searchTimeout = null;
   let results = [];
+  let searchSortable = null;
 
   // Build Set of owned scryfall_ids for O(1) lookup
   function getOwnedSet() {
@@ -256,6 +258,32 @@ export function renderDeckSearchPanel(container) {
       });
 
       resultsEl.appendChild(row);
+    }
+
+    // Wire SortableJS for drag-to-deck from search results
+    if (searchSortable) {
+      searchSortable.destroy();
+      searchSortable = null;
+    }
+    if (results.length > 0) {
+      searchSortable = new Sortable(resultsEl, {
+        group: {
+          name: 'deck-cards',
+          pull: 'clone',
+          put: false,
+        },
+        sort: false,
+        ghostClass: 'drag-ghost',
+        onEnd(evt) {
+          // Remove the cloned DOM element (store handles rendering)
+          evt.item.remove();
+          const scryfallId = evt.item.dataset.scryfallId;
+          if (scryfallId && evt.to !== evt.from) {
+            const Alpine = window.Alpine;
+            Alpine?.store('deck')?.addCard(scryfallId);
+          }
+        },
+      });
     }
   }
 }
