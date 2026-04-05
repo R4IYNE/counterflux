@@ -27,6 +27,20 @@ db.version(1).stores({
   meta: 'key'
 });
 
+db.version(2).stores({
+  cards: 'id, name, oracle_id, set, collector_number, cmc, color_identity, type_line, [set+collector_number]',
+  meta: 'key',
+  collection: '++id, scryfall_id, category, foil, [scryfall_id+foil], [scryfall_id+category]'
+});
+
+db.version(3).stores({
+  cards: 'id, name, oracle_id, set, collector_number, cmc, color_identity, type_line, [set+collector_number]',
+  meta: 'key',
+  collection: '++id, scryfall_id, category, foil, [scryfall_id+foil], [scryfall_id+category]',
+  decks: '++id, name, format, updated_at',
+  deck_cards: '++id, deck_id, scryfall_id, [deck_id+scryfall_id], scryfall_id'
+});
+
 const SCRYFALL_BULK_API = 'https://api.scryfall.com/bulk-data/default-cards';
 const USER_AGENT = 'Counterflux/1.0 (MTG collection manager)';
 
