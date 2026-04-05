@@ -86,45 +86,46 @@ export function renderAddCardModal() {
       }"
       x-show="$store.collection.addCardOpen"
       x-cloak
-      class="fixed inset-0 z-50 flex items-center justify-center"
+      style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9999; display: flex; align-items: center; justify-content: center;"
       @keydown.escape.window="$store.collection.addCardOpen && close()"
     >
       <!-- Glass backdrop -->
-      <div class="absolute inset-0 bg-black/60" @click="close()"></div>
+      <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6);" @click="close()"></div>
 
       <!-- Modal panel -->
-      <div class="relative z-10 w-full max-w-md bg-surface border border-border-ghost p-lg flex flex-col gap-md"
+      <div style="position: relative; z-index: 10; width: 100%; max-width: 480px; background: #14161C; border: 1px solid #2A2D3A; padding: 24px; display: flex; flex-direction: column; gap: 16px;"
            @click.stop>
         <!-- Heading -->
-        <h2 class="font-header text-[20px] font-bold leading-[1.2] tracking-[0.01em] text-text-primary"
-            style="font-family: 'Syne', sans-serif;">
+        <h2 style="font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; line-height: 1.2; letter-spacing: 0.01em; color: #EAECEE; margin: 0;">
           ADD TO COLLECTION
         </h2>
 
         <!-- Search input -->
-        <div class="relative">
+        <div style="position: relative;">
           <input
             type="text"
             :value="searchQuery"
             @input="doSearch($event.target.value)"
             placeholder="SEARCH CARD NAME..."
-            class="w-full bg-background border border-border-ghost text-text-primary px-md py-sm font-mono text-[11px] uppercase tracking-[0.15em] outline-none focus:border-primary"
-            style="font-family: 'JetBrains Mono', monospace;"
+            style="width: 100%; box-sizing: border-box; background: #0B0C10; border: 1px solid #2A2D3A; color: #EAECEE; padding: 8px 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; outline: none;"
+            onfocus="this.style.borderColor='#0D52BD'"
+            onblur="this.style.borderColor='#2A2D3A'"
             autocomplete="off"
           >
 
           <!-- Search results dropdown -->
           <div x-show="searchResults.length > 0"
-               class="absolute top-full left-0 right-0 mt-xs bg-surface border border-border-ghost max-h-[280px] overflow-y-auto z-10">
+               style="position: absolute; top: 100%; left: 0; right: 0; margin-top: 4px; background: #14161C; border: 1px solid #2A2D3A; max-height: 280px; overflow-y: auto; z-index: 10;">
             <template x-for="(card, idx) in searchResults" :key="card.id">
               <button
                 @click="selectCard(card)"
-                class="w-full flex items-center gap-sm px-md py-sm text-left cursor-pointer hover:bg-surface-hover transition-colors"
+                style="width: 100%; display: flex; align-items: center; gap: 8px; padding: 8px 12px; text-align: left; cursor: pointer; background: transparent; border: none; color: #EAECEE;"
+                onmouseenter="this.style.background='#1C1F28'"
+                onmouseleave="this.style.background='transparent'"
               >
-                <span class="font-mono text-[11px] uppercase tracking-[0.15em] font-bold text-text-primary flex-1 truncate"
-                      style="font-family: 'JetBrains Mono', monospace;"
+                <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; color: #EAECEE; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"
                       x-text="card._name"></span>
-                <i class="ss" :class="'ss-' + card.set" style="font-size: 14px; color: var(--color-text-dim);"></i>
+                <i class="ss" :class="'ss-' + card.set" style="font-size: 14px; color: #4A5064;"></i>
               </button>
             </template>
           </div>
@@ -132,28 +133,25 @@ export function renderAddCardModal() {
 
         <!-- Selected card preview -->
         <template x-if="selectedCard">
-          <div class="flex gap-md items-start">
+          <div style="display: flex; gap: 16px; align-items: flex-start;">
             <img
               :src="selectedCard.image_uris?.small || ''"
               :alt="selectedCard.name"
-              class="w-16 h-auto object-contain flex-shrink-0"
+              style="width: 64px; height: auto; object-fit: contain; flex-shrink: 0;"
               loading="lazy"
               onerror="this.style.display='none'"
             >
-            <div class="flex flex-col gap-xs">
-              <span class="font-body text-[14px] font-bold text-text-primary" x-text="selectedCard.name"
-                    style="font-family: 'Space Grotesk', sans-serif;"></span>
-              <span class="font-mono text-[11px] uppercase tracking-[0.15em] font-normal text-primary"
-                    style="font-family: 'JetBrains Mono', monospace;"
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+              <span style="font-family: 'Space Grotesk', sans-serif; font-size: 14px; font-weight: 700; color: #EAECEE;" x-text="selectedCard.name"></span>
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; color: #0D52BD;"
                     x-text="getPrice()"></span>
             </div>
           </div>
         </template>
 
         <!-- Quantity -->
-        <div class="flex items-center gap-sm">
-          <label class="font-mono text-[11px] uppercase tracking-[0.15em] font-bold text-text-muted"
-                 style="font-family: 'JetBrains Mono', monospace;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <label style="font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; color: #7A8498;">
             QTY
           </label>
           <input
@@ -161,52 +159,45 @@ export function renderAddCardModal() {
             x-model.number="quantity"
             min="1"
             max="999"
-            class="w-20 bg-background border border-border-ghost text-text-primary px-sm py-xs font-mono text-[11px] uppercase tracking-[0.15em] outline-none focus:border-primary text-center"
-            style="font-family: 'JetBrains Mono', monospace;"
+            style="width: 80px; background: #0B0C10; border: 1px solid #2A2D3A; color: #EAECEE; padding: 4px 8px; font-family: 'JetBrains Mono', monospace; font-size: 11px; text-align: center; outline: none;"
           >
         </div>
 
         <!-- Foil toggle -->
-        <label class="flex items-center gap-sm cursor-pointer">
-          <input type="checkbox" x-model="foil" class="accent-primary w-4 h-4">
-          <span class="font-mono text-[11px] uppercase tracking-[0.15em] font-bold text-text-muted"
-                style="font-family: 'JetBrains Mono', monospace;">
+        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+          <input type="checkbox" x-model="foil" class="accent-primary" style="width: 16px; height: 16px;">
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; color: #7A8498;">
             FOIL
           </span>
         </label>
 
         <!-- Category radio -->
-        <div class="flex items-center gap-md">
-          <span class="font-mono text-[11px] uppercase tracking-[0.15em] font-bold text-text-muted"
-                style="font-family: 'JetBrains Mono', monospace;">
+        <div style="display: flex; align-items: center; gap: 16px;">
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; color: #7A8498;">
             CATEGORY
           </span>
-          <label class="flex items-center gap-xs cursor-pointer">
+          <label style="display: flex; align-items: center; gap: 4px; cursor: pointer;">
             <input type="radio" value="owned" x-model="category" class="accent-primary">
-            <span class="font-mono text-[11px] uppercase tracking-[0.15em] text-text-primary"
-                  style="font-family: 'JetBrains Mono', monospace;">OWNED</span>
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; color: #EAECEE;">OWNED</span>
           </label>
-          <label class="flex items-center gap-xs cursor-pointer">
+          <label style="display: flex; align-items: center; gap: 4px; cursor: pointer;">
             <input type="radio" value="wishlist" x-model="category" class="accent-primary">
-            <span class="font-mono text-[11px] uppercase tracking-[0.15em] text-text-primary"
-                  style="font-family: 'JetBrains Mono', monospace;">WISHLIST</span>
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; color: #EAECEE;">WISHLIST</span>
           </label>
         </div>
 
         <!-- Action buttons -->
-        <div class="flex gap-sm pt-sm">
+        <div style="display: flex; gap: 8px; padding-top: 8px;">
           <button
             @click="addToCollection()"
             :disabled="!selectedCard"
-            :class="selectedCard ? 'bg-primary text-text-primary cursor-pointer hover:bg-primary/80' : 'bg-surface-hover text-text-dim cursor-not-allowed opacity-50'"
-            class="flex-1 px-md py-sm font-mono text-[11px] uppercase tracking-[0.15em] font-bold transition-colors"
-            style="font-family: 'JetBrains Mono', monospace;">
+            :style="selectedCard ? 'background: #0D52BD; color: #EAECEE; cursor: pointer;' : 'background: #1C1F28; color: #4A5064; cursor: not-allowed; opacity: 0.5;'"
+            style="flex: 1; padding: 8px 16px; font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; border: none;">
             ADD CARD
           </button>
           <button
             @click="close()"
-            class="flex-1 px-md py-sm font-mono text-[11px] uppercase tracking-[0.15em] font-bold bg-surface-hover text-text-primary cursor-pointer hover:bg-border-ghost transition-colors"
-            style="font-family: 'JetBrains Mono', monospace;">
+            style="flex: 1; padding: 8px 16px; font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; background: #1C1F28; color: #EAECEE; border: 1px solid #2A2D3A; cursor: pointer;">
             CLOSE PANEL
           </button>
         </div>

@@ -46,6 +46,11 @@ export function initRouter() {
       const module = await loader();
       const container = document.getElementById('main-content');
       if (container) {
+        // Clean up previous screen's resources (event listeners, body-level modals)
+        if (typeof container._cleanup === 'function') {
+          container._cleanup();
+          container._cleanup = null;
+        }
         container.innerHTML = '';
         module.mount(container);
         window.scrollTo(0, 0);

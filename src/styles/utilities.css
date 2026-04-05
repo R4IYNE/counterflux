@@ -34,3 +34,52 @@
   0% { top: -100px; }
   100% { top: 100%; }
 }
+
+/* Phase 2: Collection Manager utilities */
+
+.card-tile-hover {
+  transition: all 500ms;
+}
+.card-tile-hover:hover {
+  border-color: rgba(13, 82, 189, 0.5);
+}
+.card-tile-hover:hover img {
+  transform: scale(1.1);
+  opacity: 1;
+}
+
+.progress-glow {
+  box-shadow: 0 0 15px rgba(13, 82, 189, 0.5);
+}
+
+.foil-badge {
+  background: rgba(226, 56, 56, 0.2);
+  color: #E23838;
+  font-family: 'JetBrains Mono Variable', monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  padding: 4px 8px;
+}
+
+.qty-badge {
+  background: rgba(13, 82, 189, 0.8);
+  color: #EAECEE;
+  font-family: 'JetBrains Mono Variable', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 8px;
+  position: absolute;
+  top: 8px;
+  right: 8px;
+}
+
+.terminal-input {
+  font-family: 'JetBrains Mono Variable', monospace;
+  font-size: 14px;
+  background: #0B0C10;
+  border: 1px solid #2A2D3A;
+  color: #EAECEE;
+  padding: 16px;
+  resize: vertical;
+}

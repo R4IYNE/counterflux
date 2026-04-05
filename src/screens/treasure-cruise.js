@@ -1,16 +1,21 @@
 import { renderEmptyState } from '../components/empty-state.js';
+import { renderStatsHeader } from '../components/stats-header.js';
+import { renderFilterBar } from '../components/filter-bar.js';
+import { renderGalleryView } from '../components/gallery-view.js';
+import { renderTableView } from '../components/table-view.js';
+import { renderSetCompletionView } from '../components/set-completion.js';
 import { renderAddCardModal } from '../components/add-card-modal.js';
 import { renderMassEntryPanel } from '../components/mass-entry-panel.js';
+import { renderCSVImportModal } from '../components/csv-import-modal.js';
 import { renderEditInline } from '../components/edit-card-inline.js';
 import { renderDeleteConfirm } from '../components/delete-confirm.js';
-import { renderCSVImportModal } from '../components/csv-import-modal.js';
 import { renderAnalyticsPanel, analyticsPanel } from '../components/analytics-panel.js';
 import { initContextMenu } from '../components/context-menu.js';
 import { exportCollection } from '../services/csv-export.js';
 
 /**
  * Treasure Cruise -- Collection Manager.
- * Mounts the collection screen with gallery/table views,
+ * Mounts the collection screen with gallery/table/sets views,
  * filter bar, context menu, and modal overlays.
  */
 export function mount(container) {
@@ -24,149 +29,147 @@ export function mount(container) {
 
   // Build screen HTML
   container.innerHTML = `
-    <div x-data>
+    <div x-data class="flex flex-col gap-[24px]">
+
       <!-- Screen header -->
-      <div class="flex items-center justify-between mb-lg">
-        <div>
-          <h1 class="font-header text-[20px] font-bold leading-[1.2] tracking-[0.01em] text-text-primary"
-              style="font-family: 'Syne', sans-serif;">
-            Archive Manifest
-          </h1>
-          <span class="font-mono text-[11px] uppercase tracking-[0.15em] font-bold text-text-muted"
-                style="font-family: 'JetBrains Mono', monospace;">
-            MASTER REPOSITORY SUMMARY
-          </span>
-        </div>
-
-        <!-- Action buttons -->
-        <div class="flex gap-sm">
-          <button
-            @click="$store.collection.addCardOpen = true"
-            class="px-md py-sm font-mono text-[11px] uppercase tracking-[0.15em] font-bold bg-primary text-text-primary cursor-pointer hover:bg-primary/80 transition-colors"
-            style="font-family: 'JetBrains Mono', monospace;">
-            ADD CARD
-          </button>
-          <button
-            @click="$store.collection.massEntryOpen = true"
-            class="px-md py-sm font-mono text-[11px] uppercase tracking-[0.15em] font-bold bg-surface-hover text-text-primary cursor-pointer hover:bg-border-ghost transition-colors"
-            style="font-family: 'JetBrains Mono', monospace;">
-            MASS ENTRY
-          </button>
-          <button
-            @click="$store.collection.importOpen = true"
-            class="px-md py-sm font-mono text-[11px] uppercase tracking-[0.15em] font-bold bg-surface-hover text-text-primary cursor-pointer hover:bg-border-ghost transition-colors"
-            style="font-family: 'JetBrains Mono', monospace;">
-            IMPORT CSV
-          </button>
-          <button
-            @click="document.dispatchEvent(new CustomEvent('export-csv'))"
-            class="px-md py-sm font-mono text-[11px] uppercase tracking-[0.15em] font-bold bg-surface-hover text-text-primary cursor-pointer hover:bg-border-ghost transition-colors"
-            style="font-family: 'JetBrains Mono', monospace;">
-            EXPORT CSV
-          </button>
-        </div>
+      <div>
+        <h2 class="syne-header text-[20px] font-bold leading-[1.2] tracking-[0.01em]"
+            style="color: #EAECEE;">Archive Manifest</h2>
+        <span class="font-mono uppercase text-[11px] tracking-[0.15em] font-bold"
+              style="color: #7A8498;">MASTER REPOSITORY SUMMARY</span>
       </div>
 
-      <!-- Stats header -->
-      <div class="flex gap-xl mb-lg p-md bg-surface-hover border-l-4 border-primary">
-        <div class="flex flex-col">
-          <span class="font-mono text-[11px] uppercase tracking-[0.15em] font-bold text-text-muted"
-                style="font-family: 'JetBrains Mono', monospace;">TOTAL CARDS</span>
-          <span class="font-header text-[28px] font-bold text-primary"
-                x-text="$store.collection.stats.totalCards"></span>
-        </div>
-        <div class="flex flex-col">
-          <span class="font-mono text-[11px] uppercase tracking-[0.15em] font-bold text-text-muted"
-                style="font-family: 'JetBrains Mono', monospace;">UNIQUE CARDS</span>
-          <span class="font-header text-[28px] font-bold text-text-primary"
-                x-text="$store.collection.stats.uniqueCards"></span>
-        </div>
-        <div class="flex flex-col">
-          <span class="font-mono text-[11px] uppercase tracking-[0.15em] font-bold text-text-muted"
-                style="font-family: 'JetBrains Mono', monospace;">ESTIMATED VALUE</span>
-          <span class="font-header text-[28px] font-bold text-primary"
-                x-text="'EUR ' + $store.collection.stats.estimatedValue.toFixed(2)"></span>
-        </div>
-        <div class="flex flex-col">
-          <span class="font-mono text-[11px] uppercase tracking-[0.15em] font-bold text-text-muted"
-                style="font-family: 'JetBrains Mono', monospace;">WISHLIST</span>
-          <span class="font-header text-[28px] font-bold text-text-primary"
-                x-text="$store.collection.stats.wishlistCount"></span>
-        </div>
-      </div>
-
-      <!-- Analytics panel -->
-      ${renderAnalyticsPanel()}
-
-      <!-- Empty state -->
+      <!-- Empty state (shown when no entries) -->
       <template x-if="$store.collection.entries.length === 0 && !$store.collection.loading">
-        <div class="flex flex-col items-center justify-center py-3xl gap-md">
-          <img src="/assets/assetsmila-izzet.png" alt="Mila" class="w-24 h-24 object-contain opacity-60">
-          <h2 class="font-header text-[20px] font-bold text-text-primary" style="font-family: 'Syne', sans-serif;">
-            No Treasures Catalogued
-          </h2>
-          <p class="text-[14px] leading-[1.5] text-text-muted max-w-md text-center"
-             style="font-family: 'Space Grotesk', sans-serif;">
+        <div class="flex flex-col items-center justify-center min-h-[60vh] gap-[24px] text-center">
+          <img
+            src="/assets/assetsmila-izzet.png"
+            alt="Mila -- Izzet Familiar"
+            class="w-24 h-24 object-cover"
+            style="filter: grayscale(1) opacity(0.5);"
+          >
+          <h2 class="syne-header text-[20px] font-bold leading-[1.2] tracking-[0.01em]"
+              style="color: #EAECEE;">No Treasures Catalogued</h2>
+          <p class="max-w-md" style="font-family: 'Space Grotesk', sans-serif; font-size: 14px; line-height: 1.5; color: #7A8498;">
             Mila here! Your collection is empty. Add cards one at a time, paste a batch into the Mass Entry Terminal, or import a CSV from Deckbox, Moxfield, or Archidekt.
           </p>
-        </div>
-      </template>
-
-      <!-- Collection grid (gallery view placeholder) -->
-      <template x-if="$store.collection.entries.length > 0">
-        <div>
-          <!-- Card grid -->
-          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-lg">
-            <template x-for="entry in $store.collection.sorted" :key="entry.id">
-              <div
-                class="bg-surface border border-border-ghost cursor-pointer card-tile-hover relative"
-                @click="$store.search.selectResult(entry.card)"
-                @contextmenu.prevent="document.dispatchEvent(new CustomEvent('collection-context-menu', { detail: { entry, x: $event.clientX, y: $event.clientY } }))"
-              >
-                <!-- Card image -->
-                <div class="relative overflow-hidden" style="aspect-ratio: 63/88;">
-                  <img
-                    :src="entry.card?.image_uris?.normal || entry.card?.image_uris?.small || ''"
-                    :alt="entry.card?.name || ''"
-                    class="w-full h-full object-cover opacity-80 transition-all duration-500"
-                    loading="lazy"
-                    onerror="this.style.display='none'"
-                  >
-                  <!-- Qty badge -->
-                  <template x-if="entry.quantity > 1">
-                    <span class="qty-badge" x-text="'x' + entry.quantity"></span>
-                  </template>
-                  <!-- Foil badge -->
-                  <template x-if="entry.foil">
-                    <span class="foil-badge absolute bottom-sm left-sm">FOIL</span>
-                  </template>
-                </div>
-                <!-- Card info -->
-                <div class="p-sm flex flex-col gap-xs">
-                  <span class="text-[14px] font-bold text-text-primary truncate"
-                        style="font-family: 'Space Grotesk', sans-serif;"
-                        x-text="entry.card?.name || 'Unknown'"></span>
-                  <span class="font-mono text-[11px] uppercase tracking-[0.15em] font-normal text-primary"
-                        style="font-family: 'JetBrains Mono', monospace;"
-                        x-text="'EUR ' + (entry.foil ? (entry.card?.prices?.eur_foil || '0.00') : (entry.card?.prices?.eur || '0.00'))"></span>
-                  <span class="font-mono text-[11px] uppercase tracking-[0.15em] font-normal text-text-dim"
-                        style="font-family: 'JetBrains Mono', monospace;"
-                        x-text="entry.card?.set_name || entry.card?.set?.toUpperCase() || ''"></span>
-                </div>
-              </div>
-            </template>
+          <div class="flex items-center gap-[8px]">
+            <button
+              @click="$store.collection.addCardOpen = true"
+              class="font-mono text-[11px] uppercase tracking-[0.15em] font-bold cursor-pointer px-[16px] py-[8px]"
+              style="background: #0D52BD; color: #EAECEE; border: none;">ADD CARD</button>
+            <button
+              @click="$store.collection.massEntryOpen = true"
+              class="font-mono text-[11px] uppercase tracking-[0.15em] font-bold cursor-pointer px-[16px] py-[8px]"
+              style="background: #1C1F28; color: #EAECEE; border: 1px solid #2A2D3A;">MASS ENTRY</button>
+            <button
+              @click="$store.collection.importOpen = true"
+              class="font-mono text-[11px] uppercase tracking-[0.15em] font-bold cursor-pointer px-[16px] py-[8px]"
+              style="background: #1C1F28; color: #EAECEE; border: 1px solid #2A2D3A;">IMPORT CSV</button>
           </div>
         </div>
       </template>
-    </div>
 
-    <!-- Modals (rendered outside main flow for z-index) -->
+      <!-- Collection content (shown when entries exist) -->
+      <template x-if="$store.collection.entries.length > 0">
+        <div class="flex flex-col gap-[24px]">
+
+          <!-- Stats header -->
+          ${renderStatsHeader()}
+
+          <!-- Analytics panel (toggleable) -->
+          ${renderAnalyticsPanel()}
+
+          <!-- View toggle + filter bar -->
+          <div class="flex flex-col gap-0">
+
+            <!-- View toggle tabs -->
+            <div class="flex items-center gap-0 border-b border-[#2A2D3A]">
+              <button
+                @click="$store.collection.setViewMode('gallery')"
+                :class="$store.collection.viewMode === 'gallery'
+                  ? 'text-[#0D52BD] border-b-2 border-[#0D52BD]'
+                  : 'text-[#7A8498] hover:text-[#EAECEE] border-b-2 border-transparent'"
+                :style="$store.collection.viewMode === 'gallery' ? 'background: rgba(13,82,189,0.1);' : ''"
+                class="font-mono text-[11px] uppercase tracking-[0.15em] font-bold cursor-pointer px-[16px] py-[8px] bg-transparent"
+                style="border-top: none; border-left: none; border-right: none;"
+              >GALLERY</button>
+              <button
+                @click="$store.collection.setViewMode('table')"
+                :class="$store.collection.viewMode === 'table'
+                  ? 'text-[#0D52BD] border-b-2 border-[#0D52BD]'
+                  : 'text-[#7A8498] hover:text-[#EAECEE] border-b-2 border-transparent'"
+                :style="$store.collection.viewMode === 'table' ? 'background: rgba(13,82,189,0.1);' : ''"
+                class="font-mono text-[11px] uppercase tracking-[0.15em] font-bold cursor-pointer px-[16px] py-[8px] bg-transparent"
+                style="border-top: none; border-left: none; border-right: none;"
+              >TABLE</button>
+              <button
+                @click="$store.collection.setViewMode('sets')"
+                :class="$store.collection.viewMode === 'sets'
+                  ? 'text-[#0D52BD] border-b-2 border-[#0D52BD]'
+                  : 'text-[#7A8498] hover:text-[#EAECEE] border-b-2 border-transparent'"
+                :style="$store.collection.viewMode === 'sets' ? 'background: rgba(13,82,189,0.1);' : ''"
+                class="font-mono text-[11px] uppercase tracking-[0.15em] font-bold cursor-pointer px-[16px] py-[8px] bg-transparent"
+                style="border-top: none; border-left: none; border-right: none;"
+              >SETS</button>
+            </div>
+
+            <!-- Filter bar -->
+            ${renderFilterBar()}
+
+          </div>
+
+          <!-- View content area -->
+          <div class="min-h-[400px]">
+
+            <!-- Gallery view -->
+            <template x-if="$store.collection.viewMode === 'gallery'">
+              ${renderGalleryView()}
+            </template>
+
+            <!-- Table view -->
+            <template x-if="$store.collection.viewMode === 'table'">
+              ${renderTableView()}
+            </template>
+
+            <!-- Sets view -->
+            <template x-if="$store.collection.viewMode === 'sets'">
+              ${renderSetCompletionView()}
+            </template>
+
+            <!-- No results message -->
+            <template x-if="$store.collection.sorted.length === 0 && $store.collection.entries.length > 0 && $store.collection.viewMode !== 'sets'">
+              <div class="flex flex-col items-center justify-center py-[64px] gap-[16px] text-center">
+                <img
+                  src="/assets/assetsmila-izzet.png"
+                  alt="Mila -- Izzet Familiar"
+                  class="w-16 h-16 object-cover"
+                  style="filter: grayscale(1) opacity(0.5);"
+                >
+                <p class="font-mono uppercase text-[11px] tracking-[0.15em] font-bold"
+                   style="color: #7A8498;">No cards match your filters</p>
+              </div>
+            </template>
+
+          </div>
+
+        </div>
+      </template>
+
+    </div>
+  `;
+
+  // Append modals to document.body so fixed positioning works correctly
+  const modalContainer = document.createElement('div');
+  modalContainer.id = 'tc-modals';
+  modalContainer.innerHTML = `
     ${renderAddCardModal()}
     ${renderMassEntryPanel()}
     ${renderCSVImportModal()}
     ${renderEditInline()}
     ${renderDeleteConfirm()}
   `;
+  document.body.appendChild(modalContainer);
 
   // Register Alpine component for analytics panel
   if (Alpine && typeof Alpine.data === 'function') {
@@ -185,6 +188,12 @@ export function mount(container) {
   };
   document.addEventListener('export-csv', handleExportCSV);
 
-  // Cleanup on unmount (Navigo calls mount again on re-navigation)
-  container._cleanupExportCSV = () => document.removeEventListener('export-csv', handleExportCSV);
+  // Cleanup on unmount
+  const prevCleanup = container._cleanup;
+  container._cleanup = () => {
+    document.removeEventListener('export-csv', handleExportCSV);
+    const modals = document.getElementById('tc-modals');
+    if (modals) modals.remove();
+    if (prevCleanup) prevCleanup();
+  };
 }
