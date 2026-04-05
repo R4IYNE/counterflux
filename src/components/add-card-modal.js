@@ -7,6 +7,10 @@ import { getCardThumbnail, getCardImage, getCardName } from '../db/card-accessor
  * @returns {string} HTML string
  */
 export function renderAddCardModal() {
+  // Expose searchCards on window so Alpine x-data templates can access it
+  // (dynamic import() inside x-data strings has no module context)
+  window.__cf_searchCards = searchCards;
+
   return `
     <div
       x-data="{
@@ -30,7 +34,7 @@ export function renderAddCardModal() {
           clearTimeout(this._debounce);
           this._debounce = setTimeout(async () => {
             try {
-              const cards = await (await import('../db/search.js')).searchCards(q, 8);
+              const cards = await window.__cf_searchCards(q, 8);
               this.searchResults = cards.map(c => ({
                 ...c,
                 _thumb: null,

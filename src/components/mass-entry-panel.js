@@ -7,6 +7,11 @@ import { searchCards } from '../db/search.js';
  * @returns {string} HTML string
  */
 export function renderMassEntryPanel() {
+  // Expose functions on window so Alpine x-data templates can access them
+  window.__cf_parseBatchText = parseBatchText;
+  window.__cf_resolveBatchEntries = resolveBatchEntries;
+  window.__cf_searchCards = searchCards;
+
   return `
     <div
       x-data="{
@@ -19,10 +24,10 @@ export function renderMassEntryPanel() {
           if (!this.inputText.trim()) return;
           this.resolving = true;
           try {
-            const parsed = (await import('../services/mass-entry.js')).parseBatchText(this.inputText);
-            const resolved = await (await import('../services/mass-entry.js')).resolveBatchEntries(
+            const parsed = window.__cf_parseBatchText(this.inputText);
+            const resolved = await window.__cf_resolveBatchEntries(
               parsed,
-              (await import('../db/search.js')).searchCards
+              window.__cf_searchCards
             );
             this.entries = resolved;
             this.parsed = true;
