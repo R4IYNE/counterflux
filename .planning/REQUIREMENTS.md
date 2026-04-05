@@ -60,12 +60,12 @@
 
 ### Deck Builder (Thousand-Year Storm)
 
-- [ ] **DECK-01**: Three-panel layout: card search (left), the 99 (centre), live analytics (right)
-- [ ] **DECK-02**: Card search powered by Scryfall with full syntax, autocomplete, and filter toggles (colour identity locked to commander, card type, CMC, rarity)
-- [ ] **DECK-03**: "In Collection" toggle filters search results to cards user owns; unowned cards show ghost border with price
-- [ ] **DECK-04**: The 99 toggles between visual grid (card images, drag-and-drop) and list view (compact table)
+- [x] **DECK-01**: Three-panel layout: card search (left), the 99 (centre), live analytics (right)
+- [x] **DECK-02**: Card search powered by Scryfall with full syntax, autocomplete, and filter toggles (colour identity locked to commander, card type, CMC, rarity)
+- [x] **DECK-03**: "In Collection" toggle filters search results to cards user owns; unowned cards show ghost border with price
+- [x] **DECK-04**: The 99 toggles between visual grid (card images, drag-and-drop) and list view (compact table)
 - [x] **DECK-05**: User-defined category sorting (Ramp, Card Draw, Removal, etc.) with custom category creation
-- [ ] **DECK-06**: Drag-and-drop cards between categories via SortableJS
+- [x] **DECK-06**: Drag-and-drop cards between categories via SortableJS
 - [x] **DECK-07**: Persistent card count tracker: `67/99 — 32 slots remaining`
 - [x] **DECK-08**: Owned/missing indicators (green/red dots) with summary: "You own 72 of 99 cards. Remaining cost: £47.30"
 - [ ] **DECK-09**: Live mana curve bar chart (CMC 0-7+, colour-coded) with average CMC
@@ -77,8 +77,8 @@
 - [x] **DECK-15**: Support partner commanders and companions
 - [ ] **DECK-16**: Import decklists from Moxfield, Archidekt, MTGGoldfish, and plain text formats
 - [ ] **DECK-17**: Export as plain text, MTGO format, Arena format, and CSV
-- [ ] **DECK-18**: Right-click context menu on cards: Add to Deck, Add to Collection, Add to Wishlist, View Details, View on Scryfall
-- [ ] **DECK-19**: Card detail flyout: full image, Oracle text, type line, mana cost, price, legalities, collection status, deck usage
+- [x] **DECK-18**: Right-click context menu on cards: Add to Deck, Add to Collection, Add to Wishlist, View Details, View on Scryfall
+- [x] **DECK-19**: Card detail flyout: full image, Oracle text, type line, mana cost, price, legalities, collection status, deck usage
 
 ### Intelligence Layer
 
@@ -190,12 +190,12 @@ Updated during roadmap creation.
 | COLL-11 | Phase 2 | Complete |
 | COLL-12 | Phase 2 | Complete |
 | COLL-13 | Phase 2 | Complete |
-| DECK-01 | Phase 3 | Pending |
-| DECK-02 | Phase 3 | Pending |
-| DECK-03 | Phase 3 | Pending |
-| DECK-04 | Phase 3 | Pending |
+| DECK-01 | Phase 3 | Complete |
+| DECK-02 | Phase 3 | Complete |
+| DECK-03 | Phase 3 | Complete |
+| DECK-04 | Phase 3 | Complete |
 | DECK-05 | Phase 3 | Complete |
-| DECK-06 | Phase 3 | Pending |
+| DECK-06 | Phase 3 | Complete |
 | DECK-07 | Phase 3 | Complete |
 | DECK-08 | Phase 3 | Complete |
 | DECK-09 | Phase 3 | Pending |
@@ -207,8 +207,8 @@ Updated during roadmap creation.
 | DECK-15 | Phase 3 | Complete |
 | DECK-16 | Phase 3 | Pending |
 | DECK-17 | Phase 3 | Pending |
-| DECK-18 | Phase 3 | Pending |
-| DECK-19 | Phase 3 | Pending |
+| DECK-18 | Phase 3 | Complete |
+| DECK-19 | Phase 3 | Complete |
 | INTEL-01 | Phase 4 | Pending |
 | INTEL-02 | Phase 4 | Pending |
 | INTEL-03 | Phase 4 | Pending |

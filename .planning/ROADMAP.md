@@ -68,11 +68,11 @@ Plans:
   3. User can organise cards into custom categories with drag-and-drop reordering, and toggle between visual grid and compact list views
   4. User can see live-updating mana curve, colour pie, type breakdown, category fill indicators, and price summary in the analytics sidebar — all recalculating within 100ms
   5. User can import decklists from Moxfield/Archidekt/MTGGoldfish/plain text and export as plain text, MTGO, Arena, or CSV formats
-**Plans:** 6 plans
+**Plans:** 3/6 plans executed
 Plans:
 - [x] 03-01-PLAN.md — Dexie schema v3, deck store, type classifier, tag heuristics, commander detection, tests
 - [x] 03-02-PLAN.md — Deck landing page, Initialize Ritual modal, deck management context menu, SortableJS install
-- [ ] 03-03-PLAN.md — Three-panel editor layout, search panel, centre panel, card tiles, drag-and-drop, context menu, tags
+- [x] 03-03-PLAN.md — Three-panel editor layout, search panel, centre panel, card tiles, drag-and-drop, context menu, tags
 - [ ] 03-04-PLAN.md — Analytics sidebar: mana curve, colour pie, type/tag breakdown, price summary
 - [ ] 03-05-PLAN.md — Import/export services and modals (Moxfield, Archidekt, MTGGoldfish, plain text, CSV)
 - [ ] 03-06-PLAN.md — Integration wiring, sidebar unlock, search drag-to-deck, full verification checkpoint
@@ -122,7 +122,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 |-------|----------------|--------|-----------|
 | 1. Foundation + Data Layer | 1/4 | In Progress|  |
 | 2. Collection Manager (Treasure Cruise) | 0/5 | Planned | - |
-| 3. Deck Builder (Thousand-Year Storm) | 0/6 | Planned | - |
+| 3. Deck Builder (Thousand-Year Storm) | 3/6 | In Progress|  |
 | 4. Intelligence Layer | 0/0 | Not started | - |
 | 5. Market Intel + Game Tracker | 0/0 | Not started | - |
 | 6. Dashboard + Polish (Epic Experiment) | 0/0 | Not started | - |
