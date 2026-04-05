@@ -2,6 +2,7 @@ import { renderDeckSearchPanel } from './deck-search-panel.js';
 import { renderDeckCentrePanel } from './deck-centre-panel.js';
 import { initDeckContextMenu } from './deck-context-menu.js';
 import { renderTagManager } from './tag-manager.js';
+import { renderDeckAnalyticsPanel, destroyDeckCharts } from './deck-analytics-panel.js';
 
 /**
  * Three-panel deck editor layout.
@@ -93,16 +94,10 @@ export function renderDeckEditor(container) {
     renderTagManager(tagSection, store.activeDeck.id);
   }
 
-  // Analytics placeholder (charts in Plan 04)
-  const analyticsPlaceholder = document.createElement('div');
-  analyticsPlaceholder.style.cssText = 'display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 200px; gap: 16px; text-align: center;';
-  analyticsPlaceholder.innerHTML = `
-    <span class="material-symbols-outlined" style="font-size: 48px; color: #4A5064;">analytics</span>
-    <p style="font-family: 'Space Grotesk', sans-serif; font-size: 14px; color: #7A8498;">
-      Charts coming in Plan 04.
-    </p>
-  `;
-  rightPanel.appendChild(analyticsPlaceholder);
+  // Analytics panel (mana curve, colour pie, type/tag breakdown, price summary)
+  const analyticsContainer = document.createElement('div');
+  rightPanel.appendChild(analyticsContainer);
+  renderDeckAnalyticsPanel(analyticsContainer);
 
   panelRow.appendChild(leftPanel);
   panelRow.appendChild(centrePanel);
@@ -137,5 +132,7 @@ export function renderDeckEditor(container) {
     ctxMenu?.cleanup();
     tagSection._tagManagerCleanup?.();
     centrePanel._centreCleanup?.();
+    analyticsContainer._analyticsCleanup?.();
+    destroyDeckCharts();
   };
 }
