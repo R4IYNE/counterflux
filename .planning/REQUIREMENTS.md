@@ -45,9 +45,9 @@
 ### Collection Manager (Treasure Cruise)
 
 - [x] **COLL-01**: User can add cards to collection with quantity, condition (NM/LP/MP/HP/DMG), foil status, and acquired price
-- [ ] **COLL-02**: Gallery view displays card images in a filterable, sortable grid (by name, set, price, date, colour)
-- [ ] **COLL-03**: Table view displays spreadsheet-style rows (name, set, collector #, condition, foil, qty, location, market price, cost basis, P&L) with sortable/filterable columns
-- [ ] **COLL-04**: Set completion view shows per-set progress bars (owned/total), filterable by rarity tier
+- [x] **COLL-02**: Gallery view displays card images in a filterable, sortable grid (by name, set, price, date, colour)
+- [x] **COLL-03**: Table view displays spreadsheet-style rows (name, set, qty, foil, price GBP, category) with sortable columns
+- [x] **COLL-04**: Set completion view shows per-set progress bars (owned/total), filterable by rarity tier
 - [x] **COLL-05**: Mass entry terminal accepts batch syntax: `{qty}x {name} [{set}] {condition} {foil?} {@price?}` with Scryfall auto-resolution
 - [x] **COLL-06**: Unresolved mass entry items flagged for manual matching with confirmation modal
 - [x] **COLL-07**: Inventory categories: Collection, Trade Binder, Wishlist, Lent Out (with borrower tracking)
@@ -178,9 +178,9 @@ Updated during roadmap creation.
 | MILA-03 | Phase 1 | Pending |
 | PERF-01 | Phase 1 | Complete |
 | COLL-01 | Phase 2 | Complete |
-| COLL-02 | Phase 2 | Pending |
-| COLL-03 | Phase 2 | Pending |
-| COLL-04 | Phase 2 | Pending |
+| COLL-02 | Phase 2 | Complete |
+| COLL-03 | Phase 2 | Complete |
+| COLL-04 | Phase 2 | Complete |
 | COLL-05 | Phase 2 | Complete |
 | COLL-06 | Phase 2 | Complete |
 | COLL-07 | Phase 2 | Complete |
