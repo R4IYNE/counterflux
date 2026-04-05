@@ -289,25 +289,36 @@ export function renderDeckCentrePanel(container) {
   refresh();
   setTimeout(setupSearchDragSource, 100);
 
-  // Re-render when store updates (poll-based since we're imperative, not Alpine template)
-  let refreshInterval = setInterval(() => {
-    if (!store) return;
-    updateHeader();
-  }, 500);
-
-  // Listen for card additions to re-render groups
-  const handleStoreChange = () => {
-    setTimeout(refresh, 50);
-  };
-  document.addEventListener('deck-cards-changed', handleStoreChange);
+  // Reactive re-render via Alpine.effect() — triggers when activeCards changes
+  let effectCleanup = null;
+  if (Alpine && store) {
+    let lastCardCount = -1;
+    effectCleanup = Alpine.effect(() => {
+      // Touch reactive properties to register dependency tracking
+      const cards = store.activeCards;
+      const len = cards?.length ?? 0;
+      const deck = store.activeDeck;
+      const vm = store.viewMode;
+      // Skip the initial run (already rendered above)
+      if (lastCardCount === -1) {
+        lastCardCount = len;
+        return;
+      }
+      // Re-render on any change
+      lastCardCount = len;
+      requestAnimationFrame(() => {
+        refresh();
+        setTimeout(setupSearchDragSource, 50);
+      });
+    });
+  }
 
   // Cleanup
   const prevCleanup = container._centreCleanup;
   container._centreCleanup = () => {
     destroySortables();
     observer.disconnect();
-    clearInterval(refreshInterval);
-    document.removeEventListener('deck-cards-changed', handleStoreChange);
+    if (effectCleanup && typeof effectCleanup === 'function') effectCleanup();
     if (prevCleanup) prevCleanup();
   };
 }

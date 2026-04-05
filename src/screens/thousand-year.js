@@ -13,16 +13,6 @@ export function mount(container) {
   let mode = 'landing';
   let cleanupFns = [];
 
-  // Check if URL hash contains a deck ID for direct editor access
-  const hashMatch = window.location.hash.match(/#\/decks\/edit\/(\d+)/);
-  if (hashMatch) {
-    const deckId = parseInt(hashMatch[1], 10);
-    if (store && typeof store.loadDeck === 'function') {
-      store.loadDeck(deckId);
-    }
-    mode = 'editor';
-  }
-
   // Load decks list
   if (store && typeof store.loadDecks === 'function') {
     store.loadDecks();
@@ -63,7 +53,6 @@ export function mount(container) {
     const deckId = e.detail?.deckId;
     if (deckId && store) {
       store.loadDeck(deckId).then(() => {
-        window.location.hash = `#/decks/edit/${deckId}`;
         renderEditor(deckId);
       });
     }
@@ -73,18 +62,13 @@ export function mount(container) {
 
   // Listen for deck-back-to-landing events
   const handleBackToLanding = () => {
-    window.location.hash = '#/decks';
     renderLanding();
   };
   document.addEventListener('deck-back-to-landing', handleBackToLanding);
   cleanupFns.push(() => document.removeEventListener('deck-back-to-landing', handleBackToLanding));
 
-  // Initial render based on mode
-  if (mode === 'editor') {
-    renderEditor(hashMatch ? parseInt(hashMatch[1], 10) : null);
-  } else {
-    renderLanding();
-  }
+  // Initial render
+  renderLanding();
 
   // Cleanup on unmount
   const prevCleanup = container._cleanup;

@@ -120,7 +120,7 @@ export function initDeckContextMenu(container) {
         font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase;
         letter-spacing: 0.15em; font-weight: 700; color: #7A8498; padding: 8px 16px 4px;
       `;
-      tagHeader.textContent = 'ADD TAG';
+      tagHeader.textContent = 'CATEGORY';
       menuEl.appendChild(tagHeader);
 
       for (const tag of tags) {

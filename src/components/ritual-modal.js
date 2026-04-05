@@ -488,10 +488,22 @@ export function openRitualModal(options = {}) {
       color_identity: colorIdentity,
     });
 
+    // Load the new deck so addCard can operate on it
+    await store.loadDeck(newId);
+
+    // Auto-add commander (and partner/companion) to the deck
+    await store.addCard(selectedCommander.id, ['Commander']);
+    if (selectedPartner) {
+      await store.addCard(selectedPartner.id, ['Commander']);
+    }
+    if (selectedCompanion) {
+      await store.addCard(selectedCompanion.id, ['Companion']);
+    }
+
     toast?.success(`Deck "${name}" created. Begin brewing.`);
     closeModal();
 
-    // Navigate to editor
+    // Navigate to editor (deck already loaded, just render)
     document.dispatchEvent(
       new CustomEvent('deck-open', { detail: { deckId: newId } })
     );

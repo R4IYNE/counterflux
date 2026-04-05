@@ -343,7 +343,8 @@
               const card = $store.search.selectedCard;
               if (!card || !card.id) return;
               try {
-                const { db } = await import('./src/db/schema.js');
+                const db = window.__cf_db;
+                if (!db) return;
                 const deckCards = await db.deck_cards.where('scryfall_id').equals(card.id).toArray();
                 if (!deckCards.length) return;
                 const deckIds = [...new Set(deckCards.map(dc => dc.deck_id))];

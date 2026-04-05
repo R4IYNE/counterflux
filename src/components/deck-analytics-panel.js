@@ -1,12 +1,28 @@
 /**
  * Deck analytics sidebar panel.
  * Renders mana curve, colour distribution, type breakdown,
- * functional tags, price summary, and salt score placeholder.
+ * categories, price summary, and salt score placeholder.
  * All charts live-update via Alpine.effect() within 100ms.
  */
 
-import { Chart } from 'chart.js';
+import {
+  Chart,
+  DoughnutController,
+  BarController,
+  ArcElement,
+  BarElement,
+  CategoryScale,
+  LinearScale,
+  Tooltip,
+} from 'chart.js';
 import { TYPE_ORDER } from '../utils/type-classifier.js';
+
+Chart.register(
+  DoughnutController, BarController,
+  ArcElement, BarElement,
+  CategoryScale, LinearScale,
+  Tooltip
+);
 // Prices from deck-analytics.js are already in GBP (via eurToGbpValue).
 // We format directly with formatGbp() below.
 
@@ -323,7 +339,7 @@ export function renderDeckAnalyticsPanel(container) {
   // --- Section 4: Functional Tags ---
   const tagSection = document.createElement('div');
   tagSection.style.cssText = 'margin-bottom: 24px;';
-  tagSection.appendChild(createSectionHeader('FUNCTIONAL TAGS'));
+  tagSection.appendChild(createSectionHeader('CATEGORIES'));
 
   const tagBarsContainer = document.createElement('div');
   tagSection.appendChild(tagBarsContainer);
@@ -413,8 +429,10 @@ export function renderDeckAnalyticsPanel(container) {
   let effectCleanup = null;
   if (Alpine && store) {
     effectCleanup = Alpine.effect(() => {
-      // Touch the analytics getter to register reactivity
-      const _analytics = store.analytics;
+      // Touch reactive properties to register dependency tracking
+      const _cards = store.activeCards;
+      const _len = _cards?.length;
+      const _deck = store.activeDeck;
       // Batch updates via requestAnimationFrame
       if (updateFrameId) cancelAnimationFrame(updateFrameId);
       updateFrameId = requestAnimationFrame(() => {

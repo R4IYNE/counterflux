@@ -1,6 +1,7 @@
-import { searchCards } from '../db/search.js';
+import { searchCards, browseCards } from '../db/search.js';
 import { getCardImage, getCardName, getCardManaCost } from '../db/card-accessor.js';
 import Sortable from 'sortablejs';
+import { DEFAULT_TAGS, suggestTags } from '../utils/tag-heuristics.js';
 
 /**
  * Deck editor search panel.
@@ -19,6 +20,8 @@ export function renderDeckSearchPanel(container) {
   let typeFilter = 'All';
   let cmcFilter = 'All';
   let rarityFilter = 'All';
+  let colourFilter = new Set(); // active WUBRG colour filters
+  let tagFilter = 'All';
   let searchTimeout = null;
   let results = [];
   let searchSortable = null;
@@ -75,6 +78,65 @@ export function renderDeckSearchPanel(container) {
   });
   container.appendChild(toggleBtn);
 
+  // Colour identity filter (WUBRG mana icons)
+  const colourLabel = document.createElement('span');
+  colourLabel.textContent = 'COLOUR';
+  colourLabel.style.cssText = `
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase;
+    letter-spacing: 0.15em; font-weight: 700; color: #7A8498; display: block; margin-bottom: 4px;
+  `;
+  container.appendChild(colourLabel);
+
+  const colourRow = document.createElement('div');
+  colourRow.style.cssText = 'display: flex; gap: 4px; margin-bottom: 16px;';
+
+  const WUBRG = [
+    { key: 'W', icon: 'ms ms-w ms-cost', label: 'White' },
+    { key: 'U', icon: 'ms ms-u ms-cost', label: 'Blue' },
+    { key: 'B', icon: 'ms ms-b ms-cost', label: 'Black' },
+    { key: 'R', icon: 'ms ms-r ms-cost', label: 'Red' },
+    { key: 'G', icon: 'ms ms-g ms-cost', label: 'Green' },
+    { key: 'C', icon: 'ms ms-c ms-cost', label: 'Colourless' },
+  ];
+
+  // Only show colours within the deck's colour identity (+ colourless always)
+  const deckCI = deckStore?.activeDeck?.color_identity || [];
+
+  // Start with all deck-legal colours + colourless active
+  for (const c of deckCI) colourFilter.add(c);
+  colourFilter.add('C');
+
+  for (const colour of WUBRG) {
+    // Skip colours outside deck's identity (except colourless)
+    if (colour.key !== 'C' && deckCI.length > 0 && !deckCI.includes(colour.key)) continue;
+
+    const btn = document.createElement('button');
+    btn.title = colour.label;
+    btn.style.cssText = `
+      width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+      cursor: pointer; border: 2px solid transparent; background: transparent;
+      border-radius: 50%; transition: border-color 150ms, opacity 150ms;
+      opacity: 1; border-color: #0D52BD;
+    `;
+    btn.innerHTML = `<i class="${colour.icon}" style="font-size: 20px;"></i>`;
+
+    btn.addEventListener('click', () => {
+      if (colourFilter.has(colour.key)) {
+        colourFilter.delete(colour.key);
+        btn.style.opacity = '0.4';
+        btn.style.borderColor = 'transparent';
+      } else {
+        colourFilter.add(colour.key);
+        btn.style.opacity = '1';
+        btn.style.borderColor = '#0D52BD';
+      }
+      executeSearch();
+    });
+
+    colourRow.appendChild(btn);
+  }
+  container.appendChild(colourRow);
+
   // Filter controls
   const filterWrap = document.createElement('div');
   filterWrap.style.cssText = 'display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px;';
@@ -91,9 +153,14 @@ export function renderDeckSearchPanel(container) {
     'All', 'common', 'uncommon', 'rare', 'mythic',
   ], (val) => { rarityFilter = val; executeSearch(); });
 
+  const tagSelect = createFilterDropdown('CATEGORY', [
+    'All', ...DEFAULT_TAGS,
+  ], (val) => { tagFilter = val; executeSearch(); });
+
   filterWrap.appendChild(typeSelect);
   filterWrap.appendChild(cmcSelect);
   filterWrap.appendChild(raritySelect);
+  filterWrap.appendChild(tagSelect);
   container.appendChild(filterWrap);
 
   // Results container
@@ -113,42 +180,49 @@ export function renderDeckSearchPanel(container) {
 
   async function executeSearch() {
     const query = searchInput.value.trim();
-    if (query.length < 2) {
-      results = [];
-      renderResults();
-      return;
-    }
-
-    // Fetch more results to allow post-filtering
-    let raw = await searchCards(query, 50);
-
-    // Filter by commander colour identity
     const deckColorIdentity = deckStore?.activeDeck?.color_identity || [];
-    if (deckColorIdentity.length > 0) {
-      raw = raw.filter(card => {
-        const cardCI = card.color_identity || [];
-        return cardCI.every(c => deckColorIdentity.includes(c));
-      });
-    }
 
-    // Type filter
-    if (typeFilter !== 'All') {
-      raw = raw.filter(card => (card.type_line || '').includes(typeFilter));
-    }
+    let raw;
 
-    // CMC filter
-    if (cmcFilter !== 'All') {
-      if (cmcFilter === '7+') {
-        raw = raw.filter(card => (card.cmc || 0) >= 7);
-      } else {
-        const cmcVal = parseInt(cmcFilter, 10);
-        raw = raw.filter(card => (card.cmc || 0) === cmcVal);
+    if (query.length < 2) {
+      // Browse mode: show cards matching colour identity and filters
+      raw = await browseCards(deckColorIdentity, {
+        type: typeFilter,
+        cmc: cmcFilter,
+        rarity: rarityFilter,
+        tag: tagFilter,
+      }, 50);
+    } else {
+      // Search mode: text search
+      raw = await searchCards(query, 50);
+
+      // Filter by commander colour identity
+      if (deckColorIdentity.length > 0) {
+        raw = raw.filter(card => {
+          const cardCI = card.color_identity || [];
+          return cardCI.every(c => deckColorIdentity.includes(c));
+        });
       }
-    }
 
-    // Rarity filter
-    if (rarityFilter !== 'All') {
-      raw = raw.filter(card => card.rarity === rarityFilter);
+      // Type filter
+      if (typeFilter !== 'All') {
+        raw = raw.filter(card => (card.type_line || '').includes(typeFilter));
+      }
+
+      // CMC filter
+      if (cmcFilter !== 'All') {
+        if (cmcFilter === '7+') {
+          raw = raw.filter(card => (card.cmc || 0) >= 7);
+        } else {
+          const cmcVal = parseInt(cmcFilter, 10);
+          raw = raw.filter(card => (card.cmc || 0) === cmcVal);
+        }
+      }
+
+      // Rarity filter
+      if (rarityFilter !== 'All') {
+        raw = raw.filter(card => card.rarity === rarityFilter);
+      }
     }
 
     // In Collection Only filter
@@ -157,13 +231,33 @@ export function renderDeckSearchPanel(container) {
       raw = raw.filter(card => ownedSet.has(card.id));
     }
 
+    // Colour filter (WUBRG toggles) — exclude cards with unticked colours
+    const allColoursActive = deckCI.every(c => colourFilter.has(c)) && colourFilter.has('C');
+    if (!allColoursActive) {
+      raw = raw.filter(card => {
+        const cardCI = card.color_identity || [];
+        // Colourless cards: only show if C is ticked
+        if (cardCI.length === 0) return colourFilter.has('C');
+        // Every colour in the card must be ticked
+        return cardCI.every(c => colourFilter.has(c));
+      });
+    }
+
+    // Functional tag filter — match via oracle text heuristics
+    if (tagFilter !== 'All') {
+      raw = raw.filter(card => {
+        const cardTags = suggestTags(card?.oracle_text);
+        return cardTags.includes(tagFilter);
+      });
+    }
+
     results = raw.slice(0, 20);
     renderResults();
   }
 
   function renderResults() {
     resultsEl.innerHTML = '';
-    noResults.style.display = results.length === 0 && searchInput.value.trim().length >= 2 ? 'block' : 'none';
+    noResults.style.display = results.length === 0 ? 'block' : 'none';
 
     const ownedSet = getOwnedSet();
 
@@ -286,6 +380,9 @@ export function renderDeckSearchPanel(container) {
       });
     }
   }
+
+  // Show browse results on initial load
+  executeSearch();
 }
 
 /**

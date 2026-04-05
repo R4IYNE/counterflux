@@ -1,7 +1,6 @@
 import { renderDeckSearchPanel } from './deck-search-panel.js';
 import { renderDeckCentrePanel } from './deck-centre-panel.js';
 import { initDeckContextMenu } from './deck-context-menu.js';
-import { renderTagManager } from './tag-manager.js';
 import { renderDeckAnalyticsPanel, destroyDeckCharts } from './deck-analytics-panel.js';
 
 /**
@@ -86,14 +85,6 @@ export function renderDeckEditor(container) {
   `;
   rightPanel.appendChild(analyticsHeader);
 
-  // Tag manager section
-  const tagSection = document.createElement('div');
-  tagSection.style.cssText = 'margin-bottom: 24px;';
-  rightPanel.appendChild(tagSection);
-  if (store?.activeDeck?.id) {
-    renderTagManager(tagSection, store.activeDeck.id);
-  }
-
   // Analytics panel (mana curve, colour pie, type/tag breakdown, price summary)
   const analyticsContainer = document.createElement('div');
   rightPanel.appendChild(analyticsContainer);
@@ -130,7 +121,6 @@ export function renderDeckEditor(container) {
   container._editorCleanup = () => {
     window.removeEventListener('resize', applyResponsiveWidths);
     ctxMenu?.cleanup();
-    tagSection._tagManagerCleanup?.();
     centrePanel._centreCleanup?.();
     analyticsContainer._analyticsCleanup?.();
     destroyDeckCharts();

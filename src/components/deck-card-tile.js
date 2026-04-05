@@ -23,7 +23,7 @@ export function renderDeckCardTile(entry, options = {}) {
 function renderGridTile(entry, card, cardName, typeGroup) {
   const tile = document.createElement('div');
   tile.className = 'card-tile-hover cursor-pointer flex flex-col relative';
-  tile.style.cssText = 'background: #14161C; border: 1px solid #2A2D3A;';
+  tile.style.cssText = 'background: #14161C; border: 1px solid #2A2D3A; overflow: hidden;';
   tile.dataset.deckCardId = String(entry.id);
   tile.dataset.scryfallId = entry.scryfall_id;
   tile.dataset.typeGroup = typeGroup;
@@ -107,10 +107,11 @@ function renderGridTile(entry, card, cardName, typeGroup) {
   // Tag pills
   if (entry.tags && entry.tags.length > 0) {
     const tagWrap = document.createElement('div');
-    tagWrap.style.cssText = 'display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px;';
+    tagWrap.style.cssText = 'display: flex; flex-wrap: wrap; gap: 2px; margin-top: 4px; overflow: hidden; max-height: 22px;';
     for (const tag of entry.tags) {
       const pill = document.createElement('span');
       pill.className = 'tag-pill';
+      pill.style.cssText += ' max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 9px; padding: 1px 4px;';
       pill.textContent = tag;
       tagWrap.appendChild(pill);
     }

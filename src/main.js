@@ -25,6 +25,10 @@ initBulkDataStore();
 // Expose renderManaCost globally for Alpine template usage
 window.renderManaCost = renderManaCost;
 
+// Expose db globally for Alpine inline expressions (flyout, etc.)
+import { db } from './db/schema.js';
+window.__cf_db = db;
+
 // Expose currency converter globally for Alpine template usage
 window.__cf_eurToGbp = eurToGbp;
 window.__cf_eurToGbpValue = eurToGbpValue;

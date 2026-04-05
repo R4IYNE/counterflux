@@ -211,6 +211,26 @@ export function initDeckStore() {
       }
     },
 
+    /**
+     * Re-categorize all cards in the active deck using latest heuristics.
+     * Overwrites existing tags with fresh suggestTags() results.
+     */
+    async recategorizeAll() {
+      if (!this.activeDeck) return 0;
+      const deckId = this.activeDeck.id;
+      const deckCards = await db.deck_cards.where('deck_id').equals(deckId).toArray();
+      let updated = 0;
+      for (const dc of deckCards) {
+        const card = await db.cards.get(dc.scryfall_id);
+        const newTags = suggestTags(card?.oracle_text);
+        await db.deck_cards.update(dc.id, { tags: newTags });
+        updated++;
+      }
+      await db.decks.update(deckId, { tags: [...DEFAULT_TAGS], updated_at: new Date().toISOString() });
+      await this.loadDeck(deckId);
+      return updated;
+    },
+
     async changeCommander(deckId, newCommanderId, newColorIdentity) {
       await db.decks.update(deckId, {
         commander_id: newCommanderId,
