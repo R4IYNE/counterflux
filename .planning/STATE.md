@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 03-04-PLAN.md
-last_updated: "2026-04-05T18:45:39.396Z"
+stopped_at: Completed 03-05-PLAN.md
+last_updated: "2026-04-05T18:53:47.984Z"
 last_activity: 2026-04-05
 progress:
   total_phases: 6
   completed_phases: 1
   total_plans: 15
-  completed_plans: 12
+  completed_plans: 13
   percent: 0
 ---
 
@@ -61,6 +61,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 03 P02 | 5min | 2 tasks | 8 files |
 | Phase 03 P03 | 7min | 2 tasks | 7 files |
 | Phase 03 P04 | 4min | 2 tasks | 2 files |
+| Phase 03 P05 | 5min | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -93,6 +94,9 @@ Recent decisions affecting current work:
 - [Phase 03]: Centre panel uses 500ms polling for header stats (imperative DOM, not Alpine template)
 - [Phase 03]: Tag manager placed in analytics right panel above chart placeholder
 - [Phase 03]: Deck analytics prices formatted directly as GBP (already converted by eurToGbpValue) rather than round-tripping through eurToGbp
+- [Phase 03]: PapaParse unparse with explicit fields array for CSV export; empty CSV returns header-only
+- [Phase 03]: Import modal uses imperative DOM pattern consistent with centre panel
+- [Phase 03]: Format auto-detection regex cascade: Moxfield > Archidekt > Arena > plaintext
 
 ### Pending Todos
 
@@ -106,6 +110,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-05T18:45:39.394Z
-Stopped at: Completed 03-04-PLAN.md
+Last session: 2026-04-05T18:53:47.982Z
+Stopped at: Completed 03-05-PLAN.md
 Resume file: None

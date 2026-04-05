@@ -75,8 +75,8 @@
 - [x] **DECK-13**: Price summary (total cost, cost of unowned, most expensive card)
 - [x] **DECK-14**: Initialize Ritual flow: enter commander (autocomplete), auto-populate colour identity, lock filters, open canvas
 - [x] **DECK-15**: Support partner commanders and companions
-- [ ] **DECK-16**: Import decklists from Moxfield, Archidekt, MTGGoldfish, and plain text formats
-- [ ] **DECK-17**: Export as plain text, MTGO format, Arena format, and CSV
+- [x] **DECK-16**: Import decklists from Moxfield, Archidekt, MTGGoldfish, and plain text formats
+- [x] **DECK-17**: Export as plain text, MTGO format, Arena format, and CSV
 - [x] **DECK-18**: Right-click context menu on cards: Add to Deck, Add to Collection, Add to Wishlist, View Details, View on Scryfall
 - [x] **DECK-19**: Card detail flyout: full image, Oracle text, type line, mana cost, price, legalities, collection status, deck usage
 
@@ -205,8 +205,8 @@ Updated during roadmap creation.
 | DECK-13 | Phase 3 | Complete |
 | DECK-14 | Phase 3 | Complete |
 | DECK-15 | Phase 3 | Complete |
-| DECK-16 | Phase 3 | Pending |
-| DECK-17 | Phase 3 | Pending |
+| DECK-16 | Phase 3 | Complete |
+| DECK-17 | Phase 3 | Complete |
 | DECK-18 | Phase 3 | Complete |
 | DECK-19 | Phase 3 | Complete |
 | INTEL-01 | Phase 4 | Pending |
