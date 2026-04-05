@@ -306,12 +306,12 @@
             <div class="flex items-baseline gap-md">
               <span
                 class="font-header text-[28px] font-bold text-text-primary"
-                x-text="$store.search.selectedCard.prices?.usd ? '$' + $store.search.selectedCard.prices.usd : 'N/A'"
+                x-text="window.__cf_eurToGbp ? window.__cf_eurToGbp($store.search.selectedCard.prices?.eur) : 'N/A'"
               ></span>
               <span
-                x-show="$store.search.selectedCard.prices?.usd_foil"
+                x-show="$store.search.selectedCard.prices?.eur_foil"
                 class="font-mono uppercase text-[11px] tracking-[0.15em] font-normal text-text-muted"
-                x-text="$store.search.selectedCard.prices?.usd_foil ? 'Foil: $' + $store.search.selectedCard.prices.usd_foil : ''"
+                x-text="$store.search.selectedCard.prices?.eur_foil ? 'Foil: ' + window.__cf_eurToGbp($store.search.selectedCard.prices.eur_foil) : ''"
               ></span>
             </div>
           </div>

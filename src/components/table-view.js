@@ -65,7 +65,7 @@ export function renderTableView() {
               <th @click="toggleSort('price')"
                   class="text-left px-[16px] py-[8px] font-mono text-[11px] uppercase tracking-[0.15em] font-bold cursor-pointer select-none"
                   :style="isSortedBy('price') ? 'color: #0D52BD;' : 'color: #7A8498;'">
-                PRICE (EUR)
+                PRICE (GBP)
                 <template x-if="isSortedBy('price')">
                   <span class="material-symbols-outlined align-middle" style="font-size: 11px;"
                         x-text="sortDir('price') === 'asc' ? 'arrow_upward' : 'arrow_downward'"></span>
@@ -105,7 +105,7 @@ export function renderTableView() {
                 </td>
                 <td class="px-[16px] py-[8px] font-mono text-[11px] tracking-[0.15em]"
                     style="color: #0D52BD;"
-                    x-text="'EUR ' + (entry.foil ? (entry.card?.prices?.eur_foil || '--') : (entry.card?.prices?.eur || '--'))"></td>
+                    x-text="window.__cf_eurToGbp(entry.foil ? entry.card?.prices?.eur_foil : entry.card?.prices?.eur)"></td>
                 <td class="px-[16px] py-[8px] font-mono text-[11px] tracking-[0.15em] font-bold uppercase"
                     style="color: #EAECEE;"
                     x-text="(entry.category || 'owned').toUpperCase()"></td>

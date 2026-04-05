@@ -12,6 +12,7 @@ import { initBulkDataStore, startBulkDataPipeline } from './stores/bulkdata.js';
 import { splashScreen } from './components/splash-screen.js';
 import { initRouter } from './router.js';
 import { renderManaCost } from './utils/mana.js';
+import { getEurToGbpRate, eurToGbp, eurToGbpValue } from './services/currency.js';
 
 // Initialize stores before Alpine starts
 initAppStore();
@@ -21,6 +22,10 @@ initBulkDataStore();
 
 // Expose renderManaCost globally for Alpine template usage
 window.renderManaCost = renderManaCost;
+
+// Expose currency converter globally for Alpine template usage
+window.__cf_eurToGbp = eurToGbp;
+window.__cf_eurToGbpValue = eurToGbpValue;
 
 // Register Alpine components
 Alpine.data('splashScreen', splashScreen);
@@ -33,6 +38,13 @@ Alpine.start();
 
 // Initialize router after Alpine is ready
 initRouter();
+
+// Fetch EUR→GBP exchange rate (once per session, cached 24h)
+getEurToGbpRate().then(rate => {
+  console.log(`[Counterflux] EUR→GBP rate: ${rate}`);
+}).catch(() => {
+  console.warn('[Counterflux] Using fallback EUR→GBP rate');
+});
 
 // Start the bulk data pipeline (runs after Alpine is ready)
 startBulkDataPipeline().catch((err) => {

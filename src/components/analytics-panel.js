@@ -119,16 +119,17 @@ export function computeTopSets(entries, limit = 10) {
 }
 
 /**
- * Compute top N most valuable cards by EUR price.
+ * Compute top N most valuable cards by price (EUR converted to GBP).
  * @param {Array} entries
  * @param {number} limit
  * @returns {Array<{ name: string, price: number, set: string }>}
  */
 export function computeTopValuable(entries, limit = 10) {
+  const convert = (typeof window !== 'undefined' && window.__cf_eurToGbpValue) || (v => v);
   return [...entries]
     .map(e => ({
       name: e.card?.name || 'Unknown',
-      price: parseFloat(e.foil ? e.card?.prices?.eur_foil : e.card?.prices?.eur) || 0,
+      price: convert(parseFloat(e.foil ? e.card?.prices?.eur_foil : e.card?.prices?.eur) || 0),
       set: e.card?.set_name || '',
     }))
     .sort((a, b) => b.price - a.price)
@@ -354,7 +355,7 @@ export function renderAnalyticsPanel() {
                         x-text="card.set"></span>
                   <span class="font-mono text-[11px] font-bold text-primary"
                         style="font-family: 'JetBrains Mono', monospace;"
-                        x-text="'EUR ' + card.price.toFixed(2)"></span>
+                        x-text="'£' + card.price.toFixed(2)"></span>
                 </div>
               </template>
               <template x-if="topValuable.length === 0">

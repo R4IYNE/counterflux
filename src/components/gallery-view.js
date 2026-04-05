@@ -46,7 +46,7 @@ export function renderGalleryView() {
                       x-text="entry.card?.name || 'Unknown'"></span>
                 <span class="font-mono text-[11px] tracking-[0.15em]"
                       style="color: #0D52BD;"
-                      x-text="'EUR ' + (entry.foil ? (entry.card?.prices?.eur_foil || '--') : (entry.card?.prices?.eur || '--'))"></span>
+                      x-text="window.__cf_eurToGbp(entry.foil ? entry.card?.prices?.eur_foil : entry.card?.prices?.eur)"></span>
                 <span class="font-mono text-[11px] tracking-[0.15em]"
                       style="color: #4A5064;"
                       x-text="(entry.card?.set_name || entry.card?.set || '').toUpperCase()"></span>
@@ -78,7 +78,8 @@ export function renderGalleryView() {
                 const card = entry.card;
                 const imgSrc = card?._thumbnail || card?.image_uris?.small || card?.card_faces?.[0]?.image_uris?.small || '';
                 const name = card?.name || 'Unknown';
-                const price = entry.foil ? (card?.prices?.eur_foil || '--') : (card?.prices?.eur || '--');
+                const eurPrice = entry.foil ? card?.prices?.eur_foil : card?.prices?.eur;
+                const price = window.__cf_eurToGbp ? window.__cf_eurToGbp(eurPrice) : (eurPrice || '--');
                 const setName = (card?.set_name || card?.set || '').toUpperCase();
                 const qtyBadge = entry.quantity > 1 ? '<span class=\"qty-badge\">x' + entry.quantity + '</span>' : '';
                 const foilBadge = entry.foil ? '<span class=\"foil-badge absolute bottom-0 left-0 mb-[8px] ml-[8px]\">FOIL</span>' : '';
@@ -90,7 +91,7 @@ export function renderGalleryView() {
                   + '</div>'
                   + '<div class=\"p-[8px] flex flex-col gap-[2px]\">'
                   + '<span class=\"text-[14px] font-bold leading-[1.3] truncate\" style=\"font-family: Space Grotesk, sans-serif; color: #EAECEE;\">' + name + '</span>'
-                  + '<span class=\"font-mono text-[11px] tracking-[0.15em]\" style=\"color: #0D52BD;\">EUR ' + price + '</span>'
+                  + '<span class=\"font-mono text-[11px] tracking-[0.15em]\" style=\"color: #0D52BD;\">' + price + '</span>'
                   + '<span class=\"font-mono text-[11px] tracking-[0.15em]\" style=\"color: #4A5064;\">' + setName + '</span>'
                   + '</div></div>';
               }

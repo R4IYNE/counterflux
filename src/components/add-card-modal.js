@@ -58,7 +58,8 @@ export function renderAddCardModal() {
           const p = this.foil
             ? this.selectedCard.prices?.eur_foil
             : this.selectedCard.prices?.eur;
-          return p ? 'EUR ' + p : 'N/A';
+          if (!p) return 'N/A';
+          return window.__cf_eurToGbp ? window.__cf_eurToGbp(p) : p;
         },
 
         async addToCollection() {

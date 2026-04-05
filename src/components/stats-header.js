@@ -35,7 +35,7 @@ export function renderStatsHeader() {
               style="color: #7A8498;">ESTIMATED VALUE</span>
         <span class="syne-header text-[48px] font-bold leading-[1.1] tracking-[-0.02em]"
               style="color: #0D52BD;"
-              x-text="'EUR ' + ($store.collection.stats.estimatedValue || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })">EUR 0.00</span>
+              x-text="'£' + (window.__cf_eurToGbpValue ? window.__cf_eurToGbpValue($store.collection.stats.estimatedValue || 0) : ($store.collection.stats.estimatedValue || 0)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })">£0.00</span>
       </div>
 
       <!-- Wishlist -->

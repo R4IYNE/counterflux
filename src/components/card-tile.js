@@ -1,4 +1,5 @@
 import { getCardThumbnail, getCardImage, getCardName } from '../db/card-accessor.js';
+import { eurToGbp } from '../services/currency.js';
 
 /**
  * Render a single gallery card tile.
@@ -13,10 +14,10 @@ export function renderCardTile(entry, index) {
 
   const imgSrc = getCardThumbnail(card) || getCardImage(card, 0, 'normal') || '';
   const name = getCardName(card) || 'Unknown';
-  const price = entry.foil
+  const eurPrice = entry.foil
     ? card.prices?.eur_foil
     : card.prices?.eur;
-  const priceDisplay = price ? `EUR ${price}` : 'EUR --';
+  const priceDisplay = eurToGbp(eurPrice);
   const setName = (card.set_name || card.set || '').toUpperCase();
 
   const qtyBadge = entry.quantity > 1
