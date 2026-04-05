@@ -181,7 +181,7 @@ Exceptions: none.
 | Step 5: format label | `FORMAT` |
 | Format options | `Commander (100)` / `Standard (60)` / `Modern (60)` / `Legacy (60)` / `Vintage (60)` / `Pauper (60)` |
 | Confirm button | `Begin Ritual` |
-| Cancel link | `Cancel` |
+| Cancel link | `Abandon Ritual` |
 
 ### Three-Panel Editor
 
@@ -233,7 +233,7 @@ Exceptions: none.
 | Item | Copy |
 |------|------|
 | Open | `Open Deck` |
-| Rename | `Rename` |
+| Rename | `Rename Deck` |
 | Duplicate | `Duplicate Deck` |
 | Change commander | `Change Commander` |
 | Delete | `Delete Deck` (destructive, text-secondary) |
@@ -247,7 +247,7 @@ Exceptions: none.
 | Import textarea placeholder | `PASTE DECKLIST OR DROP FILE...` |
 | Import format detection | `DETECTED FORMAT: {format}` (label 400) |
 | Import unresolved warning | `{n} CARDS COULD NOT BE RESOLVED` |
-| Export button | `Export` |
+| Export button | `Export Decklist` |
 | Export format options | `Plain Text` / `MTGO` / `Arena` / `CSV` |
 
 ### Toast Notifications (Phase 3 contexts)
@@ -275,7 +275,7 @@ Exceptions: none.
 
 | Action | Confirmation Copy |
 |--------|------------------|
-| Delete Deck | Title: `Delete "{deck_name}"?` Body: `This will permanently remove this deck and all its cards. This cannot be undone.` Confirm: `Delete Deck` (secondary bg) Cancel: `Cancel` |
+| Delete Deck | Title: `Delete "{deck_name}"?` Body: `This will permanently remove this deck and all its cards. This cannot be undone.` Confirm: `Delete Deck` (secondary bg) Cancel: `Keep Deck` |
 | Remove card from deck | No confirmation -- instant removal with toast: `{card_name} removed.` Undo via Ctrl+Z (Phase 6). |
 
 **Source:** CONTEXT.md D-01 through D-23 for all interaction copy. REQUIREMENTS.md DECK-01 through DECK-19. Mockup screen for panel header text.
@@ -289,7 +289,7 @@ Components the executor must build for this phase:
 | Component | Alpine Store | Key Interactions |
 |-----------|-------------|-----------------|
 | `deck-landing` | `deck` | Grid of deck cards with commander art thumbnails. "Initialize Ritual" button. Context menu on right-click. Click to open editor. Empty state with Mila when no decks exist. |
-| `ritual-modal` | `deck` | Multi-step modal wizard overlay. Glass overlay backdrop. Commander autocomplete (filtered to legendary creatures). Partner/companion conditional steps. Deck name field with auto-suggestion. Format dropdown. Colour identity display (mana-font icons). "Begin Ritual" confirm. "Cancel" dismisses. |
+| `ritual-modal` | `deck` | Multi-step modal wizard overlay. Glass overlay backdrop. Commander autocomplete (filtered to legendary creatures). Partner/companion conditional steps. Deck name field with auto-suggestion. Format dropdown. Colour identity display (mana-font icons). "Begin Ritual" confirm. "Abandon Ritual" dismisses. |
 | `deck-editor` | `deck`, `search`, `collection` | Three-panel layout filling the content area. Search panel left (280px), centre panel flexible, analytics panel right (280px). Panels separated by tonal shifting (no visible borders between panels). |
 | `deck-search-panel` | `search`, `collection` | Search input with autocomplete (reuse `searchCards()`). "In Collection Only" toggle. Filter dropdowns: Type, CMC, Rarity. Results as scrollable card list. Each result: card thumbnail (32px), name, mana cost, price. Click or drag to add to deck. Right-click for context menu. |
 | `deck-centre-panel` | `deck` | Header: deck name (heading), card count (display), slots remaining (label), owned summary bar (label). View toggle: Grid / List. Card groups by type with headers. Visual grid: card image tiles with SortableJS drag-and-drop. Compact list: table rows (name, type, mana cost, price, tags). Owned/missing dot indicators on every card tile. |
@@ -299,7 +299,7 @@ Components the executor must build for this phase:
 | `deck-landing-context-menu` | `deck` | Separate context menu for deck cards on landing. Listens for `deck-landing-context-menu` custom events. Rename (inline edit), Duplicate, Change Commander, Delete (opens confirmation modal). |
 | `deck-import-modal` | `deck` | Modal with textarea for paste or file drop. Auto-detect format (Moxfield/Archidekt/MTGGoldfish/plain text). Show detected format badge. Resolve cards against Scryfall. Flag unresolved cards (reuse mass entry resolution pattern). Confirm import. |
 | `deck-export-modal` | `deck` | Modal with format selection (Plain Text, MTGO, Arena, CSV). Preview of output. Copy to clipboard button. Download as file button. |
-| `delete-deck-modal` | `deck` | Confirmation modal for deck deletion. Deck name in title. Warning body copy. "Delete Deck" button (secondary bg). "Cancel" button. Glass overlay backdrop. |
+| `delete-deck-modal` | `deck` | Confirmation modal for deck deletion. Deck name in title. Warning body copy. "Delete Deck" button (secondary bg). "Keep Deck" button. Glass overlay backdrop. |
 | `tag-manager` | `deck` | Tag creation input, tag list with edit/delete. Tag pills with optional colour. Default tag set auto-populated on new deck. |
 
 ---
@@ -326,7 +326,7 @@ Components the executor must build for this phase:
 | Deck name | Auto-fills from commander name. User can edit freely. |
 | Format dropdown | Default: Commander (100). Other options: Standard (60), Modern (60), Legacy (60), Vintage (60), Pauper (60). |
 | "Begin Ritual" click | Validate commander selected. Create deck in Dexie. Navigate to three-panel editor. Toast: "Deck created." |
-| Cancel / Escape / backdrop click | Close modal, discard inputs. |
+| "Abandon Ritual" / Escape / backdrop click | Close modal, discard inputs. |
 
 ### Three-Panel Editor
 
@@ -456,7 +456,7 @@ This creates the visual rhythm: dark-light-dark across the three panels.
 | `.drop-zone-active` | `border-left: 2px solid var(--color-primary); box-shadow: 0 0 12px var(--color-glow-blue);` | Active drop target group highlight |
 | `.owned-dot` | `width: 6px; height: 6px; background: var(--color-success); position: absolute; top: 4px; right: 4px;` | Green owned indicator |
 | `.missing-dot` | `width: 6px; height: 6px; background: var(--color-secondary); position: absolute; top: 4px; right: 4px;` | Red missing indicator |
-| `.tag-pill` | `font: 11px 'JetBrains Mono'; text-transform: uppercase; letter-spacing: 0.15em; padding: 2px 8px; border: 1px solid var(--color-border-ghost);` | Functional tag pill |
+| `.tag-pill` | `font: 11px 'JetBrains Mono'; text-transform: uppercase; letter-spacing: 0.15em; padding: 4px 8px; border: 1px solid var(--color-border-ghost);` | Functional tag pill |
 | `.view-toggle-active` | `background: var(--color-primary); color: var(--color-text-primary);` | Active view mode (grid/list) |
 | `.view-toggle-inactive` | `background: transparent; border: 1px solid var(--color-border-ghost); color: var(--color-text-muted);` | Inactive view mode |
 | `.filter-toggle-on` | `background: var(--color-primary); color: var(--color-text-primary);` | "In Collection Only" toggle when ON |
