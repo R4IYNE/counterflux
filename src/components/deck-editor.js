@@ -1,5 +1,7 @@
 import { renderDeckSearchPanel } from './deck-search-panel.js';
 import { renderDeckCentrePanel } from './deck-centre-panel.js';
+import { initDeckContextMenu } from './deck-context-menu.js';
+import { renderTagManager } from './tag-manager.js';
 
 /**
  * Three-panel deck editor layout.
@@ -73,20 +75,34 @@ export function renderDeckEditor(container) {
     padding: 24px 16px;
   `;
 
-  // Analytics placeholder
-  rightPanel.innerHTML = `
-    <div style="margin-bottom: 24px;">
-      <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; color: #0D52BD;">
-        ARCHIVE ANALYTICS
-      </span>
-    </div>
-    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 200px; gap: 16px; text-align: center;">
-      <span class="material-symbols-outlined" style="font-size: 48px; color: #4A5064;">analytics</span>
-      <p style="font-family: 'Space Grotesk', sans-serif; font-size: 14px; color: #7A8498;">
-        Analytics panel coming in Plan 04.
-      </p>
-    </div>
+  // Analytics panel header
+  const analyticsHeader = document.createElement('div');
+  analyticsHeader.style.cssText = 'margin-bottom: 24px;';
+  analyticsHeader.innerHTML = `
+    <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; color: #0D52BD;">
+      ARCHIVE ANALYTICS
+    </span>
   `;
+  rightPanel.appendChild(analyticsHeader);
+
+  // Tag manager section
+  const tagSection = document.createElement('div');
+  tagSection.style.cssText = 'margin-bottom: 24px;';
+  rightPanel.appendChild(tagSection);
+  if (store?.activeDeck?.id) {
+    renderTagManager(tagSection, store.activeDeck.id);
+  }
+
+  // Analytics placeholder (charts in Plan 04)
+  const analyticsPlaceholder = document.createElement('div');
+  analyticsPlaceholder.style.cssText = 'display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 200px; gap: 16px; text-align: center;';
+  analyticsPlaceholder.innerHTML = `
+    <span class="material-symbols-outlined" style="font-size: 48px; color: #4A5064;">analytics</span>
+    <p style="font-family: 'Space Grotesk', sans-serif; font-size: 14px; color: #7A8498;">
+      Charts coming in Plan 04.
+    </p>
+  `;
+  rightPanel.appendChild(analyticsPlaceholder);
 
   panelRow.appendChild(leftPanel);
   panelRow.appendChild(centrePanel);
@@ -112,8 +128,14 @@ export function renderDeckEditor(container) {
   renderDeckSearchPanel(leftPanel);
   renderDeckCentrePanel(centrePanel);
 
+  // Init context menu
+  const ctxMenu = initDeckContextMenu(container);
+
   // Cleanup
   container._editorCleanup = () => {
     window.removeEventListener('resize', applyResponsiveWidths);
+    ctxMenu?.cleanup();
+    tagSection._tagManagerCleanup?.();
+    centrePanel._centreCleanup?.();
   };
 }
