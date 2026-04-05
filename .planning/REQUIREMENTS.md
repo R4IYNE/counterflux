@@ -68,11 +68,11 @@
 - [x] **DECK-06**: Drag-and-drop cards between categories via SortableJS
 - [x] **DECK-07**: Persistent card count tracker: `67/99 — 32 slots remaining`
 - [x] **DECK-08**: Owned/missing indicators (green/red dots) with summary: "You own 72 of 99 cards. Remaining cost: £47.30"
-- [ ] **DECK-09**: Live mana curve bar chart (CMC 0-7+, colour-coded) with average CMC
-- [ ] **DECK-10**: Live colour pie doughnut chart (mana symbol distribution vs land colour production)
-- [ ] **DECK-11**: Live type breakdown (creatures/instants/sorceries/enchantments/artifacts/planeswalkers/lands)
-- [ ] **DECK-12**: Live category breakdown with card counts and target fill indicator
-- [ ] **DECK-13**: Price summary (total cost, cost of unowned, most expensive card)
+- [x] **DECK-09**: Live mana curve bar chart (CMC 0-7+, colour-coded) with average CMC
+- [x] **DECK-10**: Live colour pie doughnut chart (mana symbol distribution vs land colour production)
+- [x] **DECK-11**: Live type breakdown (creatures/instants/sorceries/enchantments/artifacts/planeswalkers/lands)
+- [x] **DECK-12**: Live category breakdown with card counts and target fill indicator
+- [x] **DECK-13**: Price summary (total cost, cost of unowned, most expensive card)
 - [x] **DECK-14**: Initialize Ritual flow: enter commander (autocomplete), auto-populate colour identity, lock filters, open canvas
 - [x] **DECK-15**: Support partner commanders and companions
 - [ ] **DECK-16**: Import decklists from Moxfield, Archidekt, MTGGoldfish, and plain text formats
@@ -198,11 +198,11 @@ Updated during roadmap creation.
 | DECK-06 | Phase 3 | Complete |
 | DECK-07 | Phase 3 | Complete |
 | DECK-08 | Phase 3 | Complete |
-| DECK-09 | Phase 3 | Pending |
-| DECK-10 | Phase 3 | Pending |
-| DECK-11 | Phase 3 | Pending |
-| DECK-12 | Phase 3 | Pending |
-| DECK-13 | Phase 3 | Pending |
+| DECK-09 | Phase 3 | Complete |
+| DECK-10 | Phase 3 | Complete |
+| DECK-11 | Phase 3 | Complete |
+| DECK-12 | Phase 3 | Complete |
+| DECK-13 | Phase 3 | Complete |
 | DECK-14 | Phase 3 | Complete |
 | DECK-15 | Phase 3 | Complete |
 | DECK-16 | Phase 3 | Pending |

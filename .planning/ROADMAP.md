@@ -73,7 +73,7 @@ Plans:
 - [x] 03-01-PLAN.md — Dexie schema v3, deck store, type classifier, tag heuristics, commander detection, tests
 - [x] 03-02-PLAN.md — Deck landing page, Initialize Ritual modal, deck management context menu, SortableJS install
 - [x] 03-03-PLAN.md — Three-panel editor layout, search panel, centre panel, card tiles, drag-and-drop, context menu, tags
-- [ ] 03-04-PLAN.md — Analytics sidebar: mana curve, colour pie, type/tag breakdown, price summary
+- [x] 03-04-PLAN.md — Analytics sidebar: mana curve, colour pie, type/tag breakdown, price summary
 - [ ] 03-05-PLAN.md — Import/export services and modals (Moxfield, Archidekt, MTGGoldfish, plain text, CSV)
 - [ ] 03-06-PLAN.md — Integration wiring, sidebar unlock, search drag-to-deck, full verification checkpoint
 **UI hint**: yes
