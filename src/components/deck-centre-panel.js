@@ -1,6 +1,8 @@
 import { renderDeckCardTile } from './deck-card-tile.js';
 import { TYPE_ORDER } from '../utils/type-classifier.js';
 import Sortable from 'sortablejs';
+import { openDeckImportModal } from './deck-import-modal.js';
+import { openDeckExportModal } from './deck-export-modal.js';
 
 /**
  * Deck centre panel -- the 99.
@@ -81,9 +83,15 @@ export function renderDeckCentrePanel(container) {
   controls.appendChild(gridBtn);
   controls.appendChild(listBtn);
 
-  // Import/Export buttons (disabled, coming in Plan 05)
-  const importBtn = createDisabledBtn('Import Decklist');
-  const exportBtn = createDisabledBtn('Export Decklist');
+  // Import/Export buttons
+  const importBtn = createActionBtn('Import Decklist');
+  importBtn.addEventListener('click', () => {
+    if (store?.activeDeck?.id) openDeckImportModal(store.activeDeck.id);
+  });
+  const exportBtn = createActionBtn('Export Decklist');
+  exportBtn.addEventListener('click', () => {
+    openDeckExportModal();
+  });
   controls.appendChild(importBtn);
   controls.appendChild(exportBtn);
 
@@ -329,13 +337,11 @@ function applyToggleActive(btn, active) {
   }
 }
 
-function createDisabledBtn(label) {
+function createActionBtn(label) {
   const btn = document.createElement('button');
   btn.textContent = label;
-  btn.disabled = true;
-  btn.title = 'Coming soon';
   btn.style.cssText = `
-    padding: 6px 12px; cursor: not-allowed; opacity: 0.4;
+    padding: 6px 12px; cursor: pointer;
     font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase;
     letter-spacing: 0.15em; font-weight: 700; background: transparent;
     color: var(--color-text-muted, #7A8498); border: 1px solid var(--color-border-ghost, #2A2D3A);
