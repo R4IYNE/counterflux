@@ -26,12 +26,12 @@ export async function searchCards(query, limit = 12) {
     if (results.length >= limit) break;
   }
 
-  // Fallback: substring match for cards that contain the query anywhere
-  if (results.length < limit) {
-    const remaining = limit - results.length;
+  // Fallback: substring match only when prefix search found nothing
+  // (skip when we have any prefix results — the full table scan is too slow)
+  if (results.length === 0) {
     const additional = await db.cards
-      .filter(card => card.name.toLowerCase().includes(normalised) && !seen.has(card.oracle_id || card.id))
-      .limit(remaining * 3)
+      .filter(card => card.name.toLowerCase().includes(normalised))
+      .limit(limit * 3)
       .toArray();
     for (const card of additional) {
       const key = card.oracle_id || card.id;
