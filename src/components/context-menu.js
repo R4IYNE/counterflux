@@ -160,7 +160,7 @@ export function initContextMenu(container) {
   }
 
   // Listen for custom context menu events
-  document.addEventListener('collection-context-menu', (e) => {
+  document.addEventListener('card-context-menu', (e) => {
     const { entry, x, y } = e.detail;
     showMenu(entry, x, y);
   });
