@@ -38,7 +38,7 @@ db.version(3).stores({
   meta: 'key',
   collection: '++id, scryfall_id, category, foil, [scryfall_id+foil], [scryfall_id+category]',
   decks: '++id, name, format, updated_at',
-  deck_cards: '++id, deck_id, scryfall_id, [deck_id+scryfall_id], scryfall_id'
+  deck_cards: '++id, deck_id, scryfall_id, [deck_id+scryfall_id]'
 });
 
 const SCRYFALL_BULK_API = 'https://api.scryfall.com/bulk-data/default-cards';

@@ -8,6 +8,7 @@ import Alpine from 'alpinejs';
 import { initAppStore } from './stores/app.js';
 import { initSearchStore } from './stores/search.js';
 import { initCollectionStore } from './stores/collection.js';
+import { initDeckStore } from './stores/deck.js';
 import { initBulkDataStore, startBulkDataPipeline } from './stores/bulkdata.js';
 import { splashScreen } from './components/splash-screen.js';
 import { initRouter } from './router.js';
@@ -18,6 +19,7 @@ import { getEurToGbpRate, eurToGbp, eurToGbpValue } from './services/currency.js
 initAppStore();
 initSearchStore();
 initCollectionStore();
+initDeckStore();
 initBulkDataStore();
 
 // Expose renderManaCost globally for Alpine template usage
