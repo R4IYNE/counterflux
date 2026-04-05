@@ -22,6 +22,7 @@ export function renderAddCardModal() {
         category: 'owned',
         searching: false,
         _debounce: null,
+        _searchId: 0,
 
         async doSearch(q) {
           this.searchQuery = q;
@@ -32,16 +33,20 @@ export function renderAddCardModal() {
           }
           this.searching = true;
           clearTimeout(this._debounce);
+          const thisSearchId = ++this._searchId;
           this._debounce = setTimeout(async () => {
             try {
               const cards = await window.__cf_searchCards(q, 8);
+              if (thisSearchId !== this._searchId) return;
               this.searchResults = cards.map(c => ({
                 ...c,
                 _thumb: null,
                 _name: c.name,
               }));
             } catch(e) {
-              this.searchResults = [];
+              if (thisSearchId === this._searchId) {
+                this.searchResults = [];
+              }
             }
             this.searching = false;
           }, 150);
