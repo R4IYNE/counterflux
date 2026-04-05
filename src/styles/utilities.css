@@ -83,3 +83,16 @@
   padding: 16px;
   resize: vertical;
 }
+
+/* Phase 3: Deck Builder utilities */
+
+.drag-ghost { opacity: 0.6; transform: rotate(2deg); }
+.drop-zone-active { border-left: 2px solid var(--color-primary); box-shadow: 0 0 12px var(--color-glow-blue); }
+.owned-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--color-success); position: absolute; top: 4px; right: 4px; }
+.missing-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--color-secondary); position: absolute; top: 4px; right: 4px; }
+.ghost-border-unowned { border: 1px solid #2A2D3A; }
+.tag-pill { font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; padding: 4px 8px; border: 1px solid var(--color-border-ghost); }
+.view-toggle-active { background: var(--color-primary); color: var(--color-text-primary); }
+.view-toggle-inactive { background: transparent; border: 1px solid var(--color-border-ghost); color: var(--color-text-muted); }
+.filter-toggle-on { background: var(--color-primary); color: var(--color-text-primary); }
+.filter-toggle-off { background: transparent; border: 1px solid var(--color-border-ghost); color: var(--color-text-muted); }
