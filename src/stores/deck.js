@@ -95,6 +95,17 @@ export function initDeckStore() {
         owned: ownedSet.has(dc.scryfall_id),
       }));
       this.loading = false;
+
+      // Trigger intelligence layer fetch (non-blocking)
+      const intel = Alpine.store('intelligence');
+      if (intel && this.activeDeck?.commander_name) {
+        intel.fetchForCommander(this.activeDeck.commander_name);
+        intel.fetchCombos(this.activeDeck, this.activeCards);
+        intel.loadDeckThresholds(deckId);
+        // Gap detection is synchronous — runs immediately from local analytics
+        const analytics = computeDeckAnalytics(this.activeCards);
+        intel.updateGaps(analytics, this.activeDeck.deck_size || 100);
+      }
     },
 
     async addCard(scryfallId, tags) {

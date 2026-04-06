@@ -472,7 +472,7 @@ export function renderDeckAnalyticsPanel(container) {
     } else if (!intel?.synergies || intel.synergies.length === 0) {
       const emptyEl = document.createElement('div');
       emptyEl.style.cssText = `${LABEL_400} color: #4A5064;`;
-      emptyEl.textContent = 'Select a commander to see synergy suggestions.';
+      emptyEl.textContent = 'No synergy data available yet. Refresh to fetch from EDHREC.';
       synergyContainer.appendChild(emptyEl);
     } else {
       // Filter out cards already in deck
