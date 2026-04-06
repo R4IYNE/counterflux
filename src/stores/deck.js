@@ -98,9 +98,17 @@ export function initDeckStore() {
 
       // Trigger intelligence layer fetch (non-blocking)
       const intel = Alpine.store('intelligence');
-      if (intel && this.activeDeck?.commander_name) {
-        intel.fetchForCommander(this.activeDeck.commander_name);
-        intel.fetchCombos(this.activeDeck, this.activeCards);
+      if (intel && this.activeDeck?.commander_id) {
+        const commanderCard = await db.cards.get(this.activeDeck.commander_id);
+        if (commanderCard?.name) {
+          intel.fetchForCommander(commanderCard.name);
+          // Build deck info with commander name for Spellbook
+          const deckInfo = {
+            ...this.activeDeck,
+            commander_name: commanderCard.name,
+          };
+          intel.fetchCombos(deckInfo, this.activeCards);
+        }
         intel.loadDeckThresholds(deckId);
         // Gap detection is synchronous — runs immediately from local analytics
         const analytics = computeDeckAnalytics(this.activeCards);
