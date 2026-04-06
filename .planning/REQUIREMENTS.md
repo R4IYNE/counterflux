@@ -87,7 +87,7 @@
 - [ ] **INTEL-03**: Commander Spellbook combo detection: surface known combos in current 99 with badge, pieces, and steps
 - [ ] **INTEL-04**: Near-miss combo suggestions where only 1 piece is missing
 - [x] **INTEL-05**: Salt score aggregate for deck (from EDHREC data)
-- [ ] **INTEL-06**: Mila's daily insights: upgrade suggestions, price alerts, collection stats
+- [x] **INTEL-06**: Mila's daily insights: upgrade suggestions, price alerts, collection stats
 
 ### Market Intel (Preordain)
 
@@ -214,7 +214,7 @@ Updated during roadmap creation.
 | INTEL-03 | Phase 4 | Pending |
 | INTEL-04 | Phase 4 | Pending |
 | INTEL-05 | Phase 4 | Complete |
-| INTEL-06 | Phase 4 | Pending |
+| INTEL-06 | Phase 4 | Complete |
 | MRKT-01 | Phase 5 | Pending |
 | MRKT-02 | Phase 5 | Pending |
 | MRKT-03 | Phase 5 | Pending |

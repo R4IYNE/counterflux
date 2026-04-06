@@ -90,7 +90,7 @@ Plans:
 Plans:
 - [x] 04-01-PLAN.md — Dexie schema v4, EDHREC service with caching and rate limiting, salt score normalization, tests
 - [x] 04-02-PLAN.md — Commander Spellbook combo detection service, gap detection utility, tests
-- [ ] 04-03-PLAN.md — Intelligence Alpine store orchestration, Mila insight engine, main.js wiring
+- [x] 04-03-PLAN.md — Intelligence Alpine store orchestration, Mila insight engine, main.js wiring
 - [ ] 04-04-PLAN.md — UI integration: salt gauge, synergy suggestions, combo badges/popover, gap warnings, near-miss section, visual checkpoint
 **UI hint**: yes
 

@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 04-02-PLAN.md
-last_updated: "2026-04-06T19:07:34.224Z"
+stopped_at: Completed 04-03-PLAN.md
+last_updated: "2026-04-06T19:17:07.489Z"
 last_activity: 2026-04-06
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 19
-  completed_plans: 15
+  completed_plans: 17
   percent: 0
 ---
 
@@ -63,6 +63,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 03 P04 | 4min | 2 tasks | 2 files |
 | Phase 03 P05 | 5min | 2 tasks | 7 files |
 | Phase 04 P02 | 3min | 2 tasks | 5 files |
+| Phase 04 P03 | 4min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -100,6 +101,8 @@ Recent decisions affecting current work:
 - [Phase 03]: Format auto-detection regex cascade: Moxfield > Archidekt > Arena > plaintext
 - [Phase 04]: Spellbook mapCombo includes zoneLocations for future zone display
 - [Phase 04]: Gap detection sorts results critical-first for UI priority
+- [Phase 04]: Salt label thresholds: 0-3 MILD, 4-6 SPICY, 7-10 CRITICAL
+- [Phase 04]: Combo cache 24h TTL; insight rotation day-of-year % top-10 pool
 
 ### Pending Todos
 
@@ -113,6 +116,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-06T19:07:34.221Z
-Stopped at: Completed 04-02-PLAN.md
+Last session: 2026-04-06T19:17:07.487Z
+Stopped at: Completed 04-03-PLAN.md
 Resume file: None
