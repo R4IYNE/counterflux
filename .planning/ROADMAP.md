@@ -86,7 +86,13 @@ Plans:
   1. User selects a commander and sees EDHREC top synergy suggestions filtered by colour identity with lift scores
   2. User sees known combos in their current 99 highlighted with badges, plus near-miss suggestions where only 1 piece is missing
   3. User is warned when their deck has fewer than threshold ramp, removal, or card draw cards, and can see the deck's aggregate salt score
-**Plans**: TBD
+**Plans:** 4 plans
+Plans:
+- [ ] 04-01-PLAN.md — Dexie schema v4, EDHREC service with caching and rate limiting, salt score normalization, tests
+- [ ] 04-02-PLAN.md — Commander Spellbook combo detection service, gap detection utility, tests
+- [ ] 04-03-PLAN.md — Intelligence Alpine store orchestration, Mila insight engine, main.js wiring
+- [ ] 04-04-PLAN.md — UI integration: salt gauge, synergy suggestions, combo badges/popover, gap warnings, near-miss section, visual checkpoint
+**UI hint**: yes
 
 ### Phase 5: Market Intel + Game Tracker
 **Goal**: Users can track card prices with alerts and spoilers, and run full Commander game sessions with life totals, commander damage, and game history
@@ -123,6 +129,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | 1. Foundation + Data Layer | 1/4 | In Progress|  |
 | 2. Collection Manager (Treasure Cruise) | 0/5 | Planned | - |
 | 3. Deck Builder (Thousand-Year Storm) | 5/6 | In Progress|  |
-| 4. Intelligence Layer | 0/0 | Not started | - |
+| 4. Intelligence Layer | 0/4 | Planned | - |
 | 5. Market Intel + Game Tracker | 0/0 | Not started | - |
 | 6. Dashboard + Polish (Epic Experiment) | 0/0 | Not started | - |
