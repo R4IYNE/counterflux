@@ -86,10 +86,10 @@ Plans:
   1. User selects a commander and sees EDHREC top synergy suggestions filtered by colour identity with lift scores
   2. User sees known combos in their current 99 highlighted with badges, plus near-miss suggestions where only 1 piece is missing
   3. User is warned when their deck has fewer than threshold ramp, removal, or card draw cards, and can see the deck's aggregate salt score
-**Plans:** 1/4 plans executed
+**Plans:** 2/4 plans executed
 Plans:
 - [x] 04-01-PLAN.md — Dexie schema v4, EDHREC service with caching and rate limiting, salt score normalization, tests
-- [ ] 04-02-PLAN.md — Commander Spellbook combo detection service, gap detection utility, tests
+- [x] 04-02-PLAN.md — Commander Spellbook combo detection service, gap detection utility, tests
 - [ ] 04-03-PLAN.md — Intelligence Alpine store orchestration, Mila insight engine, main.js wiring
 - [ ] 04-04-PLAN.md — UI integration: salt gauge, synergy suggestions, combo badges/popover, gap warnings, near-miss section, visual checkpoint
 **UI hint**: yes

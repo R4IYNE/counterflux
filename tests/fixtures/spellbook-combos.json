@@ -1,0 +1,54 @@
+{
+  "count": null,
+  "results": {
+    "identity": "BRG",
+    "included": [
+      {
+        "id": "3519-3705",
+        "uses": [
+          {
+            "card": { "id": 3705, "name": "Squee, the Immortal" },
+            "quantity": 1,
+            "zoneLocations": ["B"]
+          },
+          {
+            "card": { "id": 3519, "name": "Food Chain" },
+            "quantity": 1,
+            "zoneLocations": ["B"]
+          }
+        ],
+        "produces": [
+          { "feature": { "id": 463, "name": "Infinite colored mana", "uncountable": true } },
+          { "feature": { "id": 4, "name": "Infinite ETB" } }
+        ],
+        "description": "Activate Food Chain by exiling Squee, the Immortal to add mana. Cast Squee from exile. Repeat.",
+        "manaNeeded": "",
+        "identity": "RG",
+        "easyPrerequisites": ""
+      }
+    ],
+    "almostIncluded": [
+      {
+        "id": "1234-5678",
+        "uses": [
+          {
+            "card": { "id": 1234, "name": "Peregrine Drake" },
+            "quantity": 1,
+            "zoneLocations": ["B"]
+          },
+          {
+            "card": { "id": 5678, "name": "Deadeye Navigator" },
+            "quantity": 1,
+            "zoneLocations": ["B"]
+          }
+        ],
+        "produces": [
+          { "feature": { "id": 100, "name": "Infinite mana" } }
+        ],
+        "description": "Pair Peregrine Drake with Deadeye Navigator. Blink Drake to untap lands."
+      }
+    ],
+    "includedByChangingCommanders": [],
+    "almostIncludedByAddingColors": []
+  }
+}
