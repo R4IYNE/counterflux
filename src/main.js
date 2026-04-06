@@ -9,6 +9,7 @@ import { initAppStore } from './stores/app.js';
 import { initSearchStore } from './stores/search.js';
 import { initCollectionStore } from './stores/collection.js';
 import { initDeckStore } from './stores/deck.js';
+import { initIntelligenceStore } from './stores/intelligence.js';
 import { initBulkDataStore, startBulkDataPipeline } from './stores/bulkdata.js';
 import { splashScreen } from './components/splash-screen.js';
 import { initRouter } from './router.js';
@@ -20,6 +21,7 @@ initAppStore();
 initSearchStore();
 initCollectionStore();
 initDeckStore();
+initIntelligenceStore();
 initBulkDataStore();
 
 // Expose renderManaCost globally for Alpine template usage
