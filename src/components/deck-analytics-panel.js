@@ -43,9 +43,9 @@ async function findCheapestLegalPrinting(cardName) {
   const legal = printings.filter(c =>
     c.games?.includes('paper') &&
     c.set_type !== 'memorabilia' &&
-    c.legalities?.commander !== 'banned'
+    c.legalities?.commander === 'legal'
   );
-  if (legal.length === 0) return printings[0] || null; // fallback to any
+  if (legal.length === 0) return null;
   legal.sort((a, b) => {
     const pa = parseFloat(a.prices?.usd || a.prices?.usd_foil) || 999;
     const pb = parseFloat(b.prices?.usd || b.prices?.usd_foil) || 999;
