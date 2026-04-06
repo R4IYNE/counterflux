@@ -130,8 +130,7 @@ describe('getCommanderSynergies', () => {
     await getCommanderSynergies('Prossh, Skyraider of Kher');
 
     expect(fetch).toHaveBeenCalledWith(
-      'https://json.edhrec.com/pages/commanders/prossh-skyraider-of-kher.json',
-      expect.any(Object)
+      '/api/edhrec/pages/commanders/prossh-skyraider-of-kher.json'
     );
   });
 });

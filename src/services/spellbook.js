@@ -4,7 +4,9 @@
  * Caching is handled by the intelligence store (Plan 03), not here.
  */
 
-const SPELLBOOK_BASE = 'https://backend.commanderspellbook.com';
+// Proxy through Vite dev server to avoid CORS issues.
+// In production, wire /api/spellbook to a serverless proxy or edge function.
+const SPELLBOOK_BASE = '/api/spellbook';
 
 /**
  * Map raw Spellbook combo response to app-friendly shape.

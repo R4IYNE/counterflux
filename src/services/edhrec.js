@@ -1,6 +1,8 @@
 import { db } from '../db/schema.js';
 
-const EDHREC_BASE = 'https://json.edhrec.com';
+// Proxy through Vite dev server to avoid CORS preflight rejection from CloudFront.
+// In production, wire /api/edhrec to a serverless proxy or edge function.
+const EDHREC_BASE = '/api/edhrec';
 const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 const REQUEST_DELAY_MS = 200; // Rate limit: 5 req/sec max
 
@@ -36,9 +38,9 @@ async function rateLimitedFetch(url) {
   }
   lastRequestTime = Date.now();
 
-  const res = await fetch(url, {
-    headers: { 'User-Agent': 'Counterflux/1.0' },
-  });
+  // User-Agent is a forbidden header in browsers (silently stripped).
+  // EDHREC doesn't require it — safe to omit.
+  const res = await fetch(url);
   if (!res.ok) throw new Error(`EDHREC ${res.status}`);
   return res.json();
 }

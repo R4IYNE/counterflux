@@ -3,6 +3,20 @@ import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
   plugins: [tailwindcss()],
+  server: {
+    proxy: {
+      '/api/edhrec': {
+        target: 'https://json.edhrec.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/edhrec/, ''),
+      },
+      '/api/spellbook': {
+        target: 'https://backend.commanderspellbook.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/spellbook/, ''),
+      },
+    },
+  },
   build: {
     target: 'esnext',
     rollupOptions: {
