@@ -31,6 +31,29 @@ Chart.register(
 // Prices from deck-analytics.js are already in GBP (via eurToGbpValue).
 // We format directly with formatGbp() below.
 
+/**
+ * Find the cheapest paper-legal printing of a card by name.
+ * Filters out memorabilia (World Championship, gold-bordered) and digital-only.
+ * Sorts by USD price ascending, falls back to any legal printing if no price.
+ * @param {string} cardName
+ * @returns {Promise<object|null>}
+ */
+async function findCheapestLegalPrinting(cardName) {
+  const printings = await db.cards.where('name').equals(cardName).toArray();
+  const legal = printings.filter(c =>
+    c.games?.includes('paper') &&
+    c.set_type !== 'memorabilia' &&
+    c.legalities?.commander !== 'banned'
+  );
+  if (legal.length === 0) return printings[0] || null; // fallback to any
+  legal.sort((a, b) => {
+    const pa = parseFloat(a.prices?.usd || a.prices?.usd_foil) || 999;
+    const pb = parseFloat(b.prices?.usd || b.prices?.usd_foil) || 999;
+    return pa - pb;
+  });
+  return legal[0];
+}
+
 // MTG colour hex map (matches analytics-panel.js convention + colourless)
 const MTG_COLOURS = {
   W: { label: 'White', hex: '#F9FAF4', icon: 'ms ms-w' },
@@ -483,13 +506,13 @@ export function renderDeckAnalyticsPanel(container) {
       const filtered = intel.synergies.filter(s => !deckCardNames.has(s.name));
       for (const suggestion of filtered) {
         const card = renderSynergyCard(suggestion, async (s) => {
-          const match = await db.cards.where('name').equals(s.name).first();
+          const match = await findCheapestLegalPrinting(s.name);
           if (match) {
             const result = await Alpine.store('deck')?.addCard(match.id);
             if (result?.warning) {
               Alpine.store('toast')?.warning(result.message);
             } else {
-              Alpine.store('toast')?.success(`Added ${s.name} from suggestions.`);
+              Alpine.store('toast')?.success(`Added ${s.name} (${match.set.toUpperCase()}) from suggestions.`);
             }
           } else {
             Alpine.store('toast')?.warning(`${s.name} not found in local card database.`);
@@ -536,13 +559,13 @@ export function renderDeckAnalyticsPanel(container) {
               pieceEl.textContent = `+ ${piece.name}`;
               pieceEl.title = `Add ${piece.name} to deck`;
               pieceEl.addEventListener('click', async () => {
-                const match = await db.cards.where('name').equals(piece.name).first();
+                const match = await findCheapestLegalPrinting(piece.name);
                 if (match) {
                   const result = await Alpine.store('deck')?.addCard(match.id);
                   if (result?.warning) {
                     Alpine.store('toast')?.warning(result.message);
                   } else {
-                    Alpine.store('toast')?.success(`Added ${piece.name} to complete combo.`);
+                    Alpine.store('toast')?.success(`Added ${piece.name} (${match.set.toUpperCase()}) to complete combo.`);
                   }
                 } else {
                   Alpine.store('toast')?.warning(`${piece.name} not found in local card database.`);
