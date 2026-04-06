@@ -82,11 +82,11 @@
 
 ### Intelligence Layer
 
-- [ ] **INTEL-01**: EDHREC synergy suggestions surfaced on commander selection (top synergy cards filtered by colour identity with lift scores)
+- [x] **INTEL-01**: EDHREC synergy suggestions surfaced on commander selection (top synergy cards filtered by colour identity with lift scores)
 - [ ] **INTEL-02**: Category gap detection: prompt when deck has fewer than threshold ramp/removal/draw cards
 - [ ] **INTEL-03**: Commander Spellbook combo detection: surface known combos in current 99 with badge, pieces, and steps
 - [ ] **INTEL-04**: Near-miss combo suggestions where only 1 piece is missing
-- [ ] **INTEL-05**: Salt score aggregate for deck (from EDHREC data)
+- [x] **INTEL-05**: Salt score aggregate for deck (from EDHREC data)
 - [ ] **INTEL-06**: Mila's daily insights: upgrade suggestions, price alerts, collection stats
 
 ### Market Intel (Preordain)
@@ -209,11 +209,11 @@ Updated during roadmap creation.
 | DECK-17 | Phase 3 | Complete |
 | DECK-18 | Phase 3 | Complete |
 | DECK-19 | Phase 3 | Complete |
-| INTEL-01 | Phase 4 | Pending |
+| INTEL-01 | Phase 4 | Complete |
 | INTEL-02 | Phase 4 | Pending |
 | INTEL-03 | Phase 4 | Pending |
 | INTEL-04 | Phase 4 | Pending |
-| INTEL-05 | Phase 4 | Pending |
+| INTEL-05 | Phase 4 | Complete |
 | INTEL-06 | Phase 4 | Pending |
 | MRKT-01 | Phase 5 | Pending |
 | MRKT-02 | Phase 5 | Pending |
