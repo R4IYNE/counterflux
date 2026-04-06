@@ -21,6 +21,17 @@ db.version(3).stores({
   deck_cards: '++id, deck_id, scryfall_id, [deck_id+scryfall_id]'
 });
 
+db.version(4).stores({
+  cards: 'id, name, oracle_id, set, collector_number, cmc, color_identity, type_line, [set+collector_number]',
+  meta: 'key',
+  collection: '++id, scryfall_id, category, foil, [scryfall_id+foil], [scryfall_id+category]',
+  decks: '++id, name, format, updated_at',
+  deck_cards: '++id, deck_id, scryfall_id, [deck_id+scryfall_id]',
+  edhrec_cache: 'commander',
+  combo_cache: 'deck_id',
+  card_salt_cache: 'sanitized'
+});
+
 export async function getBulkMeta() {
   return db.meta.get('bulk-data');
 }

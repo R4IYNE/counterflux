@@ -1,0 +1,63 @@
+{
+  "avg_price": 1394.0,
+  "creature": 27,
+  "instant": 9,
+  "num_decks_avg": 6504,
+  "similar": [],
+  "container": {
+    "json_dict": {
+      "card": {
+        "name": "Prossh, Skyraider of Kher",
+        "salt": 0.8,
+        "color_identity": ["B", "R", "G"],
+        "sanitized": "prossh-skyraider-of-kher",
+        "url": "/commanders/prossh-skyraider-of-kher"
+      },
+      "cardlists": [
+        {
+          "header": "New Cards",
+          "tag": "newcards",
+          "cardviews": []
+        },
+        {
+          "header": "High Synergy Cards",
+          "tag": "highsynergycards",
+          "cardviews": [
+            {
+              "name": "Impact Tremors",
+              "synergy": 0.63,
+              "inclusion": 4477,
+              "num_decks": 4477,
+              "potential_decks": 6504,
+              "url": "/cards/impact-tremors",
+              "sanitized": "impact-tremors"
+            },
+            {
+              "name": "Purphoros, God of the Forge",
+              "synergy": 0.58,
+              "inclusion": 3200,
+              "num_decks": 3200,
+              "potential_decks": 6504,
+              "url": "/cards/purphoros-god-of-the-forge",
+              "sanitized": "purphoros-god-of-the-forge"
+            },
+            {
+              "name": "Zulaport Cutthroat",
+              "synergy": 0.45,
+              "inclusion": 2800,
+              "num_decks": 2800,
+              "potential_decks": 6504,
+              "url": "/cards/zulaport-cutthroat",
+              "sanitized": "zulaport-cutthroat"
+            }
+          ]
+        },
+        {
+          "header": "Top Cards",
+          "tag": "topcards",
+          "cardviews": []
+        }
+      ]
+    }
+  }
+}
