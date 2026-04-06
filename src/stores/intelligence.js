@@ -118,6 +118,14 @@ export function initIntelligenceStore() {
           });
         }
 
+        // Mark missing pieces on almostIncluded combos
+        const deckCardSet = new Set([...commanderNames, ...cardNames]);
+        for (const combo of result.almostIncluded) {
+          for (const piece of combo.pieces) {
+            piece.missing = !deckCardSet.has(piece.name);
+          }
+        }
+
         this.combos = result;
         this.comboMap = buildComboMap(result.included);
       } catch {
