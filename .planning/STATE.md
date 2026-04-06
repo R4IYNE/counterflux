@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: Completed 04-03-PLAN.md
-last_updated: "2026-04-06T19:17:07.489Z"
+status: completed
+stopped_at: Completed 04-04-PLAN.md (Phase 4 complete)
+last_updated: "2026-04-06T21:39:24.758Z"
 last_activity: 2026-04-06
 progress:
   total_phases: 6
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 19
-  completed_plans: 17
+  completed_plans: 18
   percent: 0
 ---
 
@@ -21,13 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-03)
 
 **Core value:** The deck builder knows what you own, and the collection knows what's in your decks — one interconnected data layer
-**Current focus:** Phase 03 — deck-builder-thousand-year-storm
+**Current focus:** Phase 04 — intelligence-layer (COMPLETE)
 
 ## Current Position
 
-Phase: 4
-Plan: Not started
-Status: Planned — ready to execute
+Phase: 4 (complete)
+Plan: 4/4 complete
+Status: Phase 4 complete — ready for Phase 5
 Last activity: 2026-04-06
 
 Progress: [░░░░░░░░░░] 0%
@@ -64,6 +64,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 03 P05 | 5min | 2 tasks | 7 files |
 | Phase 04 P02 | 3min | 2 tasks | 5 files |
 | Phase 04 P03 | 4min | 2 tasks | 4 files |
+| Phase 04 P04 | 12min | 3 tasks | 16 files |
 
 ## Accumulated Context
 
@@ -103,6 +104,8 @@ Recent decisions affecting current work:
 - [Phase 04]: Gap detection sorts results critical-first for UI priority
 - [Phase 04]: Salt label thresholds: 0-3 MILD, 4-6 SPICY, 7-10 CRITICAL
 - [Phase 04]: Combo cache 24h TTL; insight rotation day-of-year % top-10 pool
+- [Phase 04]: Vite dev server CORS proxy for EDHREC and Spellbook APIs (CloudFront blocks OPTIONS preflight)
+- [Phase 04]: Intelligence UI reads store reactively; synergy card add resolves Scryfall ID by name before deck addCard
 
 ### Pending Todos
 
