@@ -171,7 +171,7 @@ Exceptions: none. All Phase 4 components integrate into the existing analytics s
 | Critical (below 50% of threshold) | `{CATEGORY}: {count} CARDS -- CRITICALLY LOW` |
 | Threshold settings tooltip | `Adjust thresholds` |
 | Settings popover title | `GAP THRESHOLDS` |
-| Settings save action | `Save` |
+| Settings save action | `Save Thresholds` |
 | Settings reset action | `Reset to Defaults` |
 
 ### Toast Notifications (Phase 4 Actions)
@@ -214,7 +214,7 @@ New components and extensions the executor must build:
 | `combo-popover` | New | `intelligence` | Anchored popover (not modal). Background: surface (#14161C). Ghost border. Max-width: 320px. Shows combo name (label 700), pieces as a horizontal row of 48px card thumbnails with names below (label 400), step-by-step description (body 14px), and produces list (label 400, text-muted). Multiple combos: vertical stack with ghost-border separator. Close: click outside or Escape. |
 | `near-miss-section` | New (sidebar) | `intelligence` | Section in analytics sidebar below synergy suggestions. Each near-miss combo shows: combo effect (label 700), owned pieces (label 400, text-muted), missing piece (label 700, secondary colour #E23838) with "MISSING" badge. Click missing piece name: opens card detail flyout (existing). Max 5 near-miss combos displayed. |
 | `gap-warning` | Extension | `intelligence` | Inline within existing tag breakdown rows in `deck-analytics-panel.js`. When a category count is below threshold: warning icon (Material Symbols `warning` 14px) + amber text. When critically low (below 50%): secondary (#E23838) text. Gear icon button on the right opens threshold settings popover. |
-| `threshold-settings` | New (popover) | `intelligence` | Small popover anchored to gear icon. 5 rows: Ramp, Draw, Removal, Board Wipes, Lands. Each row: category label (label 700) + number input (48px wide, ghost-border, surface background, label 400 text). "Save" button (primary background) + "Reset to Defaults" text button (text-muted). Close: click outside or Escape. |
+| `threshold-settings` | New (popover) | `intelligence` | Small popover anchored to gear icon. 5 rows: Ramp, Draw, Removal, Board Wipes, Lands. Each row: category label (label 700) + number input (48px wide, ghost-border, surface background, label 400 text). "Save Thresholds" button (primary background) + "Reset to Defaults" text button (text-muted). Close: click outside or Escape. |
 | `deck-analytics-panel` | Extension | `deck`, `intelligence` | Add 3 new sections below existing price summary: (1) Salt gauge replaces placeholder, (2) Synergy suggestions section, (3) Near-miss combos section. Gap warnings wired into existing tag breakdown. Loading skeletons while intelligence data fetches. |
 | `deck-card-tile` | Extension | `deck`, `intelligence` | Add combo-badge overlay to grid tiles when card participates in combos. Badge count from intelligence store. No changes to list mode tiles. |
 
@@ -258,9 +258,9 @@ New components and extensions the executor must build:
 |-------------|-----------|
 | Deck cards change | Gap detection runs synchronously (pure function, no API call). Tag breakdown rows update immediately. Warning icons appear/disappear as counts cross thresholds. |
 | Click gear icon | Threshold settings popover opens anchored to icon. |
-| Edit threshold value | Number input, min 0, max 99. No live preview -- changes applied on "Save". |
-| Click "Save" | Thresholds saved per-deck in Dexie. Popover closes. Success toast. Gap warnings recalculate. |
-| Click "Reset to Defaults" | All inputs reset to defaults (Ramp: 10, Draw: 10, Removal: 8, Board Wipes: 3, Lands: 36). Must still click "Save" to persist. |
+| Edit threshold value | Number input, min 0, max 99. No live preview -- changes applied on "Save Thresholds". |
+| Click "Save Thresholds" | Thresholds saved per-deck in Dexie. Popover closes. Success toast. Gap warnings recalculate. |
+| Click "Reset to Defaults" | All inputs reset to defaults (Ramp: 10, Draw: 10, Removal: 8, Board Wipes: 3, Lands: 36). Must still click "Save Thresholds" to persist. |
 
 ### Loading & Degradation
 
