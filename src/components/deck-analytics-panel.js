@@ -16,6 +16,7 @@ import {
   Tooltip,
 } from 'chart.js';
 import Alpine from 'alpinejs';
+import { db } from '../db/schema.js';
 import { TYPE_ORDER } from '../utils/type-classifier.js';
 import { renderSaltGauge } from './salt-gauge.js';
 import { renderSynergyCard } from './synergy-card.js';
@@ -481,9 +482,18 @@ export function renderDeckAnalyticsPanel(container) {
       );
       const filtered = intel.synergies.filter(s => !deckCardNames.has(s.name));
       for (const suggestion of filtered) {
-        const card = renderSynergyCard(suggestion, (s) => {
-          Alpine.store('deck')?.addCard(s.name);
-          Alpine.store('toast')?.success(`Added ${s.name} from suggestions.`);
+        const card = renderSynergyCard(suggestion, async (s) => {
+          const match = await db.cards.where('name').equals(s.name).first();
+          if (match) {
+            const result = await Alpine.store('deck')?.addCard(match.id);
+            if (result?.warning) {
+              Alpine.store('toast')?.warning(result.message);
+            } else {
+              Alpine.store('toast')?.success(`Added ${s.name} from suggestions.`);
+            }
+          } else {
+            Alpine.store('toast')?.warning(`${s.name} not found in local card database.`);
+          }
         });
         synergyContainer.appendChild(card);
       }
@@ -522,8 +532,22 @@ export function renderDeckAnalyticsPanel(container) {
             const pieceEl = document.createElement('div');
             const isMissing = piece.missing || false;
             if (isMissing) {
-              pieceEl.style.cssText = `${LABEL_700} color: #E23838; margin-left: 8px;`;
-              pieceEl.textContent = `${piece.name} MISSING`;
+              pieceEl.style.cssText = `${LABEL_700} color: #E23838; margin-left: 8px; cursor: pointer; text-decoration: underline; text-decoration-style: dotted;`;
+              pieceEl.textContent = `+ ${piece.name}`;
+              pieceEl.title = `Add ${piece.name} to deck`;
+              pieceEl.addEventListener('click', async () => {
+                const match = await db.cards.where('name').equals(piece.name).first();
+                if (match) {
+                  const result = await Alpine.store('deck')?.addCard(match.id);
+                  if (result?.warning) {
+                    Alpine.store('toast')?.warning(result.message);
+                  } else {
+                    Alpine.store('toast')?.success(`Added ${piece.name} to complete combo.`);
+                  }
+                } else {
+                  Alpine.store('toast')?.warning(`${piece.name} not found in local card database.`);
+                }
+              });
             } else {
               pieceEl.style.cssText = `${LABEL_400} color: #7A8498; margin-left: 8px;`;
               pieceEl.textContent = piece.name;
