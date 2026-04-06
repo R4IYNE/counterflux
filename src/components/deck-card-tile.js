@@ -1,5 +1,6 @@
 import { getCardImage, getCardName, getCardManaCost, getCardTypeLine } from '../db/card-accessor.js';
 import { classifyType } from '../utils/type-classifier.js';
+import { showComboPopover } from './combo-popover.js';
 
 /**
  * Render a deck card tile for either grid or list mode.
@@ -137,6 +138,23 @@ function renderGridTile(entry, card, cardName, typeGroup) {
       Alpine?.store('search')?.selectResult(card);
     }
   });
+
+  // Combo badge overlay (Intelligence Layer)
+  const Alpine = window.Alpine;
+  const intel = Alpine?.store?.('intelligence');
+  const comboCount = intel?.getComboCount?.(cardName) || 0;
+  if (comboCount > 0) {
+    const badge = document.createElement('div');
+    badge.className = 'combo-badge';
+    badge.innerHTML = '<span class="material-symbols-outlined" style="font-size: 16px; color: #EAECEE;">bolt</span>';
+    badge.title = `Part of ${comboCount} combo${comboCount > 1 ? 's' : ''}`;
+    badge.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const combos = intel.getCombosForCard(cardName);
+      showComboPopover(badge, combos);
+    });
+    tile.appendChild(badge);
+  }
 
   return tile;
 }

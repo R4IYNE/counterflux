@@ -15,7 +15,11 @@ import {
   LinearScale,
   Tooltip,
 } from 'chart.js';
+import Alpine from 'alpinejs';
 import { TYPE_ORDER } from '../utils/type-classifier.js';
+import { renderSaltGauge } from './salt-gauge.js';
+import { renderSynergyCard } from './synergy-card.js';
+import { DEFAULT_THRESHOLDS } from '../utils/gap-detection.js';
 
 Chart.register(
   DoughnutController, BarController,
@@ -356,17 +360,36 @@ export function renderDeckAnalyticsPanel(container) {
 
   container.appendChild(priceSection);
 
-  // --- Section 6: Salt Score Placeholder ---
+  // --- Section 6: Salt Score (Intelligence Layer) ---
   const saltSection = document.createElement('div');
   saltSection.style.cssText = 'margin-bottom: 24px;';
   saltSection.appendChild(createSectionHeader('SALT SCORE'));
 
-  const saltPlaceholder = document.createElement('div');
-  saltPlaceholder.style.cssText = `${LABEL_400} color: #4A5064;`;
-  saltPlaceholder.textContent = 'COMING IN PHASE 4';
-  saltSection.appendChild(saltPlaceholder);
+  const saltContainer = document.createElement('div');
+  saltSection.appendChild(saltContainer);
 
   container.appendChild(saltSection);
+
+  // --- Section 7: Synergy Suggestions (Intelligence Layer) ---
+  const synergySection = document.createElement('div');
+  synergySection.style.cssText = 'margin-bottom: 24px;';
+  synergySection.appendChild(createSectionHeader('SYNERGY SUGGESTIONS'));
+
+  const synergyContainer = document.createElement('div');
+  synergyContainer.style.cssText = 'max-height: 400px; overflow-y: auto;';
+  synergySection.appendChild(synergyContainer);
+
+  container.appendChild(synergySection);
+
+  // --- Section 8: Near-Miss Combos (Intelligence Layer) ---
+  const nearMissSection = document.createElement('div');
+  nearMissSection.style.cssText = 'margin-bottom: 24px;';
+  nearMissSection.appendChild(createSectionHeader('NEAR-MISS COMBOS'));
+
+  const nearMissContainer = document.createElement('div');
+  nearMissSection.appendChild(nearMissContainer);
+
+  container.appendChild(nearMissSection);
 
   // --- Reactive update function ---
   function updateAllSections() {
@@ -420,6 +443,143 @@ export function renderDeckAnalyticsPanel(container) {
       highEl.textContent = `HIGHEST: ${analytics.mostExpensive.name} (${formatGbp(analytics.mostExpensive.price)})`;
       priceContainer.appendChild(highEl);
     }
+
+    // --- Intelligence: Salt gauge ---
+    const intel = Alpine.store('intelligence');
+    renderSaltGauge(
+      saltContainer,
+      intel?.saltScore,
+      intel?.saltLabel,
+      intel?.loading?.edhrec,
+      intel?.error?.edhrec
+    );
+
+    // --- Intelligence: Synergy suggestions ---
+    synergyContainer.innerHTML = '';
+    if (intel?.loading?.edhrec) {
+      // Show 3 shimmer skeleton rows
+      for (let i = 0; i < 3; i++) {
+        const skel = document.createElement('div');
+        skel.className = 'shimmer';
+        skel.style.cssText = 'height: 48px; margin-bottom: 8px;';
+        synergyContainer.appendChild(skel);
+      }
+    } else if (intel?.error?.edhrec) {
+      const errEl = document.createElement('div');
+      errEl.style.cssText = `${LABEL_400} color: #4A5064;`;
+      errEl.textContent = 'Intelligence unavailable -- using local heuristics.';
+      synergyContainer.appendChild(errEl);
+    } else if (!intel?.synergies || intel.synergies.length === 0) {
+      const emptyEl = document.createElement('div');
+      emptyEl.style.cssText = `${LABEL_400} color: #4A5064;`;
+      emptyEl.textContent = 'Select a commander to see synergy suggestions.';
+      synergyContainer.appendChild(emptyEl);
+    } else {
+      // Filter out cards already in deck
+      const deckCardNames = new Set(
+        (store?.activeCards || []).map(c => c.card?.name).filter(Boolean)
+      );
+      const filtered = intel.synergies.filter(s => !deckCardNames.has(s.name));
+      for (const suggestion of filtered) {
+        const card = renderSynergyCard(suggestion, (s) => {
+          Alpine.store('deck')?.addCard(s.name);
+          Alpine.store('toast')?.success(`Added ${s.name} from suggestions.`);
+        });
+        synergyContainer.appendChild(card);
+      }
+    }
+
+    // --- Intelligence: Near-miss combos ---
+    nearMissContainer.innerHTML = '';
+    if (intel?.loading?.spellbook) {
+      const loadEl = document.createElement('div');
+      loadEl.style.cssText = `${LABEL_400} color: #7A8498;`;
+      loadEl.textContent = 'Checking combos...';
+      nearMissContainer.appendChild(loadEl);
+    } else if (intel?.error?.spellbook) {
+      const errEl = document.createElement('div');
+      errEl.style.cssText = `${LABEL_400} color: #4A5064;`;
+      errEl.textContent = 'Combo detection unavailable.';
+      nearMissContainer.appendChild(errEl);
+    } else if (intel?.combos?.almostIncluded?.length > 0) {
+      const nearMisses = intel.combos.almostIncluded.slice(0, 5);
+      for (const combo of nearMisses) {
+        const comboEl = document.createElement('div');
+        comboEl.style.cssText = 'margin-bottom: 16px; padding: 8px 0; border-bottom: 1px solid #2A2D3A;';
+
+        // Combo effect title
+        const effectEl = document.createElement('div');
+        effectEl.style.cssText = `${LABEL_700} color: #EAECEE; margin-bottom: 4px;`;
+        const effectText = combo.produces && combo.produces.length > 0
+          ? combo.produces[0].toUpperCase()
+          : 'COMBO';
+        effectEl.textContent = effectText;
+        comboEl.appendChild(effectEl);
+
+        // Pieces
+        if (combo.pieces) {
+          for (const piece of combo.pieces) {
+            const pieceEl = document.createElement('div');
+            const isMissing = piece.missing || false;
+            if (isMissing) {
+              pieceEl.style.cssText = `${LABEL_700} color: #E23838; margin-left: 8px;`;
+              pieceEl.textContent = `${piece.name} MISSING`;
+            } else {
+              pieceEl.style.cssText = `${LABEL_400} color: #7A8498; margin-left: 8px;`;
+              pieceEl.textContent = piece.name;
+            }
+            comboEl.appendChild(pieceEl);
+          }
+        }
+
+        // Missing count label
+        const missingCount = combo.pieces?.filter(p => p.missing).length || 0;
+        if (missingCount > 0) {
+          const countEl = document.createElement('div');
+          countEl.style.cssText = `${LABEL_400} color: #E23838; margin-top: 4px;`;
+          countEl.textContent = `${missingCount} PIECE${missingCount > 1 ? 'S' : ''} MISSING`;
+          comboEl.appendChild(countEl);
+        }
+
+        nearMissContainer.appendChild(comboEl);
+      }
+    } else if (!intel?.loading?.spellbook) {
+      const noneEl = document.createElement('div');
+      noneEl.style.cssText = `${LABEL_400} color: #4A5064;`;
+      noneEl.textContent = 'No known combos detected in the 99.';
+      nearMissContainer.appendChild(noneEl);
+    }
+
+    // --- Intelligence: Gap warnings inline in tag breakdown ---
+    if (intel?.gaps?.length > 0) {
+      const tagRows = tagBarsContainer.querySelectorAll(':scope > div');
+      for (const gap of intel.gaps) {
+        // Find matching tag row by name
+        for (const row of tagRows) {
+          const nameSpan = row.querySelector('span');
+          if (nameSpan && nameSpan.textContent.trim() === gap.category) {
+            // Check if warning already exists
+            if (row.querySelector('.gap-warning, .gap-critical')) break;
+            const warnEl = document.createElement('span');
+            warnEl.className = gap.severity === 'critical' ? 'gap-critical' : 'gap-warning';
+            warnEl.style.cssText += ` ${LABEL_400} margin-left: 8px; flex-shrink: 0;`;
+            const iconEl = document.createElement('span');
+            iconEl.className = 'material-symbols-outlined';
+            iconEl.style.fontSize = '14px';
+            iconEl.textContent = 'warning';
+            warnEl.appendChild(iconEl);
+            const textNode = document.createTextNode(
+              gap.severity === 'critical'
+                ? ` ${gap.category}: ${gap.count} CARDS -- CRITICALLY LOW`
+                : ` ${gap.category}: ${gap.count} CARDS -- BELOW ${gap.threshold}`
+            );
+            warnEl.appendChild(textNode);
+            row.appendChild(warnEl);
+            break;
+          }
+        }
+      }
+    }
   }
 
   // Initial render
@@ -433,6 +593,13 @@ export function renderDeckAnalyticsPanel(container) {
       const _cards = store.activeCards;
       const _len = _cards?.length;
       const _deck = store.activeDeck;
+      // Touch intelligence store for reactivity
+      const _intel = Alpine.store('intelligence');
+      const _synergies = _intel?.synergies;
+      const _combos = _intel?.combos;
+      const _gaps = _intel?.gaps;
+      const _salt = _intel?.saltScore;
+      const _loading = _intel?.loading;
       // Batch updates via requestAnimationFrame
       if (updateFrameId) cancelAnimationFrame(updateFrameId);
       updateFrameId = requestAnimationFrame(() => {
