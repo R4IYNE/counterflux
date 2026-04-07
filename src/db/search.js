@@ -1,6 +1,16 @@
 import { db } from './schema.js';
 import { suggestTags } from '../utils/tag-heuristics.js';
 
+/**
+ * Check if a card is a paper-legal printing (not memorabilia/digital-only).
+ * Cards without a games field are treated as paper (test fixtures, legacy data).
+ */
+function isPaperLegal(card) {
+  if (card.set_type === 'memorabilia') return false;
+  if (!card.games) return true; // no games field = assume paper
+  return card.games.includes('paper');
+}
+
 export async function searchCards(query, limit = 12) {
   if (!query || query.length < 2) return [];
 
@@ -12,33 +22,40 @@ export async function searchCards(query, limit = 12) {
   const raw = await db.cards
     .where('name')
     .startsWith(titleCased)
-    .limit(limit * 3)
+    .limit(limit * 5)
     .toArray();
 
-  // Deduplicate by oracle_id (keep first printing per unique card)
-  const seen = new Set();
-  const results = [];
+  // Deduplicate by oracle_id, prefer cheapest paper-legal printing
+  const seen = new Map(); // oracle_id -> card
   for (const card of raw) {
     if (card.name && card.name.startsWith('A-')) continue;
+    if (!isPaperLegal(card)) continue;
     const key = card.oracle_id || card.id;
-    if (seen.has(key)) continue;
-    seen.add(key);
-    results.push(card);
-    if (results.length >= limit) break;
+    const existing = seen.get(key);
+    if (!existing) {
+      seen.set(key, card);
+    } else {
+      // Keep cheapest
+      const priceA = parseFloat(existing.prices?.usd || existing.prices?.usd_foil) || 999;
+      const priceB = parseFloat(card.prices?.usd || card.prices?.usd_foil) || 999;
+      if (priceB < priceA) seen.set(key, card);
+    }
+    if (seen.size >= limit) break;
   }
+  let results = [...seen.values()];
 
   // Fallback: substring match only when prefix search found nothing
   // (skip when we have any prefix results — the full table scan is too slow)
   if (results.length === 0) {
     const additional = await db.cards
-      .filter(card => card.name.toLowerCase().includes(normalised))
-      .limit(limit * 3)
+      .filter(card => card.name.toLowerCase().includes(normalised) && isPaperLegal(card))
+      .limit(limit * 5)
       .toArray();
     for (const card of additional) {
       if (card.name && card.name.startsWith('A-')) continue;
       const key = card.oracle_id || card.id;
       if (seen.has(key)) continue;
-      seen.add(key);
+      seen.set(key, card);
       results.push(card);
       if (results.length >= limit) break;
     }
@@ -74,8 +91,9 @@ export async function browseCards(colorIdentity = [], filters = {}, limit = 20) 
       const key = card.oracle_id || card.id;
       if (seen.has(key)) continue;
 
-      // Skip Alchemy rebalanced cards (A- prefix, digital-only)
+      // Skip Alchemy rebalanced cards and non-paper/memorabilia printings
       if (card.name && card.name.startsWith('A-')) continue;
+      if (!isPaperLegal(card)) continue;
 
       // Colour identity filter
       if (colorIdentity.length > 0) {
