@@ -58,7 +58,18 @@ export function initIntelligenceStore() {
           'Intelligence unavailable \u2014 using local heuristics.'
         );
       } else {
-        this.synergies = result.synergies;
+        // Filter synergies to cards with at least one paper-legal commander printing
+        const filtered = [];
+        for (const s of result.synergies) {
+          const printings = await db.cards.where('name').equals(s.name).toArray();
+          const hasLegal = printings.some(c =>
+            c.games?.includes('paper') &&
+            c.set_type !== 'memorabilia' &&
+            c.legalities?.commander === 'legal'
+          );
+          if (hasLegal) filtered.push(s);
+        }
+        this.synergies = filtered;
 
         // Compute normalized salt from commander salt
         if (result.commanderSalt != null) {
