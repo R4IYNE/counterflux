@@ -74,7 +74,7 @@ function renderGridTile(entry, card, cardName, typeGroup) {
   removeBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 14px;">close</span>';
   removeBtn.title = 'Remove from deck';
   removeBtn.style.cssText = `
-    position: absolute; top: 4px; left: 4px; width: 24px; height: 24px;
+    position: absolute; top: 4px; right: 4px; width: 24px; height: 24px;
     background: rgba(226, 56, 56, 0.9); color: #EAECEE; border: none; cursor: pointer;
     display: none; align-items: center; justify-content: center; z-index: 5;
     border-radius: 0; padding: 0;
@@ -111,11 +111,11 @@ function renderGridTile(entry, card, cardName, typeGroup) {
   // Set code
   if (card?.set) {
     const setEl = document.createElement('span');
-    setEl.textContent = card.set.toUpperCase();
+    setEl.innerHTML = `<span style="border-bottom: 1px dotted #7A8498;">${card.set.toUpperCase()}</span> <span style="font-size: 8px; color: #0D52BD;">▼</span>`;
     setEl.title = 'Click to change printing';
     setEl.style.cssText = `
       font-family: 'JetBrains Mono', monospace; font-size: 9px; text-transform: uppercase;
-      letter-spacing: 0.15em; font-weight: 400; color: #4A5064; cursor: pointer;
+      letter-spacing: 0.15em; font-weight: 400; color: #7A8498; cursor: pointer;
     `;
     setEl.addEventListener('click', (e) => {
       e.stopPropagation();
