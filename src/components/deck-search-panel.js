@@ -332,8 +332,19 @@ export function renderDeckSearchPanel(container) {
       }
       row.appendChild(priceEl);
 
-      // Click to add
-      row.addEventListener('click', async () => {
+      // Add button (explicit)
+      const addBtn = document.createElement('button');
+      addBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 18px;">add</span>';
+      addBtn.title = `Add ${getCardName(card) || 'card'} to deck`;
+      addBtn.style.cssText = `
+        width: 28px; height: 28px; flex-shrink: 0; display: flex; align-items: center;
+        justify-content: center; background: transparent; border: 1px solid #2A2D3A;
+        color: #7A8498; cursor: pointer; transition: all 150ms; padding: 0;
+      `;
+      addBtn.addEventListener('mouseenter', () => { addBtn.style.borderColor = '#0D52BD'; addBtn.style.color = '#0D52BD'; });
+      addBtn.addEventListener('mouseleave', () => { addBtn.style.borderColor = '#2A2D3A'; addBtn.style.color = '#7A8498'; });
+      addBtn.addEventListener('click', async (e) => {
+        e.stopPropagation();
         if (!deckStore) return;
         const result = await deckStore.addCard(card.id);
         if (result?.warning) {
@@ -341,6 +352,13 @@ export function renderDeckSearchPanel(container) {
         } else if (result?.added) {
           toastStore?.success(`${getCardName(card) || 'Card'} added to ${deckStore.activeDeck?.name || 'deck'}.`);
         }
+      });
+      row.appendChild(addBtn);
+
+      // Click row to preview card (flyout)
+      row.addEventListener('click', () => {
+        const Alpine = window.Alpine;
+        Alpine?.store('search')?.selectResult(card);
       });
 
       // Right-click context menu

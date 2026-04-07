@@ -1,6 +1,7 @@
 import { getCardImage, getCardName, getCardManaCost, getCardTypeLine } from '../db/card-accessor.js';
 import { classifyType } from '../utils/type-classifier.js';
 import { showComboPopover } from './combo-popover.js';
+import { db } from '../db/schema.js';
 
 /**
  * Render a deck card tile for either grid or list mode.
@@ -68,6 +69,31 @@ function renderGridTile(entry, card, cardName, typeGroup) {
     imgWrap.appendChild(qtyBadge);
   }
 
+  // Remove button (visible on hover)
+  const removeBtn = document.createElement('button');
+  removeBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 14px;">close</span>';
+  removeBtn.title = 'Remove from deck';
+  removeBtn.style.cssText = `
+    position: absolute; top: 4px; left: 4px; width: 24px; height: 24px;
+    background: rgba(226, 56, 56, 0.9); color: #EAECEE; border: none; cursor: pointer;
+    display: none; align-items: center; justify-content: center; z-index: 5;
+    border-radius: 0; padding: 0;
+  `;
+  removeBtn.addEventListener('click', async (e) => {
+    e.stopPropagation();
+    const Alpine = window.Alpine;
+    const store = Alpine?.store('deck');
+    if (store) {
+      await store.removeCard(entry.id);
+      Alpine?.store('toast')?.success(`${cardName} removed.`);
+      document.dispatchEvent(new CustomEvent('deck-cards-changed'));
+    }
+  });
+  imgWrap.appendChild(removeBtn);
+
+  tile.addEventListener('mouseenter', () => { removeBtn.style.display = 'flex'; });
+  tile.addEventListener('mouseleave', () => { removeBtn.style.display = 'none'; });
+
   tile.appendChild(imgWrap);
 
   // Metadata below image
@@ -81,6 +107,22 @@ function renderGridTile(entry, card, cardName, typeGroup) {
     color: #EAECEE; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   `;
   meta.appendChild(nameEl);
+
+  // Set code
+  if (card?.set) {
+    const setEl = document.createElement('span');
+    setEl.textContent = card.set.toUpperCase();
+    setEl.title = 'Click to change printing';
+    setEl.style.cssText = `
+      font-family: 'JetBrains Mono', monospace; font-size: 9px; text-transform: uppercase;
+      letter-spacing: 0.15em; font-weight: 400; color: #4A5064; cursor: pointer;
+    `;
+    setEl.addEventListener('click', (e) => {
+      e.stopPropagation();
+      showSetSwitcher(entry, card, setEl);
+    });
+    meta.appendChild(setEl);
+  }
 
   // Mana cost
   const manaCost = card ? getCardManaCost(card) : '';
@@ -241,4 +283,98 @@ function renderListRow(entry, card, cardName, typeGroup) {
   });
 
   return row;
+}
+
+/**
+ * Show a popover with alternative printings for a card.
+ * Clicking a printing swaps the deck_card's scryfall_id.
+ */
+async function showSetSwitcher(entry, currentCard, anchorEl) {
+  // Remove any existing set switcher
+  document.getElementById('set-switcher-popover')?.remove();
+
+  const cardName = getCardName(currentCard);
+  const printings = await db.cards.where('name').equals(cardName).toArray();
+
+  // Filter to paper-legal, sort by price ascending
+  const legal = printings
+    .filter(c => c.set_type !== 'memorabilia' && (!c.games || c.games.includes('paper')))
+    .sort((a, b) => {
+      const pa = parseFloat(a.prices?.usd || a.prices?.usd_foil) || 999;
+      const pb = parseFloat(b.prices?.usd || b.prices?.usd_foil) || 999;
+      return pa - pb;
+    });
+
+  if (legal.length <= 1) return; // no alternatives
+
+  const popover = document.createElement('div');
+  popover.id = 'set-switcher-popover';
+  popover.style.cssText = `
+    position: fixed; z-index: 1000; background: #14161C; border: 1px solid #2A2D3A;
+    max-height: 240px; overflow-y: auto; min-width: 180px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+  `;
+
+  const rect = anchorEl.getBoundingClientRect();
+  popover.style.left = rect.left + 'px';
+  popover.style.top = (rect.bottom + 4) + 'px';
+
+  // Header
+  const header = document.createElement('div');
+  header.textContent = 'CHANGE PRINTING';
+  header.style.cssText = `
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase;
+    letter-spacing: 0.15em; font-weight: 700; color: #0D52BD; padding: 8px 12px;
+    border-bottom: 1px solid #2A2D3A;
+  `;
+  popover.appendChild(header);
+
+  for (const printing of legal.slice(0, 20)) {
+    const row = document.createElement('div');
+    const isCurrent = printing.id === entry.scryfall_id;
+    const eurPrice = printing.prices?.eur;
+    const priceText = typeof window.__cf_eurToGbp === 'function'
+      ? window.__cf_eurToGbp(eurPrice)
+      : (eurPrice ? `€${eurPrice}` : '--');
+    row.style.cssText = `
+      padding: 6px 12px; cursor: ${isCurrent ? 'default' : 'pointer'};
+      display: flex; justify-content: space-between; align-items: center;
+      transition: background 150ms;
+      ${isCurrent ? 'background: #1C1F28;' : ''}
+    `;
+    row.innerHTML = `
+      <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase;
+        letter-spacing: 0.15em; font-weight: ${isCurrent ? '700' : '400'}; color: ${isCurrent ? '#0D52BD' : '#EAECEE'};">
+        ${printing.set.toUpperCase()} #${printing.collector_number || '?'}
+      </span>
+      <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #7A8498;">
+        ${priceText}
+      </span>
+    `;
+
+    if (!isCurrent) {
+      row.addEventListener('mouseenter', () => { row.style.background = '#1C1F28'; });
+      row.addEventListener('mouseleave', () => { row.style.background = 'transparent'; });
+      row.addEventListener('click', async () => {
+        await db.deck_cards.update(entry.id, { scryfall_id: printing.id });
+        const Alpine = window.Alpine;
+        const store = Alpine?.store('deck');
+        if (store?.activeDeck) await store.loadDeck(store.activeDeck.id);
+        Alpine?.store('toast')?.success(`Switched to ${printing.set.toUpperCase()} printing.`);
+        popover.remove();
+      });
+    }
+    popover.appendChild(row);
+  }
+
+  document.body.appendChild(popover);
+
+  // Close on click outside
+  const closeHandler = (e) => {
+    if (!popover.contains(e.target) && e.target !== anchorEl) {
+      popover.remove();
+      document.removeEventListener('click', closeHandler);
+    }
+  };
+  setTimeout(() => document.addEventListener('click', closeHandler), 0);
 }
