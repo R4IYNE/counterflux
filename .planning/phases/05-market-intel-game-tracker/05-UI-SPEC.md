@@ -27,7 +27,7 @@ Inherited from Phase 1. No changes.
 | Display font | Syne (self-hosted .woff2, 400/700) |
 | Body font | Space Grotesk (self-hosted .woff2, 400/700) |
 | Mono font | JetBrains Mono (self-hosted .woff2, 400/700) |
-| Serif accent | Crimson Pro (self-hosted .woff2, 400/700) |
+| Serif accent | Crimson Pro (self-hosted .woff2, 400/700) — not used in Phase 5; reserved for dashboard headings in Phase 6 |
 | CSS framework | Tailwind CSS v4 (CSS-first config via `@theme`) |
 | Border radius | 0px everywhere (Organic Brutalism) |
 
@@ -318,7 +318,7 @@ These colours are used ONLY for:
 | Action | Confirmation Copy |
 |--------|------------------|
 | Remove from watchlist | Inline undo toast: `{card_name} removed from watchlist.` + `UNDO` button (5s timeout). No modal. |
-| Discard game (unsaved) | Modal: `Discard this game? All tracking data will be lost.` Buttons: `Cancel` / `Discard` (secondary background). |
+| Discard game (unsaved) | Modal: `Discard this game? All tracking data will be lost.` Buttons: `Keep Playing` / `Discard` (secondary background). |
 | Delete game from history | Inline undo toast: `Game deleted from history.` + `UNDO` button (5s timeout). No modal. |
 | End game early | Modal: `End this game? You can still save results.` Buttons: `Continue Playing` / `End Game` (secondary background). |
 
@@ -352,7 +352,7 @@ These colours are used ONLY for:
 | `poison-tracker` | `game` | Inline within player card. Number + small +/- buttons. Highlight secondary at 10. |
 | `tax-tracker` | `game` | Inline within player card. Shows cast count and computed tax (label 400). +/- for cast count. |
 | `counter-panel` | `game` | Accessed via "More" in floating toolbar. Lists additional counters (Energy, Experience, etc.) per player. Toggle-style: tap counter name to add it to a player's card. Each counter shows name + value + +/-. |
-| `floating-toolbar` | `game` | Fixed bottom bar, 64px height, centered, surface background with border-ghost top border. Icons: dice, coin, timer, more. Always visible, never covers player cards (player grid has 64px bottom padding). z-30. |
+| `floating-toolbar` | `game` | Fixed bottom bar, 64px height, centered, surface background with border-ghost top border. Icons: dice, coin, timer, more. Always visible, never covers player cards (player grid has 64px bottom padding). z-30. Each icon button MUST have `aria-label` matching its tooltip text (e.g., `aria-label="Roll Dice"`). |
 | `dice-roller` | `game` | Popover above toolbar dice icon. Grid of dice buttons (D4-D20) + High Roll toggle. Result displays centered in display tier, fades out after 3s. Simple CSS scale animation on roll (0.8 -> 1.2 -> 1.0, 400ms). |
 | `coin-flipper` | `game` | Popover above toolbar coin icon. Single "Flip" button. Result: HEADS or TAILS in heading tier, with 180deg Y-axis CSS rotation animation (300ms). |
 | `turn-timer` | `game` | Stopwatch mode (simplest, covers most use cases per GAME-07). Displays MM:SS in label 700. Play/pause/reset controls. Turn number increments on "Next Turn" button. Timer auto-pauses on "Next Turn". |
