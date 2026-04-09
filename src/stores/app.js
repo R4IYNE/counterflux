@@ -67,4 +67,12 @@ export function initAppStore() {
   window.addEventListener('resize', () => {
     Alpine.store('app').sidebarCollapsed = window.innerWidth < 1024;
   });
+
+  // Exit game fullscreen on any navigation (back button, hash change)
+  window.addEventListener('hashchange', () => {
+    const app = Alpine.store('app');
+    if (app.gameFullscreen && !window.location.hash.includes('vandalblast')) {
+      app.gameFullscreen = false;
+    }
+  });
 }
