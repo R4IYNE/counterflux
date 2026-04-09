@@ -1,6 +1,8 @@
 import { renderReleaseCalendar } from '../components/release-calendar.js';
 import { renderPreordainTabs } from '../components/preordain-tabs.js';
 import { renderSpoilerGallery } from '../components/spoiler-gallery.js';
+import { renderWatchlistPanel } from '../components/watchlist-panel.js';
+import { renderMoversPanel } from '../components/movers-panel.js';
 
 /**
  * Preordain -- Market Intel screen.
@@ -40,36 +42,14 @@ export function mount(container) {
           ${renderSpoilerGallery()}
         </template>
 
-        <!-- Watchlist tab (placeholder) -->
+        <!-- Watchlist tab -->
         <template x-if="$store.market.activeTab === 'watchlist'">
-          <div class="flex flex-col items-center justify-center py-[64px] gap-[16px] text-center">
-            <img
-              src="/assets/assetsmila-izzet.png"
-              alt="Mila -- Izzet Familiar"
-              class="w-16 h-16 object-cover"
-              style="filter: grayscale(1) opacity(0.5);"
-            >
-            <h2 class="syne-header" style="font-size: 20px; font-weight: 700; line-height: 1.2; letter-spacing: 0.01em; color: #EAECEE;">No Cards on Watch</h2>
-            <p style="font-family: 'Space Grotesk', sans-serif; font-size: 14px; line-height: 1.5; color: #7A8498; max-width: 28rem;">
-              Right-click any card and select "Watch Price" to track its value here. Mila will alert you when prices cross your thresholds.
-            </p>
-          </div>
+          ${renderWatchlistPanel()}
         </template>
 
-        <!-- Movers tab (placeholder) -->
+        <!-- Movers tab -->
         <template x-if="$store.market.activeTab === 'movers'">
-          <div class="flex flex-col items-center justify-center py-[64px] gap-[16px] text-center">
-            <img
-              src="/assets/assetsmila-izzet.png"
-              alt="Mila -- Izzet Familiar"
-              class="w-16 h-16 object-cover"
-              style="filter: grayscale(1) opacity(0.5);"
-            >
-            <h2 class="syne-header" style="font-size: 20px; font-weight: 700; line-height: 1.2; letter-spacing: 0.01em; color: #EAECEE;">Market Data Loading</h2>
-            <p style="font-family: 'Space Grotesk', sans-serif; font-size: 14px; line-height: 1.5; color: #7A8498; max-width: 28rem;">
-              Price history builds over time. Check back after a few days of data collection for market movers.
-            </p>
-          </div>
+          ${renderMoversPanel()}
         </template>
 
       </div>

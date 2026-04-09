@@ -10,8 +10,8 @@ export function initAppStore() {
       { id: 'epic-experiment', label: 'Epic Experiment', icon: 'dashboard', route: '/epic-experiment', locked: true },
       { id: 'treasure-cruise', label: 'Treasure Cruise', icon: 'collections_bookmark', route: '/treasure-cruise', locked: false },
       { id: 'thousand-year-storm', label: 'Thousand-Year Storm', icon: 'auto_fix_high', route: '/thousand-year-storm', locked: false },
-      { id: 'preordain', label: 'Preordain', icon: 'insights', route: '/preordain', locked: true },
-      { id: 'vandalblast', label: 'Vandalblast', icon: 'local_fire_department', route: '/vandalblast', locked: true },
+      { id: 'preordain', label: 'Preordain', icon: 'insights', route: '/preordain', locked: false },
+      { id: 'vandalblast', label: 'Vandalblast', icon: 'local_fire_department', route: '/vandalblast', locked: false },
     ],
 
     navigate(screenId) {

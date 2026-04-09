@@ -1,6 +1,8 @@
 import { renderGameSetup } from '../components/game-setup.js';
 import { renderPlayerGrid, cleanupLifeButtons } from '../components/player-card.js';
 import { renderFloatingToolbar } from '../components/floating-toolbar.js';
+import { renderPostGameOverlay } from '../components/post-game-overlay.js';
+import { renderGameHistoryView } from '../components/game-history-view.js';
 
 /**
  * VANDALBLAST // GAME TRACKER
@@ -64,35 +66,26 @@ export function mount(container) {
             ${renderPlayerGrid()}
           </template>
 
-          <!-- Post-game summary (Plan 07) -->
+          <!-- Post-game summary -->
           <template x-if="$store.game.view === 'summary'">
-            <div class="flex flex-col items-center justify-center min-h-[40vh] gap-[16px] text-center">
-              <span class="font-mono uppercase text-[11px] tracking-[0.15em] font-bold"
-                    style="color: #7A8498;">Post-game summary coming in Plan 07</span>
+            <div><!-- placeholder for x-if single root -->
             </div>
           </template>
         </div>
       </template>
 
-      <!-- History view (Plan 07) -->
+      <!-- History view -->
       <template x-if="$store.game.historyView">
-        <div class="flex flex-col items-center justify-center min-h-[40vh] gap-[16px] text-center">
-          <img
-            src="/assets/assetsmila-izzet.png"
-            alt="Mila -- Izzet Familiar"
-            style="width: 96px; height: 96px; object-fit: cover; filter: grayscale(1) opacity(0.5);"
-          >
-          <h2 class="syne-header" style="font-size: 20px; font-weight: 700; line-height: 1.2; letter-spacing: 0.01em; color: #EAECEE;">No Games Recorded</h2>
-          <p style="font-family: 'Space Grotesk', sans-serif; font-size: 14px; line-height: 1.5; color: #7A8498; max-width: 28rem;">
-            Start a game from the Active Game view. Mila will keep track of your victories and defeats.
-          </p>
-        </div>
+        ${renderGameHistoryView()}
       </template>
 
     </div>
 
     <!-- Floating toolbar (visible during active game only) -->
     ${renderFloatingToolbar()}
+
+    <!-- Post-game overlay (manages own visibility via x-show) -->
+    ${renderPostGameOverlay()}
   `;
 
   // Cleanup on unmount
