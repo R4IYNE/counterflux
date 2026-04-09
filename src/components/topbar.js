@@ -20,10 +20,18 @@ export function topbarComponent() {
     },
 
     /**
-     * Handle notification bell click. Placeholder for future implementation.
+     * Handle notification bell click.
+     * Shows pending price alerts from the market store.
      */
     handleNotifications() {
-      // Notification panel will be implemented in a future phase
+      const market = Alpine.store('market');
+      if (market && market.alertBadgeCount > 0) {
+        // Navigate to Preordain watchlist tab to show alerts
+        if (window.__counterflux_router) {
+          window.__counterflux_router.navigate('/preordain');
+        }
+        market.setTab('watchlist');
+      }
     }
   };
 }
