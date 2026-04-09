@@ -103,10 +103,10 @@ describe('Screen content', () => {
     expect(container.textContent).toContain('Archive Manifest');
   });
 
-  it('preordain shows "Market Intel Coming Soon"', async () => {
+  it('preordain shows "PREORDAIN // MARKET INTEL" overline', async () => {
     const { mount } = await import('../src/screens/preordain.js');
     mount(container);
-    expect(container.textContent).toContain('Market Intel Coming Soon');
+    expect(container.textContent).toContain('PREORDAIN // MARKET INTEL');
   });
 
   it('vandalblast shows "Game Tracker Coming Soon"', async () => {

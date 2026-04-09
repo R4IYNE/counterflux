@@ -117,3 +117,48 @@
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
+
+/* Phase 5: Preordain tabs */
+.tab-active {
+  color: var(--color-text-primary);
+  border-bottom: 2px solid var(--color-primary);
+  box-shadow: 0 2px 8px var(--color-glow-blue);
+}
+.tab-inactive {
+  color: var(--color-text-muted);
+  border-bottom: 2px solid transparent;
+}
+
+/* Phase 5: Player borders */
+.player-border-1 { border-left: 4px solid #0D52BD; }
+.player-border-2 { border-left: 4px solid #E23838; }
+.player-border-3 { border-left: 4px solid #2ECC71; }
+.player-border-4 { border-left: 4px solid #F39C12; }
+.player-border-5 { border-left: 4px solid #A855F7; }
+.player-border-6 { border-left: 4px solid #22D3EE; }
+
+/* Phase 5: Game lethal highlight */
+.lethal-highlight {
+  background-color: rgba(226, 56, 56, 0.15);
+  border-color: var(--color-secondary);
+}
+
+/* Phase 5: NEW spoiler badge */
+.badge-new {
+  background: var(--color-primary);
+  color: var(--color-text-primary);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+}
+
+/* Phase 5: Alert badge dot */
+.badge-alert {
+  background: var(--color-secondary);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
