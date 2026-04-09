@@ -93,10 +93,10 @@
 
 - [ ] **MRKT-01**: Spoiler browser showing upcoming/recent sets with filterable card image gallery (colour, rarity, type)
 - [ ] **MRKT-02**: New cards highlighted with "NEW" badge during spoiler season
-- [ ] **MRKT-03**: Price watchlist: user-curated cards with current price, 7/30/90-day trend, sparkline, target price
-- [ ] **MRKT-04**: Price alert configuration: notify on price below/above threshold or change by percentage
-- [ ] **MRKT-05**: Market trends: top movers (24h/7d/30d), format staples tracker, reprint tracker
-- [ ] **MRKT-06**: Release calendar: visual timeline of upcoming MTG products with dates and types
+- [x] **MRKT-03**: Price watchlist: user-curated cards with current price, 7/30/90-day trend, sparkline, target price
+- [x] **MRKT-04**: Price alert configuration: notify on price below/above threshold or change by percentage
+- [x] **MRKT-05**: Market trends: top movers (24h/7d/30d), format staples tracker, reprint tracker
+- [x] **MRKT-06**: Release calendar: visual timeline of upcoming MTG products with dates and types
 
 ### Game Tracker (Vandalblast)
 
@@ -217,10 +217,10 @@ Updated during roadmap creation.
 | INTEL-06 | Phase 4 | Complete |
 | MRKT-01 | Phase 5 | Pending |
 | MRKT-02 | Phase 5 | Pending |
-| MRKT-03 | Phase 5 | Pending |
-| MRKT-04 | Phase 5 | Pending |
-| MRKT-05 | Phase 5 | Pending |
-| MRKT-06 | Phase 5 | Pending |
+| MRKT-03 | Phase 5 | Complete |
+| MRKT-04 | Phase 5 | Complete |
+| MRKT-05 | Phase 5 | Complete |
+| MRKT-06 | Phase 5 | Complete |
 | GAME-01 | Phase 5 | Pending |
 | GAME-02 | Phase 5 | Pending |
 | GAME-03 | Phase 5 | Pending |
