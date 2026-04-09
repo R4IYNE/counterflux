@@ -109,10 +109,14 @@ describe('Screen content', () => {
     expect(container.textContent).toContain('Market Intel Coming Soon');
   });
 
-  it('vandalblast shows "Game Tracker Coming Soon"', async () => {
+  it('vandalblast shows game tracker screen with setup', async () => {
     const { mount } = await import('../src/screens/vandalblast.js');
     mount(container);
-    expect(container.textContent).toContain('Game Tracker Coming Soon');
+    expect(container.innerHTML).toContain('VANDALBLAST // GAME TRACKER');
+    expect(container.innerHTML).toContain('ACTIVE GAME');
+    expect(container.innerHTML).toContain('HISTORY');
+    expect(container.innerHTML).toContain('NEW GAME');
+    expect(container.innerHTML).toContain('Start Game');
   });
 
   it('empty states include Mila image with grayscale', async () => {

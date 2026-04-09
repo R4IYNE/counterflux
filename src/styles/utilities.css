@@ -117,3 +117,45 @@
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
+
+/* Phase 5: Market Intel + Game Tracker utilities */
+
+.tab-active {
+  color: var(--color-text-primary, #EAECEE);
+  border-bottom: 2px solid var(--color-primary, #0D52BD);
+  box-shadow: 0 2px 8px rgba(13, 82, 189, 0.3);
+}
+.tab-inactive {
+  color: var(--color-text-muted, #7A8498);
+  border-bottom: 2px solid transparent;
+}
+
+.player-border-1 { border-left: 4px solid #0D52BD; }
+.player-border-2 { border-left: 4px solid #E23838; }
+.player-border-3 { border-left: 4px solid #2ECC71; }
+.player-border-4 { border-left: 4px solid #F39C12; }
+.player-border-5 { border-left: 4px solid #A855F7; }
+.player-border-6 { border-left: 4px solid #22D3EE; }
+
+.lethal-highlight {
+  background-color: rgba(226, 56, 56, 0.15);
+  border-color: var(--color-secondary, #E23838);
+}
+
+.badge-new {
+  background: var(--color-primary, #0D52BD);
+  color: var(--color-text-primary, #EAECEE);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+}
+
+.badge-alert {
+  background: var(--color-secondary, #E23838);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
