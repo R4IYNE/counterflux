@@ -25,14 +25,14 @@ export function renderMoversPanel() {
 
       <!-- Empty state -->
       <template x-if="$store.market.gainers.length === 0 && $store.market.losers.length === 0 && !$store.market.loading">
-        <div class="flex flex-col items-center justify-center py-xl text-center">
+        <div class="py-xl text-center w-full">
           <span class="material-symbols-outlined text-[48px] text-text-dim mb-md">trending_up</span>
           <h3
             class="text-text-primary mb-sm"
             style="font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 700;"
           >Market Data Loading</h3>
           <p
-            class="text-text-muted max-w-sm"
+            class="text-text-muted mx-auto max-w-[320px]"
             style="font-family: 'Space Grotesk', sans-serif; font-size: 14px; line-height: 1.5;"
           >Price history builds over time. Check back after a few days of data collection for market movers.</p>
         </div>
