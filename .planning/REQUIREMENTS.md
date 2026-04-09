@@ -100,18 +100,18 @@
 
 ### Game Tracker (Vandalblast)
 
-- [ ] **GAME-01**: Game setup: select deck (from builder) or enter commander manually, set starting life (default 40), add 1-5 opponents with name/commander/colour
-- [ ] **GAME-02**: Life total tracking with large readable numbers, +/- buttons, long-press for fast adjustment (5/10 increments)
-- [ ] **GAME-03**: Commander damage tracking per-player per-commander, auto-flag at 21+, support partner commanders
-- [ ] **GAME-04**: Poison counter tracking per-player, auto-KO at 10
-- [ ] **GAME-05**: Commander tax tracking (cast count and current tax cost per player)
-- [ ] **GAME-06**: Additional counters: Energy, Experience, Treasure, Monarch, Initiative, Day/Night, City's Blessing, Storm count
+- [x] **GAME-01**: Game setup: select deck (from builder) or enter commander manually, set starting life (default 40), add 1-5 opponents with name/commander/colour
+- [x] **GAME-02**: Life total tracking with large readable numbers, +/- buttons, long-press for fast adjustment (5/10 increments)
+- [x] **GAME-03**: Commander damage tracking per-player per-commander, auto-flag at 21+, support partner commanders
+- [x] **GAME-04**: Poison counter tracking per-player, auto-KO at 10
+- [x] **GAME-05**: Commander tax tracking (cast count and current tax cost per player)
+- [x] **GAME-06**: Additional counters: Energy, Experience, Treasure, Monarch, Initiative, Day/Night, City's Blessing, Storm count
 - [ ] **GAME-07**: Turn tracker with current turn number and optional timer (stopwatch/countdown/chess-clock)
 - [ ] **GAME-08**: Dice roller: d4, d6, d8, d10, d12, d20, high-roll mode, coin flip
 - [ ] **GAME-09**: Post-game summary: duration, turn count, winner, elimination order
 - [ ] **GAME-10**: Life total chart: line graph of each player's life over the game, shareable as image
-- [ ] **GAME-11**: Game saved to history linked to deck
-- [ ] **GAME-12**: Game history stats: win rate by deck, average game length, most-played commanders, win rate by player, win streaks
+- [x] **GAME-11**: Game saved to history linked to deck
+- [x] **GAME-12**: Game history stats: win rate by deck, average game length, most-played commanders, win rate by player, win streaks
 - [ ] **GAME-13**: Vandalblast has a mobile-responsive layout for use at the table
 
 ### Interaction Patterns
@@ -221,18 +221,18 @@ Updated during roadmap creation.
 | MRKT-04 | Phase 5 | Complete |
 | MRKT-05 | Phase 5 | Complete |
 | MRKT-06 | Phase 5 | Complete |
-| GAME-01 | Phase 5 | Pending |
-| GAME-02 | Phase 5 | Pending |
-| GAME-03 | Phase 5 | Pending |
-| GAME-04 | Phase 5 | Pending |
-| GAME-05 | Phase 5 | Pending |
-| GAME-06 | Phase 5 | Pending |
+| GAME-01 | Phase 5 | Complete |
+| GAME-02 | Phase 5 | Complete |
+| GAME-03 | Phase 5 | Complete |
+| GAME-04 | Phase 5 | Complete |
+| GAME-05 | Phase 5 | Complete |
+| GAME-06 | Phase 5 | Complete |
 | GAME-07 | Phase 5 | Pending |
 | GAME-08 | Phase 5 | Pending |
 | GAME-09 | Phase 5 | Pending |
 | GAME-10 | Phase 5 | Pending |
-| GAME-11 | Phase 5 | Pending |
-| GAME-12 | Phase 5 | Pending |
+| GAME-11 | Phase 5 | Complete |
+| GAME-12 | Phase 5 | Complete |
 | GAME-13 | Phase 5 | Pending |
 | PERF-03 | Phase 5 | Pending |
 | DASH-01 | Phase 6 | Pending |
