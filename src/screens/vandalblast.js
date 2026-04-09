@@ -1,4 +1,5 @@
 import { renderGameSetup } from '../components/game-setup.js';
+import { renderPlayerGrid, cleanupLifeButtons } from '../components/player-card.js';
 
 /**
  * VANDALBLAST // GAME TRACKER
@@ -57,9 +58,9 @@ export function mount(container) {
             ${renderGameSetup()}
           </template>
 
-          <!-- Active game view (player grid rendered by Plan 05-05 Task 2) -->
+          <!-- Active game view -->
           <template x-if="$store.game.view === 'active'">
-            <div id="vandalblast-player-grid"></div>
+            ${renderPlayerGrid()}
           </template>
 
           <!-- Post-game summary (Plan 07) -->
@@ -93,6 +94,7 @@ export function mount(container) {
   // Cleanup on unmount
   const prevCleanup = container._cleanup;
   container._cleanup = () => {
+    cleanupLifeButtons();
     if (prevCleanup) prevCleanup();
   };
 }
