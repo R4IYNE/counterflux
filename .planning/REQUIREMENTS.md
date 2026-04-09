@@ -112,7 +112,7 @@
 - [ ] **GAME-10**: Life total chart: line graph of each player's life over the game, shareable as image
 - [x] **GAME-11**: Game saved to history linked to deck
 - [x] **GAME-12**: Game history stats: win rate by deck, average game length, most-played commanders, win rate by player, win streaks
-- [ ] **GAME-13**: Vandalblast has a mobile-responsive layout for use at the table
+- [x] **GAME-13**: Vandalblast has a mobile-responsive layout for use at the table
 
 ### Interaction Patterns
 
@@ -233,7 +233,7 @@ Updated during roadmap creation.
 | GAME-10 | Phase 5 | Pending |
 | GAME-11 | Phase 5 | Complete |
 | GAME-12 | Phase 5 | Complete |
-| GAME-13 | Phase 5 | Pending |
+| GAME-13 | Phase 5 | Complete |
 | PERF-03 | Phase 5 | Pending |
 | DASH-01 | Phase 6 | Pending |
 | DASH-02 | Phase 6 | Pending |
