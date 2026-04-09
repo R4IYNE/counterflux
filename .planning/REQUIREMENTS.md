@@ -106,8 +106,8 @@
 - [x] **GAME-04**: Poison counter tracking per-player, auto-KO at 10
 - [x] **GAME-05**: Commander tax tracking (cast count and current tax cost per player)
 - [x] **GAME-06**: Additional counters: Energy, Experience, Treasure, Monarch, Initiative, Day/Night, City's Blessing, Storm count
-- [ ] **GAME-07**: Turn tracker with current turn number and optional timer (stopwatch/countdown/chess-clock)
-- [ ] **GAME-08**: Dice roller: d4, d6, d8, d10, d12, d20, high-roll mode, coin flip
+- [x] **GAME-07**: Turn tracker with current turn number and optional timer (stopwatch/countdown/chess-clock)
+- [x] **GAME-08**: Dice roller: d4, d6, d8, d10, d12, d20, high-roll mode, coin flip
 - [ ] **GAME-09**: Post-game summary: duration, turn count, winner, elimination order
 - [ ] **GAME-10**: Life total chart: line graph of each player's life over the game, shareable as image
 - [x] **GAME-11**: Game saved to history linked to deck
@@ -227,8 +227,8 @@ Updated during roadmap creation.
 | GAME-04 | Phase 5 | Complete |
 | GAME-05 | Phase 5 | Complete |
 | GAME-06 | Phase 5 | Complete |
-| GAME-07 | Phase 5 | Pending |
-| GAME-08 | Phase 5 | Pending |
+| GAME-07 | Phase 5 | Complete |
+| GAME-08 | Phase 5 | Complete |
 | GAME-09 | Phase 5 | Pending |
 | GAME-10 | Phase 5 | Pending |
 | GAME-11 | Phase 5 | Complete |
