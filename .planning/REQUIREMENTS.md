@@ -108,10 +108,10 @@
 - [ ] **GAME-06**: Additional counters: Energy, Experience, Treasure, Monarch, Initiative, Day/Night, City's Blessing, Storm count
 - [ ] **GAME-07**: Turn tracker with current turn number and optional timer (stopwatch/countdown/chess-clock)
 - [ ] **GAME-08**: Dice roller: d4, d6, d8, d10, d12, d20, high-roll mode, coin flip
-- [ ] **GAME-09**: Post-game summary: duration, turn count, winner, elimination order
-- [ ] **GAME-10**: Life total chart: line graph of each player's life over the game, shareable as image
-- [ ] **GAME-11**: Game saved to history linked to deck
-- [ ] **GAME-12**: Game history stats: win rate by deck, average game length, most-played commanders, win rate by player, win streaks
+- [x] **GAME-09**: Post-game summary: duration, turn count, winner, elimination order
+- [x] **GAME-10**: Life total chart: line graph of each player's life over the game, shareable as image
+- [x] **GAME-11**: Game saved to history linked to deck
+- [x] **GAME-12**: Game history stats: win rate by deck, average game length, most-played commanders, win rate by player, win streaks
 - [ ] **GAME-13**: Vandalblast has a mobile-responsive layout for use at the table
 
 ### Interaction Patterns
@@ -124,7 +124,7 @@
 
 - [x] **PERF-01**: Initial page load under 3 seconds on broadband
 - [ ] **PERF-02**: Full collection and deck data available offline after initial load
-- [ ] **PERF-03**: Game Tracker fully functional offline
+- [x] **PERF-03**: Game Tracker fully functional offline
 - [ ] **PERF-04**: Deck builder analytics recalculate within 100ms on card add/remove
 - [ ] **PERF-05**: Stale price data indicator when offline
 
@@ -229,12 +229,12 @@ Updated during roadmap creation.
 | GAME-06 | Phase 5 | Pending |
 | GAME-07 | Phase 5 | Pending |
 | GAME-08 | Phase 5 | Pending |
-| GAME-09 | Phase 5 | Pending |
-| GAME-10 | Phase 5 | Pending |
-| GAME-11 | Phase 5 | Pending |
-| GAME-12 | Phase 5 | Pending |
+| GAME-09 | Phase 5 | Complete |
+| GAME-10 | Phase 5 | Complete |
+| GAME-11 | Phase 5 | Complete |
+| GAME-12 | Phase 5 | Complete |
 | GAME-13 | Phase 5 | Pending |
-| PERF-03 | Phase 5 | Pending |
+| PERF-03 | Phase 5 | Complete |
 | DASH-01 | Phase 6 | Pending |
 | DASH-02 | Phase 6 | Pending |
 | DASH-03 | Phase 6 | Pending |
