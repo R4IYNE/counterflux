@@ -185,8 +185,7 @@ export function renderWatchlistPanel() {
 /**
  * Alpine.data registration for watchlist panel top-level state.
  */
-if (typeof window !== 'undefined') {
-  document.addEventListener('alpine:init', () => {
+if (typeof window !== 'undefined' && window.Alpine) {
     window.Alpine.data('watchlistPanelData', () => ({
       searchQuery: '',
       searchResults: [],
@@ -346,5 +345,4 @@ if (typeof window !== 'undefined') {
         // A full undo system would need to preserve alert config before deletion.
       },
     }));
-  });
 }
