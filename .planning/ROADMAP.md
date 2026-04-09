@@ -15,7 +15,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 1: Foundation + Data Layer** - Scryfall bulk data pipeline, IndexedDB persistence, navigation shell, Izzet visual identity, Mila system familiar
 - [ ] **Phase 2: Collection Manager (Treasure Cruise)** - Full collection management with gallery/table/set views, mass entry, CSV import/export, analytics
 - [ ] **Phase 3: Deck Builder (Thousand-Year Storm)** - Three-panel editor with search, drag-and-drop categories, live analytics, collection-aware owned/missing
-- [x] **Phase 4: Intelligence Layer** - EDHREC synergy suggestions, Commander Spellbook combo detection, category gap analysis, salt scores (completed 2026-04-06)
+- [x] **Phase 4: Intelligence Layer** - EDHREC synergy suggestions, Commander Spellbook combo detection, category gap analysis, salt scores (completed 2026-04-06)
 - [ ] **Phase 5: Market Intel + Game Tracker** - Spoiler browser, price watchlist, release calendar, life totals, commander damage, game history
 - [ ] **Phase 6: Dashboard + Polish (Epic Experiment)** - Dashboard panels wired to all modules, keyboard shortcuts, undo system, offline hardening, performance targets
 
@@ -104,7 +104,16 @@ Plans:
   3. User can set up a Commander game (select deck or enter commander, set life totals, add opponents), track life/commander damage/poison/commander tax/additional counters, and use dice/coin tools
   4. User can complete a game and see a post-game summary (duration, turns, winner, elimination order) with a life total chart, and browse game history with win rate stats by deck/player/commander
   5. Game Tracker works fully offline and has a mobile-responsive layout for use at the table
-**Plans**: TBD
+**Plans:** 8 plans
+Plans:
+- [ ] 05-01-PLAN.md — Dexie schema v5, market store, price-history service, sets service, sparkline, tests
+- [ ] 05-02-PLAN.md — Game store, game-stats utility, game data layer tests
+- [ ] 05-03-PLAN.md — Preordain screen layout, tab bar, release calendar, spoiler gallery
+- [ ] 05-04-PLAN.md — Watchlist panel, movers panel, Watch Price context menu, alert badges
+- [ ] 05-05-PLAN.md — Vandalblast screen, game setup, player card grid, life/poison/damage tracking
+- [ ] 05-06-PLAN.md — Floating toolbar, dice roller, coin flipper, turn timer, counter panel
+- [ ] 05-07-PLAN.md — Post-game overlay, life chart, game history view, stats cards
+- [ ] 05-08-PLAN.md — Integration wiring, sidebar unlock, visual verification checkpoint
 **UI hint**: yes
 
 ### Phase 6: Dashboard + Polish (Epic Experiment)
@@ -130,5 +139,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | 2. Collection Manager (Treasure Cruise) | 0/5 | Planned | - |
 | 3. Deck Builder (Thousand-Year Storm) | 5/6 | In Progress|  |
 | 4. Intelligence Layer | 4/4 | Complete   | 2026-04-06 |
-| 5. Market Intel + Game Tracker | 0/0 | Not started | - |
+| 5. Market Intel + Game Tracker | 0/8 | Planned | - |
 | 6. Dashboard + Polish (Epic Experiment) | 0/0 | Not started | - |
