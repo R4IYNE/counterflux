@@ -91,8 +91,8 @@
 
 ### Market Intel (Preordain)
 
-- [ ] **MRKT-01**: Spoiler browser showing upcoming/recent sets with filterable card image gallery (colour, rarity, type)
-- [ ] **MRKT-02**: New cards highlighted with "NEW" badge during spoiler season
+- [x] **MRKT-01**: Spoiler browser showing upcoming/recent sets with filterable card image gallery (colour, rarity, type)
+- [x] **MRKT-02**: New cards highlighted with "NEW" badge during spoiler season
 - [x] **MRKT-03**: Price watchlist: user-curated cards with current price, 7/30/90-day trend, sparkline, target price
 - [x] **MRKT-04**: Price alert configuration: notify on price below/above threshold or change by percentage
 - [x] **MRKT-05**: Market trends: top movers (24h/7d/30d), format staples tracker, reprint tracker
@@ -215,8 +215,8 @@ Updated during roadmap creation.
 | INTEL-04 | Phase 4 | Complete |
 | INTEL-05 | Phase 4 | Complete |
 | INTEL-06 | Phase 4 | Complete |
-| MRKT-01 | Phase 5 | Pending |
-| MRKT-02 | Phase 5 | Pending |
+| MRKT-01 | Phase 5 | Complete |
+| MRKT-02 | Phase 5 | Complete |
 | MRKT-03 | Phase 5 | Complete |
 | MRKT-04 | Phase 5 | Complete |
 | MRKT-05 | Phase 5 | Complete |
