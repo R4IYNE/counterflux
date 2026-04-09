@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: completed
-stopped_at: Completed 05-03-PLAN.md
-last_updated: "2026-04-09T07:45:42.027Z"
+stopped_at: Completed 05-04-PLAN.md
+last_updated: "2026-04-09T07:47:43.888Z"
 last_activity: 2026-04-07
 progress:
   total_phases: 6
@@ -66,7 +66,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 04 P03 | 4min | 2 tasks | 4 files |
 | Phase 04 P04 | 12min | 3 tasks | 16 files |
 | Phase 05 P02 | 8min | 2 tasks | 7 files |
-| Phase 05 P03 | 8min | 2 tasks | 6 files |
+| Phase 05 P04 | 8min | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -111,7 +111,8 @@ Recent decisions affecting current work:
 - [Phase 05]: Auto-save uses 2s debounced write to meta table for game state recovery
 - [Phase 05]: DB schema v5 adds games table (++id, deck_id, started_at, ended_at)
 - [Phase 05]: Commander damage tracked as object keyed by source player index
-- [Phase 05]: Spoiler gallery created alongside screen in single commit since preordain.js imports it
+- [Phase 05]: Watchlist entry uses per-row Alpine.data with async card lookup for isolated state
+- [Phase 05]: Alert badge: sidebar 8px dot, topbar bell shows count number
 
 ### Pending Todos
 
@@ -125,6 +126,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-09T07:45:42.025Z
-Stopped at: Completed 05-03-PLAN.md
+Last session: 2026-04-09T07:47:43.886Z
+Stopped at: Completed 05-04-PLAN.md
 Resume file: None

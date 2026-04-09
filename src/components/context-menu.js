@@ -125,6 +125,22 @@ export function initContextMenu(container) {
       })
     );
 
+    // WATCH PRICE
+    menuEl.appendChild(
+      createMenuItem('WATCH PRICE', async () => {
+        const Alpine = window.Alpine;
+        if (!Alpine) return;
+        const store = Alpine.store('market');
+        if (store && activeEntry?.card?.id) {
+          await store.addToWatchlist(activeEntry.card.id);
+          Alpine.store('toast').show(
+            (activeEntry.card.name || 'Card') + ' added to watchlist.',
+            'success'
+          );
+        }
+      })
+    );
+
     // REMOVE FROM COLLECTION
     const removeBtn = createMenuItem('REMOVE FROM COLLECTION', () => {
       document.dispatchEvent(

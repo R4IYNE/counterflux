@@ -114,7 +114,15 @@
             :aria-disabled="screen.locked"
             @click.prevent="!screen.locked && $store.app.currentScreen !== screen.id && (window.__counterflux_router ? window.__counterflux_router.navigate(screen.route) : null)"
           >
-            <span class="material-symbols-outlined text-2xl" x-text="screen.icon"></span>
+            <span class="relative">
+              <span class="material-symbols-outlined text-2xl" x-text="screen.icon"></span>
+              <span
+                x-show="screen.id === 'preordain' && $store.market && $store.market.alertBadgeCount > 0"
+                x-cloak
+                class="badge-alert absolute -top-1 -right-1 w-[8px] h-[8px] bg-secondary"
+                style="border-radius: 50%;"
+              ></span>
+            </span>
             <span
               x-show="!$store.app.sidebarCollapsed"
               x-text="screen.label"
@@ -212,8 +220,15 @@
 
       <!-- Right section -->
       <div class="flex items-center gap-md">
-        <button class="text-text-muted hover:text-text-primary transition-colors" aria-label="Notifications">
+        <button class="text-text-muted hover:text-text-primary transition-colors relative" aria-label="Notifications">
           <span class="material-symbols-outlined text-2xl">notifications</span>
+          <span
+            x-show="$store.market && $store.market.alertBadgeCount > 0"
+            x-cloak
+            class="badge-alert absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center bg-secondary text-white text-[10px] font-bold leading-none px-[4px]"
+            style="font-family: 'JetBrains Mono', monospace; border-radius: 9px;"
+            x-text="$store.market?.alertBadgeCount || ''"
+          ></span>
         </button>
         <img
           src="/assets/assetsmila-izzet.png"
@@ -314,6 +329,17 @@
                 x-text="$store.search.selectedCard.prices?.eur_foil ? 'Foil: ' + window.__cf_eurToGbp($store.search.selectedCard.prices.eur_foil) : ''"
               ></span>
             </div>
+          </div>
+
+          <!-- Watch Price (D-08) -->
+          <div class="pt-sm">
+            <button
+              @click="$store.market.addToWatchlist($store.search.selectedCard.id); $store.toast.show($store.search.selectedCard._name + ' added to watchlist.', 'success')"
+              class="w-full py-sm px-md bg-surface-hover border border-border-ghost text-text-primary font-mono uppercase text-[11px] tracking-[0.15em] font-bold hover:border-primary hover:text-primary transition-colors cursor-pointer"
+            >
+              <span class="material-symbols-outlined text-[16px] align-middle mr-xs">visibility</span>
+              WATCH PRICE
+            </button>
           </div>
 
           <!-- Legalities section -->

@@ -24,6 +24,18 @@ export function sidebarComponent() {
     },
 
     /**
+     * Check if a screen should show an alert badge.
+     * Currently only Preordain shows a badge when alertBadgeCount > 0.
+     * @param {Object} screen - Screen object
+     * @returns {boolean}
+     */
+    hasAlertBadge(screen) {
+      if (screen.id !== 'preordain') return false;
+      const market = Alpine.store('market');
+      return market && market.alertBadgeCount > 0;
+    },
+
+    /**
      * Returns CSS classes for a nav item based on active/locked state.
      * @param {Object} screen - Screen object
      * @returns {string} Tailwind class string

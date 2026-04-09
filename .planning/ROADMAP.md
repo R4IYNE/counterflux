@@ -108,8 +108,8 @@ Plans:
 Plans:
 - [x] 05-01-PLAN.md — Dexie schema v5, market store, price-history service, sets service, sparkline, tests
 - [x] 05-02-PLAN.md — Game store, game-stats utility, game data layer tests
-- [x] 05-03-PLAN.md — Preordain screen layout, tab bar, release calendar, spoiler gallery
-- [ ] 05-04-PLAN.md — Watchlist panel, movers panel, Watch Price context menu, alert badges
+- [ ] 05-03-PLAN.md — Preordain screen layout, tab bar, release calendar, spoiler gallery
+- [x] 05-04-PLAN.md — Watchlist panel, movers panel, Watch Price context menu, alert badges
 - [ ] 05-05-PLAN.md — Vandalblast screen, game setup, player card grid, life/poison/damage tracking
 - [ ] 05-06-PLAN.md — Floating toolbar, dice roller, coin flipper, turn timer, counter panel
 - [ ] 05-07-PLAN.md — Post-game overlay, life chart, game history view, stats cards
