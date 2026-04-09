@@ -54,14 +54,14 @@ export function renderWatchlistPanel() {
 
       <!-- Empty state -->
       <template x-if="$store.market.watchlist.length === 0 && !$store.market.loading">
-        <div class="flex flex-col items-center justify-center py-xl text-center">
+        <div class="py-xl text-center w-full">
           <span class="material-symbols-outlined text-[48px] text-text-dim mb-md">visibility_off</span>
           <h3
             class="text-text-primary mb-sm"
             style="font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 700;"
           >No Cards on Watch</h3>
           <p
-            class="text-text-muted max-w-sm"
+            class="text-text-muted mx-auto max-w-[320px]"
             style="font-family: 'Space Grotesk', sans-serif; font-size: 14px; line-height: 1.5;"
           >Right-click any card and select "Watch Price" to track its value here. Mila will alert you when prices cross your thresholds.</p>
         </div>
