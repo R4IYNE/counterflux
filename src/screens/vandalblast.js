@@ -1,5 +1,6 @@
 import { renderGameSetup } from '../components/game-setup.js';
 import { renderPlayerGrid, cleanupLifeButtons } from '../components/player-card.js';
+import { renderFloatingToolbar } from '../components/floating-toolbar.js';
 
 /**
  * VANDALBLAST // GAME TRACKER
@@ -89,6 +90,9 @@ export function mount(container) {
       </template>
 
     </div>
+
+    <!-- Floating toolbar (visible during active game only) -->
+    ${renderFloatingToolbar()}
   `;
 
   // Cleanup on unmount
