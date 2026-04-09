@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: completed
-stopped_at: Completed 04-03-PLAN.md
-last_updated: "2026-04-07T14:49:35.930Z"
+stopped_at: Completed 05-02-PLAN.md
+last_updated: "2026-04-09T07:26:59.430Z"
 last_activity: 2026-04-07
 progress:
   total_phases: 6
   completed_phases: 3
   total_plans: 19
-  completed_plans: 18
+  completed_plans: 19
   percent: 0
 ---
 
@@ -65,6 +65,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 04 P02 | 3min | 2 tasks | 5 files |
 | Phase 04 P03 | 4min | 2 tasks | 4 files |
 | Phase 04 P04 | 12min | 3 tasks | 16 files |
+| Phase 05 P02 | 8min | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -106,6 +107,9 @@ Recent decisions affecting current work:
 - [Phase 04]: Combo cache 24h TTL; insight rotation day-of-year % top-10 pool
 - [Phase 04]: Vite dev server CORS proxy for EDHREC and Spellbook APIs (CloudFront blocks OPTIONS preflight)
 - [Phase 04]: Intelligence UI reads store reactively; synergy card add resolves Scryfall ID by name before deck addCard
+- [Phase 05]: Auto-save uses 2s debounced write to meta table for game state recovery
+- [Phase 05]: DB schema v5 adds games table (++id, deck_id, started_at, ended_at)
+- [Phase 05]: Commander damage tracked as object keyed by source player index
 
 ### Pending Todos
 
@@ -119,6 +123,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-06T19:17:07.487Z
-Stopped at: Completed 04-03-PLAN.md
+Last session: 2026-04-09T07:26:59.428Z
+Stopped at: Completed 05-02-PLAN.md
 Resume file: None
