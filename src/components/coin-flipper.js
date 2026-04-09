@@ -9,7 +9,16 @@
  */
 export function renderCoinFlipper() {
   return `
-    <div x-data="{ open: false, result: null, animating: false }"
+    <div x-data="{
+           open: false,
+           result: null,
+           animating: false,
+           flip() {
+             this.animating = true;
+             this.result = (Math.random() < 0.5) ? 'HEADS' : 'TAILS';
+             setTimeout(() => { this.animating = false; }, 300);
+           }
+         }"
          class="relative">
       <!-- Trigger button -->
       <button
@@ -35,11 +44,7 @@ export function renderCoinFlipper() {
           style="background: #0D52BD; border: 1px solid #0D52BD; color: #EAECEE; width: 96px;"
           @mouseenter="$el.style.background = '#1048A0'"
           @mouseleave="$el.style.background = '#0D52BD'"
-          @click.stop="
-            animating = true;
-            result = Math.random() < 0.5 ? 'HEADS' : 'TAILS';
-            setTimeout(() => { animating = false; }, 300);
-          "
+          @click.stop="flip()"
         >FLIP</button>
 
         <!-- Result display -->

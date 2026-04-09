@@ -50,19 +50,32 @@ export function renderFloatingToolbar() {
       <!-- Coin flipper -->
       ${renderCoinFlipper()}
 
-      <!-- Timer reset -->
+      <!-- Timer toggle (play/pause) -->
       <button
         class="flex items-center justify-center w-[48px] h-[48px] cursor-pointer"
         style="background: #1C1F28; border: 1px solid #2A2D3A; color: #EAECEE;"
         @mouseenter="$el.style.background = '#2A2D3A'"
         @mouseleave="$el.style.background = '#1C1F28'"
-        @click="$store.game.resetTimer()"
+        @click="$store.game.timerRunning ? $store.game.pauseTimer() : $store.game.startTimer()"
         aria-label="Toggle Timer">
-        <span class="material-symbols-outlined" style="font-size: 24px;">timer</span>
+        <span class="material-symbols-outlined" style="font-size: 24px;"
+              x-text="$store.game.timerRunning ? 'pause' : 'timer'"></span>
       </button>
 
       <!-- Counter panel -->
       ${renderCounterPanel()}
+
+      <!-- Fullscreen toggle -->
+      <button
+        class="flex items-center justify-center w-[48px] h-[48px] cursor-pointer"
+        style="background: #1C1F28; border: 1px solid #2A2D3A; color: #EAECEE;"
+        @mouseenter="$el.style.background = '#2A2D3A'"
+        @mouseleave="$el.style.background = '#1C1F28'"
+        @click="$store.app.gameFullscreen = !$store.app.gameFullscreen"
+        aria-label="Toggle Fullscreen">
+        <span class="material-symbols-outlined" style="font-size: 24px;"
+              x-text="$store.app.gameFullscreen ? 'fullscreen_exit' : 'fullscreen'"></span>
+      </button>
 
       <!-- Separator -->
       <div style="width: 1px; height: 32px; background: #2A2D3A;"></div>

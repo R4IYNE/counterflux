@@ -4,6 +4,7 @@ export function initAppStore() {
   Alpine.store('app', {
     currentScreen: 'welcome',
     sidebarCollapsed: window.innerWidth < 1024,
+    gameFullscreen: false,
 
     screens: [
       { id: 'welcome', label: 'Archive', icon: 'cyclone', route: '/', locked: false },
@@ -18,6 +19,8 @@ export function initAppStore() {
       const screen = this.screens.find(s => s.id === screenId);
       if (!screen || screen.locked) return;
       this.currentScreen = screenId;
+      // Exit fullscreen when leaving Vandalblast
+      if (screenId !== 'vandalblast') this.gameFullscreen = false;
     }
   });
 

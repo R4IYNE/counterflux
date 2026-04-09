@@ -189,10 +189,15 @@ export function renderPlayerGrid() {
             </div>
           </template>
 
-          <!-- Player name -->
-          <span class="syne-header text-[20px] font-bold"
-                style="color: #EAECEE;"
-                x-text="player.name || 'Player'"></span>
+          <!-- Player name + expand icon -->
+          <div class="flex items-center justify-between">
+            <span class="syne-header text-[20px] font-bold"
+                  style="color: #EAECEE;"
+                  x-text="player.name || 'Player'"></span>
+            <span class="material-symbols-outlined transition-transform"
+                  :style="$store.game.expandedPlayer === pIdx ? 'transform: rotate(180deg); color: #0D52BD;' : 'color: #7A8498;'"
+                  style="font-size: 20px;">expand_more</span>
+          </div>
 
           <!-- Commander name -->
           <span class="font-mono text-[11px] tracking-[0.15em]"
@@ -273,6 +278,26 @@ export function renderPlayerGrid() {
               </button>
             </div>
           </div>
+
+          <!-- Active counters (always visible when set) -->
+          <template x-if="Object.keys(player.counters || {}).length > 0">
+            <div class="flex flex-wrap gap-[8px] px-[8px]" @click.stop>
+              <template x-for="(val, name) in (player.counters || {})" :key="'vis-' + name">
+                <div class="flex items-center gap-[4px] py-[2px] px-[6px]"
+                     style="background: #1C1F28; border: 1px solid #2A2D3A;">
+                  <span class="font-mono text-[9px] uppercase tracking-[0.1em]"
+                        style="color: #7A8498;" x-text="name"></span>
+                  <template x-if="typeof val === 'number'">
+                    <span class="font-mono text-[11px] font-bold"
+                          style="color: #EAECEE;" x-text="val"></span>
+                  </template>
+                  <template x-if="typeof val === 'boolean'">
+                    <span class="material-symbols-outlined" style="font-size: 12px; color: #0D52BD;">check</span>
+                  </template>
+                </div>
+              </template>
+            </div>
+          </template>
 
           <!-- Mobile tap hint -->
           <span class="md:hidden text-center"

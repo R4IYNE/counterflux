@@ -80,6 +80,8 @@
 
     <!-- Sidebar -->
     <aside
+      x-show="!$store.app.gameFullscreen"
+      x-transition
       :class="$store.app.sidebarCollapsed ? 'w-16' : 'w-60'"
       class="fixed left-0 top-0 bottom-0 z-30 bg-background border-r border-border-ghost transition-all duration-200 flex flex-col"
     >
@@ -156,6 +158,8 @@
 
     <!-- Topbar -->
     <header
+      x-show="!$store.app.gameFullscreen"
+      x-transition
       :class="$store.app.sidebarCollapsed ? 'ml-16' : 'ml-60'"
       class="fixed top-0 right-0 z-40 h-16 glass-overlay border-b border-border-ghost flex items-center justify-between px-xl transition-all duration-200"
     >
@@ -241,7 +245,7 @@
 
     <!-- Main content -->
     <main
-      :class="$store.app.sidebarCollapsed ? 'ml-16' : 'ml-60'"
+      :class="$store.app.gameFullscreen ? 'ml-0 pt-0' : ($store.app.sidebarCollapsed ? 'ml-16' : 'ml-60')"
       class="mt-16 p-xl min-h-screen transition-all duration-200"
     >
       <div id="main-content"></div>
