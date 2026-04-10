@@ -8,7 +8,7 @@
   <link rel="preload" href="/src/styles/fonts/JetBrainsMono-Variable.woff2" as="font" type="font/woff2" crossorigin>
   <style>[x-cloak] { display: none !important; }</style>
 </head>
-<body x-data @keydown.escape.window="$store.search.flyoutOpen ? $store.search.closeFlyout() : $store.search.clear()" @keydown.slash.window="if (!['INPUT','TEXTAREA','SELECT'].includes($event.target.tagName)) { $event.preventDefault(); (document.getElementById('global-search-input') || document.querySelector('header input[type=text]'))?.focus(); }">
+<body x-data @keydown.escape.window="$store.search.flyoutOpen ? $store.search.closeFlyout() : $store.search.clear()" @keydown.slash.window="if (!['INPUT','TEXTAREA','SELECT'].includes($event.target.tagName)) { $event.preventDefault(); (document.getElementById('global-search-input') || document.querySelector('header input[type=text]'))?.focus(); }" @keydown.ctrl.z.window="if (!['INPUT','TEXTAREA','SELECT'].includes($event.target.tagName)) { $event.preventDefault(); $store.undo.undoLast(); }">
 
   <!-- Splash Screen: blocks all interaction until bulk data is ready -->
   <div
@@ -467,6 +467,12 @@
   </template>
 
   <!-- Toast container -->
+  <style>
+    @keyframes undoCountdown {
+      from { width: 100%; }
+      to { width: 0%; }
+    }
+  </style>
   <div class="fixed bottom-4 right-4 z-50 flex flex-col gap-sm" style="max-width: 400px;">
     <template x-for="toast in ($store.toast?.items || [])" :key="toast.id">
       <div
@@ -481,28 +487,51 @@
           'bg-primary/20 border-primary/40': toast.type === 'info',
           'bg-success/20 border-success/40': toast.type === 'success',
           'bg-warning/20 border-warning/40': toast.type === 'warning',
-          'bg-secondary/20 border-secondary/40': toast.type === 'error'
+          'bg-secondary/20 border-secondary/40': toast.type === 'error',
+          'bg-surface border-l-4 border-secondary': toast.type === 'undo'
         }"
-        class="border px-4 py-3 flex items-start gap-sm"
+        :style="toast.type !== 'undo' ? 'border-width: 1px;' : ''"
+        class="px-4 py-3 flex flex-col relative overflow-hidden"
       >
-        <span
-          class="material-symbols-outlined text-xl flex-shrink-0 mt-0.5"
-          :class="{
-            'text-primary': toast.type === 'info',
-            'text-success': toast.type === 'success',
-            'text-warning': toast.type === 'warning',
-            'text-secondary': toast.type === 'error'
-          }"
-          x-text="toast.type === 'info' ? 'info' : toast.type === 'success' ? 'check_circle' : toast.type === 'warning' ? 'warning' : 'error'"
-        ></span>
-        <p class="font-body text-text-primary text-sm flex-1" x-text="toast.message" style="font-size: 14px; line-height: 1.5;"></p>
-        <button
-          @click="$store.toast.dismiss(toast.id)"
-          class="text-text-dim hover:text-text-primary transition-colors flex-shrink-0"
-          aria-label="Dismiss notification"
-        >
-          <span class="material-symbols-outlined text-lg">close</span>
-        </button>
+        <!-- Standard toast content -->
+        <template x-if="toast.type !== 'undo'">
+          <div class="flex items-start gap-sm">
+            <span
+              class="material-symbols-outlined text-xl flex-shrink-0 mt-0.5"
+              :class="{
+                'text-primary': toast.type === 'info',
+                'text-success': toast.type === 'success',
+                'text-warning': toast.type === 'warning',
+                'text-secondary': toast.type === 'error'
+              }"
+              x-text="toast.type === 'info' ? 'info' : toast.type === 'success' ? 'check_circle' : toast.type === 'warning' ? 'warning' : 'error'"
+            ></span>
+            <p class="font-body text-text-primary text-sm flex-1" x-text="toast.message" style="font-size: 14px; line-height: 1.5;"></p>
+            <button
+              @click="$store.toast.dismiss(toast.id)"
+              class="text-text-dim hover:text-text-primary transition-colors flex-shrink-0"
+              aria-label="Dismiss notification"
+            >
+              <span class="material-symbols-outlined text-lg">close</span>
+            </button>
+          </div>
+        </template>
+        <!-- Undo toast content -->
+        <template x-if="toast.type === 'undo'">
+          <div>
+            <div class="flex items-center gap-sm">
+              <p class="font-body text-text-primary text-sm flex-1" x-text="toast.message" style="font-size: 14px; line-height: 1.5;"></p>
+              <button
+                @click="$store.undo.undo(toast.undoId)"
+                class="font-mono text-[11px] font-bold uppercase tracking-[0.15em] text-primary hover:text-text-primary cursor-pointer transition-colors flex-shrink-0"
+              >UNDO</button>
+            </div>
+            <!-- Countdown bar -->
+            <div class="absolute bottom-0 left-0 right-0 h-[2px]">
+              <div class="h-full bg-primary" style="animation: undoCountdown 10s linear forwards;"></div>
+            </div>
+          </div>
+        </template>
       </div>
     </template>
   </div>
