@@ -1,7 +1,7 @@
 import { renderGameSetup } from '../components/game-setup.js';
 import { renderPlayerGrid, cleanupLifeButtons } from '../components/player-card.js';
 import { renderFloatingToolbar } from '../components/floating-toolbar.js';
-import { renderPostGameOverlay } from '../components/post-game-overlay.js';
+import { renderPostGameOverlay, postGameOverlay } from '../components/post-game-overlay.js';
 import { renderGameHistoryView } from '../components/game-history-view.js';
 
 /**
@@ -12,6 +12,9 @@ import { renderGameHistoryView } from '../components/game-history-view.js';
 export function mount(container) {
   const Alpine = window.Alpine;
   const store = Alpine?.store('game');
+
+  // Register Alpine components for this screen
+  Alpine.data('postGameOverlay', postGameOverlay);
 
   // Initialize game store if not yet initialized
   if (store && typeof store.init === 'function') {
