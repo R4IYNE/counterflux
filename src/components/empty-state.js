@@ -21,7 +21,7 @@ export function renderEmptyState(container, { heading, body }) {
       <h2 class="font-header text-xl font-bold text-text-primary" style="font-size: 20px; line-height: 1.2; letter-spacing: 0.01em;">
         ${heading}
       </h2>
-      <p class="font-body text-text-muted max-w-md" style="font-size: 14px; line-height: 1.5;">
+      <p class="font-body text-text-muted w-full max-w-md" style="font-size: 14px; line-height: 1.5;">
         ${body}
       </p>
     </div>
