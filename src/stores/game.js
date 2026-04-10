@@ -262,7 +262,7 @@ export function initGameStore() {
         turn_count: this.currentTurn,
         winner_index: winnerIndex,
         players: JSON.parse(JSON.stringify(this.players)),
-        elimination_order: eliminationOrder || null,
+        elimination_order: eliminationOrder ? [...eliminationOrder] : null,
       };
 
       await db.games.add(gameRecord);
