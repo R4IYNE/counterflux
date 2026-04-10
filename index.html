@@ -262,14 +262,20 @@
           ></span>
         </div>
 
-        <button class="text-text-muted hover:text-text-primary transition-colors" aria-label="Notifications">
+        <button class="text-text-muted hover:text-text-primary transition-colors relative" aria-label="Notifications">
           <span class="material-symbols-outlined text-2xl">notifications</span>
+          <span
+            x-show="$store.market && $store.market.alertBadgeCount > 0"
+            x-text="$store.market?.alertBadgeCount"
+            class="absolute -top-1 -right-1 badge-alert flex items-center justify-center font-mono text-text-primary"
+            style="font-size: 9px; font-weight: 700; min-width: 16px; height: 16px; border-radius: 50%; padding: 0 2px;"
+          ></span>
         </button>
         <img
           src="/assets/assetsmila-izzet.png"
-          alt="Mila"
-          class="w-6 h-6 rounded-full object-cover"
-          style="filter: grayscale(0.5);"
+          alt="Mila — System Familiar"
+          class="w-8 h-8 object-contain cursor-pointer"
+          title="Mila — Izzet Familiar"
         >
       </div>
     </header>

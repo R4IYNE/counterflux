@@ -75,12 +75,12 @@ function renderPortfolioSummary(grid, cleanups) {
   panel.appendChild(overline);
 
   const row = document.createElement('div');
-  row.className = 'flex items-start gap-lg';
+  row.className = 'flex items-start gap-lg flex-wrap';
   panel.appendChild(row);
 
   // Left: value + counts
   const leftCol = document.createElement('div');
-  leftCol.className = 'flex flex-col gap-xs';
+  leftCol.className = 'flex flex-col gap-xs min-w-[200px]';
   row.appendChild(leftCol);
 
   const totalLabel = document.createElement('div');
@@ -123,7 +123,7 @@ function renderPortfolioSummary(grid, cleanups) {
 
   // Right: Quick Add
   const rightCol = document.createElement('div');
-  rightCol.className = 'flex flex-col gap-sm flex-1 max-w-md';
+  rightCol.className = 'flex flex-col gap-sm flex-1 min-w-[280px] max-w-md';
   row.appendChild(rightCol);
 
   _buildQuickAdd(rightCol, cleanups);
