@@ -1,5 +1,6 @@
 import Alpine from 'alpinejs';
 import { db } from '../db/schema.js';
+import { logActivity } from '../services/activity.js';
 
 /**
  * Sort collection entries by the given sort key.
@@ -127,6 +128,10 @@ export function initCollectionStore() {
         });
       }
       await this.loadEntries();
+
+      // Log activity
+      const card = await db.cards.get(scryfallId);
+      logActivity('card_added', `Added ${quantity || 1}x ${card?.name || 'card'} to collection`, scryfallId);
     },
 
     async editEntry(entryId, updates) {
@@ -135,8 +140,29 @@ export function initCollectionStore() {
     },
 
     async deleteEntry(entryId) {
-      await db.collection.delete(entryId);
-      await this.loadEntries();
+      const entry = await db.collection.get(entryId);
+      if (!entry) return;
+      const card = await db.cards.get(entry.scryfall_id);
+      const cardName = card?.name || 'card';
+
+      // Remove from UI immediately (optimistic)
+      this.entries = this.entries.filter(e => e.id !== entryId);
+
+      // Defer actual DB deletion via undo system (D-09, D-10)
+      Alpine.store('undo').push(
+        'collection_remove',
+        entry,
+        `Removed ${cardName} from collection.`,
+        async () => {
+          await db.collection.delete(entryId);
+          logActivity('card_removed', `Removed ${cardName} from collection`, entry.scryfall_id);
+        },
+        () => {
+          // Restore: re-add to UI
+          this.entries.push(entry);
+          this.entries.sort((a, b) => (a.id || 0) - (b.id || 0));
+        }
+      );
     },
 
     async addBatch(entries) {
