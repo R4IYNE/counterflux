@@ -8,7 +8,17 @@
   <link rel="preload" href="/src/styles/fonts/JetBrainsMono-Variable.woff2" as="font" type="font/woff2" crossorigin>
   <style>[x-cloak] { display: none !important; }</style>
 </head>
-<body x-data @keydown.escape.window="$store.search.flyoutOpen ? $store.search.closeFlyout() : $store.search.clear()" @keydown.slash.window="if (!['INPUT','TEXTAREA','SELECT'].includes($event.target.tagName)) { $event.preventDefault(); (document.getElementById('global-search-input') || document.querySelector('header input[type=text]'))?.focus(); }">
+<body x-data
+  @keydown.escape.window="
+    if (window.__shortcutModalOpen && window.__shortcutModalOpen()) { window.__closeShortcutModal(); }
+    else if ($store.search.flyoutOpen) { $store.search.closeFlyout(); }
+    else if (document.querySelector('.context-menu, #collection-context-menu[style*=block]')) { const cm = document.querySelector('.context-menu'); if (cm) cm.remove(); const ccm = document.getElementById('collection-context-menu'); if (ccm) ccm.style.display = 'none'; }
+    else { $store.search.clear(); }
+  "
+  @keydown.slash.window="if (!['INPUT','TEXTAREA','SELECT'].includes($event.target.tagName)) { $event.preventDefault(); (document.getElementById('global-search-input') || document.querySelector('header input[type=text]'))?.focus(); }"
+  @keydown.ctrl.z.window="if (!['INPUT','TEXTAREA','SELECT'].includes($event.target.tagName)) { $event.preventDefault(); $store.undo && $store.undo.undoLast && $store.undo.undoLast(); }"
+  @keydown.window="if ($event.key === '?' && !['INPUT','TEXTAREA','SELECT'].includes($event.target.tagName)) { window.__toggleShortcutModal && window.__toggleShortcutModal(); }"
+>
 
   <!-- Splash Screen: blocks all interaction until bulk data is ready -->
   <div

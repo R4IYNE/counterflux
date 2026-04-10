@@ -14,6 +14,7 @@ import { initMarketStore } from './stores/market.js';
 import { initGameStore } from './stores/game.js';
 import { initBulkDataStore, startBulkDataPipeline } from './stores/bulkdata.js';
 import { splashScreen } from './components/splash-screen.js';
+import { toggleShortcutModal, isShortcutModalOpen, closeShortcutModal } from './components/shortcut-modal.js';
 import { initRouter } from './router.js';
 import { renderManaCost } from './utils/mana.js';
 import { getEurToGbpRate, eurToGbp, eurToGbpValue } from './services/currency.js';
@@ -30,6 +31,11 @@ initBulkDataStore();
 
 // Expose renderManaCost globally for Alpine template usage
 window.renderManaCost = renderManaCost;
+
+// Expose shortcut modal functions globally for Alpine template usage
+window.__toggleShortcutModal = toggleShortcutModal;
+window.__shortcutModalOpen = isShortcutModalOpen;
+window.__closeShortcutModal = closeShortcutModal;
 
 // Expose db globally for Alpine inline expressions (flyout, etc.)
 import { db } from './db/schema.js';
