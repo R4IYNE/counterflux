@@ -144,4 +144,27 @@ describe('computeDeckAnalytics', () => {
     const result = computeDeckAnalytics(cards);
     expect(result.colourPie.C).toBe(1); // Only {C} counts, not generic {2}
   });
+
+  it('PERF-04: computes analytics for 100-card deck in under 100ms', () => {
+    // Simulate a full 99-card Commander deck
+    const cards = Array.from({ length: 99 }, (_, i) => ({
+      quantity: 1,
+      card: {
+        cmc: (i % 7) + 1,
+        type_line: i < 30 ? 'Creature' : i < 45 ? 'Instant' : i < 60 ? 'Sorcery' : i < 70 ? 'Artifact' : i < 80 ? 'Enchantment' : 'Basic Land',
+        mana_cost: `{${i % 5}}{${'WUBRG'[i % 5]}}`,
+        prices: { eur: String((Math.random() * 20).toFixed(2)) },
+        name: `Test Card ${i}`,
+      },
+      tags: ['Utility'],
+      owned: i % 3 !== 0,
+    }));
+
+    const start = performance.now();
+    const result = computeDeckAnalytics(cards);
+    const end = performance.now();
+
+    expect(end - start).toBeLessThan(100);
+    expect(result.averageCmc).toBeGreaterThan(0);
+  });
 });

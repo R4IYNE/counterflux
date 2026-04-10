@@ -3,6 +3,7 @@ import { db } from '../db/schema.js';
 import { classifyType, TYPE_ORDER } from '../utils/type-classifier.js';
 import { suggestTags, DEFAULT_TAGS } from '../utils/tag-heuristics.js';
 import { computeDeckAnalytics } from '../utils/deck-analytics.js';
+import { logActivity } from '../services/activity.js';
 
 // Re-export for backward compatibility
 export { computeDeckAnalytics } from '../utils/deck-analytics.js';
@@ -65,6 +66,7 @@ export function initDeckStore() {
         updated_at: now,
       });
       await this.loadDecks();
+      logActivity('deck_created', `Created deck "${name}"`, id);
       return id;
     },
 
@@ -172,9 +174,30 @@ export function initDeckStore() {
 
     async removeCard(deckCardId) {
       if (!this.activeDeck) return;
-      await db.deck_cards.delete(deckCardId);
-      await db.decks.update(this.activeDeck.id, { updated_at: new Date().toISOString() });
-      await this.loadDeck(this.activeDeck.id);
+      const deckCard = await db.deck_cards.get(deckCardId);
+      if (!deckCard) return;
+      const card = await db.cards.get(deckCard.scryfall_id);
+      const cardName = card?.name || 'card';
+      const deckName = this.activeDeck.name;
+
+      // Remove from UI immediately (optimistic)
+      this.activeCards = this.activeCards.filter(c => c.id !== deckCardId);
+
+      Alpine.store('undo').push(
+        'deck_card_remove',
+        deckCard,
+        `Removed ${cardName} from ${deckName}.`,
+        async () => {
+          await db.deck_cards.delete(deckCardId);
+          await db.decks.update(this.activeDeck.id, { updated_at: new Date().toISOString() });
+          logActivity('deck_edited', `Removed ${cardName} from "${deckName}"`, deckCard.scryfall_id);
+        },
+        async () => {
+          // Restore: re-add to DB and reload
+          await db.deck_cards.add(deckCard);
+          if (this.activeDeck) await this.loadDeck(this.activeDeck.id);
+        }
+      );
     },
 
     async updateCardTags(deckCardId, tags) {
@@ -188,15 +211,36 @@ export function initDeckStore() {
     },
 
     async deleteDeck(deckId) {
-      await db.transaction('rw', [db.decks, db.deck_cards], async () => {
-        await db.deck_cards.where('deck_id').equals(deckId).delete();
-        await db.decks.delete(deckId);
-      });
+      const deck = await db.decks.get(deckId);
+      if (!deck) return;
+      const deckCards = await db.deck_cards.where('deck_id').equals(deckId).toArray();
+      const deckName = deck.name;
+
+      // Remove from UI immediately (optimistic)
+      this.decks = this.decks.filter(d => d.id !== deckId);
       if (this.activeDeck?.id === deckId) {
         this.activeDeck = null;
         this.activeCards = [];
       }
-      await this.loadDecks();
+
+      Alpine.store('undo').push(
+        'deck_delete',
+        { deck, deckCards },
+        `Deleted deck "${deckName}".`,
+        async () => {
+          await db.transaction('rw', [db.decks, db.deck_cards], async () => {
+            await db.deck_cards.where('deck_id').equals(deckId).delete();
+            await db.decks.delete(deckId);
+          });
+          logActivity('deck_edited', `Deleted deck "${deckName}"`);
+        },
+        async () => {
+          // Restore: re-add deck and cards
+          await db.decks.add(deck);
+          if (deckCards.length > 0) await db.deck_cards.bulkAdd(deckCards);
+          await this.loadDecks();
+        }
+      );
     },
 
     async duplicateDeck(deckId) {
