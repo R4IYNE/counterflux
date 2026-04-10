@@ -137,21 +137,46 @@
       <!-- Spacer -->
       <div class="flex-1"></div>
 
-      <!-- Mila avatar (bottom) -->
-      <div class="pb-4 px-2">
-        <div class="flex items-center gap-sm px-2 py-2">
+      <!-- Mila chat widget (bottom) -->
+      <div class="pb-4 px-2" x-data="{ showTip: false, tip: '' }">
+        <div
+          class="flex items-center gap-sm px-2 py-2 cursor-pointer transition-colors hover:bg-surface-hover"
+          @click="
+            showTip = !showTip;
+            if (showTip && !tip) {
+              const tips = [
+                'Try Quick Add on the dashboard — type 4x Lightning Bolt [2XM] to add cards fast.',
+                'Press ? anywhere to see all keyboard shortcuts.',
+                'Ctrl+Z undoes card removals and deck deletions within 10 seconds.',
+                'The deck builder knows what you own — toggle In Collection to filter.',
+                'Your price data refreshes automatically when you reconnect.',
+                'Use the mass entry terminal in Treasure Cruise for bulk imports.',
+                'EDHREC synergy suggestions appear when you pick a commander.',
+                'Commander Spellbook detects combos in your deck automatically.',
+              ];
+              tip = tips[Math.floor(Math.random() * tips.length)];
+            }
+          "
+        >
           <img
             src="/assets/assetsmila-izzet.png"
             alt="Mila -- Izzet Familiar"
-            class="w-10 h-10 rounded-full object-cover transition-all duration-300"
-            style="filter: grayscale(0.8) brightness(0.7);"
-            onmouseenter="this.style.filter='grayscale(0) brightness(1)'"
-            onmouseleave="this.style.filter='grayscale(0.8) brightness(0.7)'"
+            class="w-10 h-10 object-contain transition-all duration-300"
+            :style="showTip ? 'filter: none' : 'filter: grayscale(0.8) brightness(0.7)'"
           >
           <span
             x-show="!$store.app.sidebarCollapsed"
             class="font-mono text-text-dim uppercase text-[11px] tracking-[0.15em] font-normal"
           >MILA</span>
+        </div>
+        <!-- Tip bubble -->
+        <div
+          x-show="showTip && !$store.app.sidebarCollapsed"
+          x-transition
+          class="mx-2 mt-1 p-sm bg-surface-hover border border-border-ghost"
+          style="font-family: 'Space Grotesk', sans-serif; font-size: 12px; line-height: 1.5; color: var(--color-text-muted);"
+        >
+          <span x-text="tip"></span>
         </div>
       </div>
     </aside>
