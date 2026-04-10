@@ -156,7 +156,8 @@ export function renderPostGameOverlay() {
       <div
         x-show="showDiscardConfirm"
         x-cloak
-        style="position: fixed; inset: 0; z-index: 60; display: flex; align-items: center; justify-content: center; background: rgba(11, 12, 16, 0.8);"
+        class="fixed inset-0 flex items-center justify-center"
+        style="z-index: 60; background: rgba(11, 12, 16, 0.8);"
       >
         <div
           class="p-xl"
