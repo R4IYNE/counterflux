@@ -137,46 +137,26 @@
       <!-- Spacer -->
       <div class="flex-1"></div>
 
-      <!-- Mila chat widget (bottom) -->
-      <div class="pb-4 px-2" x-data="{ showTip: false, tip: '' }">
+      <!-- Profile (bottom) -->
+      <div class="pb-4 px-2">
         <div
           class="flex items-center gap-sm px-2 py-2 cursor-pointer transition-colors hover:bg-surface-hover"
-          @click="
-            showTip = !showTip;
-            if (showTip && !tip) {
-              const tips = [
-                'Try Quick Add on the dashboard — type 4x Lightning Bolt [2XM] to add cards fast.',
-                'Press ? anywhere to see all keyboard shortcuts.',
-                'Ctrl+Z undoes card removals and deck deletions within 10 seconds.',
-                'The deck builder knows what you own — toggle In Collection to filter.',
-                'Your price data refreshes automatically when you reconnect.',
-                'Use the mass entry terminal in Treasure Cruise for bulk imports.',
-                'EDHREC synergy suggestions appear when you pick a commander.',
-                'Commander Spellbook detects combos in your deck automatically.',
-              ];
-              tip = tips[Math.floor(Math.random() * tips.length)];
-            }
-          "
+          x-data="{ name: localStorage.getItem('cf_profile_name') || 'Planeswalker', email: localStorage.getItem('cf_profile_email') || '' }"
         >
-          <img
-            src="/assets/assetsmila-izzet.png"
-            alt="Mila -- Izzet Familiar"
-            class="w-10 h-10 object-contain transition-all duration-300"
-            :style="showTip ? 'filter: none' : 'filter: grayscale(0.8) brightness(0.7)'"
-          >
-          <span
-            x-show="!$store.app.sidebarCollapsed"
-            class="font-mono text-text-dim uppercase text-[11px] tracking-[0.15em] font-normal"
-          >MILA</span>
-        </div>
-        <!-- Tip bubble -->
-        <div
-          x-show="showTip && !$store.app.sidebarCollapsed"
-          x-transition
-          class="mx-2 mt-1 p-sm bg-surface-hover border border-border-ghost"
-          style="font-family: 'Space Grotesk', sans-serif; font-size: 12px; line-height: 1.5; color: var(--color-text-muted);"
-        >
-          <span x-text="tip"></span>
+          <span class="material-symbols-outlined text-2xl text-text-muted">account_circle</span>
+          <div x-show="!$store.app.sidebarCollapsed" class="flex flex-col min-w-0">
+            <span
+              class="font-body text-text-primary truncate"
+              style="font-size: 13px; font-weight: 700; line-height: 1.2;"
+              x-text="name"
+            ></span>
+            <span
+              x-show="email"
+              class="font-mono text-text-dim truncate"
+              style="font-size: 10px; letter-spacing: 0.05em; line-height: 1.3;"
+              x-text="email"
+            ></span>
+          </div>
         </div>
       </div>
     </aside>
