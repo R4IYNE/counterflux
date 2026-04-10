@@ -111,7 +111,7 @@ export function renderFloatingToolbar() {
               <button
                 class="cursor-pointer font-mono text-[11px] tracking-[0.15em] font-bold uppercase py-[8px] px-[16px]"
                 style="background: #E23838; border: 1px solid #E23838; color: #EAECEE;"
-                @click="showEndConfirm = false; $store.game.endGame()"
+                @click="showEndConfirm = false; $store.app.gameFullscreen = false; $store.game.endGame()"
               >End Game</button>
             </div>
           </div>
