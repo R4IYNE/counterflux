@@ -256,16 +256,16 @@ function _buildQuickAdd(parent, cleanups) {
   // Main input
   const input = document.createElement('input');
   input.type = 'text';
-  input.className = 'flex-1 bg-surface-hover border border-border-ghost font-mono text-text-dim px-sm py-xs';
+  input.className = 'flex-1 bg-surface-hover border border-border-ghost font-mono text-text-dim px-sm py-xs min-w-0';
   input.style.cssText = 'font-size: 11px;';
-  input.placeholder = 'QUICK ADD \u2014 4X LIGHTNING BOLT [2XM]';
+  input.placeholder = '4X LIGHTNING BOLT [2XM]';
   input.addEventListener('keydown', (e) => e.stopPropagation()); // prevent global / shortcut
   inputRow.appendChild(input);
 
   // Condition dropdown
   const condition = document.createElement('select');
-  condition.className = 'bg-surface-hover border border-border-ghost font-mono px-sm py-xs';
-  condition.style.cssText = 'font-size: 11px;';
+  condition.className = 'bg-surface-hover border border-border-ghost font-mono px-xs py-xs shrink-0';
+  condition.style.cssText = 'font-size: 11px; width: 52px;';
   ['NM', 'LP', 'MP', 'HP', 'DMG'].forEach(c => {
     const opt = document.createElement('option');
     opt.value = c;
@@ -276,8 +276,8 @@ function _buildQuickAdd(parent, cleanups) {
 
   // Foil toggle
   const foilBtn = document.createElement('button');
-  foilBtn.className = 'font-mono bg-surface-hover border border-border-ghost px-sm py-xs';
-  foilBtn.style.cssText = 'font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.15em;';
+  foilBtn.className = 'font-mono bg-surface-hover border border-border-ghost px-xs py-xs shrink-0';
+  foilBtn.style.cssText = 'font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;';
   foilBtn.textContent = 'FOIL';
   let foilActive = false;
   foilBtn.addEventListener('click', () => {
