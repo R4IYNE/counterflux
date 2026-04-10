@@ -7,7 +7,7 @@ let router;
  * Route-to-screen ID mapping. Exported for testing.
  */
 export const ROUTE_MAP = {
-  '/': 'welcome',
+  '/': 'epic-experiment',
   '/epic-experiment': 'epic-experiment',
   '/treasure-cruise': 'treasure-cruise',
   '/thousand-year-storm': 'thousand-year-storm',
@@ -19,7 +19,7 @@ export const ROUTE_MAP = {
  * Screen loaders -- lazy import for each screen module.
  */
 const screenLoaders = {
-  '/': () => import('./screens/welcome.js'),
+  '/': () => import('./screens/epic-experiment.js'),
   '/epic-experiment': () => import('./screens/epic-experiment.js'),
   '/treasure-cruise': () => import('./screens/treasure-cruise.js'),
   '/thousand-year-storm': () => import('./screens/thousand-year.js'),

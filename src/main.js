@@ -13,6 +13,7 @@ import { initIntelligenceStore } from './stores/intelligence.js';
 import { initMarketStore } from './stores/market.js';
 import { initGameStore } from './stores/game.js';
 import { initBulkDataStore, startBulkDataPipeline } from './stores/bulkdata.js';
+import { initUndoStore } from './stores/undo.js';
 import { splashScreen } from './components/splash-screen.js';
 import { toggleShortcutModal, isShortcutModalOpen, closeShortcutModal } from './components/shortcut-modal.js';
 import { initRouter } from './router.js';
@@ -21,6 +22,7 @@ import { getEurToGbpRate, eurToGbp, eurToGbpValue } from './services/currency.js
 
 // Initialize stores before Alpine starts
 initAppStore();
+initUndoStore();
 initSearchStore();
 initCollectionStore();
 initDeckStore();

@@ -49,9 +49,9 @@ describe('Router configuration', () => {
     expect('router' in mod).toBe(true);
   });
 
-  it('route "/" maps to welcome screen', async () => {
+  it('route "/" maps to epic-experiment screen (dashboard)', async () => {
     const mod = await import('../src/router.js');
-    expect(mod.ROUTE_MAP['/']).toBe('welcome');
+    expect(mod.ROUTE_MAP['/']).toBe('epic-experiment');
   });
 
   it('route "/epic-experiment" maps to epic-experiment screen', async () => {
@@ -85,10 +85,17 @@ describe('Screen content', () => {
     expect(container.textContent).toContain('COUNTERFLUX');
   });
 
-  it('epic-experiment shows "Dashboard Coming Soon"', async () => {
+  it('epic-experiment shows dashboard with PORTFOLIO SUMMARY', async () => {
+    // Mocking Alpine stores for the dashboard screen
+    const Alpine = (await import('alpinejs')).default;
+    Alpine.store('collection', { entries: [], stats: { totalCards: 0, uniqueCards: 0, estimatedValue: 0 } });
+    Alpine.store('deck', { decks: [] });
+    Alpine.store('market', { pendingAlerts: [] });
+    Alpine.store('toast', { success() {}, error() {}, show() {} });
+    Alpine.start();
     const { mount } = await import('../src/screens/epic-experiment.js');
     mount(container);
-    expect(container.textContent).toContain('Dashboard Coming Soon');
+    expect(container.textContent).toContain('PORTFOLIO SUMMARY');
   });
 
   it('thousand-year shows deck landing with "DECK ARCHIVE"', async () => {
@@ -119,12 +126,16 @@ describe('Screen content', () => {
     expect(container.innerHTML).toContain('Start Game');
   });
 
-  it('empty states include Mila image with grayscale', async () => {
+  it('empty states include Mila image in welcome overlay', async () => {
+    const Alpine = (await import('alpinejs')).default;
+    Alpine.store('collection', { entries: [], stats: { totalCards: 0, uniqueCards: 0, estimatedValue: 0 } });
+    Alpine.store('deck', { decks: [] });
+    Alpine.store('market', { pendingAlerts: [] });
+    Alpine.store('toast', { success() {}, error() {}, show() {} });
     const { mount } = await import('../src/screens/epic-experiment.js');
     mount(container);
     const img = container.querySelector('img');
     expect(img).not.toBeNull();
     expect(img.alt).toContain('Mila');
-    expect(img.style.filter).toContain('grayscale');
   });
 });
