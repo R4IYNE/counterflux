@@ -420,7 +420,7 @@ async function _parseAndAdd(rawInput, condition, foil, input) {
   }
 }
 
-// ─── Panel 2: Deck Quick-Launch Grid (stub) ──────────────────────
+// ─── Panel 2: Deck Quick-Launch Grid ─────────────────────────────
 function renderDeckLaunchGrid(grid, cleanups) {
   const panel = document.createElement('div');
   panel.className = 'col-span-2 bg-surface border border-border-ghost p-md';
@@ -432,22 +432,128 @@ function renderDeckLaunchGrid(grid, cleanups) {
   panel.appendChild(overline);
 
   const content = document.createElement('div');
-  content.id = 'deck-launch-content';
   panel.appendChild(content);
 
-  // Stub: empty state
-  const decks = Alpine.store('deck').decks;
-  if (decks.length === 0) {
-    renderEmptyState(content, {
-      heading: 'No Decks Yet',
-      body: 'Head to Thousand-Year Storm and initialize your first ritual.',
+  async function updateDeckGrid() {
+    const deckStore = Alpine.store('deck');
+    const allDecks = deckStore.decks;
+
+    if (allDecks.length === 0) {
+      content.innerHTML = '';
+      renderEmptyState(content, {
+        heading: 'No Decks Yet',
+        body: 'Head to Thousand-Year Storm and initialize your first ritual.',
+      });
+      return;
+    }
+
+    const topDecks = [...allDecks]
+      .sort((a, b) => (b.updated_at || '').localeCompare(a.updated_at || ''))
+      .slice(0, 6);
+
+    content.innerHTML = '';
+    const deckGrid = document.createElement('div');
+    deckGrid.className = 'grid grid-cols-3 gap-sm';
+    content.appendChild(deckGrid);
+
+    for (const deck of topDecks) {
+      const tile = document.createElement('div');
+      tile.className = 'bg-surface-hover border border-border-ghost p-sm cursor-pointer';
+      tile.style.cssText = 'transition: border-color 0.15s, box-shadow 0.15s;';
+      tile.addEventListener('mouseenter', () => {
+        tile.style.borderColor = '#0D52BD';
+        tile.style.boxShadow = '0 0 12px rgba(13, 82, 189, 0.3)';
+      });
+      tile.addEventListener('mouseleave', () => {
+        tile.style.borderColor = '';
+        tile.style.boxShadow = '';
+      });
+
+      // Commander art thumbnail
+      const artContainer = document.createElement('div');
+      artContainer.className = 'w-full overflow-hidden mb-xs';
+      artContainer.style.height = '80px';
+
+      if (deck.commander_id) {
+        try {
+          const card = await db.cards.get(deck.commander_id);
+          const artUrl = card?.image_uris?.art_crop || card?.card_faces?.[0]?.image_uris?.art_crop;
+          if (artUrl) {
+            const img = document.createElement('img');
+            img.src = artUrl;
+            img.alt = card.name || '';
+            img.className = 'w-full h-full object-cover';
+            img.style.transition = 'filter 0.15s';
+            tile.addEventListener('mouseenter', () => { img.style.filter = 'brightness(1.1)'; });
+            tile.addEventListener('mouseleave', () => { img.style.filter = ''; });
+            artContainer.appendChild(img);
+          } else {
+            artContainer.style.background = 'linear-gradient(135deg, #14161C, #1C1F28)';
+          }
+        } catch {
+          artContainer.style.background = 'linear-gradient(135deg, #14161C, #1C1F28)';
+        }
+      } else {
+        artContainer.style.background = 'linear-gradient(135deg, #14161C, #1C1F28)';
+      }
+      tile.appendChild(artContainer);
+
+      // Deck name
+      const nameEl = document.createElement('div');
+      nameEl.className = 'font-mono text-text-primary overflow-hidden text-ellipsis whitespace-nowrap';
+      nameEl.style.cssText = 'font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.15em; max-width: 100%;';
+      nameEl.textContent = deck.name?.slice(0, 24) || 'Untitled';
+      tile.appendChild(nameEl);
+
+      // Card count
+      const countEl = document.createElement('div');
+      countEl.className = 'font-mono text-text-muted';
+      countEl.style.cssText = 'font-size: 11px; font-weight: 400; letter-spacing: 0.15em;';
+      try {
+        const deckCards = await db.deck_cards.where('deck_id').equals(deck.id).toArray();
+        const cardCount = deckCards.reduce((sum, c) => sum + (c.quantity || 1), 0);
+        const deckSize = deck.deck_size || 99;
+        countEl.textContent = `${cardCount}/${deckSize}`;
+      } catch {
+        countEl.textContent = `0/${deck.deck_size || 99}`;
+      }
+      tile.appendChild(countEl);
+
+      // Click to navigate
+      tile.addEventListener('click', () => {
+        if (window.__counterflux_router) {
+          window.__counterflux_router.navigate('/thousand-year-storm');
+        }
+      });
+
+      deckGrid.appendChild(tile);
+    }
+
+    // View all link
+    const viewAll = document.createElement('a');
+    viewAll.className = 'font-mono text-primary cursor-pointer mt-sm inline-block';
+    viewAll.style.cssText = 'font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.15em;';
+    viewAll.textContent = 'VIEW ALL DECKS';
+    viewAll.addEventListener('click', () => {
+      if (window.__counterflux_router) {
+        window.__counterflux_router.navigate('/thousand-year-storm');
+      }
     });
+    content.appendChild(viewAll);
   }
+
+  updateDeckGrid();
+
+  const stopEffect = Alpine.effect(() => {
+    const _ = Alpine.store('deck').decks.length;
+    updateDeckGrid();
+  });
+  cleanups.push(() => { if (typeof stopEffect === 'function') stopEffect(); });
 
   grid.appendChild(panel);
 }
 
-// ─── Panel 3: Activity Timeline (stub) ───────────────────────────
+// ─── Panel 3: Activity Timeline ──────────────────────────────────
 function renderActivityTimeline(grid, cleanups) {
   const panel = document.createElement('div');
   panel.className = 'bg-surface border border-border-ghost p-md';
@@ -459,17 +565,108 @@ function renderActivityTimeline(grid, cleanups) {
   panel.appendChild(overline);
 
   const content = document.createElement('div');
-  content.id = 'activity-content';
-  renderEmptyState(content, {
-    heading: 'No Activity Yet',
-    body: 'Your recent actions will appear here as you use the Archive.',
-  });
+  content.style.cssText = 'max-height: 320px; overflow-y: auto;';
   panel.appendChild(content);
+
+  const ICON_MAP = {
+    card_added: 'add_circle',
+    card_removed: 'remove_circle',
+    deck_created: 'auto_fix_high',
+    deck_edited: 'edit',
+    game_played: 'local_fire_department',
+    watchlist_add: 'bookmark_add',
+  };
+
+  function formatRelativeTime(timestamp) {
+    const diff = Date.now() - new Date(timestamp).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return 'now';
+    if (mins < 60) return `${mins}m ago`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `${hours}h ago`;
+    const days = Math.floor(hours / 24);
+    return `${days}d ago`;
+  }
+
+  function getDayLabel(timestamp) {
+    const date = new Date(timestamp);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    if (date.toDateString() === today.toDateString()) return 'TODAY';
+    if (date.toDateString() === yesterday.toDateString()) return 'YESTERDAY';
+    return date.toISOString().slice(0, 10);
+  }
+
+  async function updateTimeline() {
+    try {
+      const entries = await getActivity();
+
+      if (entries.length === 0) {
+        content.innerHTML = '';
+        renderEmptyState(content, {
+          heading: 'No Activity Yet',
+          body: 'Your recent actions will appear here as you use the Archive.',
+        });
+        return;
+      }
+
+      content.innerHTML = '';
+      const display = entries.slice(0, 20);
+      let lastDay = '';
+
+      display.forEach(entry => {
+        const dayLabel = getDayLabel(entry.timestamp);
+        if (dayLabel !== lastDay) {
+          lastDay = dayLabel;
+          const separator = document.createElement('div');
+          separator.className = 'font-mono text-text-muted mt-sm mb-xs';
+          separator.style.cssText = 'font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.15em;';
+          separator.textContent = dayLabel;
+          content.appendChild(separator);
+        }
+
+        const row = document.createElement('div');
+        row.className = 'flex items-start gap-sm py-xs';
+
+        const icon = document.createElement('span');
+        icon.className = 'material-symbols-outlined text-text-muted';
+        icon.style.cssText = 'font-size: 16px;';
+        icon.textContent = ICON_MAP[entry.type] || 'info';
+        row.appendChild(icon);
+
+        const msgCol = document.createElement('div');
+        msgCol.className = 'flex-1 min-w-0';
+        const msg = document.createElement('div');
+        msg.className = 'font-body text-text-primary truncate';
+        msg.style.cssText = 'font-size: 14px; line-height: 1.5;';
+        msg.textContent = entry.message;
+        msgCol.appendChild(msg);
+        row.appendChild(msgCol);
+
+        const time = document.createElement('span');
+        time.className = 'font-mono text-text-dim whitespace-nowrap';
+        time.style.cssText = 'font-size: 11px; font-weight: 400; letter-spacing: 0.15em;';
+        time.textContent = formatRelativeTime(entry.timestamp);
+        row.appendChild(time);
+
+        content.appendChild(row);
+      });
+    } catch {
+      content.innerHTML = `<p class="font-body text-text-muted" style="font-size: 14px;">Could not load recent activity.</p>`;
+    }
+  }
+
+  updateTimeline();
+  // Refresh every 30 seconds
+  const interval = setInterval(updateTimeline, 30000);
+  cleanups.push(() => clearInterval(interval));
 
   grid.appendChild(panel);
 }
 
-// ─── Panel 4: Mila's Daily Insight (stub) ────────────────────────
+// ─── Panel 4: Mila's Daily Insight ──────────────────────────────
 function renderMilaInsight(grid, cleanups) {
   const panel = document.createElement('div');
   panel.className = 'bg-surface border border-border-ghost p-md';
@@ -481,18 +678,57 @@ function renderMilaInsight(grid, cleanups) {
   panel.appendChild(overline);
 
   const content = document.createElement('div');
-  content.id = 'mila-insight-content';
-  content.innerHTML = `
-    <p class="font-body text-text-muted" style="font-size: 14px; line-height: 1.5;">
-      Mila is still gathering data. Add some cards or build a deck to unlock daily insights.
-    </p>
-  `;
   panel.appendChild(content);
+
+  const CATEGORY_MAP = {
+    synergy: 'UPGRADE',
+    price: 'PRICE',
+    collection: 'COLLECTION',
+    deck: 'DECK',
+  };
+
+  async function loadInsight() {
+    try {
+      const insight = await generateDailyInsight();
+      if (!insight) {
+        content.innerHTML = `
+          <p class="font-body text-text-muted" style="font-size: 14px; line-height: 1.5;">
+            Mila is still gathering data. Add some cards or build a deck to unlock daily insights.
+          </p>
+        `;
+        return;
+      }
+
+      const categoryLabel = CATEGORY_MAP[insight.category] || 'UPGRADE';
+
+      content.innerHTML = `
+        <div class="flex items-start gap-sm">
+          <img src="/assets/assetsmila-izzet.png" alt="Mila" class="object-cover" style="width: 32px; height: 32px;">
+          <div class="flex-1">
+            <span class="font-mono inline-block mb-xs" style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.15em; background: rgba(13, 82, 189, 0.1); color: #0D52BD; padding: 2px 8px;">
+              ${categoryLabel}
+            </span>
+            <p class="font-body text-text-primary" style="font-size: 14px; line-height: 1.5;">
+              ${insight.message}
+            </p>
+          </div>
+        </div>
+      `;
+    } catch {
+      content.innerHTML = `
+        <p class="font-body text-text-muted" style="font-size: 14px; line-height: 1.5;">
+          Mila is still gathering data. Add some cards or build a deck to unlock daily insights.
+        </p>
+      `;
+    }
+  }
+
+  loadInsight();
 
   grid.appendChild(panel);
 }
 
-// ─── Panel 5: Price Alerts (stub) ────────────────────────────────
+// ─── Panel 5: Price Alerts ───────────────────────────────────────
 function renderPriceAlerts(grid, cleanups) {
   const panel = document.createElement('div');
   panel.className = 'bg-surface border border-border-ghost p-md';
@@ -504,18 +740,74 @@ function renderPriceAlerts(grid, cleanups) {
   panel.appendChild(overline);
 
   const content = document.createElement('div');
-  content.id = 'price-alerts-content';
-  content.innerHTML = `
-    <p class="font-body text-text-muted" style="font-size: 14px; line-height: 1.5;">
-      No triggered alerts. Set price targets in Preordain.
-    </p>
-  `;
+  content.style.cssText = 'max-height: 280px; overflow-y: auto;';
   panel.appendChild(content);
+
+  function updateAlerts() {
+    const market = Alpine.store('market');
+    const alerts = market?.pendingAlerts || [];
+
+    if (alerts.length === 0) {
+      content.innerHTML = `
+        <p class="font-body text-text-muted" style="font-size: 14px; line-height: 1.5;">
+          No triggered alerts. Set price targets in Preordain.
+        </p>
+      `;
+      return;
+    }
+
+    content.innerHTML = '';
+    alerts.forEach(alert => {
+      const row = document.createElement('div');
+      row.className = 'flex items-center gap-sm py-xs';
+
+      const nameEl = document.createElement('span');
+      nameEl.className = 'font-body text-text-primary flex-1';
+      nameEl.style.cssText = 'font-size: 14px;';
+      nameEl.textContent = alert.card_name;
+      row.appendChild(nameEl);
+
+      const arrow = document.createElement('span');
+      arrow.className = 'material-symbols-outlined';
+      arrow.style.cssText = 'font-size: 16px;';
+      if (alert.alert_type === 'above') {
+        arrow.textContent = 'arrow_upward';
+        arrow.style.color = '#2ECC71';
+      } else {
+        arrow.textContent = 'arrow_downward';
+        arrow.style.color = '#E23838';
+      }
+      row.appendChild(arrow);
+
+      const priceEl = document.createElement('span');
+      priceEl.className = 'font-mono text-text-primary';
+      priceEl.style.cssText = 'font-size: 11px; font-weight: 400; letter-spacing: 0.15em;';
+      const gbpStr = window.__cf_eurToGbp ? `£${alert.current_price_gbp.toFixed(2)}` : `£${(alert.current_price_gbp || 0).toFixed(2)}`;
+      priceEl.textContent = gbpStr;
+      row.appendChild(priceEl);
+
+      const threshEl = document.createElement('span');
+      threshEl.className = 'font-mono text-text-dim';
+      threshEl.style.cssText = 'font-size: 11px; font-weight: 400; letter-spacing: 0.15em;';
+      threshEl.textContent = `(£${alert.alert_threshold?.toFixed(2) || '0.00'})`;
+      row.appendChild(threshEl);
+
+      content.appendChild(row);
+    });
+  }
+
+  updateAlerts();
+
+  const stopEffect = Alpine.effect(() => {
+    const _ = Alpine.store('market')?.pendingAlerts?.length;
+    updateAlerts();
+  });
+  cleanups.push(() => { if (typeof stopEffect === 'function') stopEffect(); });
 
   grid.appendChild(panel);
 }
 
-// ─── Panel 6: Upcoming Releases (stub) ───────────────────────────
+// ─── Panel 6: Upcoming Releases ──────────────────────────────────
 function renderUpcomingReleases(grid, cleanups) {
   const panel = document.createElement('div');
   panel.className = 'bg-surface border border-border-ghost p-md';
@@ -527,13 +819,74 @@ function renderUpcomingReleases(grid, cleanups) {
   panel.appendChild(overline);
 
   const content = document.createElement('div');
-  content.id = 'releases-content';
-  content.innerHTML = `
-    <p class="font-body text-text-muted" style="font-size: 14px; line-height: 1.5;">
-      No upcoming releases found.
-    </p>
-  `;
   panel.appendChild(content);
+
+  function formatDate(dateStr) {
+    const d = new Date(dateStr + 'T00:00:00');
+    return d.toLocaleDateString('en-GB', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
+  async function loadReleases() {
+    try {
+      let sets = getCachedSets();
+      if (sets.length === 0) {
+        sets = await fetchSets();
+      }
+
+      const today = new Date().toISOString().slice(0, 10);
+      const upcoming = sets
+        .filter(s => s.released_at > today)
+        .sort((a, b) => a.released_at.localeCompare(b.released_at))
+        .slice(0, 3);
+
+      if (upcoming.length === 0) {
+        content.innerHTML = `
+          <p class="font-body text-text-muted" style="font-size: 14px; line-height: 1.5;">
+            No upcoming releases found.
+          </p>
+        `;
+        return;
+      }
+
+      content.innerHTML = '';
+      upcoming.forEach(set => {
+        const row = document.createElement('div');
+        row.className = 'flex items-center gap-sm py-xs';
+
+        // Keyrune icon
+        const icon = document.createElement('i');
+        icon.className = `ss ss-${set.code.toLowerCase()} ss-fw`;
+        icon.style.cssText = 'font-size: 20px; color: #7A8498;';
+        row.appendChild(icon);
+
+        const info = document.createElement('div');
+        info.className = 'flex-1';
+
+        const nameEl = document.createElement('div');
+        nameEl.className = 'font-body text-text-primary';
+        nameEl.style.cssText = 'font-size: 14px; font-weight: 700;';
+        nameEl.textContent = set.name;
+        info.appendChild(nameEl);
+
+        const dateEl = document.createElement('div');
+        dateEl.className = 'font-mono text-text-muted';
+        dateEl.style.cssText = 'font-size: 11px; font-weight: 400; letter-spacing: 0.15em;';
+        dateEl.textContent = formatDate(set.released_at);
+        info.appendChild(dateEl);
+
+        row.appendChild(info);
+        content.appendChild(row);
+      });
+    } catch {
+      content.innerHTML = `
+        <p class="font-body text-text-muted" style="font-size: 14px; line-height: 1.5;">
+          Unable to load upcoming releases. Check your connection.
+        </p>
+      `;
+    }
+  }
+
+  loadReleases();
 
   grid.appendChild(panel);
 }
