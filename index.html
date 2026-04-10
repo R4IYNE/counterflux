@@ -344,6 +344,9 @@
           <!-- Type line -->
           <p class="font-mono uppercase text-[11px] tracking-[0.15em] font-normal text-text-muted" x-text="$store.search.selectedCard._typeLine"></p>
 
+          <!-- Set code + collector number -->
+          <p class="font-mono uppercase text-[11px] tracking-[0.15em] font-normal text-text-muted" x-show="$store.search.selectedCard.set" x-text="($store.search.selectedCard.set || '').toUpperCase() + ($store.search.selectedCard.collector_number ? ' · #' + $store.search.selectedCard.collector_number : '')"></p>
+
           <!-- Mana cost -->
           <div class="flex items-center gap-[2px]" x-html="window.renderManaCost($store.search.selectedCard._manaCost)"></div>
 
