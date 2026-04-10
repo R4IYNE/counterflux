@@ -11,17 +11,16 @@
  */
 export function renderEmptyState(container, { heading, body }) {
   container.innerHTML = `
-    <div class="flex flex-col items-stretch justify-center min-h-[200px] gap-lg text-center">
+    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 200px; gap: 24px; text-align: center; width: 100%;">
       <img
         src="/assets/assetsmila-izzet.png"
         alt="Mila -- Izzet Familiar"
-        class="w-24 h-24 object-cover mx-auto"
-        style="filter: grayscale(1) opacity(0.5);"
+        style="width: 96px; height: 96px; object-fit: cover; filter: grayscale(1) opacity(0.5);"
       >
-      <h2 class="font-header text-xl font-bold text-text-primary" style="font-size: 20px; line-height: 1.2; letter-spacing: 0.01em;">
+      <h2 style="font-family: var(--font-header); font-size: 20px; font-weight: 700; line-height: 1.2; letter-spacing: 0.01em; color: var(--color-text-primary); margin: 0;">
         ${heading}
       </h2>
-      <p class="font-body text-text-muted max-w-md mx-auto" style="font-size: 14px; line-height: 1.5;">
+      <p style="font-family: var(--font-body); font-size: 14px; line-height: 1.5; color: var(--color-text-muted); margin: 0; max-width: 28rem; width: 100%;">
         ${body}
       </p>
     </div>
