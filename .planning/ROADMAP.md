@@ -125,11 +125,11 @@ Plans:
   2. User can Quick Add cards from the dashboard using autocomplete with quantity prefix, set code suffix, and condition/foil toggles
   3. User can press `/` to focus search, Escape to close modals, right-click any card tile for context menu, and Ctrl+Z to undo destructive actions with a 10-second grace period
   4. Full collection and deck data is available offline after initial load, with a stale price data indicator when connectivity is lost
-**Plans:** 1/4 plans executed
+**Plans:** 3/4 plans executed
 Plans:
 - [x] 06-01-PLAN.md — Activity logger, undo store, undo toast, connectivity utility (foundation services)
-- [ ] 06-02-PLAN.md — Keyboard shortcuts, cheat sheet modal, Escape priority chain
-- [ ] 06-03-PLAN.md — Epic Experiment dashboard screen (all 7 panels, Quick Add, empty states)
+- [x] 06-02-PLAN.md — Keyboard shortcuts, cheat sheet modal, Escape priority chain
+- [x] 06-03-PLAN.md — Epic Experiment dashboard screen (all 7 panels, Quick Add, empty states)
 - [ ] 06-04-PLAN.md — Status chip, auto-refresh, activity/undo integration, visual checkpoint
 **UI hint**: yes
 
@@ -145,4 +145,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | 3. Deck Builder (Thousand-Year Storm) | 5/6 | In Progress|  |
 | 4. Intelligence Layer | 4/4 | Complete   | 2026-04-06 |
 | 5. Market Intel + Game Tracker | 0/8 | Planned | - |
-| 6. Dashboard + Polish (Epic Experiment) | 1/4 | In Progress|  |
+| 6. Dashboard + Polish (Epic Experiment) | 3/4 | In Progress|  |

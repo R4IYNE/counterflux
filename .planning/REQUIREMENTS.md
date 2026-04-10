@@ -34,13 +34,13 @@
 
 ### Dashboard (Epic Experiment)
 
-- [ ] **DASH-01**: Portfolio summary panel showing total collection value, 7/30/90-day change, unique card count, total card count, sparkline chart
-- [ ] **DASH-02**: Quick Add input with autocomplete — supports quantity prefix (4x), set code suffix ([2XM]), condition/foil toggles
-- [ ] **DASH-03**: Price alerts panel showing cards that crossed user-set price thresholds
-- [ ] **DASH-04**: Mila's Insight panel with rotating daily tip (upgrade suggestion, price alert, or collection stat)
+- [x] **DASH-01**: Portfolio summary panel showing total collection value, 7/30/90-day change, unique card count, total card count, sparkline chart
+- [x] **DASH-02**: Quick Add input with autocomplete — supports quantity prefix (4x), set code suffix ([2XM]), condition/foil toggles
+- [x] **DASH-03**: Price alerts panel showing cards that crossed user-set price thresholds
+- [x] **DASH-04**: Mila's Insight panel with rotating daily tip (upgrade suggestion, price alert, or collection stat)
 - [x] **DASH-05**: Recent activity timeline (cards added, decks modified, games played)
-- [ ] **DASH-06**: Deck quick-launch grid with commander art thumbnails and "Initialize Ritual" button
-- [ ] **DASH-07**: Upcoming releases panel showing next 2-3 MTG sets with dates
+- [x] **DASH-06**: Deck quick-launch grid with commander art thumbnails and "Initialize Ritual" button
+- [x] **DASH-07**: Upcoming releases panel showing next 2-3 MTG sets with dates
 
 ### Collection Manager (Treasure Cruise)
 
@@ -235,13 +235,13 @@ Updated during roadmap creation.
 | GAME-12 | Phase 5 | Complete |
 | GAME-13 | Phase 5 | Complete |
 | PERF-03 | Phase 5 | Complete |
-| DASH-01 | Phase 6 | Pending |
-| DASH-02 | Phase 6 | Pending |
-| DASH-03 | Phase 6 | Pending |
-| DASH-04 | Phase 6 | Pending |
+| DASH-01 | Phase 6 | Complete |
+| DASH-02 | Phase 6 | Complete |
+| DASH-03 | Phase 6 | Complete |
+| DASH-04 | Phase 6 | Complete |
 | DASH-05 | Phase 6 | Complete |
-| DASH-06 | Phase 6 | Pending |
-| DASH-07 | Phase 6 | Pending |
+| DASH-06 | Phase 6 | Complete |
+| DASH-07 | Phase 6 | Complete |
 | UX-01 | Phase 6 | Pending |
 | UX-02 | Phase 6 | Pending |
 | UX-03 | Phase 6 | Complete |
