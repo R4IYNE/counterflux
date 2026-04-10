@@ -7,7 +7,7 @@ export function initAppStore() {
     gameFullscreen: false,
 
     screens: [
-      { id: 'epic-experiment', label: 'Archive', icon: 'cyclone', route: '/', locked: false },
+      { id: 'epic-experiment', label: 'Epic Experiment', icon: 'dashboard', route: '/', locked: false },
       { id: 'treasure-cruise', label: 'Treasure Cruise', icon: 'collections_bookmark', route: '/treasure-cruise', locked: false },
       { id: 'thousand-year-storm', label: 'Thousand-Year Storm', icon: 'auto_fix_high', route: '/thousand-year-storm', locked: false },
       { id: 'preordain', label: 'Preordain', icon: 'insights', route: '/preordain', locked: false },
