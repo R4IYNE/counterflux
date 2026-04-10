@@ -212,6 +212,46 @@
 
       <!-- Right section -->
       <div class="flex items-center gap-md">
+        <!-- Connectivity Status Chip (D-14, D-15, PERF-05) -->
+        <div
+          x-data="{
+            state: 'live',
+            label: 'LIVE',
+            color: 'success',
+            update() {
+              const isOnline = navigator.onLine;
+              const updatedAt = $store.bulkdata?.updatedAt || null;
+              if (!isOnline) { this.state = 'offline'; this.label = 'OFFLINE'; this.color = 'secondary'; return; }
+              if (updatedAt && (Date.now() - new Date(updatedAt).getTime()) > 86400000) {
+                const hours = Math.floor((Date.now() - new Date(updatedAt).getTime()) / 3600000);
+                this.state = 'stale'; this.label = 'STALE ' + hours + 'H'; this.color = 'warning'; return;
+              }
+              this.state = 'live'; this.label = 'LIVE'; this.color = 'success';
+            }
+          }"
+          x-init="update(); window.addEventListener('online', () => { update(); $dispatch('cf:reconnect'); }); window.addEventListener('offline', () => update()); setInterval(() => update(), 60000);"
+          class="flex items-center gap-xs px-sm py-xs"
+          :title="'Last updated: ' + ($store.bulkdata?.updatedAt ? new Date($store.bulkdata.updatedAt).toLocaleString() : 'Unknown')"
+        >
+          <span
+            class="w-2 h-2 rounded-full"
+            :class="{
+              'bg-success': color === 'success',
+              'bg-warning': color === 'warning',
+              'bg-secondary': color === 'secondary'
+            }"
+          ></span>
+          <span
+            class="font-mono text-[11px] font-bold uppercase tracking-[0.15em]"
+            :class="{
+              'text-success': color === 'success',
+              'text-warning': color === 'warning',
+              'text-secondary': color === 'secondary'
+            }"
+            x-text="label"
+          ></span>
+        </div>
+
         <button class="text-text-muted hover:text-text-primary transition-colors" aria-label="Notifications">
           <span class="material-symbols-outlined text-2xl">notifications</span>
         </button>

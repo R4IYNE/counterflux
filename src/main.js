@@ -64,4 +64,15 @@ startBulkDataPipeline().catch((err) => {
   }
 });
 
+// Auto-refresh on reconnect: trigger bulk data refresh if prices are stale (D-16)
+window.addEventListener('cf:reconnect', async () => {
+  const updatedAt = Alpine.store('bulkdata')?.updatedAt;
+  if (!updatedAt) return;
+  const hoursSince = (Date.now() - new Date(updatedAt).getTime()) / 3600000;
+  if (hoursSince > 24) {
+    console.log('[Connectivity] Prices stale, triggering background refresh');
+    startBulkDataPipeline().catch(err => console.error('[Connectivity] Refresh failed:', err));
+  }
+});
+
 console.log('Counterflux -- The Aetheric Archive');
