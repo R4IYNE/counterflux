@@ -38,7 +38,7 @@
 - [ ] **DASH-02**: Quick Add input with autocomplete — supports quantity prefix (4x), set code suffix ([2XM]), condition/foil toggles
 - [ ] **DASH-03**: Price alerts panel showing cards that crossed user-set price thresholds
 - [ ] **DASH-04**: Mila's Insight panel with rotating daily tip (upgrade suggestion, price alert, or collection stat)
-- [ ] **DASH-05**: Recent activity timeline (cards added, decks modified, games played)
+- [x] **DASH-05**: Recent activity timeline (cards added, decks modified, games played)
 - [ ] **DASH-06**: Deck quick-launch grid with commander art thumbnails and "Initialize Ritual" button
 - [ ] **DASH-07**: Upcoming releases panel showing next 2-3 MTG sets with dates
 
@@ -116,9 +116,9 @@
 
 ### Interaction Patterns
 
-- [x] **UX-01**: Keyboard shortcuts: `/` focuses card search, Escape closes modals, Enter confirms
-- [x] **UX-02**: Right-click context menus on card tiles across all screens
-- [ ] **UX-03**: Ctrl+Z undo for destructive actions (card removal, deck deletion) with 10-second grace period
+- [ ] **UX-01**: Keyboard shortcuts: `/` focuses card search, Escape closes modals, Enter confirms
+- [ ] **UX-02**: Right-click context menus on card tiles across all screens
+- [x] **UX-03**: Ctrl+Z undo for destructive actions (card removal, deck deletion) with 10-second grace period
 
 ### Offline & Performance
 
@@ -126,7 +126,7 @@
 - [ ] **PERF-02**: Full collection and deck data available offline after initial load
 - [x] **PERF-03**: Game Tracker fully functional offline
 - [ ] **PERF-04**: Deck builder analytics recalculate within 100ms on card add/remove
-- [ ] **PERF-05**: Stale price data indicator when offline
+- [x] **PERF-05**: Stale price data indicator when offline
 
 ## v2 Requirements
 
@@ -239,15 +239,15 @@ Updated during roadmap creation.
 | DASH-02 | Phase 6 | Pending |
 | DASH-03 | Phase 6 | Pending |
 | DASH-04 | Phase 6 | Pending |
-| DASH-05 | Phase 6 | Pending |
+| DASH-05 | Phase 6 | Complete |
 | DASH-06 | Phase 6 | Pending |
 | DASH-07 | Phase 6 | Pending |
-| UX-01 | Phase 6 | Complete |
-| UX-02 | Phase 6 | Complete |
-| UX-03 | Phase 6 | Pending |
+| UX-01 | Phase 6 | Pending |
+| UX-02 | Phase 6 | Pending |
+| UX-03 | Phase 6 | Complete |
 | PERF-02 | Phase 6 | Pending |
 | PERF-04 | Phase 6 | Pending |
-| PERF-05 | Phase 6 | Pending |
+| PERF-05 | Phase 6 | Complete |
 
 **Coverage:**
 - v1 requirements: 90 total

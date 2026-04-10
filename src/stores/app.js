@@ -57,6 +57,24 @@ export function initAppStore() {
       }
     },
 
+    showUndo(message, undoId) {
+      // Use the undoId as the toast id for direct dismiss targeting
+      this.items.push({ id: undoId, message, type: 'undo', visible: true, undoId });
+      // Max 3 visible check
+      while (this.items.filter(t => t.visible).length > 3) {
+        const oldest = this.items.find(t => t.visible);
+        if (oldest) oldest.visible = false;
+      }
+      // Auto-dismiss after 10.3s (slightly after undo timer to avoid flash)
+      setTimeout(() => {
+        const item = this.items.find(t => t.id === undoId);
+        if (item) item.visible = false;
+        setTimeout(() => {
+          this.items = this.items.filter(t => t.id !== undoId);
+        }, 300);
+      }, 10300);
+    },
+
     info(msg) { this.show(msg, 'info'); },
     success(msg) { this.show(msg, 'success'); },
     warning(msg) { this.show(msg, 'warning'); },
