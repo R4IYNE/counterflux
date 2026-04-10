@@ -128,7 +128,7 @@ Plans:
 **Plans:** 4 plans
 Plans:
 - [ ] 06-01-PLAN.md — Activity logger, undo store, undo toast, connectivity utility (foundation services)
-- [ ] 06-02-PLAN.md — Keyboard shortcuts, cheat sheet modal, Escape priority chain
+- [x] 06-02-PLAN.md — Keyboard shortcuts, cheat sheet modal, Escape priority chain
 - [ ] 06-03-PLAN.md — Epic Experiment dashboard screen (all 7 panels, Quick Add, empty states)
 - [ ] 06-04-PLAN.md — Status chip, auto-refresh, activity/undo integration, visual checkpoint
 **UI hint**: yes

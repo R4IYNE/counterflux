@@ -116,8 +116,8 @@
 
 ### Interaction Patterns
 
-- [ ] **UX-01**: Keyboard shortcuts: `/` focuses card search, Escape closes modals, Enter confirms
-- [ ] **UX-02**: Right-click context menus on card tiles across all screens
+- [x] **UX-01**: Keyboard shortcuts: `/` focuses card search, Escape closes modals, Enter confirms
+- [x] **UX-02**: Right-click context menus on card tiles across all screens
 - [ ] **UX-03**: Ctrl+Z undo for destructive actions (card removal, deck deletion) with 10-second grace period
 
 ### Offline & Performance
@@ -242,8 +242,8 @@ Updated during roadmap creation.
 | DASH-05 | Phase 6 | Pending |
 | DASH-06 | Phase 6 | Pending |
 | DASH-07 | Phase 6 | Pending |
-| UX-01 | Phase 6 | Pending |
-| UX-02 | Phase 6 | Pending |
+| UX-01 | Phase 6 | Complete |
+| UX-02 | Phase 6 | Complete |
 | UX-03 | Phase 6 | Pending |
 | PERF-02 | Phase 6 | Pending |
 | PERF-04 | Phase 6 | Pending |
