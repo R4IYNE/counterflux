@@ -52,7 +52,7 @@ function _renderFullWelcome(container) {
       <img src="/assets/assetsmila-izzet.png" alt="Mila" class="w-12 h-12 object-cover">
       <div>
         <h2 class="font-header text-text-primary" style="font-size: 20px; font-weight: 700; line-height: 1.2; letter-spacing: 0.01em;">
-          Welcome to Epic Experiment
+          Welcome to Counterflux
         </h2>
         <p class="font-body text-text-muted mt-xs" style="font-size: 14px; line-height: 1.5;">
           Mila here! Your command centre is ready. Start by adding cards to your collection or building your first deck. Each panel will light up as your Archive grows.

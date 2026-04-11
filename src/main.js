@@ -14,6 +14,8 @@ import { initMarketStore } from './stores/market.js';
 import { initGameStore } from './stores/game.js';
 import { initBulkDataStore, startBulkDataPipeline } from './stores/bulkdata.js';
 import { initUndoStore } from './stores/undo.js';
+import { initProfileStore } from './stores/profile.js';
+import { openSettingsModal } from './components/settings-modal.js';
 import { splashScreen } from './components/splash-screen.js';
 import { toggleShortcutModal, isShortcutModalOpen, closeShortcutModal } from './components/shortcut-modal.js';
 import { initRouter } from './router.js';
@@ -22,6 +24,7 @@ import { getEurToGbpRate, eurToGbp, eurToGbpValue } from './services/currency.js
 
 // Initialize stores before Alpine starts
 initAppStore();
+initProfileStore();
 initUndoStore();
 initSearchStore();
 initCollectionStore();
@@ -38,6 +41,7 @@ window.renderManaCost = renderManaCost;
 window.__toggleShortcutModal = toggleShortcutModal;
 window.__shortcutModalOpen = isShortcutModalOpen;
 window.__closeShortcutModal = closeShortcutModal;
+window.__openSettingsModal = openSettingsModal;
 
 // Expose db globally for Alpine inline expressions (flyout, etc.)
 import { db } from './db/schema.js';
