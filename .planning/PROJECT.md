@@ -8,46 +8,53 @@ A premium, desktop-first web application for Magic: The Gathering collectors and
 
 The deck builder knows what you own, and the collection knows what's in your decks — one interconnected data layer that eliminates tab-juggling across fragmented tools.
 
+## Current State
+
+**Shipped:** v1.0 (2026-04-13)
+**Codebase:** 15,367 LOC across 104 source files, 45 test files, 222 commits
+**Stack:** Alpine.js 3.15 + Dexie.js 4 + Chart.js 4 + Vite 8 + Tailwind CSS v4 + SortableJS + Navigo + mana-font
+
+All six modules operational: Dashboard (Epic Experiment), Collection Manager (Treasure Cruise), Deck Builder (Thousand-Year Storm), Intelligence Layer, Market Intel (Preordain), Game Tracker (Vandalblast). Local-first with IndexedDB persistence, Scryfall bulk data pipeline, keyboard shortcuts, undo system, and connectivity status.
+
 ## Requirements
 
 ### Validated
 
-(None yet — ship to validate)
+- ✓ Scryfall API integration with bulk data caching and rate-limit compliance — v1.0
+- ✓ IndexedDB local-first persistence for all user data (collection, decks, games) — v1.0
+- ✓ Global navigation shell with Izzet-themed sidebar and top app bar — v1.0
+- ✓ Dashboard (Epic Experiment) — portfolio summary, quick add, price alerts, Mila's insights, deck quick-launch — v1.0
+- ✓ Collection Manager (Treasure Cruise) — gallery/table/set-completion views, mass entry terminal, CSV import/export, inventory categories, analytics — v1.0
+- ✓ Deck Builder (Thousand-Year Storm) — three-panel editor with search, the 99 (grid/list), live analytics sidebar, collection-aware owned/missing, import/export — v1.0
+- ✓ EDHREC synergy recommendations and Commander Spellbook combo detection in Deck Builder — v1.0
+- ✓ Market Intel (Preordain) — spoiler browser, price watchlist with alerts, market trends, release calendar — v1.0
+- ✓ Game Tracker (Vandalblast) — life totals, commander damage, poison/counters, dice, turn tracking, post-game summary, game history and stats — v1.0
+- ✓ Full visual identity — colour palette, typography (Syne / Space Grotesk / JetBrains Mono), ghost borders, active glow, aether gradient — v1.0
+- ✓ Mila (System Familiar) — sidebar presence, insights, empty states — v1.0
+- ✓ Keyboard-first interaction patterns, right-click context menus, undo support — v1.0
+- ✓ Offline capability for collection, decks, and game tracking — v1.0
 
 ### Active
 
-- [ ] Scryfall API integration with bulk data caching and rate-limit compliance
-- [ ] IndexedDB local-first persistence for all user data (collection, decks, games)
-- [ ] Global navigation shell with Izzet-themed sidebar and top app bar
-- [ ] Dashboard (Epic Experiment) — portfolio summary, quick add, price alerts, Mila's insights, deck quick-launch
-- [ ] Collection Manager (Treasure Cruise) — gallery/table/set-completion views, mass entry terminal, CSV import/export, inventory categories, analytics
-- [ ] Deck Builder (Thousand-Year Storm) — three-panel editor with search, the 99 (grid/list), live analytics sidebar, collection-aware owned/missing, import/export
-- [ ] EDHREC synergy recommendations and Commander Spellbook combo detection in Deck Builder
-- [ ] Market Intel (Preordain) — spoiler browser, price watchlist with alerts, market trends, release calendar
-- [ ] Game Tracker (Vandalblast) — life totals, commander damage, poison/counters, dice, turn tracking, post-game summary, game history and stats
-- [ ] Full visual identity — colour palette, typography (Crimson Pro / Space Grotesk / JetBrains Mono), ghost borders, active glow, aether gradient
-- [ ] Mila (System Familiar) — Corgi mascot in sidebar, insights, empty states, loading states
-- [ ] Keyboard-first interaction patterns, right-click context menus, undo support
-- [ ] Offline capability for collection, decks, and game tracking
+(None — next milestone requirements defined via `/gsd:new-milestone`)
 
 ### Out of Scope
 
-- Supabase cloud sync / user accounts — deferred to Phase 5 (future milestone)
-- Firemind (Personal Analytics) — deferred to Phase 5
+- Supabase cloud sync / user accounts — deferred to future milestone
+- Firemind (Personal Analytics) — deferred to future milestone
 - Trade binder matching with other users — future consideration
-- Mobile companion app — future consideration (Vandalblast responsive layout is in scope)
-- Real-time pricing / marketplace integration — Scryfall daily prices sufficient for v1
+- Mobile companion app — Vandalblast responsive layout covers game-day use
+- Real-time pricing / marketplace integration — Scryfall daily prices sufficient
 - OAuth / social login — no accounts in v1
+- Mila loading animation (MILA-03) — accepted as minor tech debt from v1.0
 
 ## Context
 
 **Target users:** Spike/Johnny Commander players who own 500+ cards, maintain multiple Commander decks, and play weekly. Four personas: The Archivist (collection-focused), The Brewer (deckbuilding-focused), The Speculator (price-tracking), The Pod Leader (game-tracking).
 
-**Data architecture:** Scryfall is the canonical card data source (free, comprehensive, community-standard). User data is local-first via IndexedDB. Secondary sources: Commander Spellbook API (combos), EDHREC (synergy/recommendations), Scryfall prices (daily).
+**Data architecture:** Scryfall is the canonical card data source (free, comprehensive, community-standard). User data is local-first via IndexedDB (Dexie.js v4, schema v5). Secondary sources: Commander Spellbook API (combos), EDHREC (synergy/recommendations), Scryfall prices (daily). Bulk data stream-parsed in Web Worker to avoid blocking main thread.
 
-**Visual identity:** "Neo-Occult Terminal" — dark, immersive, information-dense. Izzet guild colour palette (blue #0D52BD + red #E23838 on deep void #0B0C10). All screen names reference real MTG card names (Epic Experiment, Thousand-Year Storm, Treasure Cruise, Preordain, Vandalblast). Mila the Corgi is the System Familiar mascot.
-
-**Existing assets:** HTML mockup of Collection Manager (Treasure Cruise) with Tailwind CDN styling, Mila corgi illustration, Izzet guild logo.
+**Visual identity:** "Neo-Occult Terminal" — dark, immersive, information-dense. Izzet guild colour palette (blue #0D52BD + red #E23838 on deep void #0B0C10). All screen names reference real MTG card names. Mila the Corgi is the System Familiar mascot. Profile system with settings modal added post-plan.
 
 **Competitive landscape:** Replaces the need to juggle Moxfield (deckbuilding) + Deckbox (collection) + EDHREC (recommendations) + TCGPlayer (pricing) + MythicSpoiler (spoilers) + Commander Spellbook (combos) + Lifetap (game tracking).
 
@@ -57,19 +64,23 @@ The deck builder knows what you own, and the collection knows what's in your dec
 - **Local-first**: Must work without account creation or internet (after initial data fetch). IndexedDB for persistence, bulk data cache for offline card lookup
 - **Desktop-first**: Optimised for desktop viewports. Only Vandalblast (Game Tracker) requires mobile-responsive layout
 - **Performance**: Initial load < 3s, autocomplete < 200ms, collection scroll virtualised at 1,000+ cards, deck analytics recalc < 100ms
-- **Stack**: Lightweight — no heavy SPA framework. Vite build, Tailwind CSS, vanilla JS or lightweight reactivity layer (Alpine.js/Petite Vue/Lit). Final choice pending research
-- **Bulk data**: Scryfall bulk exports can be ~300MB+ — need efficient caching and storage strategy
+- **Stack**: Alpine.js 3.15 + Dexie.js 4 + Chart.js 4 + Vite 8 + Tailwind CSS v4 + SortableJS + Navigo + mana-font (~99KB JS gzipped)
 
 ## Key Decisions
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Scryfall as canonical data source | Free, comprehensive, community-standard, well-documented API. No other source has complete card data + imagery + pricing | — Pending |
-| Local-first with IndexedDB | No account required to start, offline-capable, fast. Cloud sync deferred to future phase | — Pending |
-| Izzet "Neo-Occult Terminal" visual identity | No competing tool has a distinctive aesthetic. The look is a feature, not a skin. Creates emotional attachment | — Pending |
-| Lightweight stack (no React/Vue/Angular) | Keeps build simple for iterative development. Card data is read-heavy, not interaction-heavy. Avoid framework overhead | — Pending |
-| Phased delivery matching PRD structure | Foundation → Deckbuilding → Intelligence → Game Night. Each phase delivers standalone value | — Pending |
-| Mila as System Familiar | Warm personality touchpoint in a data-dense app. Corgi with Izzet goggles — memorable, unique, endearing | — Pending |
+| Scryfall as canonical data source | Free, comprehensive, community-standard, well-documented API | ✓ Good — powers all card data, pricing, images |
+| Local-first with IndexedDB | No account required, offline-capable, fast | ✓ Good — Dexie v4 schema versioning works well |
+| Izzet "Neo-Occult Terminal" visual identity | Distinctive aesthetic creates emotional attachment | ✓ Good — unique in MTG tool space |
+| Alpine.js + Dexie.js lightweight stack | Keeps build simple, avoids framework overhead | ✓ Good — 99KB gzipped, fast iteration |
+| Phased delivery (6 phases) | Foundation → Collection → Deck → Intelligence → Market/Game → Dashboard | ✓ Good — each phase delivered standalone value |
+| Mila as System Familiar | Warm personality in data-dense app | ✓ Good — memorable touchpoint |
+| Web Worker bulk data parsing | 300MB Scryfall JSON crashes main thread with JSON.parse | ✓ Good — stream parsing works reliably |
+| Vite 8 with Rolldown | Modern bundler with manualChunks function form | ✓ Good — fast HMR, clean builds |
+| fontsource npm packages | Self-hosted .woff2 fonts for offline support | ✓ Good — no external font CDN dependency |
+| EDHREC via Vite dev proxy | CloudFront blocks CORS preflight on EDHREC | ⚠️ Revisit — needs production proxy solution |
+| GBP currency throughout | User preference for pound sterling pricing | ✓ Good — EUR→GBP conversion via live rate |
 
 ## Evolution
 
@@ -89,4 +100,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-05 — Phase 2 (Collection Manager) complete*
+*Last updated: 2026-04-13 after v1.0 milestone*
