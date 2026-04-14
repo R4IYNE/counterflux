@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { readFileSync } from 'node:fs';
 import { getConnectivityStatus } from '../src/utils/connectivity.js';
 
 describe('Connectivity Status', () => {
@@ -51,3 +52,39 @@ describe('Connectivity Status', () => {
     expect(result.state).toBe('stale');
   });
 });
+
+describe('POLISH-08: pulsing dot (D-26)', () => {
+  const css = readFileSync('src/styles/main.css', 'utf-8');
+  const html = readFileSync('index.html', 'utf-8');
+
+  it('@keyframes cf-pulse is defined in main.css', () => {
+    expect(css).toMatch(/@keyframes cf-pulse/);
+  });
+
+  it('.cf-live-dot rule declares animation using cf-pulse', () => {
+    // The animation declaration lives inside the .cf-live-dot block
+    expect(css).toMatch(/\.cf-live-dot\s*\{[\s\S]*?animation:\s*cf-pulse/);
+  });
+
+  it('live state binds cf-live-dot class (index.html template audit)', () => {
+    // Binding: 'cf-live-dot': color === 'success'
+    expect(html).toMatch(/['"]cf-live-dot['"]\s*:\s*color\s*===\s*['"]success['"]/);
+  });
+
+  it('warning state uses static bg-warning (no pulse)', () => {
+    expect(html).toMatch(/bg-warning['"]\s*:\s*color\s*===\s*['"]warning['"]/);
+  });
+
+  it('offline/error state uses static bg-secondary (no pulse)', () => {
+    expect(html).toMatch(/bg-secondary['"]\s*:\s*color\s*===\s*['"]secondary['"]/);
+  });
+
+  it('connectivity utility still returns { state, label, color } shape (D-26 guard)', () => {
+    const live = getConnectivityStatus(true, new Date().toISOString());
+    expect(live).toHaveProperty('state');
+    expect(live).toHaveProperty('label');
+    expect(live).toHaveProperty('color');
+    expect(live.color).toBe('success');
+  });
+});
+

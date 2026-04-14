@@ -277,12 +277,13 @@
           class="flex items-center gap-xs px-sm py-xs"
           :title="'Last updated: ' + ($store.bulkdata?.updatedAt ? new Date($store.bulkdata.updatedAt).toLocaleString() : 'Unknown')"
         >
+          <!-- POLISH-08 / D-26: pulse only on live (success). Warning/offline keep static dot. -->
           <span
-            class="w-2 h-2 rounded-full"
+            class="rounded-full"
             :class="{
-              'bg-success': color === 'success',
-              'bg-warning': color === 'warning',
-              'bg-secondary': color === 'secondary'
+              'cf-live-dot': color === 'success',
+              'w-2 h-2 bg-warning': color === 'warning',
+              'w-2 h-2 bg-secondary': color === 'secondary'
             }"
           ></span>
           <span
