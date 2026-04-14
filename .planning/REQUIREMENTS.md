@@ -10,17 +10,17 @@
 
 ### Polish Pass (cross-app quick wins)
 
-- [ ] **POLISH-01**: Splash loading quotes render without `--` separators and use typographic treatment (quote mark, italic attribution, spacing)
-- [ ] **POLISH-02**: Izzet red (`#E23838`) accents injected across app — card detail hover, secondary CTAs, rag indicators — increasing red coverage from ~5% of surfaces to ~15%
-- [ ] **POLISH-03**: Favicon set to `assets/niv-mila.png` and declared via `<link rel="icon">` in `index.html`
-- [ ] **POLISH-04**: Card images in detail flyout render with rounded corners matching Scryfall's border-radius, no white triangles visible
-- [ ] **POLISH-05**: Toast icons render at full opacity (no alpha transparency) so they don't overlap with CTAs behind them
-- [ ] **POLISH-06**: Rename "Initiate ritual" → "Brew a new storm" and "Abandon ritual" → "Abandon storm" across ritual modal and any other call sites
-- [ ] **POLISH-07**: Additional-counters trigger icon changed from `more_horiz` to `+` (Material Symbols `add`)
-- [ ] **POLISH-08**: 'LIVE' status indicator refined — either pulsing dot added to justify the chip or chip removed entirely (decision during phase)
-- [ ] **POLISH-09**: Sidebar has a manual collapse toggle button (icon in sidebar header) that persists user preference across sessions
-- [ ] **POLISH-10**: Top losers panel never renders raw `scryfall_id` strings — missing names show graceful fallback or the entry is filtered out
-- [ ] **POLISH-11**: Add-to-wishlist toast reads "Added to wishlist" (not "Added to collection") — all wishlist add paths audited
+- [x] **POLISH-01**: Splash loading quotes render without `--` separators and use typographic treatment (quote mark, italic attribution, spacing)
+- [x] **POLISH-02**: Izzet red (`#E23838`) accents injected across app — card detail hover, secondary CTAs, rag indicators — increasing red coverage from ~5% of surfaces to ~15%
+- [x] **POLISH-03**: Favicon set to `assets/niv-mila.png` and declared via `<link rel="icon">` in `index.html`
+- [x] **POLISH-04**: Card images in detail flyout render with rounded corners matching Scryfall's border-radius, no white triangles visible
+- [x] **POLISH-05**: Toast icons render at full opacity (no alpha transparency) so they don't overlap with CTAs behind them
+- [x] **POLISH-06**: Rename "Initiate ritual" → "Brew a new storm" and "Abandon ritual" → "Abandon storm" across ritual modal and any other call sites
+- [x] **POLISH-07**: Additional-counters trigger icon changed from `more_horiz` to `+` (Material Symbols `add`)
+- [x] **POLISH-08**: 'LIVE' status indicator refined — either pulsing dot added to justify the chip or chip removed entirely (decision during phase)
+- [x] **POLISH-09**: Sidebar has a manual collapse toggle button (icon in sidebar header) that persists user preference across sessions
+- [x] **POLISH-10**: Top losers panel never renders raw `scryfall_id` strings — missing names show graceful fallback or the entry is filtered out
+- [x] **POLISH-11**: Add-to-wishlist toast reads "Added to wishlist" (not "Added to collection") — all wishlist add paths audited
 
 ### Performance
 

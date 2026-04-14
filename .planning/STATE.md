@@ -2,16 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Second Sunrise
-status: active
-stopped_at: Roadmap created — ready for /gsd:plan-phase 7
-last_updated: "2026-04-14"
+status: executing
+stopped_at: Completed 07-01-PLAN.md (Polish Pass) — 11 POLISH items shipped, 57/57 plan tests pass
+last_updated: "2026-04-14T23:46:45.766Z"
 last_activity: 2026-04-14
-current_phase: 7
 progress:
   total_phases: 7
   completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
+  total_plans: 3
+  completed_plans: 1
   percent: 0
 ---
 
@@ -22,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-14)
 
 **Core value:** The deck builder knows what you own, and the collection knows what's in your decks — one interconnected data layer
-**Current focus:** v1.1 Second Sunrise — Phase 7 (Polish Pass + Perf Baseline + Schema Migration)
+**Current focus:** Phase 07 — polish-pass-perf-baseline-schema-migration
 
 ## Current Position
 
-Phase: 7 — Polish Pass + Perf Baseline + Schema Migration (not started)
-Plan: —
-Status: Roadmap drafted; ready for `/gsd:plan-phase 7`
-Last activity: 2026-04-14 — v1.1 roadmap created (7 phases, 56 requirements mapped)
+Phase: 07 (polish-pass-perf-baseline-schema-migration) — EXECUTING
+Plan: 2 of 3
+Status: Ready to execute
+Last activity: 2026-04-14
 
 Progress: [          ] 0%
 
@@ -60,6 +59,7 @@ Progress: [          ] 0%
 | Phase 04 P03 | 4min | 2 | 4 |
 | Phase 04 P04 | 12min | 3 | 16 |
 | Phase 06 P04 | 5min | 2 | 7 |
+| Phase 07 P01 | 12min | 8 tasks | 16 files |
 
 ## Accumulated Context
 
@@ -68,6 +68,7 @@ Progress: [          ] 0%
 Full decision log in PROJECT.md Key Decisions table.
 
 **v1.1 scope decisions (2026-04-14):**
+
 - Auth + cloud sync in scope (previously Out of Scope) — unblocks multi-device use
 - Preordain item 20 scoped to spoiler-focused overhaul only (no news/RSS feeds)
 - Item 8 printings limited to paper (`games: paper`) — excludes MTGO/Arena-only printings
@@ -76,11 +77,15 @@ Full decision log in PROJECT.md Key Decisions table.
 - Performance target (item 1) deferred — measure first, set baseline, pick target (PERF-04 gated on Phase 7 findings)
 
 **v1.1 roadmap decisions (2026-04-14):**
+
 - Phase numbering continues from v1.0 (Phase 7-13); no reset
 - Schema v5→v6 migration front-loaded into Phase 7 so `turn_laps` (GAME-09) and sync (SYNC-*) share a single migration event
 - Auth (Phase 10) hard-precedes sync (Phase 11); sync engine has no `user_id` identity without it
 - SYNC-08 (notification bell) lives in Phase 12 alongside Preordain spoiler refresh — bell needs sync errors to surface as day-one content
 - Phase 13 (PERF-04) is conditional on Phase 7 baseline measurement; documentation-only pass if targets already met
+- [Phase 07]: Filter nameless movers rows (strategy A) with per-column empty state — cleaner UX than scryfall_id fallback
+- [Phase 07]: Sidebar collapse resize handler respects persisted user preference (D-28)
+- [Phase 07]: cf-card-img shared utility class applied to all card-image render sites (POLISH-04)
 
 ### Pending Todos
 
@@ -95,6 +100,6 @@ None — roadmap complete, next step is `/gsd:plan-phase 7`.
 
 ## Session Continuity
 
-Last session: 2026-04-14
-Stopped at: v1.1 roadmap created — 7 phases (7-13), 56 requirements mapped, ready for `/gsd:plan-phase 7`
+Last session: 2026-04-14T23:46:45.764Z
+Stopped at: Completed 07-01-PLAN.md (Polish Pass) — 11 POLISH items shipped, 57/57 plan tests pass
 Resume file: None

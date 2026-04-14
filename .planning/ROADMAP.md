@@ -42,7 +42,7 @@
   4. Running `npm run perf` produces a desktop Lighthouse report against `vite preview`, and web-vitals metrics (LCP/INP/CLS/FCP/TTFB) log to the console on every page load in dev mode
   5. `.planning/` contains a committed baseline report capturing current v1.0 numbers with explicit TTI/LCP targets derived from measurement
 **Plans**: 3 plans
-  - [ ] 07-01-PLAN.md — Polish batch: 11 cross-app polish fixes (POLISH-01..11)
+  - [x] 07-01-PLAN.md — Polish batch: 11 cross-app polish fixes (POLISH-01..11)
   - [ ] 07-02-PLAN.md — Perf baseline: web-vitals + Lighthouse CI tooling + committed PERF-BASELINE.md (PERF-01..03)
   - [ ] 07-03-PLAN.md — Schema v6+v7 migration: temp-table shuffle to UUID PKs + sync_queue + sync_conflicts + profile (SCHEMA-01..03)
 
