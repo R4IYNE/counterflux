@@ -23,6 +23,10 @@ Out of scope: PERF-04 (optimisation) lives in Phase 13, gated on baseline findin
 - **D-01:** Migrate all synced tables (`collection`, `decks`, `deck_cards`, `games`, `watchlist`, `profile`) from `++id` autoincrement to text UUID primary keys during the v6 upgrade. Generate with `crypto.randomUUID()`. One-time migration cost buys zero ID-translation work in Phase 11.
 - **D-02:** Migration must rewrite all foreign keys atomically — notably `deck_cards.deck_id` must swap from the old numeric id to the new UUID for every existing deck_cards row. Tests must assert FK integrity post-upgrade.
 - **D-03:** Never change these PKs again. Per Dexie Cloud guidance in `.planning/research/PITFALLS.md` §1, locking this shape now is a permanent commitment.
+- **D-01a:** *(from research — Dexie #1148 confirms PK type cannot change in-place)* Land the UUID migration via **two-version bump (v6 + v7) within Plan 3's single PR**:
+  - v6 upgrade creates shadow `*_v6` tables with text PKs, copies every row with fresh UUIDs, rewrites `deck_cards.deck_id` using an in-memory `oldId → newUuid` Map
+  - v7 upgrade renames each `*_v6` table back to its clean final name (`collection`, `decks`, `deck_cards`, `games`, `watchlist`, `profile`)
+  - Both bumps ship in the same Plan 3 PR; user experiences a single upgrade event. Phases 9/11 inherit clean names, no `_v6` suffix clutter.
 
 ### Schema v6 — sync_queue / sync_conflicts shape
 - **D-04:** Create both tables in v6 with their **full final shape** even though Phase 11 is what populates them. No second migration needed in Phase 11.
@@ -44,7 +48,9 @@ Out of scope: PERF-04 (optimisation) lives in Phase 13, gated on baseline findin
 - **D-14:** Backup format = single `localStorage` key `counterflux_v5_backup_<ISO-timestamp>` containing a JSON snapshot of each table's full rows. Synchronous writes so it's guaranteed done before Dexie opens v6.
 - **D-15:** `onblocked` handler shows a **blocking modal** ("Counterflux is upgrading — please close other Counterflux tabs") until the block releases. App is unusable mid-state to prevent half-upgraded write paths.
 - **D-16:** Backup TTL = 7 days. On every boot check `counterflux_v5_backup_*` keys; delete ones older than 7 days. If v6 load throws within the window, app surfaces a "restore backup" option.
-- **D-17:** Include migration tests against fixture v5 databases representing every prior schema version (1-5) + realistic user states (empty, 500-card collection, 10 decks with deck_cards rows, active game with turn history). Zero-data-loss assertion is a hard gate.
+- **D-17:** Include migration tests against fixture v5 databases representing every prior schema version (1-5) + realistic user states (empty, 500-card collection, 10 decks with deck_cards rows, active game with turn history). Zero-data-loss assertion is a hard gate. Use the existing `fake-indexeddb` 6.2.5 setup in `tests/setup.js` — extend the pattern in `tests/schema.test.js`.
+- **D-17a:** *(from research)* Migration progress UX — emit progress events from the upgrade callback every 10% of row count across all tables; splash-screen subscribes and renders "Migrating your archive — 43%" so large-collection users (5000+ cards) don't force-reload a seemingly-frozen app.
+- **D-17b:** *(from research)* After writing the localStorage backup, **read it back and `JSON.parse` it** to validate round-trip integrity (~20ms cost). If the read-back fails or parses to a different row count than written, abort the migration with a user-visible error instead of proceeding on a corrupt safety net.
 
 ### Performance baseline (PERF-01…PERF-03)
 - **D-18:** Baseline report sets **absolute number targets** for TTI / LCP, committed as hard numbers (e.g. "LCP < 2.5s, TTI < 3.5s") derived from the median of 3 cold-boot runs. Aligns with Web Vitals "Good" thresholds by default.
@@ -52,6 +58,7 @@ Out of scope: PERF-04 (optimisation) lives in Phase 13, gated on baseline findin
 - **D-20:** CI-gating is deferred — Phase 13 decides whether to add `@lhci/cli` assertions based on baseline findings. v1.1 PRs merge on functional review only.
 - **D-21:** `web-vitals` 5.2.x logs LCP / INP / CLS / FCP / TTFB via `console.table` on every page navigation in dev mode. No UI overlay (keeps Phase 7 scope tight).
 - **D-22:** Baseline captured **before** the schema migration ships — the report represents true v1.0 numbers so Phase 13 has a clean reference point.
+- **D-22a:** *(from research)* Plan 2 produces **two artefacts**: (a) committed `.planning/phases/07-.../PERF-BASELINE.md` with median-of-3 manual runs for the official baseline numbers (stable, cites target), (b) reproducible `npm run perf` tooling for fast dev runs. D-18 and D-19 serve different purposes — the baseline needs stable numbers (median of 3), the dev tool needs fast feedback (single run).
 
 ### Delivery sequencing
 - **D-23:** Ship order within Phase 7: **Polish → Perf → Schema**. Low-risk polish items warm up; perf tooling lands before migration so measurements can attribute any regression; schema migration ships last with the full safety net in place.
