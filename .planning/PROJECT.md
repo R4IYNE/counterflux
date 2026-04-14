@@ -16,6 +16,25 @@ The deck builder knows what you own, and the collection knows what's in your dec
 
 All six modules operational: Dashboard (Epic Experiment), Collection Manager (Treasure Cruise), Deck Builder (Thousand-Year Storm), Intelligence Layer, Market Intel (Preordain), Game Tracker (Vandalblast). Local-first with IndexedDB persistence, Scryfall bulk data pipeline, keyboard shortcuts, undo system, and connectivity status.
 
+## Current Milestone: v1.1 Second Sunrise
+
+**Goal:** Refine every rough edge users hit in v1.0, elevate Preordain's spoiler experience and Vandalblast's pod-play polish, and move Counterflux from single-device local-first to multi-device synced.
+
+**Target features:**
+- Polish Pass — 11 cross-app quick-win items (quotes UI, favicon, red accents, toast opacity, card corners, rename "ritual" → "storm", sidebar collapse, top-losers bug, add-to-wishlist toast wording)
+- Performance baseline & optimisation — measure first, then optimise boot time
+- Treasure Cruise rapid entry — LHS pop-out add panel, precon quick-add, set-icon printing picker, mass-entry close button
+- Thousand-Year Storm accuracy — QA analytics, RAG warning redesign, salt score debug, Commander as own type
+- Preordain spoiler refresh — visual spoiler browser overhaul, set icons in dropdown, quick add-to-watchlist
+- Vandalblast pod experience — layout fixes, RAG life colours, counter icons, fullscreen fix, in-card counter edits, coin-flip + visual turn indicator + persisted per-turn laps
+- Supabase auth — email magic-link + Google OAuth, auth-driven profile
+- Cloud sync — multi-device sync for collection/decks/games/watchlist, conflict resolution, offline queue, notification bell wire-up
+
+**Key context:**
+- Auth + cloud sync is the largest scope addition (previously Out of Scope); makes this a multi-device milestone
+- Scope decisions: spoiler-focused only (no news feeds), paper printings only, Scryfall precon products, turn laps persist to game history (schema migration)
+- 8 phases planned, continuing from phase 7 (v1.0 ended at phase 6)
+
 ## Requirements
 
 ### Validated
@@ -36,16 +55,16 @@ All six modules operational: Dashboard (Epic Experiment), Collection Manager (Tr
 
 ### Active
 
-(None — next milestone requirements defined via `/gsd:new-milestone`)
+See `.planning/REQUIREMENTS.md` for the full v1.1 requirement catalogue (POLISH, PERF, COLLECT, DECK, MARKET, GAME, AUTH, SYNC categories).
 
 ### Out of Scope
 
-- Supabase cloud sync / user accounts — deferred to future milestone
 - Firemind (Personal Analytics) — deferred to future milestone
 - Trade binder matching with other users — future consideration
 - Mobile companion app — Vandalblast responsive layout covers game-day use
 - Real-time pricing / marketplace integration — Scryfall daily prices sufficient
-- OAuth / social login — no accounts in v1
+- MTG news / RSS feed integration — scoped out of item 20; spoiler-focused overhaul only
+- All-printings view including MTGO/Arena-only — v1.1 scopes to `games: paper` only
 - Mila loading animation (MILA-03) — accepted as minor tech debt from v1.0
 
 ## Context
@@ -100,4 +119,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-13 after v1.0 milestone*
+*Last updated: 2026-04-14 — milestone v1.1 Second Sunrise initialised*

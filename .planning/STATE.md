@@ -1,39 +1,40 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: The Aetheric Archive
-status: complete
-stopped_at: Milestone v1.0 shipped
-last_updated: "2026-04-13"
-last_activity: 2026-04-13
+milestone: v1.1
+milestone_name: Second Sunrise
+status: active
+stopped_at: Milestone v1.1 started — defining requirements
+last_updated: "2026-04-14"
+last_activity: 2026-04-14
 progress:
-  total_phases: 6
-  completed_phases: 6
-  total_plans: 31
-  completed_plans: 31
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-04-13)
+See: .planning/PROJECT.md (updated 2026-04-14)
 
 **Core value:** The deck builder knows what you own, and the collection knows what's in your decks — one interconnected data layer
-**Current focus:** v1.0 shipped — planning next milestone
+**Current focus:** v1.1 Second Sunrise — polish + Preordain/Vandalblast uplift + Supabase auth & cloud sync
 
 ## Current Position
 
-Phase: 6 of 6 — All complete
-Status: v1.0 Milestone shipped
-Last activity: 2026-04-13
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-04-14 — Milestone v1.1 started
 
-Progress: [██████████] 100%
+Progress: [          ] 0%
 
 ## Performance Metrics
 
-**Velocity:**
+**Velocity (v1.0 — for reference):**
 
 | Plan | Duration | Tasks | Files |
 |------|----------|-------|-------|
@@ -58,16 +59,25 @@ Progress: [██████████] 100%
 
 Full decision log in PROJECT.md Key Decisions table.
 
+**v1.1 scope decisions (2026-04-14):**
+- Auth + cloud sync in scope (previously Out of Scope) — unblocks multi-device use
+- Preordain item 20 scoped to spoiler-focused overhaul only (no news/RSS feeds)
+- Item 8 printings limited to paper (`games: paper`) — excludes MTGO/Arena-only printings
+- Item 6 precons sourced from Scryfall precon products (`set_type: commander`, etc.)
+- Turn laps (item 29) persist to game history — requires schema migration for games table
+- Performance target (item 1) deferred — measure first, set baseline, pick target
+
 ### Pending Todos
 
 None.
 
 ### Blockers/Concerns
 
-- EDHREC CORS proxy needed for production deployment (works via Vite dev proxy only)
+- EDHREC CORS proxy needed for production deployment (works via Vite dev proxy only) — carry-over from v1.0
+- Auth + sync adds new operational concerns: Supabase project provisioning, env vars, sync conflict semantics
 
 ## Session Continuity
 
-Last session: 2026-04-13
-Stopped at: v1.0 milestone completed and archived
+Last session: 2026-04-14
+Stopped at: Milestone v1.1 initialised — ready for `/gsd:plan-phase 7` (Polish Pass)
 Resume file: None
