@@ -149,6 +149,7 @@ export function renderAddCardModal() {
             <img
               :src="selectedCard.image_uris?.small || ''"
               :alt="selectedCard.name"
+              class="cf-card-img"
               style="width: 64px; height: auto; object-fit: contain; flex-shrink: 0;"
               loading="lazy"
               onerror="this.style.display='none'"

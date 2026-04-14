@@ -76,6 +76,14 @@ body {
   min-height: 100vh;
 }
 
+/* POLISH-04: Card-image rounded corners matching MTG physical card frame.
+   Percentage-based so it scales correctly at any size (19px on a 400px
+   image, 3px on a 64px thumbnail). Apply to every card-image render site
+   so no dark surface shows through square corners. */
+.cf-card-img {
+  border-radius: 4.75%;
+}
+
 /* POLISH-08 (D-26): LIVE chip pulsing dot. Applied only when
    connectivity color === 'success' so warning/offline states do
    not pulse (reduces visual noise per D-26). */

@@ -375,12 +375,12 @@
           <span class="font-mono uppercase text-[11px] tracking-[0.15em] font-bold text-primary">CARD DETAIL</span>
         </div>
 
-        <!-- Card image -->
+        <!-- Card image (POLISH-04: cf-card-img rounds corners to match MTG frame) -->
         <div class="px-md pb-md">
           <img
             :src="$store.search.selectedCard._image"
             :alt="$store.search.selectedCard._name"
-            class="w-full object-contain"
+            class="w-full object-contain cf-card-img"
             style="aspect-ratio: 488/680;"
             loading="eager"
           >

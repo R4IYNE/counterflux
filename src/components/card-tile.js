@@ -38,7 +38,7 @@ export function renderCardTile(entry, index) {
         <img
           src="${imgSrc}"
           alt="${name}"
-          class="w-full h-full object-cover opacity-80 transition-all duration-500"
+          class="w-full h-full object-cover opacity-80 transition-all duration-500 cf-card-img"
           loading="lazy"
           onerror="this.style.display='none'"
         >
