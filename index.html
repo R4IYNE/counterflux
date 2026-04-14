@@ -6,6 +6,10 @@
   <title>Counterflux -- The Aetheric Archive</title>
   <link rel="preload" href="/src/styles/fonts/SpaceGrotesk-Variable.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/src/styles/fonts/JetBrainsMono-Variable.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="icon" type="image/png" href="/assets/niv-mila.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/niv-mila.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/niv-mila.png">
+  <link rel="apple-touch-icon" href="/assets/niv-mila.png">
   <style>[x-cloak] { display: none !important; }</style>
 </head>
 <body x-data
@@ -78,10 +82,27 @@
           </div>
         </template>
       </div>
-      <p x-show="$store.bulkdata.status !== 'error'"
-        class="text-[14px] italic text-center leading-[1.5] max-w-[400px]"
-        style="color: var(--color-text-muted, #7A8498); font-family: 'Space Grotesk', sans-serif;"
-        x-text="flavourText"></p>
+      <div x-show="$store.bulkdata.status !== 'error'"
+        class="text-center leading-[1.5] max-w-[400px]"
+        style="color: var(--color-text-muted, #7A8498); font-family: 'Space Grotesk', sans-serif;">
+        <p class="text-[14px]">
+          <span aria-hidden="true" style="color: var(--color-text-dim, #4A5064);">&ldquo;</span><span
+            class="italic"
+            x-text="flavourText.quote"
+            style="font-family: 'Space Grotesk', sans-serif;"
+          ></span><span aria-hidden="true" style="color: var(--color-text-dim, #4A5064);">&rdquo;</span>
+        </p>
+        <p
+          class="mono-data text-[11px] uppercase tracking-[0.15em] mt-xs"
+          style="font-family: 'JetBrains Mono', monospace; color: var(--color-text-dim, #4A5064);"
+          x-text="'\u2014 ' + flavourText.attribution"
+        ></p>
+      </div>
+      <!-- D-17a: schema migration progress hook (populated by Plan 3 via $store.bulkdata.migrationProgress) -->
+      <div x-show="migrationProgress !== null"
+        class="mono-data text-[11px] uppercase tracking-[0.15em] text-center"
+        style="font-family: 'JetBrains Mono', monospace; color: var(--color-warning, #F39C12);"
+        x-text="'Migrating your archive \u2014 ' + migrationProgress + '%'"></div>
     </div>
   </div>
 

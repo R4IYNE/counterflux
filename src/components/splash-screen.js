@@ -7,12 +7,34 @@
  * Fades out after 1s delay on completion.
  */
 
-const FLAVOUR_TEXTS = [
-  '"The Izzet are creative geniuses. Disregard the number of property-loss inquiries." -- Razia, Boros Archangel',
-  '"Izzet-style problem solving: keep adding electricity until something works." -- Ral Zarek',
-  '"Knowledge is the most dangerous weapon." -- Niv-Mizzet, Parun',
-  '"Inspiration is just one satisfying explosion away." -- Chandra Nalaar',
-  '"There\'s no wrong way to wield a thunderbolt." -- Ral Zarek'
+/**
+ * Flavour quotes rendered beneath the splash progress bar.
+ * Each entry is `{ quote, attribution }` so the template can wrap
+ * the quote in italic + curly quote marks and the attribution
+ * in JetBrains Mono with an em-dash prefix (POLISH-01, D-17).
+ * The `--` attribution separator is NOT baked into the data.
+ */
+export const FLAVOUR_TEXTS = [
+  {
+    quote: 'The Izzet are creative geniuses. Disregard the number of property-loss inquiries.',
+    attribution: 'Razia, Boros Archangel',
+  },
+  {
+    quote: 'Izzet-style problem solving: keep adding electricity until something works.',
+    attribution: 'Ral Zarek',
+  },
+  {
+    quote: 'Knowledge is the most dangerous weapon.',
+    attribution: 'Niv-Mizzet, Parun',
+  },
+  {
+    quote: 'Inspiration is just one satisfying explosion away.',
+    attribution: 'Chandra Nalaar',
+  },
+  {
+    quote: "There's no wrong way to wield a thunderbolt.",
+    attribution: 'Ral Zarek',
+  },
 ];
 
 /**
@@ -21,7 +43,7 @@ const FLAVOUR_TEXTS = [
  */
 export function splashScreen() {
   return {
-    flavourIndex: 0,
+    flavourIndex: Math.floor(Math.random() * FLAVOUR_TEXTS.length),
     fadingOut: false,
     _interval: null,
 
@@ -32,13 +54,15 @@ export function splashScreen() {
       }, 8000);
 
       // Watch for ready state and trigger fade out
-      this.$watch('$store.bulkdata.status', (status) => {
-        if (status === 'ready') {
-          setTimeout(() => {
-            this.fadingOut = true;
-          }, 1000);
-        }
-      });
+      if (typeof this.$watch === 'function') {
+        this.$watch('$store.bulkdata.status', (status) => {
+          if (status === 'ready') {
+            setTimeout(() => {
+              this.fadingOut = true;
+            }, 1000);
+          }
+        });
+      }
     },
 
     destroy() {
@@ -47,6 +71,22 @@ export function splashScreen() {
 
     get flavourText() {
       return FLAVOUR_TEXTS[this.flavourIndex];
+    },
+
+    /**
+     * D-17a hook: Plan 3 will populate `$store.bulkdata.migrationProgress`
+     * as the v5→v6 migration runs. For now this safely returns null when
+     * the store or field is absent, so the template `x-show` stays hidden.
+     */
+    get migrationProgress() {
+      try {
+        const alpine = globalThis.Alpine || (typeof window !== 'undefined' ? window.Alpine : null);
+        const store = alpine?.store ? alpine.store('bulkdata') : null;
+        const val = store?.migrationProgress;
+        return (val === undefined) ? null : val;
+      } catch {
+        return null;
+      }
     },
 
     get isVisible() {
