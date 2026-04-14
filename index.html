@@ -475,7 +475,8 @@
                 this.flyoutFoil,
                 this.flyoutCategory
               );
-              $store.toast.success($store.search.selectedCard._name + ' added to collection.');
+              const _cfTarget = this.flyoutCategory === 'wishlist' ? 'wishlist' : 'collection';
+              $store.toast.success($store.search.selectedCard._name + ' added to ' + _cfTarget + '.');
             }
           }">
             <span class="font-mono uppercase text-[11px] tracking-[0.15em] font-bold text-primary block mb-sm">ADD TO COLLECTION</span>
@@ -542,7 +543,9 @@
         }"
         class="border px-4 py-3 flex items-start gap-sm"
       >
+        <!-- POLISH-05: toast icon renders at full opacity (no opacity-* class, no alpha on text color) -->
         <span
+          data-toast-icon
           class="material-symbols-outlined text-xl flex-shrink-0 mt-0.5"
           :class="{
             'text-primary': toast.type === 'info',

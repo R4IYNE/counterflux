@@ -75,7 +75,9 @@ export function renderAddCardModal() {
             this.foil,
             this.category
           );
-          $store.toast.success(this.selectedCard.name + ' added to collection.');
+          // POLISH-11: wishlist path uses 'Added to wishlist' wording
+          const target = this.category === 'wishlist' ? 'wishlist' : 'collection';
+          $store.toast.success(this.selectedCard.name + ' added to ' + target + '.');
           this.reset();
           $store.collection.addCardOpen = false;
         },

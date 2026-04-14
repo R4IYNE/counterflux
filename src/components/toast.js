@@ -3,6 +3,10 @@
  *
  * Toast rendering is handled inline in index.html via Alpine directives.
  * This module provides the icon and colour mappings for toast types.
+ *
+ * POLISH-05: Toast icons render at full opacity. Never apply partial-alpha
+ * Tailwind utilities on the icon span — the translucent container background
+ * supplies the needed contrast, not the icon itself.
  */
 
 /**

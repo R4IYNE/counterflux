@@ -111,3 +111,27 @@ describe('Toast Store', () => {
     expect(store.items[0].type).toBe('info');
   });
 });
+
+describe('POLISH-05: icon opacity audit', () => {
+  it('toast module documents full-opacity icon rule', async () => {
+    const { readFileSync } = await import('node:fs');
+    const src = readFileSync('src/components/toast.js', 'utf-8');
+    // Must not define an opacity-reducing class on the icon config
+    expect(src).not.toMatch(/opacity-(60|70|75|80|90)/);
+    expect(src).not.toMatch(/text-opacity-/);
+  });
+
+  it('toast template in index.html has no opacity-reducing class on icon span', async () => {
+    const { readFileSync } = await import('node:fs');
+    const html = readFileSync('index.html', 'utf-8');
+    // Find the toast icon block (data-toast-icon sentinel) and assert no opacity modifier
+    const match = html.match(/data-toast-icon[\s\S]*?<\/span>/);
+    expect(match).not.toBeNull();
+    const block = match[0];
+    expect(block).not.toMatch(/opacity-(60|70|75|80|90)/);
+    expect(block).not.toMatch(/text-opacity-/);
+    // No inline style="opacity: 0.x"
+    expect(block).not.toMatch(/opacity\s*:\s*0\./);
+  });
+});
+
