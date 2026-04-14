@@ -24,7 +24,7 @@ export function renderDeckLanding(container) {
         <button
           @click="openRitual()"
           style="font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; cursor: pointer; padding: 8px 16px; background: #0D52BD; color: #EAECEE; border: none;"
-        >Initialize Ritual</button>
+        >Brew a new storm</button>
       </div>
 
       <!-- Empty state -->
@@ -39,12 +39,12 @@ export function renderDeckLanding(container) {
             No Decks in the Archive
           </h2>
           <p style="font-family: 'Space Grotesk', sans-serif; font-size: 14px; line-height: 1.5; color: #7A8498; max-width: 28rem; width: 100%; margin: 0;">
-            The storm hasn't gathered yet. Click "Initialize Ritual" to create your first Commander deck and begin brewing.
+            The storm hasn't gathered yet. Click "Brew a new storm" to create your first Commander deck and begin brewing.
           </p>
           <button
             @click="openRitual()"
             style="font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; cursor: pointer; padding: 8px 16px; background: #0D52BD; color: #EAECEE; border: none;"
-          >Initialize Ritual</button>
+          >Brew a new storm</button>
         </div>
       </template>
 

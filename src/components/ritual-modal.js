@@ -12,7 +12,7 @@ import {
 } from '../utils/commander-detection.js';
 
 /**
- * Initialize Ritual modal wizard.
+ * Brew a new storm modal wizard (formerly "Initialize Ritual").
  * Opens a multi-step form for deck creation (or Change Commander flow).
  *
  * @param {Object} [options]
@@ -44,7 +44,7 @@ export function openRitualModal(options = {}) {
 
       <!-- Title -->
       <h2 style="font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; line-height: 1.2; letter-spacing: 0.01em; color: #EAECEE; margin: 0;">
-        ${isChangeMode ? 'Change Commander' : 'Initialize Ritual'}
+        ${isChangeMode ? 'Change Commander' : 'Brew a new storm'}
       </h2>
 
       <!-- Step 1: SELECT COMMANDER -->
@@ -160,12 +160,12 @@ export function openRitualModal(options = {}) {
         <button
           id="ritual-abandon"
           style="font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 400; color: #7A8498; background: transparent; border: none; cursor: pointer; padding: 8px 0;"
-        >Abandon Ritual</button>
+        >Abandon storm</button>
         <button
           id="ritual-confirm"
           disabled
           style="padding: 8px 16px; font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; background: #1C1F28; color: #4A5064; border: none; cursor: not-allowed; opacity: 0.5;"
-        >${isChangeMode ? 'Change Commander' : 'Begin Ritual'}</button>
+        >${isChangeMode ? 'Change Commander' : 'Brew a new storm'}</button>
       </div>
     </div>
   `;

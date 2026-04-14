@@ -97,7 +97,7 @@ export function renderCounterPanel() {
         @mouseleave="$el.style.background = '#1C1F28'"
         @click.stop="open = !open"
         aria-label="Counters">
-        <span class="material-symbols-outlined" style="font-size: 24px;">more_horiz</span>
+        <span class="material-symbols-outlined" style="font-size: 24px;">add</span>
       </button>
 
       <!-- Popover -->
