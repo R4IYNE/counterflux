@@ -41,7 +41,10 @@
   3. Top losers panel shows only cards with resolvable names (no raw `scryfall_id` strings leak into the UI), and additional-counters uses a `+` icon in place of `more_horiz`
   4. Running `npm run perf` produces a desktop Lighthouse report against `vite preview`, and web-vitals metrics (LCP/INP/CLS/FCP/TTFB) log to the console on every page load in dev mode
   5. `.planning/` contains a committed baseline report capturing current v1.0 numbers with explicit TTI/LCP targets derived from measurement
-**Plans**: TBD
+**Plans**: 3 plans
+  - [ ] 07-01-PLAN.md — Polish batch: 11 cross-app polish fixes (POLISH-01..11)
+  - [ ] 07-02-PLAN.md — Perf baseline: web-vitals + Lighthouse CI tooling + committed PERF-BASELINE.md (PERF-01..03)
+  - [ ] 07-03-PLAN.md — Schema v6+v7 migration: temp-table shuffle to UUID PKs + sync_queue + sync_conflicts + profile (SCHEMA-01..03)
 
 ### Phase 8: Treasure Cruise Rapid Entry
 **Goal**: Collectors can add cards faster than they could in v1.0 — whether entering one card, picking a specific printing, or importing a whole Commander precon
@@ -126,7 +129,7 @@
 | 4. Intelligence Layer | v1.0 | 4/4 | Complete | 2026-04-06 |
 | 5. Market Intel + Game Tracker | v1.0 | 8/8 | Complete | 2026-04-08 |
 | 6. Dashboard + Polish | v1.0 | 4/4 | Complete | 2026-04-10 |
-| 7. Polish Pass + Perf Baseline + Schema Migration | v1.1 | 0/? | Not started | — |
+| 7. Polish Pass + Perf Baseline + Schema Migration | v1.1 | 0/3 | Not started | — |
 | 8. Treasure Cruise Rapid Entry | v1.1 | 0/? | Not started | — |
 | 9. Deck Accuracy + Vandalblast Pod Experience | v1.1 | 0/? | Not started | — |
 | 10. Supabase Auth Foundation | v1.1 | 0/? | Not started | — |
