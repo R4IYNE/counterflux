@@ -1,892 +1,704 @@
-# Architecture Patterns
+# Architecture Research — v1.1 Second Sunrise Integration
 
-**Domain:** MTG Collection/Deckbuilding Command Centre (Local-First SPA)
-**Researched:** 2026-04-03
+**Domain:** Local-first SPA (Alpine.js + Dexie.js) gaining cloud sync, auth, and new product surfaces
+**Researched:** 2026-04-14
+**Confidence:** HIGH (existing codebase walked, public docs verified)
 
-## Recommended Architecture
+---
 
-### High-Level Structure
+## 1. System Overview — v1.0 → v1.1
 
-```
-[Vite Dev Server / Build]
-         |
-    [index.html]
-         |
-    [app.js] ──── [Navigo Router] ──── [Screen Modules]
-         |                                    |
-    [Alpine.js]                    [Dashboard | Collection | DeckBuilder | Market | Game]
-         |                                    |
-    [Alpine.store()] ────────────── [Shared State (active deck, search, notifications)]
-         |
-    [Data Layer]
-    ├── [Dexie.js] ──── IndexedDB (user data: collection, decks, games)
-    ├── [ScryfallService] ──── Scryfall REST API (card data, prices, symbols)
-    └── [BulkDataCache] ──── IndexedDB (Scryfall bulk data for offline)
-```
-
-### Directory Structure
+### v1.0 (current)
 
 ```
-counterflux/
-├── index.html                    # Single HTML entry point
-├── vite.config.js
-├── tailwind.config.js
-├── package.json
-│
-├── src/
-│   ├── styles.css                # Tailwind entry + @theme + font imports
-│   ├── app.js                    # Alpine init, router setup, global stores
-│   ├── router.js                 # Navigo configuration
-│   │
-│   ├── stores/                   # Alpine.store() modules
-│   │   ├── collection.js         # Collection CRUD, filtering, sorting state
-│   │   ├── deck.js               # Active deck state + card add/remove/move
-│   │   ├── game.js               # Game tracker state (life, damage, turns)
-│   │   ├── search.js             # Global card search query + results
-│   │   └── notifications.js      # Toast/alert state
-│   │
-│   ├── services/                 # Data access layer
-│   │   ├── db.js                 # Dexie schema + instance + migrations
-│   │   ├── scryfall.js           # Scryfall API client (rate-limited queue)
-│   │   ├── bulk-data.js          # Bulk data download + cache management
-│   │   ├── price-service.js      # Price lookup + alert checking
-│   │   ├── edhrec.js             # EDHREC synergy/recommendation proxy
-│   │   ├── combos.js             # Commander Spellbook integration
-│   │   └── import-export.js      # CSV/decklist import/export
-│   │
-│   ├── workers/
-│   │   └── bulk-import.worker.js # Web Worker for bulk JSON parsing
-│   │
-│   ├── screens/                  # Screen-level Alpine components (lazy loaded)
-│   │   ├── dashboard.js          # Epic Experiment
-│   │   ├── collection.js         # Treasure Cruise
-│   │   ├── deck-builder.js       # Thousand-Year Storm
-│   │   ├── market.js             # Preordain
-│   │   └── game-tracker.js       # Vandalblast
-│   │
-│   ├── components/               # Reusable Alpine component functions
-│   │   ├── card-grid.js          # Virtual scrolling card grid
-│   │   ├── card-table.js         # Sortable/filterable data table
-│   │   ├── card-preview.js       # Card image + hover details
-│   │   ├── card-search.js        # Autocomplete search bar
-│   │   ├── mana-cost.js          # Mana cost rendering helper
-│   │   ├── life-counter.js       # Game life total widget
-│   │   ├── damage-tracker.js     # Commander damage matrix
-│   │   ├── dice-roller.js        # D6/D20 roller
-│   │   ├── deck-analytics.js     # Chart.js mana curve + stats
-│   │   ├── deck-list.js          # The 99 with categories
-│   │   ├── context-menu.js       # Right-click context menu
-│   │   ├── virtual-list.js       # Generic virtual scroll container
-│   │   ├── modal.js              # Modal dialog
-│   │   ├── toast.js              # Toast notification
-│   │   ├── price-chart.js        # Price trend sparkline
-│   │   └── mila-widget.js        # Mila familiar (tips, empty states)
-│   │
-│   ├── utils/                    # Pure utility functions
-│   │   ├── mana-parser.js        # Parse "{2}{U}{R}" to mana-font HTML
-│   │   ├── csv.js                # CSV import/export helpers
-│   │   ├── debounce.js           # Debounce for search input
-│   │   ├── format.js             # Price formatting, date formatting
-│   │   └── keyboard.js           # Keyboard shortcut registration
-│   │
-│   └── assets/
-│       ├── mila/                 # Corgi mascot illustrations
-│       └── izzet-logo.svg        # Guild logo
-│
-├── public/
-│   ├── sw.js                     # Service Worker (registered from app.js)
-│   └── manifest.json             # PWA manifest
-│
-└── tests/
-    ├── stores/                   # Store unit tests
-    ├── services/                 # Service tests
-    └── utils/                    # Utility tests
+┌──────────────────────────────────────────────────────────────────┐
+│  index.html — Alpine app shell, splash, sidebar, topbar          │
+└──────────────────────────────────────────────────────────────────┘
+        │
+        ▼
+┌──────────────────────────────────────────────────────────────────┐
+│  main.js — boot: init stores → Alpine.start() → initRouter()     │
+│             → bulkdata pipeline → currency rate                  │
+└──────────────────────────────────────────────────────────────────┘
+        │
+        ├──── Navigo (hash router) ─── lazy screens/* (5 routes)
+        │
+        ├──── Alpine.store('app'|'toast'|'profile'|'undo'|'search'
+        │                  |'collection'|'deck'|'game'|'intelligence'
+        │                  |'market'|'bulkdata')
+        │
+        └──── db/schema.js (Dexie v5)  ←──  services/* (sync read/write)
+                  │
+                  └─ Web Worker: bulk-data.worker.js  →  bulk-data-pipeline.js
+                                                       (@streamparser/json-whatwg)
 ```
 
-### Component Boundaries
-
-| Component | Responsibility | Communicates With |
-|-----------|---------------|-------------------|
-| **Router (Navigo)** | URL-to-screen mapping, lazy loading, navigation guards | All screens (loads/unloads) |
-| **Alpine.store('collection')** | Collection CRUD, filtering, sorting state | Dexie (persistence), Deck Builder (owned/missing), Dashboard (stats) |
-| **Alpine.store('deck')** | Active deck state, card add/remove/move, analytics recalc | Dexie (persistence), Collection store (owned check), Chart.js (analytics) |
-| **Alpine.store('game')** | Life totals, commander damage, turn log, game history | Dexie (persistence), Game Tracker screen |
-| **Alpine.store('search')** | Global search query + results, autocomplete | Scryfall API, Dexie card cache, all screens with search |
-| **Alpine.store('notifications')** | Toast queue, alert state | All stores (on success/error), Toast component |
-| **ScryfallService** | API calls with rate limiting (75ms queue) + IndexedDB caching | All stores that need card data |
-| **Dexie DB** | Schema, migrations, indexed queries, bulk operations | All stores for persistence |
-| **BulkDataCache** | Download/update Scryfall bulk data via Web Worker | ScryfallService (offline fallback), Web Worker |
-| **Web Worker** | Parse bulk JSON without blocking main thread | BulkDataCache, IndexedDB (direct write in worker) |
-| **Service Worker** | Offline caching (app shell + card images), background refresh | Cache API, network |
-
-### Data Flow
-
-**Card data flow (Scryfall to UI):**
-```
-Scryfall Bulk API (/bulk-data endpoint)
-    |
-    v
-Web Worker (download + stream-parse JSON, trim to essential fields)
-    |
-    v
-IndexedDB "cards" store via Dexie (27K+ oracle cards, indexed by name/set/type/color)
-    |
-    v
-ScryfallService.search(query) → Dexie indexed query first, API fallback
-    |
-    v
-Alpine.store('search').results = [...]  (Alpine reactivity)
-    |
-    v
-UI re-renders (card-grid, card-preview, search results)
-```
-
-**User action flow (add card to collection):**
-```
-User clicks "Add to Collection" on card-preview
-    |
-    v
-Alpine.store('collection').addCard(scryfallCard, { quantity, condition, foil })
-    |
-    v
-Dexie transaction: db.collection.put({ cardId, name, quantity, condition, foil, location, addedAt })
-    |
-    v
-Alpine reactivity updates all bound UI:
-  - Collection screen: card count updates, gallery refreshes
-  - Deck Builder sidebar: owned/missing counts recalculate
-  - Dashboard: portfolio value recalculates
-```
-
-**User action flow (build a deck):**
-```
-User creates deck with commander
-    |
-    v
-Alpine.store('deck').createDeck({ name, commander: scryfallId, format: 'commander' })
-    |
-    v
-Dexie: db.decks.put({ id, name, commander, cards: [], categories: {}, createdAt })
-    |
-    v
-User adds cards via search panel → Alpine.store('deck').addCard(deckId, scryfallId, category)
-    |
-    v
-Deck analytics recalculate: mana curve, color pie, card types (<100ms for 100 cards)
-Collection overlay updates: owned vs missing counts from collection store cross-reference
-```
-
-**Search flow (with rate limiting):**
-```
-User types in search bar
-    |
-    v
-Debounce (200ms)
-    |
-    v
-ScryfallService.autocomplete(query)
-    |
-    v
-1. Check Dexie cards table first (IndexedDB name index)
-     → Cache hit? Return immediately
-     → Cache miss? Continue to step 2
-2. Scryfall API call (rate limited: 75ms min between requests)
-     → Store response in Dexie cards table
-     → Return to Alpine store → UI updates
-```
-
-## IndexedDB Schema Design (Dexie.js)
-
-Use **Dexie.js** (~16KB) as the IndexedDB wrapper. Dexie provides promise-based API, schema versioning, compound indexes, and `bulkPut()` for batch operations. Raw IndexedDB's callback API is too error-prone for an app of this complexity.
-
-### Database: `counterflux`
-
-```javascript
-// services/db.js
-import Dexie from 'dexie';
-
-export const db = new Dexie('counterflux');
-
-db.version(1).stores({
-  // Scryfall bulk data cache (trimmed fields)
-  cards: 'id, oracle_id, name, set, type_line, *color_identity, cmc, rarity, edhrec_rank, [name+set]',
-  
-  // User's card collection
-  collection: '++id, cardId, oracle_id, set, location, [cardId+condition+foil], addedAt',
-  
-  // User's decks
-  decks: 'id, format, updatedAt',
-  
-  // Game history
-  games: 'id, date, deckId, result',
-  
-  // Price watchlist
-  watchlist: 'cardId, addedAt',
-  
-  // App metadata (bulk data version, settings, last sync)
-  meta: 'key'
-});
-```
-
-### Store Details
-
-**`cards` store** (Scryfall bulk data cache)
-
-Store a **trimmed subset** of each Scryfall card object. The full Scryfall object has 200+ fields -- only ~25 are needed.
-
-```javascript
-// Trimmed card shape (~2-3KB per card vs ~8-12KB raw)
-{
-  id: 'scryfall-uuid',              // Key path
-  oracle_id: 'oracle-uuid',         // For dedup across printings
-  name: 'Lightning Bolt',           // Autocomplete, search
-  mana_cost: '{R}',                 // Display, analytics
-  cmc: 1,                           // Mana curve analysis
-  type_line: 'Instant',             // Deck analytics (creature/instant/etc)
-  oracle_text: 'Lightning Bolt...',  // Card text display
-  color_identity: ['R'],            // Commander color filtering (multi-entry index)
-  colors: ['R'],                    // Color display
-  set: 'lea',                       // Set-completion views
-  set_name: 'Limited Edition Alpha',
-  collector_number: '161',
-  rarity: 'common',                 // Filtering
-  image_uris: {                     // Card display (CDN URLs, not blobs)
-    small: 'https://cards.scryfall.io/small/...',
-    normal: 'https://cards.scryfall.io/normal/...',
-    art_crop: 'https://cards.scryfall.io/art_crop/...'
-  },
-  card_faces: [...],                // For double-faced cards
-  prices: { usd: '0.25', usd_foil: '1.50' },
-  legalities: { commander: 'legal' },
-  edhrec_rank: 42,                  // Popularity sorting
-  keywords: ['Haste'],              // Rules-aware filtering
-  produced_mana: ['R'],             // Mana source detection
-  power: '3', toughness: '2',      // Creature stats
-  loyalty: null                     // Planeswalker loyalty
-}
-```
-
-**Estimated storage: ~60-80MB** for ~27K oracle cards with trimmed fields. Well within IndexedDB limits (Chrome allows 60% of available disk space).
-
-**Index rationale:**
-- `name`: Autocomplete search, alphabetical sorting
-- `set`: Set-completion views, set filtering
-- `type_line`: Deck analytics breakdown
-- `*color_identity`: Multi-entry index -- a card with `['U', 'R']` is findable by either color
-- `cmc`: Mana curve analysis, CMC filtering
-- `edhrec_rank`: Popularity sorting
-- `[name+set]`: Compound index for "exact card in specific set" lookups
-
-**`collection` store** (user's owned cards)
-
-```javascript
-{
-  id: autoIncrement,                 // Key path
-  cardId: 'scryfall-uuid',          // Which card (FK to cards store)
-  oracle_id: 'oracle-uuid',         // "Do I own any printing?" lookups
-  name: 'Lightning Bolt',           // Denormalized for fast display without join
-  set: 'lea',                       // Set-completion tracking
-  quantity: 4,
-  condition: 'NM',                  // NM/LP/MP/HP/DMG
-  foil: false,
-  location: 'Trade Binder',         // Inventory category
-  notes: '',
-  addedAt: Date.now(),
-  updatedAt: Date.now()
-}
-```
-
-The `[cardId+condition+foil]` compound index uniquely identifies a collection entry -- you might own 2x NM non-foil and 1x LP foil of the same card.
-
-**`decks` store**
-
-```javascript
-{
-  id: 'uuid',                       // Key path
-  name: 'Izzet Spellslinger',
-  format: 'commander',
-  commander: 'scryfall-uuid',       // Commander card ID
-  partner: null,                    // Partner commander (or null)
-  cards: [                          // Embedded array (max 99 cards)
-    { cardId: 'scryfall-uuid', quantity: 1, category: 'Ramp' }
-  ],
-  categories: ['Ramp', 'Draw', 'Removal', 'Win Conditions', 'Lands'],
-  description: '',
-  tags: ['casual', 'spellslinger'],
-  createdAt: Date.now(),
-  updatedAt: Date.now()
-}
-```
-
-Cards are embedded, not in a separate store. A Commander deck has exactly 100 cards -- this is not a scale problem. Embedding avoids expensive join-like lookups when loading a deck.
-
-**`games` store**
-
-```javascript
-{
-  id: 'uuid',                       // Key path
-  date: Date.now(),                  // For history browsing
-  deckId: 'deck-uuid',              // Per-deck win rate tracking
-  players: [
-    { name: 'You', commander: 'scryfall-uuid', startingLife: 40 },
-    { name: 'Opponent 1', commander: null, startingLife: 40 }
-  ],
-  turns: [
-    {
-      turnNumber: 1,
-      events: [
-        { type: 'life_change', playerId: 0, value: -3 },
-        { type: 'commander_damage', from: 1, to: 0, value: 5 },
-        { type: 'poison', playerId: 0, value: 2 }
-      ]
-    }
-  ],
-  result: 'win',                    // win/loss/draw
-  duration: null,                   // Minutes (optional)
-  notes: 'Close game, won with Cyclonic Rift',
-  createdAt: Date.now()
-}
-```
-
-A game has 5-15 turns with a few events each. Tens of KB at most per game. Events cover: life change, commander damage, poison counters, monarch/initiative, custom counters.
-
-### Schema Versioning
-
-Dexie has built-in schema versioning. Each schema change adds a new `db.version(N).stores({...})` call. Migrations run automatically when the user opens the app after an update. Dexie also supports data transformation during upgrades via `.upgrade(tx => {...})`.
-
-## Scryfall Bulk Data Strategy
-
-This is the most architecturally critical piece. The bulk data is large, parsing is slow, and it must not block the UI.
-
-### Strategy: Stream-Parse in Web Worker, Store Trimmed Data
+### v1.1 additions (this milestone)
 
 ```
-1. App boot → check meta store for 'bulkDataVersion' + 'lastBulkUpdate'
-2. Fetch /bulk-data from Scryfall API (one lightweight call)
-3. Compare updated_at timestamp against stored version
-4. If stale (>24h) or missing:
-   a. Get oracle_cards download URL from /bulk-data response
-   b. Spawn Web Worker with download URL
-   c. Worker: fetch() the JSON file
-   d. Worker: stream-parse with @streamparser/json (~3KB library)
-   e. Worker: trim each card to essential fields
-   f. Worker: batch-write to IndexedDB (500 records per Dexie bulkPut)
-   g. Worker: post progress messages to main thread (for progress bar / Mila animation)
-   h. Main thread: update meta store with new version + timestamp
-5. If fresh → skip, use cached IndexedDB data
+                  ┌────────────────────────────────────────────┐
+                  │           Supabase Cloud (Postgres)         │
+                  │  auth.users  collection  decks  deck_cards  │
+                  │              games  watchlist  precons      │
+                  └────────────────────┬───────────────────────┘
+                                       │ HTTPS / WebSocket
+                                       │ (auth + REST + Realtime)
+        ┌──────────────────────────────┴───────────────────────────┐
+        │                                                          │
+        ▼                                                          ▼
+┌──────────────────┐                                ┌─────────────────────────┐
+│ services/        │                                │ workers/sync.worker.js  │
+│   supabase.js    │                                │ (optional Phase 2 perf) │
+│  (singleton      │                                └─────────────────────────┘
+│   client + JWT)  │                                          │
+└────────┬─────────┘                                          │
+         │                                                    │
+         ▼                                                    ▼
+┌──────────────────┐    ┌──────────────────┐    ┌──────────────────────────┐
+│ stores/auth.js   │───▶│ stores/sync.js   │───▶│ services/sync-engine.js  │
+│ (session, user,  │    │ (status, queue   │    │ (push, pull, conflict,   │
+│  signin/signout) │    │  size, lastSync) │    │  Dexie hook tap)         │
+└────────┬─────────┘    └────────┬─────────┘    └─────────────┬────────────┘
+         │                       │                            │
+         │ subscribes            │ dispatches                 │ db.table.hook(
+         ▼                       ▼                            │   'creating'|
+┌──────────────────┐    ┌──────────────────┐                  │   'updating'|
+│ stores/profile   │    │ stores/notif.js  │                  │   'deleting')
+│ (auth-aware,     │    │ (bell badge,     │                  ▼
+│  cloud-backed)   │    │  inbox, route    │    ┌──────────────────────────┐
+└──────────────────┘    │  to /alerts)     │    │ db/schema.js (Dexie v6)  │
+                        └────────┬─────────┘    │  + sync_queue table      │
+                                 │              │  + sync_meta key         │
+                                 ▼              │  + games.turn_laps       │
+                  routes/alerts (new screen)    │  + precons table         │
+                                                └──────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────┐
+│  Cross-cutting v1.1 modules                                      │
+│                                                                  │
+│  utils/perf.js          — web-vitals collection, console + meta  │
+│  services/precons.js    — Scryfall /sets/{code}/products         │
+│  components/lhs-popout/ — Treasure Cruise persistent panel       │
+└──────────────────────────────────────────────────────────────────┘
 ```
 
-### Why oracle_cards (not default_cards or all_cards)
+---
 
-| Bulk File | Cards | Raw Size | Trimmed Size | Use Case |
-|-----------|-------|----------|--------------|----------|
-| oracle_cards | ~27K | ~130MB | ~60-80MB | Search, deckbuilding, analytics. **Use this.** |
-| default_cards | ~90K+ | ~350MB+ | ~200MB+ | Every printing. Needed for set-completion views |
-| all_cards | ~250K+ | ~1GB+ | N/A | Every language. Never needed |
+## 2. Component Responsibilities
 
-**Recommendation**: Start with oracle_cards for Phase 1-2. Fetch specific set printings on-demand via `/cards/search?q=set:xxx` for set-completion views (Phase 3+). Consider downloading default_cards as an optional "full data" mode in a later phase.
+### New components
 
-### Web Worker Implementation
+| Component | File (new) | Owns | Talks to |
+|-----------|-----------|------|----------|
+| Supabase client | `src/services/supabase.js` | `createClient()` singleton, env config, realtime channel factory | All sync/auth callers |
+| Auth store | `src/stores/auth.js` | `session`, `user`, `status` (`anonymous`\|`authed`\|`pending`), `signInMagic()`, `signInGoogle()`, `signOut()` | `supabase.js`, broadcasts to `profile.js`, `sync.js` |
+| Sync engine | `src/services/sync-engine.js` | Dexie hooks → enqueue mutation; flush queue → Supabase upserts; pull deltas with `updated_at > lastSync`; conflict policy | `db/schema.js`, `supabase.js`, `stores/sync.js` |
+| Sync store | `src/stores/sync.js` | `status` (`idle`\|`syncing`\|`offline`\|`error`), `queueSize`, `lastSyncAt`, `errors[]` | `sync-engine.js`, `notifications.js` |
+| Notification store | `src/stores/notifications.js` | Unified inbox: sync errors, price alerts, app messages; `unreadCount`, `markRead()`, `dispatch()` | `market.js` (forward alerts), `sync.js` (forward errors) |
+| Precon service | `src/services/precons.js` | Fetch + cache product/decklist data from Scryfall `/sets/{code}/products` | `db.precons` table, called by Treasure Cruise + Thousand-Year Storm |
+| Perf hook | `src/utils/perf.js` | `web-vitals` import (LCP/INP/CLS/TTFB), boot-time marks, persist roll-up to `meta` | `main.js` boot, dev console, optional dashboard widget |
+| LHS popout panel | `src/components/lhs-popout-panel.js` + slots wired in `treasure-cruise.js` | Persistent left-side add/quick-action drawer for Treasure Cruise | `collection` store actions |
+| Alerts screen | `src/screens/alerts.js` | Renders unified notification inbox (route `/alerts`) | `notifications` store |
 
-```javascript
-// workers/bulk-import.worker.js
-import { Streamparser } from '@streamparser/json';
-import Dexie from 'dexie';
+### Modified existing components
 
-// Open IndexedDB directly in the worker (supported in all modern browsers)
-const db = new Dexie('counterflux');
-db.version(1).stores({ cards: 'id, oracle_id, name, set, ...' });
+| File | Modification |
+|------|--------------|
+| `src/db/schema.js` | Bump to `db.version(6)`; add `games.turn_laps` (data shape change, not indexed), add `sync_queue`, `precons` tables; meta key `sync_meta` for cursor tracking |
+| `src/stores/profile.js` | Replace `localStorage` persistence with auth-aware load: when `auth.status === 'authed'`, hydrate from Supabase row; subscribe via `Alpine.effect`/listener on `auth.session` |
+| `src/stores/game.js` | Mutate `players[i].turn_laps: number[]` on `nextTurn()`; persist in saved game record |
+| `src/stores/market.js` | When `pendingAlerts` populated, forward each into `notifications.dispatch({kind:'price-alert',...})` instead of (or in addition to) sidebar badge |
+| `src/main.js` | Add `initAuthStore()`, `initSyncStore()`, `initNotificationStore()` BEFORE Alpine.start; call `bootAuth()` then `bootSyncEngine()` AFTER Alpine.start; import + invoke `installPerfHooks()` first thing |
+| `src/router.js` | Add `'/alerts'` route → `screens/alerts.js`; add to `ROUTE_MAP` |
+| `src/components/topbar.js` (or sidebar) | Wire bell badge to `$store.notifications.unreadCount`; click → `router.navigate('/alerts')` |
+| `src/components/sidebar.js` | `hasAlertBadge()` reads from `notifications.unreadCount` not `market.alertBadgeCount` (single source of truth) |
+| `src/screens/treasure-cruise.js` | Layout grid splits into LHS popout + main content; popout binds to `collection.addCardOpen`/quick-add state |
+| `src/components/settings-modal.js` | Adds Account section: signed-in email, Sign In / Sign Out buttons calling `auth` store actions |
 
-self.onmessage = async ({ data: { url } }) => {
-  const response = await fetch(url);
-  const reader = response.body.getReader();
-  const decoder = new TextDecoder();
-  
-  let batch = [];
-  let totalProcessed = 0;
-  const BATCH_SIZE = 500;
-  
-  // Stream-parse: process cards one at a time without loading full JSON
-  // @streamparser/json emits each array element as it's parsed
-  const parser = new Streamparser({ paths: ['$.*'] });
-  
-  parser.onValue = async (card) => {
-    batch.push(trimCard(card));
-    totalProcessed++;
-    
-    if (batch.length >= BATCH_SIZE) {
-      await db.cards.bulkPut(batch);
-      batch = [];
-      self.postMessage({ type: 'progress', count: totalProcessed });
-    }
-  };
-  
-  // Feed chunks to parser
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    parser.write(decoder.decode(value, { stream: true }));
-  }
-  
-  // Flush remaining batch
-  if (batch.length > 0) await db.cards.bulkPut(batch);
-  
-  self.postMessage({ type: 'complete', total: totalProcessed });
-};
+---
 
-function trimCard(card) {
-  return {
-    id: card.id,
-    oracle_id: card.oracle_id,
-    name: card.name,
-    mana_cost: card.mana_cost,
-    cmc: card.cmc,
-    type_line: card.type_line,
-    oracle_text: card.oracle_text,
-    color_identity: card.color_identity,
-    colors: card.colors,
-    set: card.set,
-    set_name: card.set_name,
-    collector_number: card.collector_number,
-    rarity: card.rarity,
-    image_uris: card.image_uris ? {
-      small: card.image_uris.small,
-      normal: card.image_uris.normal,
-      art_crop: card.image_uris.art_crop,
-    } : null,
-    card_faces: card.card_faces?.map(f => ({
-      name: f.name, mana_cost: f.mana_cost, type_line: f.type_line,
-      oracle_text: f.oracle_text,
-      image_uris: f.image_uris ? { small: f.image_uris.small, normal: f.image_uris.normal } : null,
-    })),
-    prices: { usd: card.prices?.usd, usd_foil: card.prices?.usd_foil },
-    legalities: { commander: card.legalities?.commander },
-    edhrec_rank: card.edhrec_rank,
-    keywords: card.keywords,
-    produced_mana: card.produced_mana,
-    power: card.power,
-    toughness: card.toughness,
-    loyalty: card.loyalty,
-  };
-}
+## 3. Recommended Project Structure (v1.1 deltas only)
+
+```
+src/
+├── main.js                          [MODIFIED] — register auth/sync/notif/perf
+├── router.js                        [MODIFIED] — /alerts route
+├── services/
+│   ├── supabase.js                  [NEW]      — client singleton
+│   ├── sync-engine.js               [NEW]      — Dexie hooks + flush + pull
+│   ├── sync-conflict.js             [NEW]      — resolution policy (LWW + 3-way for decks)
+│   ├── precons.js                   [NEW]      — Scryfall product fetch + cache
+│   └── (existing files unchanged)
+├── stores/
+│   ├── auth.js                      [NEW]      — session, user, sign-in actions
+│   ├── sync.js                      [NEW]      — sync UI state
+│   ├── notifications.js             [NEW]      — unified inbox + bell badge
+│   ├── profile.js                   [MODIFIED] — auth-aware persistence
+│   ├── game.js                      [MODIFIED] — turn_laps tracking
+│   └── market.js                    [MODIFIED] — forward to notifications
+├── screens/
+│   └── alerts.js                    [NEW]      — notification inbox screen
+├── components/
+│   ├── lhs-popout-panel.js          [NEW]      — Treasure Cruise drawer
+│   ├── auth-modal.js                [NEW]      — magic-link + Google buttons
+│   ├── settings-modal.js            [MODIFIED] — Account section
+│   ├── topbar.js                    [MODIFIED] — bell wiring
+│   └── sidebar.js                   [MODIFIED] — badge from notifications store
+├── db/
+│   └── schema.js                    [MODIFIED] — version 6, sync_queue, precons
+├── utils/
+│   └── perf.js                      [NEW]      — web-vitals collector
+└── workers/
+    └── sync.worker.js               [DEFERRED] — only if main-thread cost shows up
 ```
 
-### Card Image Caching
+### Structure rationale
 
-Do NOT cache card images in IndexedDB. Scryfall serves images from a CDN (`cards.scryfall.io`). Cache them via Service Worker with a cache-first strategy. Images never change for a given URL.
+- **`services/sync-engine.js` is NOT a worker.** Dexie hooks must run in the main-thread context where the db handle lives; the network egress is async fetch and naturally yields. A worker would force serialization of every mutation across `postMessage`. Reserve worker promotion for if perf measurement (Phase 7) shows >50 ms blocked time during bursty queue flushes.
+- **`stores/auth.js` separate from `stores/profile.js`.** Auth is identity (session, JWT). Profile is presentation (display name, avatar). Decoupling lets Profile keep working anonymously (today's behaviour) and lets Auth gate sync without touching profile UI.
+- **`stores/notifications.js` separate from `stores/market.js`.** Today's `market.alertBadgeCount` is a coupled concern (Preordain badge driven by market store). v1.1 needs a third source (sync errors), so a unified inbox store eliminates fan-out logic in the topbar/sidebar.
+- **`screens/alerts.js` not a modal.** The bell already implies a "view full history" affordance. A first-class screen reuses the lazy-loaded screen pattern (consistent with rest of app) and gives sync errors a stable URL for support links.
 
-```javascript
-// In sw.js (Service Worker)
-self.addEventListener('fetch', (event) => {
-  const url = new URL(event.request.url);
-  
-  // Cache Scryfall card images (cache-first, long-lived)
-  if (url.hostname === 'cards.scryfall.io') {
-    event.respondWith(
-      caches.open('card-images').then(cache =>
-        cache.match(event.request).then(cached =>
-          cached || fetch(event.request).then(response => {
-            cache.put(event.request, response.clone());
-            return response;
-          })
-        )
-      )
-    );
-  }
-});
-```
+---
 
-## Patterns to Follow
+## 4. Architectural Patterns
 
-### Pattern 1: Alpine Store as Service Layer
+### Pattern 1: Auth-aware store hydration
 
-**What:** Each domain (collection, deck, game) gets an Alpine.store() that encapsulates both state and actions. Screens and components read from stores, never from Dexie directly.
+**What:** A store that has two source-of-truth modes (local vs cloud) based on auth state, and re-hydrates when auth flips.
 
-**When:** Always. Every data operation goes through a store.
+**When to use:** `profile`, `collection`, `decks`, `games`, `watchlist` — anything that pre-existed v1.0's local-first model and now optionally syncs.
+
+**Trade-offs:**
+- Pro: anonymous mode keeps working unchanged (no regression, GSD-friendly)
+- Pro: single store API for both modes; consumers don't branch
+- Con: hydration is async, must handle race between auth callback and screen mount
 
 **Example:**
-```javascript
-// stores/collection.js
-import Alpine from 'alpinejs';
-import { db } from '../services/db.js';
 
-Alpine.store('collection', {
-  cards: [],
-  filters: { color: null, cmc: null, set: null },
-  sortBy: 'name',
-  loading: false,
-  totalValue: 0,
+```js
+// stores/profile.js (revised shape)
+export function initProfileStore() {
+  Alpine.store('profile', {
+    name: '', email: '', avatar: '',
+    _source: 'local',  // 'local' | 'cloud'
 
-  async load() {
-    this.loading = true;
-    let query = db.collection.toCollection();
-    // Apply Dexie indexed filters
-    if (this.filters.set) query = db.collection.where('set').equals(this.filters.set);
-    this.cards = await query.toArray();
-    this.totalValue = await this._calculateValue();
-    this.loading = false;
-  },
-
-  async addCard(scryfallCard, { quantity = 1, condition = 'NM', foil = false, location = '' } = {}) {
-    await db.collection.put({
-      cardId: scryfallCard.id,
-      oracle_id: scryfallCard.oracle_id,
-      name: scryfallCard.name,
-      set: scryfallCard.set,
-      quantity, condition, foil, location,
-      addedAt: Date.now(),
-      updatedAt: Date.now()
-    });
-    await this.load(); // Refresh reactive state
-    Alpine.store('notifications').success(`Added ${scryfallCard.name}`);
-  },
-
-  async isOwned(oracleId) {
-    return (await db.collection.where('oracle_id').equals(oracleId).count()) > 0;
-  }
-});
-```
-
-### Pattern 2: Screen Module Registration with Lazy Loading
-
-**What:** Each screen exports an Alpine.data() component that gets registered on route match. Screens are lazy-loaded via dynamic import.
-
-**When:** On navigation. Only the active screen's module is loaded.
-
-**Example:**
-```javascript
-// router.js
-import Navigo from 'navigo';
-
-const router = new Navigo('/');
-
-router
-  .on('/', async () => {
-    await import('./screens/dashboard.js');
-    setScreen('dashboard-screen');
-  })
-  .on('/collection', async () => {
-    await import('./screens/collection.js');
-    setScreen('collection-screen');
-    Alpine.store('collection').load();
-  })
-  .on('/deck/:id', async ({ data }) => {
-    await import('./screens/deck-builder.js');
-    setScreen('deck-builder-screen');
-    Alpine.store('deck').loadDeck(data.id);
-  })
-  .on('/market', async () => {
-    await import('./screens/market.js');
-    setScreen('market-screen');
-  })
-  .on('/game', async () => {
-    await import('./screens/game-tracker.js');
-    setScreen('game-tracker-screen');
-  })
-  .resolve();
-
-function setScreen(templateId) {
-  const outlet = document.querySelector('#app-content');
-  const template = document.querySelector(`#${templateId}`);
-  outlet.innerHTML = '';
-  outlet.appendChild(template.content.cloneNode(true));
-}
-```
-
-### Pattern 3: Scryfall Rate-Limited Client
-
-**What:** A service that enforces Scryfall's rate limit (50-100ms between requests) via a request queue.
-
-**When:** Every Scryfall API call.
-
-```javascript
-// services/scryfall.js
-class ScryfallService {
-  #queue = [];
-  #processing = false;
-  #lastRequest = 0;
-  #minDelay = 75; // 75ms between requests (within 50-100ms guideline)
-
-  async search(query) {
-    // Check local Dexie cache first
-    const cached = await this.#searchLocal(query);
-    if (cached.length > 0) return cached;
-    // Fallback to API
-    return this.#enqueue(`/cards/search?q=${encodeURIComponent(query)}`);
-  }
-
-  async autocomplete(query) {
-    return this.#enqueue(`/cards/autocomplete?q=${encodeURIComponent(query)}`);
-  }
-
-  async #searchLocal(query) {
-    const { db } = await import('./db.js');
-    return db.cards.where('name').startsWithIgnoreCase(query).limit(20).toArray();
-  }
-
-  #enqueue(path) {
-    return new Promise((resolve, reject) => {
-      this.#queue.push({ path, resolve, reject });
-      if (!this.#processing) this.#processQueue();
-    });
-  }
-
-  async #processQueue() {
-    this.#processing = true;
-    while (this.#queue.length > 0) {
-      const elapsed = Date.now() - this.#lastRequest;
-      if (elapsed < this.#minDelay) {
-        await new Promise(r => setTimeout(r, this.#minDelay - elapsed));
+    async hydrate() {
+      const auth = Alpine.store('auth');
+      if (auth.status === 'authed') {
+        const { data } = await supabase
+          .from('profiles').select('*').eq('user_id', auth.user.id).single();
+        Object.assign(this, data || {});
+        this._source = 'cloud';
+      } else {
+        Object.assign(this, loadLocal());
+        this._source = 'local';
       }
-      const { path, resolve, reject } = this.#queue.shift();
-      try {
-        this.#lastRequest = Date.now();
-        const res = await fetch(`https://api.scryfall.com${path}`, {
-          headers: { 'User-Agent': 'Counterflux/1.0 (https://counterflux.app)' }
-        });
-        resolve(await res.json());
-      } catch (e) { reject(e); }
-    }
-    this.#processing = false;
+    },
+
+    update(fields) {
+      Object.assign(this, fields);
+      if (this._source === 'cloud') {
+        supabase.from('profiles').upsert({ user_id: ..., ...fields });
+      } else {
+        saveLocal(this);
+      }
+    },
+  });
+
+  // Subscribe to auth changes
+  Alpine.effect(() => {
+    Alpine.store('auth').status; // touch reactive dep
+    Alpine.store('profile').hydrate();
+  });
+}
+```
+
+### Pattern 2: Dexie hook → sync queue → flusher
+
+**What:** Use `db.table.hook('creating'|'updating'|'deleting')` to capture every local mutation, append a row to a `sync_queue` Dexie table, and run an asynchronous flusher that drains the queue to Supabase. Pull-side runs on a timer + Realtime channel + on-focus.
+
+**When to use:** Bidirectional sync where local writes must keep working offline.
+
+**Trade-offs:**
+- Pro: Local writes never block on network; queue survives reload
+- Pro: Hooks are synchronous and run inside the same Dexie txn, so the queue write is atomic with the data write
+- Con: Hooks fire for ALL writes including bulk-data import — must filter by table allowlist (`collection`, `decks`, `deck_cards`, `games`, `watchlist`) and ignore `cards`, `meta`, `*_cache`
+- Con: Schema bumps need careful ordering — hooks must be installed AFTER `db.open()`
+
+**Example:**
+
+```js
+// services/sync-engine.js
+const SYNCABLE = new Set(['collection', 'decks', 'deck_cards', 'games', 'watchlist']);
+
+export function installSyncHooks(db) {
+  for (const tableName of SYNCABLE) {
+    const t = db.table(tableName);
+
+    t.hook('creating', (primKey, obj) => {
+      obj.updated_at = new Date().toISOString();
+      obj._sync_state = 'pending';
+      enqueue({ op: 'put', table: tableName, key: primKey, payload: obj });
+    });
+
+    t.hook('updating', (mods, primKey, obj) => {
+      mods.updated_at = new Date().toISOString();
+      mods._sync_state = 'pending';
+      enqueue({ op: 'put', table: tableName, key: primKey,
+                payload: { ...obj, ...mods } });
+    });
+
+    t.hook('deleting', (primKey) => {
+      enqueue({ op: 'del', table: tableName, key: primKey });
+    });
   }
 }
 
-export const scryfall = new ScryfallService();
+async function enqueue(op) {
+  await db.sync_queue.add({ ...op, queued_at: Date.now() });
+  scheduleFlush();
+}
 ```
 
-### Pattern 4: Virtual Scroll with DOM Recycling
+### Pattern 3: Conflict resolution — Last-Write-Wins by table, with merge for deck_cards
 
-**What:** Render only visible items in collection/table views. Recycle DOM elements on scroll instead of creating/destroying.
+**What:** Keep policy ultra-simple. For top-level entities (`collection`, `decks`, `games`, `watchlist`), the row with the later `updated_at` wins. For `deck_cards` (a join table), merge by `(deck_id, scryfall_id)` summing quantities and taking the later note/foil flag.
 
-**When:** Any list with 100+ items. The collection can contain thousands of cards.
+**When to use:** Single-user multi-device sync where conflicts are rare (user is active on one device at a time). NOT suitable for collaborative editing.
 
-```javascript
-// components/virtual-list.js
-export function virtualGrid(containerEl, items, rowHeight, renderFn) {
-  const BUFFER = 5;
-  const spacer = document.createElement('div');
-  containerEl.appendChild(spacer);
+**Trade-offs:**
+- Pro: Trivial to implement, no CRDT library cost (~0 KB added)
+- Pro: Predictable behaviour — users understand "last edit wins"
+- Con: Silent data loss if user makes simultaneous edits on two devices
+- Mitigation: surface "conflict resolved, remote version kept" toasts via `notifications` store; keep 30-day deletion tombstones in Supabase to recover from accidental wipes
 
-  function update() {
-    const scrollTop = containerEl.scrollTop;
-    const viewportHeight = containerEl.clientHeight;
-    const startIdx = Math.max(0, Math.floor(scrollTop / rowHeight) - BUFFER);
-    const endIdx = Math.min(items.length, startIdx + Math.ceil(viewportHeight / rowHeight) + BUFFER * 2);
+### Pattern 4: Notification bus via dispatch
 
-    spacer.style.height = `${items.length * rowHeight}px`;
-    
-    // Clear and re-render visible range
-    const fragment = document.createDocumentFragment();
-    for (let i = startIdx; i < endIdx; i++) {
-      const el = renderFn(items[i]);
-      el.style.position = 'absolute';
-      el.style.transform = `translateY(${i * rowHeight}px)`;
-      fragment.appendChild(el);
+**What:** Each subsystem (`sync`, `market`, future `app-update`) calls `notifications.dispatch({kind, severity, title, body, action})`. The store de-dupes (by `dedupeKey`), assigns ID, and emits to the bell. Subscribers read `unreadCount` via Alpine reactivity.
+
+**When to use:** Any cross-cutting alert that today would proliferate as direct toast calls or per-store badges.
+
+**Trade-offs:**
+- Pro: Single sidebar/topbar surface, single screen (`/alerts`), single mark-read flow
+- Pro: Consumers still keep ephemeral toasts for transient feedback (success, undo) — only persistent/actionable items go through notifications
+- Con: One more store to wire; need clear policy on what's a toast vs notification
+
+**Example:**
+
+```js
+// stores/notifications.js
+Alpine.store('notifications', {
+  items: [],          // {id, kind, severity, title, body, action, ts, read, dedupeKey}
+
+  get unreadCount() { return this.items.filter(i => !i.read).length; },
+
+  dispatch(notif) {
+    if (notif.dedupeKey && this.items.some(i => i.dedupeKey === notif.dedupeKey && !i.read)) return;
+    this.items.unshift({ id: crypto.randomUUID(), ts: Date.now(), read: false, ...notif });
+    if (this.items.length > 200) this.items.length = 200;
+    persist(this.items);
+  },
+
+  markAllRead() { this.items.forEach(i => i.read = true); persist(this.items); },
+  open(id) { /* navigate to action */ },
+});
+```
+
+### Pattern 5: Layout-by-screen for LHS popout
+
+**What:** Don't change `index.html`. Instead, the Treasure Cruise screen (`screens/treasure-cruise.js`) renders a 2-column grid inside `#main-content`: `[popout panel | content]`. The popout is a `position: sticky` element bound to its own Alpine state. Other screens render normally.
+
+**When to use:** Per-screen permanent UI affordances that shouldn't pollute the global shell.
+
+**Trade-offs:**
+- Pro: Maintains `screens/*` independence — no other screen sees or pays for the panel
+- Pro: Survives the existing `container.innerHTML = ''` cleanup pattern in router
+- Pro: No global CSS to maintain; popout width is screen-local
+- Con: If multiple screens later need similar drawers, will need to extract a `withPopoutLayout()` helper
+
+**Example shape:**
+
+```js
+// screens/treasure-cruise.js (mount excerpt)
+container.innerHTML = `
+  <div class="grid" style="grid-template-columns: 280px 1fr; gap: 24px;">
+    <aside id="tc-popout" class="sticky top-[88px] self-start">
+      ${renderLhsPopoutPanel()}
+    </aside>
+    <main>
+      <!-- existing treasure cruise content -->
+    </main>
+  </div>
+`;
+```
+
+### Pattern 6: Web Vitals — collect, persist, surface lazily
+
+**What:** `utils/perf.js` calls `onLCP`, `onINP`, `onCLS`, `onTTFB` from the `web-vitals` package on boot. Each metric is logged to console (dev) and rolled into a `meta.perf_samples` record (last 50). NO toast fires — perf is observed, not intrusive.
+
+**When to use:** Phase 7 measurement before Phase 8+ optimisation.
+
+**Trade-offs:**
+- Pro: Tiny dependency (~3 KB), zero runtime cost after boot
+- Pro: Local-only, no telemetry endpoint needed (privacy-aligned with local-first)
+- Con: Samples never leave the device — for fleet-wide stats would need a backend
+
+**Example:**
+
+```js
+// utils/perf.js
+import { onLCP, onINP, onCLS, onTTFB } from 'web-vitals';
+import { db } from '../db/schema.js';
+
+const samples = [];
+
+function record(metric) {
+  const s = { name: metric.name, value: metric.value, ts: Date.now() };
+  samples.push(s);
+  console.log(`[Perf] ${s.name}: ${s.value.toFixed(1)}`);
+  if (samples.length >= 4) flush();
+}
+
+async function flush() {
+  const existing = (await db.meta.get('perf_samples'))?.samples || [];
+  const merged = [...existing, ...samples].slice(-50);
+  await db.meta.put({ key: 'perf_samples', samples: merged });
+  samples.length = 0;
+}
+
+export function installPerfHooks() {
+  onLCP(record); onINP(record); onCLS(record); onTTFB(record);
+  performance.mark('cf:boot:start');
+  window.addEventListener('load', () => performance.mark('cf:boot:loaded'));
+}
+```
+
+---
+
+## 5. Data Flow
+
+### Auth flow
+
+```
+User clicks "Sign in" in settings-modal
+        │
+        ▼
+auth.signInMagic(email)  ──▶  supabase.auth.signInWithOtp({email})
+        │                                  │
+        │                                  ▼
+        │                          Email arrives, user clicks link
+        │                                  │
+        ▼                                  ▼
+auth.status = 'pending'            Page reloads with #access_token=...
+                                           │
+                                           ▼
+                          supabase.auth.onAuthStateChange fires
+                                           │
+                                           ▼
+                            auth.status = 'authed', auth.user = {...}
+                                           │
+              ┌────────────────────────────┼────────────────────────────┐
+              ▼                            ▼                            ▼
+       profile.hydrate()            sync.bootstrap()           notifications.dispatch(
+       (cloud → store)              (initial pull, then       {kind:'auth', title:'Signed in'})
+                                     install hooks)
+```
+
+### Local write → cloud sync flow
+
+```
+User adds card to collection
+        │
+        ▼
+collection.addCard()  ──▶  db.collection.add({...})
+                                 │
+                                 ▼
+                  Dexie 'creating' hook fires (sync-engine)
+                                 │
+                                 ▼
+                  db.sync_queue.add({op:'put', table:'collection', payload})
+                                 │
+                                 ▼
+                            scheduleFlush()  (debounced 500 ms)
+                                 │
+                                 ▼
+                  flushQueue() drains queue:
+                  for each item → supabase.from(item.table).upsert(item.payload)
+                                 │
+                                 ├─ success → db.sync_queue.delete(item.id)
+                                 │            sync.lastSyncAt = now
+                                 │
+                                 └─ failure → mark item retries++,
+                                              if retries > 5 →
+                                              notifications.dispatch({
+                                                kind:'sync-error',
+                                                severity:'warn',
+                                                action:'/alerts'
+                                              })
+```
+
+### Cloud → local pull flow
+
+```
+Triggers: app focus | sync.bootstrap | Realtime channel event | 5-min interval
+        │
+        ▼
+sync-engine.pull()
+        │
+        ▼
+since = sync.lastSyncAt (from db.meta.sync_meta)
+        │
+        ▼
+For each syncable table:
+  supabase.from(t).select('*').gt('updated_at', since)
+        │
+        ▼
+For each remote row:
+  local = await db[t].get(remote.id)
+  if (!local) → db[t].add(remote)                                  // new from other device
+  else if (remote.updated_at > local.updated_at) →
+          db[t].put(remote, {silent:true})   // suppress sync hooks // remote wins
+  else → no-op (local already newer; will be pushed on next flush)
+        │
+        ▼
+sync.lastSyncAt = now
+db.meta.put({key:'sync_meta', last_sync_at: now})
+```
+
+**Critical:** the pull-side write must NOT trigger the Dexie hook re-enqueue (infinite loop). Two options:
+1. **Hook bypass via Dexie's transactional flag** — track inside the hook via a shared module state.
+2. **Internal flag** — module-scoped `let _suppressHooks = false`; pull sets to `true`, hook returns early when set, pull sets back to `false` in `finally`. Simple, well-tested pattern.
+
+Recommend option 2 — concrete, debuggable, no Dexie magic.
+
+### Schema migration flow (v5 → v6)
+
+```js
+// db/schema.js — appended
+db.version(6).stores({
+  cards: 'id, name, oracle_id, set, collector_number, cmc, color_identity, type_line, [set+collector_number]',
+  meta: 'key',
+  collection: '++id, scryfall_id, category, foil, [scryfall_id+foil], [scryfall_id+category], updated_at',
+  decks: '++id, name, format, updated_at',
+  deck_cards: '++id, deck_id, scryfall_id, [deck_id+scryfall_id], updated_at',
+  edhrec_cache: 'commander',
+  combo_cache: 'deck_id',
+  card_salt_cache: 'sanitized',
+  watchlist: '++id, &scryfall_id, updated_at',
+  price_history: '++id, scryfall_id, date, [scryfall_id+date]',
+  games: '++id, deck_id, started_at, ended_at, updated_at',
+  // NEW
+  sync_queue: '++id, table, queued_at',
+  precons: 'set_code, name, released_at',
+}).upgrade(async (tx) => {
+  // Backfill updated_at on existing rows so first sync push has timestamps
+  const now = new Date().toISOString();
+  await tx.table('collection').toCollection().modify(r => { r.updated_at = r.added_at || now; });
+  await tx.table('decks').toCollection().modify(r => { r.updated_at = r.updated_at || now; });
+  await tx.table('deck_cards').toCollection().modify(r => { r.updated_at = now; });
+  await tx.table('watchlist').toCollection().modify(r => { r.updated_at = r.added_at || now; });
+  // Backfill turn_laps on saved games (empty arrays — historical games have no per-turn data)
+  await tx.table('games').toCollection().modify(g => {
+    if (Array.isArray(g.players)) {
+      g.players.forEach(p => { if (!p.turn_laps) p.turn_laps = []; });
     }
-    // Replace visible elements
-    while (containerEl.childNodes.length > 1) containerEl.removeChild(containerEl.lastChild);
-    containerEl.appendChild(fragment);
-  }
-
-  containerEl.addEventListener('scroll', update, { passive: true });
-  update();
-  return { refresh: update };
-}
+    g.updated_at = g.ended_at || g.started_at || now;
+  });
+});
 ```
 
-### Pattern 5: Debounced IndexedDB Persistence
+`turn_laps` lives inside `players[i]` (object shape, not indexed) so the schema string is unchanged for that field — only the upgrade backfills empty arrays.
 
-Writes to IndexedDB are debounced (300ms) to avoid thrashing during rapid interactions (e.g., adjusting life totals, adding multiple cards quickly). The Alpine store is the source of truth for the current session; IndexedDB is the durable backup.
+---
 
-## Anti-Patterns to Avoid
+## 6. Suggested Build Order
 
-### Anti-Pattern 1: Direct Dexie Queries in Components
-
-**What:** Calling `db.collection.where(...)` directly inside Alpine `x-init` or `x-on` handlers.
-**Why bad:** Scatters data access logic. Makes it impossible to add caching, loading states, or error handling consistently.
-**Instead:** Always go through Alpine.store() actions. Stores own the Dexie interaction.
-
-### Anti-Pattern 2: Loading All Card Data at Once
-
-**What:** `const allCards = await db.cards.toArray()` then filtering in JS.
-**Why bad:** 27K+ cards loaded into memory at once. Slow, wasteful, crashes on low-memory devices.
-**Instead:** Use Dexie's indexed queries (`.where('set').equals('neo')`) and paginate results. Virtual scroll renders only what's visible.
-
-### Anti-Pattern 3: Storing Card Images in IndexedDB
-
-**What:** Downloading and caching card images as blobs in IndexedDB.
-**Why bad:** 27K cards x 100KB average = 2.7GB. Exceeds browser quotas. Slow to read.
-**Instead:** Use Scryfall CDN image URIs directly. Service Worker caches images via Cache API with browser-managed eviction.
-
-### Anti-Pattern 4: JSON.parse on Full Bulk Data String
-
-**What:** `JSON.parse(await response.text())` on the 130MB bulk data file.
-**Why bad:** Allocates 130MB string + parsed object simultaneously. Will crash on low-memory devices. Blocks thread for 5-10+ seconds even in a Worker.
-**Instead:** Stream-parse with `@streamparser/json`. Process cards one at a time. Batch-write to IndexedDB.
-
-### Anti-Pattern 5: Sharing Mutable State Between Screens
-
-**What:** Screens directly modifying another screen's state (e.g., deck builder modifying collection count).
-**Why bad:** Creates hidden coupling, race conditions, hard-to-trace bugs.
-**Instead:** Screens dispatch actions to their own stores. Cross-cutting updates happen via store-to-store references (`Alpine.store('collection').decrementCard(id)`).
-
-### Anti-Pattern 6: Synchronous Data Loading on Startup
-
-**What:** Blocking app render until all IndexedDB data is loaded.
-**Why bad:** Collection with 5,000 cards takes 500ms+ to deserialize. Users see blank screen.
-**Instead:** Render app shell immediately. Load stores asynchronously. Show skeleton/loading states. Mila fills empty states with flavor text while data loads.
-
-## Scalability Considerations
-
-| Concern | At 500 cards | At 5,000 cards | At 50,000 cards |
-|---------|-------------|----------------|-----------------|
-| Collection load | Instant (<50ms) | Fast (~200ms Dexie query) | Indexed query + virtual scroll mandatory |
-| Search autocomplete | Array filter OK | Dexie index query + limit(20) | Dexie index range query, never load all |
-| Deck analytics | Recalc on every change (<10ms) | Same (deck max 100 cards) | N/A (decks don't grow this large) |
-| IndexedDB storage | ~2MB user data | ~20MB user data | ~200MB (within browser limits) |
-| Bulk data (cards store) | Always ~60-80MB (oracle cards) | Same | Same |
-| Card images | CDN direct + lazy load | Service Worker cache hits | SW cache with LRU eviction by browser |
-| Initial JS bundle | ~100KB (Alpine + Dexie + app) | Same | Same |
-
-## Offline-First Strategy
-
-### Service Worker Registration
-```javascript
-// In src/app.js
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js');
-}
-```
-
-### Cache Strategies
-
-| Resource | Strategy | Rationale |
-|----------|----------|-----------|
-| App shell (HTML, JS, CSS) | Cache-first, update in background (stale-while-revalidate) | App works offline after first load |
-| Card images (cards.scryfall.io) | Cache-first, no expiry | Images never change for a given URL |
-| Scryfall API responses | Network-first, fallback to IndexedDB cards store | API is supplementary; bulk cache is primary |
-| Bulk data JSON | Processed into IndexedDB via Worker (not stored raw) | Too large for Cache API; needs indexed queries |
-| User data (collection, decks, games) | IndexedDB only, never hits network | Local-first, no cloud sync in v1 |
-
-### Sync Queue (Future Phase 5)
-
-For eventual Supabase cloud sync, implement a change log in IndexedDB:
-```javascript
-// Added as Dexie store in Phase 5
-// syncQueue: '++id, action, store, recordId, timestamp'
-// { id, action: 'create'|'update'|'delete', store, recordId, data, timestamp }
-```
-
-On reconnection or account creation, replay the queue to Supabase. Last-write-wins with timestamps.
-
-## Suggested Build Order
-
-Build order follows data dependency chain -- you can't build screens without stores, and you can't build stores without the persistence layer.
-
-### Layer 1: Foundation (blocks everything)
+Dependencies are strict; reordering breaks downstream phases.
 
 ```
-1. Vite + Tailwind + Alpine.js setup, dev server running
-2. CSS tokens: Izzet palette, typography (Crimson Pro / Space Grotesk / JetBrains Mono)
-3. Dexie schema + db instance (services/db.js)
-4. App shell HTML: sidebar nav + top bar + #app-content outlet
-5. Navigo router with lazy screen loading
-6. Toast/notification store + component
+Phase 7  ─ Polish + Perf measurement  (no backend)
+   │
+   ├─ utils/perf.js installs hooks at top of main.js          [INDEPENDENT]
+   ├─ Polish items 1-11                                        [INDEPENDENT]
+   └─ Schema v6 bump (turn_laps backfill, updated_at backfill) [BLOCKS sync]
+                                                ↓
+Phase 8  ─ Treasure Cruise rapid entry
+   │
+   ├─ services/precons.js + db.precons table                   [INDEPENDENT, after v6]
+   ├─ components/lhs-popout-panel.js                           [INDEPENDENT]
+   └─ screens/treasure-cruise.js layout refactor               [INDEPENDENT]
+                                                ↓
+Phase 9  ─ Thousand-Year Storm accuracy + Vandalblast pod      [INDEPENDENT, after v6]
+   │
+   └─ stores/game.js writes turn_laps                          (uses v6 schema)
+                                                ↓
+Phase 10 ─ Auth foundation                                     [BLOCKS sync, notif-error]
+   │
+   ├─ services/supabase.js
+   ├─ stores/auth.js
+   ├─ components/auth-modal.js
+   ├─ stores/profile.js auth-aware refactor
+   └─ settings-modal.js Account section
+                                                ↓
+Phase 11 ─ Sync engine                                         [BLOCKS notif-error wiring]
+   │
+   ├─ Supabase tables + RLS policies (Postgres-side)
+   ├─ services/sync-engine.js (push/pull/hooks)
+   ├─ services/sync-conflict.js
+   ├─ stores/sync.js
+   └─ Initial bootstrap UX (first-sync progress)
+                                                ↓
+Phase 12 ─ Notification bell + Preordain refresh
+   │
+   ├─ stores/notifications.js                                  [requires sync to dispatch errors]
+   ├─ screens/alerts.js + /alerts route
+   ├─ topbar.js bell wiring
+   ├─ sidebar.js badge swap (market → notifications)
+   ├─ market.js forwards price alerts to notifications
+   └─ Preordain spoiler refresh                                [INDEPENDENT, can parallel]
+                                                ↓
+Phase 13 ─ Perf optimisation (if measurements warrant)
+   │
+   └─ Reads from utils/perf.js samples persisted since Phase 7
 ```
 
-**Rationale:** Everything depends on the build pipeline, persistence layer, and navigation. Get these right first. The app shell with working navigation is the first tangible deliverable.
+**Why this order:**
 
-### Layer 2: Card Data Pipeline (blocks all card-related features)
+- **Perf hook in Phase 7, not Phase 13.** You measure for at least one full milestone before optimising. Measuring last is too late — you have no baseline.
+- **Schema v6 must precede sync.** Sync uses `updated_at` columns; without backfill, every existing row has `undefined > undefined` semantics and pull logic breaks.
+- **Auth must precede sync.** Sync engine reads `auth.user.id` to scope upserts and `auth.session.access_token` for the Supabase client. With no auth, the sync engine has no identity to attach rows to.
+- **Sync must precede notification wire-up for errors.** The notification store can be built without sync, but its first real customer is sync errors — building them together causes unclear ownership. Build sync first, dispatch errors to console, then add notifications and replace the console calls.
+- **Precon service is independent of sync** — it reads from Scryfall, caches in IndexedDB, and is anonymous-friendly. Can ship in Phase 8 without waiting for cloud.
+- **LHS popout is a layout change inside one screen** — also independent. Ships in Phase 8.
+- **Game `turn_laps`** uses the v6 schema but is logically independent of sync (sync just carries it along). Ships in Phase 9.
 
-```
-1. ScryfallService (API client with rate-limited queue)
-2. Bulk data Web Worker (download, stream-parse, trim, store)
-3. bulk-data.js orchestrator (version check, worker spawning, progress)
-4. Card search via Dexie indexes + API fallback
-5. card-preview, mana-cost, card-search components
-6. First-run experience: Mila guides user through initial bulk download
-```
+---
 
-**Rationale:** Every screen needs card data. The bulk import + search pipeline is the backbone of the entire app.
+## 7. Integration Points
 
-### Layer 3: Collection Manager (blocks deck builder's "owned" feature)
+### External services
 
-```
-1. Alpine.store('collection') with full CRUD
-2. Collection screen: gallery view (card-grid with virtual scroll)
-3. Collection screen: table view (card-table with sorting/filtering)
-4. Mass entry terminal (paste card names, batch add)
-5. CSV import/export
-6. Set-completion view
-```
+| Service | Integration pattern | Notes |
+|---------|---------------------|-------|
+| Supabase Auth | `@supabase/supabase-js` v2, `signInWithOtp` (magic link) + `signInWithOAuth({provider:'google'})` | OAuth callback URL must be added to Supabase dashboard; magic link redirect URL must match deploy origin (Vercel preview vs prod). Session persists in `localStorage` by default — keep that default. |
+| Supabase Postgres | REST via `supabase.from(table)`; Realtime via `supabase.channel(...).on('postgres_changes', ...)` | Enable RLS on every synced table — `auth.uid() = user_id`. Add `user_id uuid not null default auth.uid()` to every table. **Never** ship a sync table without RLS. |
+| Scryfall (existing) | `utils/scryfall.js` already centralises base URL + User-Agent | Add `precons` endpoint here too — keep all Scryfall fetches uniform. Reuse 75 ms rate-limit queue once consolidated. |
+| EDHREC (existing) | Vite proxy `/api/edhrec` | Production proxy still TBD per `PROJECT.md` — orthogonal to this milestone. |
+| `web-vitals` (new) | npm package, ESM imports | ~3 KB. Treeshake-friendly — only import the metrics you use. |
 
-**Rationale:** Collection data is needed by the deck builder to show owned/missing indicators. Build it before decks.
+### Internal boundaries
 
-### Layer 4: Deck Builder (depends on collection + card data)
+| Boundary | Communication | Notes |
+|----------|---------------|-------|
+| `auth` ↔ `profile` | Profile uses `Alpine.effect` on `auth.status` to re-hydrate | One-way: auth is source of truth, profile reacts |
+| `auth` ↔ `sync-engine` | Sync engine reads `Alpine.store('auth').user` on bootstrap; pauses queue flush when `status === 'anonymous'` | Sync engine is dormant for anonymous users — queue accumulates locally and flushes on first sign-in (gives users an "all your local stuff just synced" moment) |
+| `sync-engine` ↔ Dexie | Hooks installed once at boot, after `db.open()` resolves | Must be installed before first user write — install in `main.js` immediately after `await db.open()`. Otherwise early writes (e.g. bulk-data import on first run) might miss the hook (though `cards` table is correctly excluded from `SYNCABLE`) |
+| `sync-engine` ↔ `notifications` | Sync engine `dispatch({kind:'sync-error', dedupeKey:'sync-error-batch'})` after N retries | Dedupe key prevents 100-error spam from creating 100 notifications |
+| `market` ↔ `notifications` | Market store's `checkAlerts()` forwards each triggered alert via `dispatch({kind:'price-alert', dedupeKey:'price-' + scryfall_id + '-' + today})` | One alert per card per day max |
+| `notifications` ↔ topbar/sidebar | UI reads `Alpine.store('notifications').unreadCount` | Single source — sidebar `hasAlertBadge('preordain')` deprecated, badge moves to bell only |
+| `treasure-cruise` ↔ `lhs-popout` | Popout binds to `Alpine.store('collection')` for quick-add state | No new store needed — popout is presentation, state lives in collection |
+| `precons.js` ↔ Treasure Cruise + Thousand-Year Storm | Both screens import `getPrecon(setCode)` directly | Service handles cache check; consumers don't know about caching |
 
-```
-1. Alpine.store('deck') with full CRUD
-2. Three-panel layout: search panel | the 99 (grid/list) | analytics sidebar
-3. deck-list, deck-analytics (Chart.js mana curve, color pie, type breakdown)
-4. Category management (user-defined categories, drag-to-categorize)
-5. Collection overlay: owned/missing badges via collection store cross-reference
-6. Deck import/export (MTGO, Moxfield, Archidekt formats)
-7. EDHREC synergy integration
-8. Commander Spellbook combo detection
-```
+---
 
-### Layer 5: Market Intel + Dashboard
+## 8. Anti-Patterns to Avoid
 
-```
-1. price-service + watchlist store
-2. Market Intel screen: spoiler browser, price watchlist, trend charts
-3. Dashboard screen: portfolio summary, quick add, price alerts, deck quick-launch
-4. Mila insights widget (tips based on collection/deck data)
-```
+### Anti-Pattern 1: Putting sync logic in a Web Worker on day one
 
-**Rationale:** Dashboard aggregates data from collection + decks + prices. Build it last so it has data to display. Market Intel is independent but lower priority than collection/deckbuilding core.
+**What people do:** "Network IO should be off the main thread, let's worker-ise sync."
+**Why it's wrong:** Dexie can be used from workers but the existing 11 stores all hold direct `db` references in the main thread. Moving sync to a worker forces a postMessage protocol for every queue insert and a duplicate Dexie connection (Dexie uses one IDB connection per JS realm). The complexity buys you nothing for a queue that flushes 1-10 items every few seconds.
+**Do this instead:** Keep sync in main thread. Revisit only if Phase 13 perf measurement shows >50 ms blocking during burst flushes. The bulk-data worker exists for a reason — 300 MB JSON parse — sync has nowhere near that cost profile.
 
-### Layer 6: Game Tracker (independent, can parallel Layer 5)
+### Anti-Pattern 2: One Alpine store for "auth + sync + profile"
 
-```
-1. Alpine.store('game') with full session management
-2. Life counter (40 life, tap to increment/decrement)
-3. Commander damage matrix (tracks damage from each commander to each player)
-4. Poison/energy/experience counters
-5. Dice roller (D6, D20)
-6. Turn log + game history
-7. Post-game summary + stats
-8. Mobile-responsive layout (only screen that needs it)
-```
+**What people do:** Cram cloud concerns into one mega-store.
+**Why it's wrong:** Three different lifecycles (auth = session, sync = network, profile = preferences). Tests for each become coupled. A bug in sync error display would force re-rendering every profile widget.
+**Do this instead:** Three stores (`auth`, `sync`, `profile`/`notifications`), each with a single concern. Cross-store coordination via `Alpine.effect` or explicit dispatch.
 
-**Rationale:** Game Tracker is fully independent of other screens. Can be built in parallel with Layer 5.
+### Anti-Pattern 3: Mutating `index.html` shell for the LHS popout
 
-### Layer 7: Offline + PWA Polish
+**What people do:** Add a permanent `<aside>` to `index.html` that's `x-show`-bound to a route check.
+**Why it's wrong:** Breaks screen independence — every screen now has a hidden 280 px column reserved. Other screens' grid math becomes wrong. Future screens have to know the popout exists.
+**Do this instead:** Layout owned by `screens/treasure-cruise.js`. The screen mount renders `[popout | content]` grid inside `#main-content`. Other screens see `#main-content` as a single column.
 
-```
-1. Service Worker with cache strategies (app shell + card images)
-2. Offline detection + UI indicators
-3. Background bulk data refresh (check for updates when online)
-4. PWA manifest + install prompt
-5. Keyboard shortcuts (global hotkeys for navigation, search)
-6. Context menus (right-click on cards, decks)
-7. Undo support (collection edits, deck edits)
-```
+### Anti-Pattern 4: Last-Write-Wins on `deck_cards`
 
-**Rationale:** Offline support is an enhancement layer. Get the app working online-first, then add offline resilience. Keyboard/UX polish comes last because it benefits from understanding the full interaction model.
+**What people do:** Apply LWW row-by-row.
+**Why it's wrong:** `deck_cards` is a join table. If device A adds cards X, Y and device B adds card Z while both offline, LWW on the deck row resolves OK but `deck_cards` rows from each device collide on `(deck_id, scryfall_id)` and one set silently loses.
+**Do this instead:** Special-case `deck_cards` — merge by `(deck_id, scryfall_id)`, sum quantities, take latest `notes`/`foil`. Documented in `services/sync-conflict.js`.
+
+### Anti-Pattern 5: Pulling without suppressing hooks
+
+**What people do:** Pull writes data via the same `db.collection.put()` that user code uses.
+**Why it's wrong:** The Dexie hook fires, queue gets the remote row appended, next flush pushes the row back to Supabase, Supabase's Realtime fires, pull sees "new" row, infinite loop with monotonically increasing `updated_at`.
+**Do this instead:** Module-scoped `_suppressHooks` flag, set true around pull writes, hook checks it and returns early.
+
+### Anti-Pattern 6: Silent perf collection that never surfaces
+
+**What people do:** Collect web-vitals to localStorage, never look at them.
+**Why it's wrong:** Phase 13 optimisation needs the data — if it's never reviewed, it's wasted overhead.
+**Do this instead:** Console-log every metric in dev. At minimum, add a DevTools-style command (`window.__cf_perf()`) that prints the rolling average. Optional: tiny dashboard widget showing P50/P95 boot time over last 50 sessions.
+
+### Anti-Pattern 7: Making the bell badge two badges
+
+**What people do:** Keep market's sidebar badge, add a separate bell with sync errors only.
+**Why it's wrong:** Two surfaces for "you have unread things" splits attention and forces users to learn which badge means what.
+**Do this instead:** One bell, all kinds. Filter chips inside `/alerts` (`Price`, `Sync`, `App`). Sidebar Preordain link loses its badge — that information now lives at the bell.
+
+---
+
+## 9. Scaling Considerations
+
+| Scale | Adjustments |
+|-------|-------------|
+| 1 device per user (today) | LWW conflict policy is fine; Realtime channel optional |
+| 2-3 devices per user (v1.1 target) | LWW + dedupe; pull-on-focus + 5-min poll covers 99% of cases; Realtime channel for real-time co-presence (one device updates, other sees within 1 s) |
+| Heavy multi-device (out of scope) | Would need per-device vector clocks; CRDT for `deck_cards`; not needed for v1.1 |
+
+### Scaling priorities (when first cracks appear)
+
+1. **First bottleneck — initial sync after sign-in.** Pulling 5,000-card collection in one shot will block UI. Mitigation: paginate pull by `updated_at` ranges, show progress in `auth-modal` post-signin.
+2. **Second bottleneck — Realtime channel cost.** Each open device holds an open WebSocket. Free-tier Supabase caps at 200 concurrent. If user count exceeds that, drop Realtime, rely on pull-on-focus only.
+3. **Third bottleneck — sync_queue grows unbounded offline.** A user who's offline for weeks then signs back in could have 10k queued items. Mitigation: cap queue at 5000 entries; if exceeded, drop oldest non-delete ops and force a full re-pull on reconnect.
+
+---
+
+## 10. Confidence & Open Questions
+
+**HIGH confidence:**
+- Existing architecture map (read directly from source)
+- File-level integration points (every modified file inspected)
+- Schema v5 → v6 migration shape (Dexie versioning is well-established)
+- Build order dependencies (logical analysis from existing code)
+
+**MEDIUM confidence:**
+- Conflict resolution policy — LWW + deck_cards merge is appropriate for single-user multi-device, but real-world testing on race conditions needed in Phase 11
+- Realtime channel cost vs poll-on-focus — depends on deployment scale, defer decision to Phase 11
+
+**LOW confidence / needs phase-level research:**
+- Supabase Postgres schema design (column naming, indices, RLS policy details) — Phase 11 prerequisite
+- OAuth redirect URL handling for Vercel preview deploys — Phase 10 setup task
+- Exact `web-vitals` package version API surface — Phase 7, verify with package docs
+
+**Open architectural questions to resolve before Phase 11:**
+1. Does the precon service write into `db.cards` (extending the bulk-data table) or into a separate `db.precons` table? Recommendation above is separate to avoid polluting bulk data, but this needs a Phase 8 spike.
+2. Should `notifications` items persist to IndexedDB or stay in-memory? Recommend IndexedDB (`db.meta.notifications`) so unread state survives reload — confirm in Phase 12.
+3. Should anonymous users' local data auto-migrate to their account on first sign-in, or require an explicit "import my local data" button? Recommend auto-migrate (queue flushes immediately on auth) — confirm UX in Phase 10.
+
+---
 
 ## Sources
 
-- [Scryfall API Documentation](https://scryfall.com/docs/api) -- rate limiting, bulk data, endpoints, compliance rules
-- [Scryfall Bulk Data Documentation](https://scryfall.com/docs/api/bulk-data) -- file types, update frequency, caching guidance
-- [Dexie.js Documentation](https://dexie.org/) -- schema design, compound indexes, bulk operations, versioning
-- [Alpine.js Store Documentation](https://alpinejs.dev/globals/alpine-store) -- reactive state management
-- [MDN: Using IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API/Using_IndexedDB) -- schema patterns, transaction management
-- [MDN: Storage Quotas and Eviction Criteria](https://developer.mozilla.org/en-US/docs/Web/API/Storage_API/Storage_quotas_and_eviction_criteria) -- browser storage limits
-- [IndexedDB Storage Limits (RxDB)](https://rxdb.info/articles/indexeddb-max-storage-limit.html) -- Chrome 60% disk, no per-record limit
-- [IndexedDB Performance (RxDB)](https://rxdb.info/slow-indexeddb.html) -- transaction overhead, sharding benefits
-- [Chrome IndexedDB Storage Improvements](https://developer.chrome.com/docs/chromium/indexeddb-storage-improvements) -- compression, quota changes
-- [Offline-First Frontend Apps 2025](https://blog.logrocket.com/offline-first-frontend-apps-2025-indexeddb-sqlite/) -- patterns, Dexie vs raw IDB
-- [Virtual Scrolling Patterns (patterns.dev)](https://www.patterns.dev/vanilla/virtual-lists/) -- DOM recycling, performance
-- [State Management in Vanilla JS 2026](https://medium.com/@chirag.dave/state-management-in-vanilla-js-2026-trends-f9baed7599de) -- Proxy patterns, store architecture
-- [Frontend Masters: Web Components Architecture](https://frontendmasters.com/blog/architecture-through-component-colocation/) -- co-location, component boundaries
+- `d:\Vibe Coding\counterflux\src\main.js` — current boot order (lines 26-81)
+- `d:\Vibe Coding\counterflux\src\router.js` — Navigo lazy-load pattern (lines 21-65)
+- `d:\Vibe Coding\counterflux\src\db\schema.js` — Dexie versioning history v1-v5 (lines 5-47)
+- `d:\Vibe Coding\counterflux\src\stores\profile.js` — current localStorage persistence (lines 1-40)
+- `d:\Vibe Coding\counterflux\src\stores\app.js` — toast store (lines 26-81)
+- `d:\Vibe Coding\counterflux\src\stores\game.js` — game record shape, autosave debounce (lines 26-42, 257-276)
+- `d:\Vibe Coding\counterflux\src\stores\market.js` — current alert badge wiring (lines 71-128)
+- `d:\Vibe Coding\counterflux\src\components\sidebar.js` — `hasAlertBadge` coupling to market store (lines 32-36)
+- `d:\Vibe Coding\counterflux\src\workers\bulk-data-pipeline.js` — existing worker pattern reference (full file)
+- Dexie hooks: https://dexie.org/docs/Table/Table.hook('creating') — `creating` / `updating` / `deleting` signatures
+- Supabase JS v2: https://supabase.com/docs/reference/javascript — `signInWithOtp`, `onAuthStateChange`, RLS guidance
+- web-vitals: https://github.com/GoogleChrome/web-vitals — `onLCP` / `onINP` / `onCLS` / `onTTFB` API

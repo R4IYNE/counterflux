@@ -1,335 +1,432 @@
-# Technology Stack
+# Technology Stack — v1.1 "Second Sunrise"
 
 **Project:** Counterflux: The Aetheric Archive
-**Researched:** 2026-04-03
+**Milestone:** v1.1 (subsequent — adds auth, cloud sync, precon quick-add, spoiler overhaul, perf tooling)
+**Researched:** 2026-04-14
+**Confidence:** HIGH for libraries, MEDIUM for sync engine recommendation (architecture decision)
 
-## Recommended Stack
-
-### Build Tool
-
-| Technology | Version | Purpose | Why |
-|------------|---------|---------|-----|
-| Vite | 8.x | Build, dev server, HMR | Rolldown-powered unified bundler (Rust), 10-30x faster builds than Vite 6/7. Mature ecosystem, excellent vanilla JS support. No framework lock-in. Browser console forwarding useful for debugging. |
-
-**Confidence:** HIGH — Vite 8.0.3 is current stable (March 2026). Rolldown replaces the dual esbuild/Rollup architecture. Well-documented migration path.
-
-**Version note:** Use `vite@8` not `vite@6`. Vite 8 is stable and the dual-bundler era is over. Requires Node.js 22+.
-
-**Why not alternatives:**
-- Webpack: Slower, more config overhead, dying ecosystem
-- Parcel: Less community support, fewer plugins
-- esbuild direct: No HMR, no plugin ecosystem
+> This document covers ONLY the new additions for v1.1. The validated v1.0 stack (Alpine.js 3.15, Dexie 4, Vite 8 Rolldown, Tailwind v4, Chart.js 4, SortableJS, Navigo, mana-font, @streamparser/json-whatwg) remains unchanged. See `.planning/milestones/v1.0-*` for v1.0 stack context.
 
 ---
 
-### Reactivity Framework
+## TL;DR — What's Being Added
 
-| Technology | Version | Purpose | Why |
-|------------|---------|---------|-----|
-| Alpine.js | 3.15.x | Declarative reactivity in HTML | Best fit for this project's 5-screen architecture with complex interactive components. ~17KB min+gzip. Active maintenance (latest 3.15.9, April 2026). Tailwind-like DX with `x-data`, `x-for`, `x-bind`. Plugin ecosystem covers routing, state management. |
+| Concern | Recommended | Net Bundle Cost (gzip) | Confidence |
+|---------|-------------|------------------------|------------|
+| Auth + cloud DB | `@supabase/supabase-js` 2.103.x | ~25KB | HIGH |
+| Sync engine | **Roll-your-own** on top of Dexie hooks + Supabase Realtime + outbox table | ~3KB (custom code) | HIGH (architecture) |
+| Perf measurement | `web-vitals` 5.2.x (runtime) + `@lhci/cli` 0.15.x (CI/dev only) | ~2KB shipped, 0KB shipped | HIGH |
+| Scryfall precons | Existing `scryfall.js` service — no new dependency | 0KB | HIGH |
 
-**Confidence:** HIGH — Alpine.js is actively maintained, battle-tested, and designed exactly for this use case: adding reactivity to HTML without a virtual DOM framework.
-
-**Why Alpine.js over alternatives:**
-
-| Criterion | Alpine.js | Lit 4.x | Petite Vue | Vanilla JS |
-|-----------|-----------|---------|------------|------------|
-| Bundle size | ~17KB gzip | ~6KB gzip | ~7KB gzip | 0KB |
-| Maintenance | Active (weekly) | Active | Abandoned (v0.4.1, no release in 4 years) | N/A |
-| Learning curve | Low (HTML-first) | Medium (Web Components) | Low | High for reactivity |
-| Component model | HTML directives | Shadow DOM | Template directives | Manual |
-| Plugin ecosystem | Rich (persist, mask, sort) | Moderate | None | None |
-| Complex state | x-data + Alpine.store() | ReactiveElement | Reactive refs | Manual pub/sub |
-| DX with Tailwind | Excellent (same philosophy) | Good | Good | Tedious |
-
-**Petite Vue is eliminated.** Last release was v0.4.1 four years ago. Explicitly "use at your own risk." No feature requests accepted. Effectively abandoned.
-
-**Lit is a close second** but worse for this project because:
-- Shadow DOM creates CSS isolation headaches with Tailwind (styles don't pierce shadow boundaries)
-- Web Components are designed for cross-framework reuse — overkill for a single app
-- Alpine's HTML-first model means less boilerplate for data-heavy views
-
-**Vanilla JS is eliminated** for DX reasons. Building reactivity, templating, and state management from scratch for 5 complex screens with live-updating analytics would be a maintenance nightmare.
-
-**Alpine.js concerns and mitigations:**
-- *Concern:* Performance with 1000+ card lists → *Mitigation:* Virtual scrolling handles DOM, Alpine only manages state
-- *Concern:* Complex drag-and-drop → *Mitigation:* SortableJS handles DnD natively, Alpine wires the data binding
-- *Concern:* Bundle growth (was 9KB in v2, now ~17KB) → *Mitigation:* Still small; total app bundle will be dominated by chart lib
+**Total new shipped JS: ~30KB gzipped.** Pushes the bundle from ~99KB → ~129KB. Acceptable but worth gating Supabase loading behind first auth interaction (lazy import) so unauthenticated boot stays at current size.
 
 ---
 
-### CSS Framework
+## 1. Auth + Cloud Database
 
-| Technology | Version | Purpose | Why |
-|------------|---------|---------|-----|
-| Tailwind CSS | 4.x | Utility-first styling | CSS-first config (no `tailwind.config.js`), 2-5x faster builds via Rust Oxide engine, container queries in core. Pairs perfectly with Alpine.js. |
+### `@supabase/supabase-js` 2.103.x
 
-**Confidence:** HIGH — Tailwind v4 released January 2025, stable and widely adopted. Automated migration tool available.
+| Property | Value |
+|----------|-------|
+| Latest version | **2.103.0** (April 2026) |
+| Bundle size | 98.2KB minified / **25.2KB gzipped** |
+| Dependencies | `@supabase/auth-js`, `@supabase/postgrest-js`, `@supabase/realtime-js`, `@supabase/storage-js`, `@supabase/functions-js` (all peer-bundled) |
+| Browser support | All modern browsers with native `fetch` + `WebSocket` — Counterflux is desktop-first, no concern |
+| Framework | **Isomorphic, framework-agnostic.** Works with vanilla JS / Alpine.js with zero adapters. Only React/Next/Sveltekit get extra `@supabase/auth-helpers-*` packages. We do NOT need those. |
 
-**Key v4 changes from v3:**
-- `@import "tailwindcss"` replaces `@tailwind` directives
-- `@theme` in CSS replaces `tailwind.config.js`
-- `border-*` defaults changed (no longer gray-200)
-- Container queries built-in (no plugin needed)
-- Requires Safari 16.4+, Chrome 111+, Firefox 128+ (fine for desktop-first)
+**Why this version specifically:**
+- Stable v2 line since 2022; minor version bumps are additive (PostgREST features, type fixes). No v3 on the horizon.
+- v2.103.0 added `stripNulls` (handy for sync diffs) and storage `cacheNonce` (useful if we later sync deck cover images).
 
-**Why v4 over v3:** v3 is legacy. v4 is the present. Greenfield project should use v4. The CSS-first config is simpler and the Rust engine is faster. No reason to start on v3.
+**Integration pattern with Alpine 3:**
 
----
-
-### Database (Client-Side)
-
-| Technology | Version | Purpose | Why |
-|------------|---------|---------|-----|
-| Dexie.js | 4.x | IndexedDB wrapper for collections, decks, game history | Fluent query API, schema versioning, compound indexes, transaction support. ~30KB gzip. The only serious choice for complex querying over 1000s of records. |
-
-**Confidence:** HIGH — Dexie 4.4.2 is current (April 2026). Actively maintained. De facto standard for serious IndexedDB work.
-
-**Why Dexie over alternatives:**
-
-| Criterion | Dexie.js | idb | Raw IndexedDB |
-|-----------|----------|-----|---------------|
-| Bundle size | ~30KB gzip | ~1.5KB gzip | 0KB |
-| Query API | `.where('cmc').above(3).and(c => c.colors.includes('U'))` | Manual cursor iteration | Verbose callback hell |
-| Schema migration | Built-in versioning | Manual | Manual |
-| Compound indexes | Yes | Manual | Manual |
-| Transactions | Simplified | Promise-wrapped | Callback-based |
-| Bulk operations | `.bulkPut()`, `.bulkAdd()` | Manual loops | Manual |
-
-**idb is eliminated.** It's just a Promise wrapper — you still write IndexedDB queries manually. For a project storing card collections (1000s of items), deck compositions, game history with stats, and bulk Scryfall cache data, Dexie's query API is not optional — it's essential.
-
-**Schema design implications:**
 ```javascript
-db.version(1).stores({
-  cards: 'id, name, set, cmc, *colors, type_line, rarity',
-  collection: '++id, cardId, quantity, condition, foil',
-  decks: '++id, name, commander, format, updatedAt',
-  deckCards: '++id, deckId, cardId, quantity, category',
-  games: '++id, deckId, date, result, turns',
-  priceAlerts: '++id, cardId, targetPrice, direction'
+// src/services/supabase.js
+import { createClient } from '@supabase/supabase-js';
+
+export const supabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_ANON_KEY,
+  {
+    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
+    realtime: { params: { eventsPerSecond: 10 } }
+  }
+);
+
+// src/stores/auth.js — Alpine store wraps the client
+Alpine.store('auth', {
+  user: null,
+  init() {
+    supabase.auth.onAuthStateChange((_event, session) => {
+      this.user = session?.user ?? null;
+    });
+    supabase.auth.getSession().then(({ data }) => { this.user = data.session?.user ?? null; });
+  },
+  async signInGoogle() { return supabase.auth.signInWithOAuth({ provider: 'google' }); },
+  async signInMagic(email) { return supabase.auth.signInWithOtp({ email }); },
+  async signOut() { return supabase.auth.signOut(); }
 });
 ```
 
+**Bundle scrutiny:** 25KB gzip is significant given we're at ~99KB. Mitigation: **lazy-import** the supabase module on first auth interaction (sign-in click, or first sync attempt). Unauthenticated users browsing the demo never load it. Use Vite's dynamic `import('./services/supabase.js')`.
+
+**Compatibility flags:**
+- ✅ Alpine 3.15.x: no conflict — supabase-js doesn't touch the DOM
+- ✅ Dexie 4.4.x: independent layer — they don't even share a package
+- ✅ Vite 8 + Rolldown: ESM-first, tree-shakes cleanly, no Rolldown-specific issues reported
+- ⚠️ Realtime WebSocket connection counts toward Supabase free-tier 200-concurrent limit per project — fine for us
+
+### `@supabase/auth-helpers-*` — DO NOT INSTALL
+
+These exist for SSR frameworks (Next, SvelteKit, Remix) that need cookie-based session sync between server and client. Counterflux is a pure SPA — `@supabase/supabase-js` handles localStorage session persistence natively.
+
 ---
 
-### Charts
+## 2. Sync Engine — Architecture Decision
 
-| Technology | Version | Purpose | Why |
-|------------|---------|---------|-----|
-| Chart.js | 4.x | Mana curves, pie charts, portfolio sparklines, life total graphs | ~65KB gzip (tree-shakeable to ~30-40KB). Broadest chart type coverage. Canvas-based. Excellent docs. Industry standard. |
+**Recommendation: ROLL YOUR OWN.** Lightweight custom sync (~300-500 LOC) using Dexie hooks + a Supabase outbox pattern + Realtime subscriptions. Do NOT add RxDB, PowerSync, ElectricSQL, or any heavy sync framework.
 
-**Confidence:** HIGH — Chart.js 4.x is stable, actively maintained, tree-shakeable.
+### Why not a sync engine library?
 
-**Why Chart.js over alternatives:**
+| Library | Status (April 2026) | Why Not for Counterflux |
+|---------|---------------------|-------------------------|
+| **Triplit** | Founder joined Supabase Oct 2025; codebase being open-sourced as community project. **Supabase explicitly did NOT adopt it as their official offline solution.** Future is uncertain. | Don't bet a milestone on a library in transition. |
+| **PowerSync** | Active, mature, $$$ commercial pricing for production. Brings its own SQLite-WASM client (not Dexie). | We already have Dexie with all data and indexes; replacing it = full data-layer rewrite. SQLite-WASM is ~1MB. Massive bundle hit. |
+| **ElectricSQL** | Active, focuses on Postgres↔SQLite-WASM replication. Same problem as PowerSync — replaces our storage layer. | Architecturally incompatible with existing Dexie schema. |
+| **Replicache** | Commercial license required (paid for production above usage tier). Custom storage (not Dexie). | License + cost + storage replacement — three strikes. |
+| **RxDB + rxdb-supabase plugin** | RxDB has an official Supabase replication plugin that wraps Dexie as storage. Closest to our existing stack. | RxDB itself is ~50KB+ gzip and reshapes our schema (CRDT-style `_modified`/`_deleted` columns). Forces all collections into RxDB collection wrappers. Overkill for 4 tables (collection, decks, games, watchlist) with simple LWW semantics. |
+| **Dexie Cloud** | Official Dexie SaaS sync. Beautiful DX. | Vendor lock-in to Dexie's hosted backend. We're committing to Supabase for auth — splitting auth and sync across two vendors is operationally painful. |
+| **Dexie.Syncable** | Old protocol, server adapter required. | Would still need to write the Supabase server adapter ourselves. Same effort as roll-your-own. |
 
-| Criterion | Chart.js 4 | uPlot | Frappe Charts | D3 |
-|-----------|-----------|-------|--------------|-----|
-| Bundle size (gzip) | ~65KB (tree-shake to ~35KB) | ~15KB | ~18KB | ~80KB |
-| Chart types | Bar, line, pie, doughnut, radar, scatter, bubble | Line, bar, area only | Bar, line, pie, percentage | Everything (build from scratch) |
-| Pie/doughnut | Yes (native) | No | Yes (limited) | Manual |
-| Radar chart | Yes (for colour wheel) | No | No | Manual |
-| Animation | Built-in | Minimal | Basic | Manual |
-| Learning curve | Low | Low | Low | Very high |
-| Responsive | Built-in | Manual | Built-in | Manual |
+### Why roll-your-own works for our shape of data
 
-**uPlot is eliminated** despite smaller size. It lacks pie charts, doughnut charts, and radar charts — all critical for MTG analytics (colour distribution pie, mana curve bar, deck archetype radar). uPlot is a time-series specialist.
+**Counterflux's sync requirements are unusually simple:**
+1. **Single-user, multi-device** — no real-time collaboration. Two devices belonging to the same user, with the same user_id RLS scope.
+2. **Last-write-wins is acceptable** — collection edits, deck edits, game logs. The user is unlikely to edit the same deck on two devices in the same minute. No CRDT needed.
+3. **Small payloads** — collection rows are ~50 bytes, decks are ~1KB. Even a 5000-card collection is ~250KB total on first sync.
+4. **Existing schema is stable** — 4 tables, all with `updatedAt` already present (or trivially added in a migration).
+5. **No need for partial sync** — user wants all their data on every device.
 
-**D3 is eliminated.** Massive bundle, steep learning curve, requires building every chart type from primitives. Overkill for dashboard charts.
+This is the textbook "boring sync" case where a sync engine is overkill.
 
-**Frappe Charts is a decent fallback** but Chart.js's radar chart (useful for deck stat comparisons) and richer animation/tooltip system wins.
+### Recommended architecture (lightweight)
 
-**Tree-shaking strategy:** Only register what you need:
-```javascript
-import { Chart, BarController, PieController, LineController, 
-         CategoryScale, LinearScale, BarElement, ArcElement, 
-         LineElement, PointElement, Tooltip, Legend } from 'chart.js';
-Chart.register(BarController, PieController, LineController, ...);
+```
+┌───────────────────────────────┐
+│   Alpine stores / UI          │
+└──────────────┬────────────────┘
+               │ writes
+               ▼
+┌───────────────────────────────┐
+│   Dexie (IndexedDB)           │  ← canonical local store, source of truth offline
+│   + creating/updating hook    │
+│   ↓ enqueue                   │
+│   outbox table                │  ← pending mutations: { id, op, table, row, attempts }
+└──────────────┬────────────────┘
+               │ when online + auth'd
+               ▼
+┌───────────────────────────────┐
+│   sync.js worker              │
+│   • drain outbox → upsert PG  │
+│   • on success, mark row_synced
+│   • subscribe to Realtime     │
+│     postgres_changes for      │
+│     filter: user_id=eq.<me>   │
+│   • on remote change, write   │
+│     into Dexie if remote      │
+│     updatedAt > local         │
+└──────────────┬────────────────┘
+               ▼
+┌───────────────────────────────┐
+│  Supabase Postgres (RLS)      │
+│  collections, decks, games,   │
+│  watchlist — all scoped       │
+│  user_id = auth.uid()         │
+└───────────────────────────────┘
 ```
 
+**Key implementation primitives:**
+- `db.collection.hook('creating' | 'updating' | 'deleting', ...)` — Dexie's built-in hooks let us enqueue every mutation into an `outbox` table transactionally.
+- `supabase.from('collections').upsert(rows, { onConflict: 'id' })` — server-side upsert with the row's stable UUID handles "did this device already push?" idempotently.
+- `supabase.channel('user-data').on('postgres_changes', { event: '*', schema: 'public', table: 'collections', filter: `user_id=eq.${uid}` }, ...)` — server pushes deltas back.
+- Conflict resolution: compare `updated_at` timestamps. Newer wins. Log conflicts to a debug table for audit (Mila can surface "your laptop and phone disagreed about Sol Ring quantity, used the more recent value").
+
+**Shipped code budget:** ~300-500 lines across `src/services/sync.js`, `src/services/outbox.js`, and a Dexie schema migration (`v6` adds `updated_at`, `synced_at` to existing tables; new `outbox` table). No new npm dependency.
+
+**Why this beats RxDB even though RxDB is the closest fit:**
+- RxDB's Supabase plugin is ~15KB+ gzip on top of RxDB core (~50KB+).
+- RxDB requires shaping every collection through `addRxPlugin()` and `RxCollection` — a meaningful refactor of our existing Dexie services.
+- We get the same LWW semantics in <500 lines of code we own and can debug.
+- The roll-your-own gives us full control of the Mila notification touchpoints (item: "notification bell wire-up") which is part of the milestone scope.
+
+**When to revisit this decision:** If we ever add real-time collaboration (multiple users editing the same deck), CRDTs and a sync engine become non-negotiable. Until then, roll-your-own is the right call.
+
 ---
 
-### Virtual Scrolling
+## 3. Performance Measurement Tooling
 
-| Technology | Version | Purpose | Why |
-|------------|---------|---------|-----|
-| Custom implementation | N/A | Virtualise 1000+ card collection views | ~150 lines of vanilla JS. No dependency needed. The DOM recycling pattern is straightforward for fixed-height card rows/grids. |
+### Runtime: `web-vitals` 5.2.x (small, ship in production)
 
-**Confidence:** MEDIUM — Custom implementation is well-documented and common, but requires testing.
+| Property | Value |
+|----------|-------|
+| Latest version | **5.2.0** (Mar 2026) |
+| Bundle size | **~2KB brotli / ~2.4KB gzip** (modular — only what you import) |
+| Maintainer | Google Chrome team (official) |
+| Purpose | Real-user measurement of LCP, INP, CLS, FCP, TTFB |
 
-**Rationale:** The existing virtual scroll libraries for vanilla JS (vscroll, virtual-scroller, clusterize.js) are either poorly maintained, overly complex, or designed for framework integration. For Counterflux's use case (card grid with uniform card sizes, or table rows with fixed height), a custom implementation is ~150 lines:
+**Why ship it in production (not just dev):**
+- Field data > lab data. Lighthouse runs on a synthetic environment; web-vitals captures real users' experience on real hardware.
+- We can console.log to start (no telemetry endpoint in v1.1), then later pipe to Supabase if we want a perf dashboard.
 
+**Integration:**
 ```javascript
-// Core concept: only render visible items + buffer
-const BUFFER = 5;
-const visibleStart = Math.floor(scrollTop / itemHeight);
-const visibleEnd = Math.min(visibleStart + viewportItems + BUFFER, totalItems);
-// Render only items[visibleStart..visibleEnd], use transform for positioning
-```
+// src/services/perf.js
+import { onCLS, onINP, onLCP, onFCP, onTTFB } from 'web-vitals';
 
-**Fallback option:** If custom proves insufficient, [virtual-scroller](https://www.npmjs.com/package/virtual-scroller) provides a vanilla DOM component. Evaluate during Phase 1 implementation.
-
----
-
-### Drag and Drop
-
-| Technology | Version | Purpose | Why |
-|------------|---------|---------|-----|
-| SortableJS | 1.15.x | Deck builder card dragging between categories | Framework-agnostic, native HTML5 DnD API, multi-list support, touch-friendly. ~12KB min+gzip (core). Battle-tested (26K+ GitHub stars). |
-
-**Confidence:** HIGH — SortableJS is the de facto standard for framework-free drag-and-drop. Works perfectly with Alpine.js.
-
-**Key features for deck builder:**
-- `group` option: drag cards between "Creatures", "Instants", "Lands" categories
-- `sort` option: reorder within categories
-- `onEnd` callback: sync with Alpine.js state and Dexie
-- Touch support: important even for desktop (trackpad gestures)
-- Animation: built-in smooth reorder animations
-
-**Why not alternatives:**
-- Dragula: Simpler but lacks multi-group support needed for deck categories
-- DFlex: Newer, less battle-tested, smaller community
-- HTML5 DnD API raw: Painful cross-browser quirks, no animation, no touch
-
----
-
-### Routing
-
-| Technology | Version | Purpose | Why |
-|------------|---------|---------|-----|
-| Navigo | 8.11.x | SPA routing for 5 screens | ~4KB gzip. Clean API, History API based, data-navigo attribute for declarative links. Zero dependencies. |
-
-**Confidence:** MEDIUM — Navigo works well but hasn't been updated in ~5 years. The API is stable and the History API it wraps hasn't changed. Consider a custom router (~50 lines) if Navigo causes issues.
-
-**Why Navigo:**
-```javascript
-const router = new Navigo('/');
-router
-  .on('/dashboard', () => loadView('dashboard'))
-  .on('/collection', () => loadView('collection'))
-  .on('/deck/:id', ({ data }) => loadDeckBuilder(data.id))
-  .on('/market', () => loadView('market'))
-  .on('/game', () => loadView('game'))
-  .resolve();
-```
-
-**Fallback:** Custom router using `window.addEventListener('popstate', ...)` + `history.pushState()`. Only ~50 lines of code. Consider if Navigo's lack of updates becomes a concern.
-
----
-
-### Mana Symbol Rendering
-
-| Technology | Version | Purpose | Why |
-|------------|---------|---------|-----|
-| mana-font | latest | MTG mana, tap, and card type symbol rendering | CSS icon font (like Font Awesome). `<i class="ms ms-u ms-cost"></i>` renders a blue mana symbol. Complete symbol coverage. Colourable and scaleable via CSS. |
-| keyrune | latest | MTG set symbol rendering | Companion to mana-font. `<i class="ss ss-neo"></i>` renders Kamigawa: Neon Dynasty set symbol. |
-
-**Confidence:** HIGH — mana-font is the community standard for MTG web apps. Maintained by Andrew Gioia. MIT licensed.
-
-**How it works with Scryfall mana cost strings:**
-```javascript
-// Scryfall returns mana_cost: "{2}{U}{R}"
-function renderManaCost(manaCost) {
-  return manaCost.replace(/\{([^}]+)\}/g, (_, symbol) => {
-    const code = symbol.toLowerCase().replace('/', '');
-    return `<i class="ms ms-${code} ms-cost"></i>`;
-  });
+if (import.meta.env.PROD) {
+  const log = (metric) => console.log('[vitals]', metric.name, metric.value, metric.rating);
+  onCLS(log); onINP(log); onLCP(log); onFCP(log); onTTFB(log);
 }
-// "{2}{U}{R}" → <i class="ms ms-2 ms-cost"></i><i class="ms ms-u ms-cost"></i><i class="ms ms-r ms-cost"></i>
 ```
 
-**Why not Scryfall SVGs directly:** Scryfall's `/symbology` API provides SVG URLs (`https://svgs.scryfall.io/card-symbols/U.svg`) but:
-- Requires network requests for each symbol (or pre-fetching 100+ SVGs)
-- No consistent sizing/alignment built in
-- mana-font handles hybrid mana, phyrexian mana, tap symbols, etc. as single glyphs
-- Font approach = instant rendering, CSS-controllable colour/size
+**Bundle scrutiny:** 2KB is negligible. Tree-shakes per-metric — only imports used metrics.
 
-**Why not mtg-vectors:** Higher quality SVGs but requires manual integration. mana-font is drop-in CSS.
+### CI/Dev: `@lhci/cli` 0.15.x (NOT shipped — devDependency)
+
+| Property | Value |
+|----------|-------|
+| Latest version | **0.15.x** (uses Lighthouse 12.6.1) |
+| Node requirement | Node 22+ (we already require this for Vite 8) |
+| Purpose | Reproducible Lighthouse runs against `vite preview` build, optional GitHub Actions integration, budget enforcement |
+
+**Why both:**
+- **web-vitals** measures what users actually experience.
+- **lhci** gives us a controlled, reproducible "is the build worse than last time?" signal pre-merge.
+
+**Configuration for our SPA:**
+
+```javascript
+// lighthouserc.cjs (project root)
+module.exports = {
+  ci: {
+    collect: {
+      startServerCommand: 'npm run preview',
+      url: ['http://localhost:4173/'],
+      numberOfRuns: 3,
+      settings: { preset: 'desktop' }  // we are desktop-first
+    },
+    assert: {
+      preset: 'lighthouse:recommended',
+      assertions: {
+        'first-contentful-paint': ['error', { maxNumericValue: 1500 }],
+        'largest-contentful-paint': ['error', { maxNumericValue: 2500 }],
+        'cumulative-layout-shift': ['error', { maxNumericValue: 0.1 }],
+        'total-blocking-time': ['error', { maxNumericValue: 200 }]
+      }
+    },
+    upload: { target: 'temporary-public-storage' }
+  }
+};
+```
+
+```bash
+# package.json scripts
+"perf:lh": "lhci autorun"
+"perf:lh:desktop": "lhci collect --settings.preset=desktop && lhci assert"
+```
+
+**Compatibility flags:**
+- ✅ Vite 8 + Rolldown: lhci runs against the built output via `vite preview`, doesn't care about the bundler.
+- ⚠️ Lighthouse spawns headless Chrome — first run downloads Chromium (~150MB, one-time). Document this in onboarding.
+- ⚠️ Lighthouse against a SPA on `/` only audits the dashboard route. Add additional URLs for `/collection`, `/deck/:demoid`, `/market`, `/game` to cover the slow-loaders.
+
+### What NOT to add for perf
+
+| Tool | Why Not |
+|------|---------|
+| `vite-plugin-inspect` | Useful one-off for debugging, but install ad-hoc, don't keep as devDep — adds dev-server overhead |
+| `rollup-plugin-visualizer` | Tempting for bundle analysis, but we already have `vite build --emptyOutDir` + manual `dist` inspection. Add only if a phase explicitly needs treemap analysis |
+| `Sentry`/`PostHog` | Out of scope for a perf baseline phase. v1.1 needs measurement, not telemetry infrastructure |
+| `unlighthouse` | Crawls a whole site auto-discovering URLs. Overkill for our 5-route SPA. Stick with explicit lhci URLs |
 
 ---
+
+## 4. Scryfall Precon Products — No New Dependency
+
+### Endpoint: `GET /sets?type=commander`
+
+Scryfall's `set_type` field categorises sets. Full enumeration (verified April 2026):
+
+```
+core, expansion, masters, alchemy, masterpiece, arsenal, from_the_vault,
+spellbook, premium_deck, duel_deck, draft_innovation, treasure_chest,
+commander, planechase, archenemy, vanguard, funny, starter, box,
+promo, token, memorabilia, minigame
+```
+
+**For Commander precons specifically:** filter sets where `set_type === 'commander'`. Each result is a set object with `code`, `name`, `released_at`, `card_count`, and crucially **`search_uri`** — a fully-formed Scryfall search URL that returns every card in that precon set.
+
+**Existing infra reuse:**
+- `src/services/scryfall.js` already has the rate-limited queue. Add a thin wrapper:
+  ```javascript
+  // src/services/scryfall.js (additions)
+  async getCommanderPrecons() {
+    const res = await this.queueRequest('/sets');
+    return res.data
+      .filter(s => s.set_type === 'commander')
+      .sort((a, b) => b.released_at.localeCompare(a.released_at)); // newest first
+  }
+
+  async getPreconCards(searchUri) {
+    // searchUri is a complete Scryfall URL, includes pagination
+    return this.queueRequest(searchUri.replace('https://api.scryfall.com', ''));
+  }
+  ```
+- For the **set-icon printing picker** (item: paper-only printings), use the existing `prints_search_uri` field on every Card object — it's already in the schema. Filter to `games:paper` client-side after fetch (or append `&q=games:paper` if the URI hasn't been resolved yet).
+
+**No new dependency.** All work happens in `scryfall.js` and a new Alpine component `precon-quick-add.js`.
+
+**Compatibility flags:**
+- ✅ Rate limiter handles the burst when fetching cards for a 100-card precon (100 requests at 75ms = 7.5s — needs a loading state, no API issues)
+- ⚠️ Could optimise via the `/cards/collection` endpoint (POST up to 75 identifiers per request) for batched precon hydration. Not required for v1.1 but worth noting in PITFALLS for the phase planner.
+
+---
+
+## Recommended Stack — v1.1 Additions
+
+### Core Additions
+
+| Technology | Version | Purpose | Why |
+|------------|---------|---------|-----|
+| `@supabase/supabase-js` | **^2.103.0** | Auth (magic-link + Google OAuth) + Postgres CRUD + Realtime subscriptions | Single SDK covers all three needs; framework-agnostic; lazy-loadable to protect cold-start bundle |
 
 ### Supporting Libraries
 
-| Library | Version | Purpose | Bundle Impact |
-|---------|---------|---------|---------------|
-| alpinejs | 3.15.x | Reactivity layer | ~17KB gzip |
-| @alpinejs/persist | 3.x | Persist Alpine state to localStorage | ~1KB gzip |
-| dexie | 4.x | IndexedDB wrapper | ~30KB gzip |
-| chart.js | 4.x | Charts (tree-shaken) | ~35KB gzip |
-| sortablejs | 1.15.x | Drag and drop | ~12KB gzip |
-| navigo | 8.11.x | SPA routing | ~4KB gzip |
-| mana-font | latest | Mana symbols | ~50KB (font files, cached) |
-| keyrune | latest | Set symbols | ~80KB (font files, cached) |
+| Library | Version | Purpose | When to Use |
+|---------|---------|---------|-------------|
+| `web-vitals` | **^5.2.0** | Real-user perf metrics (LCP, INP, CLS, FCP, TTFB) | Phase: Performance Baseline. Ship in production behind `import.meta.env.PROD` guard |
 
-**Estimated JS bundle (gzip):** ~99KB total JavaScript
-**With font assets:** ~229KB total (fonts are cached after first load)
+### Development Tools (devDependencies — never shipped)
 
-This is extremely lean for a full-featured SPA. For comparison, React alone is ~45KB gzip before you write any application code.
+| Tool | Version | Purpose | Notes |
+|------|---------|---------|-------|
+| `@lhci/cli` | **^0.15.0** | Lighthouse CI for desktop-preset audits | Run via `npm run perf:lh`. Configure with `lighthouserc.cjs` at repo root. Downloads Chromium on first run |
 
----
+### Roll-Your-Own (no npm package)
 
-## Alternatives Considered
-
-| Category | Recommended | Alternative | Why Not |
-|----------|-------------|-------------|---------|
-| Build | Vite 8 | Webpack 5 | Slower, more config, dying ecosystem |
-| Reactivity | Alpine.js 3.15 | Lit 4.x | Shadow DOM + Tailwind = pain. Web Components overkill for single app |
-| Reactivity | Alpine.js 3.15 | Petite Vue | Abandoned. Last release 4 years ago. v0.4.1 forever |
-| Reactivity | Alpine.js 3.15 | Vanilla JS | DX nightmare for 5 screens with live-updating state |
-| CSS | Tailwind v4 | Tailwind v3 | v3 is legacy. No reason to start a greenfield on it |
-| Database | Dexie.js 4 | idb | Just a Promise wrapper. No query API for complex data |
-| Charts | Chart.js 4 | uPlot | No pie/doughnut/radar charts. Time-series specialist only |
-| Charts | Chart.js 4 | D3 | Massive bundle, builds charts from primitives. Overkill |
-| DnD | SortableJS | Dragula | No multi-group support for deck categories |
-| Routing | Navigo | Custom | Navigo saves time. Custom is fallback if issues arise |
-| Mana symbols | mana-font | Scryfall SVGs | Network requests, no sizing control, partial coverage |
+| Module | Lines (est.) | Purpose | Notes |
+|--------|--------------|---------|-------|
+| `src/services/sync.js` | ~250 | Outbox drain, Realtime subscription, conflict resolution | Calls into Dexie via existing `db.js` service |
+| `src/services/outbox.js` | ~100 | Mutation queue persisted as Dexie table `outbox` | Enqueued via Dexie hooks, drained when online + auth'd |
+| `src/stores/auth.js` | ~80 | Alpine store wrapping supabase.auth | Provides reactive `user`, `signInGoogle`, `signInMagic`, `signOut` |
+| Schema migration `db.version(6)` | ~30 | Adds `updated_at`, `synced_at` cols + new `outbox` table + `conflicts` table | Backward-compatible: existing rows get `Date.now()` defaults |
 
 ---
 
 ## Installation
 
 ```bash
-# Core dependencies
-npm install alpinejs @alpinejs/persist dexie chart.js sortablejs navigo mana-font keyrune
+# Production additions
+npm install @supabase/supabase-js@^2.103.0 web-vitals@^5.2.0
 
-# Dev dependencies
-npm install -D vite tailwindcss @tailwindcss/vite
+# Dev-only
+npm install -D @lhci/cli@^0.15.0
 ```
 
-**Vite config (`vite.config.js`):**
+Add to `.env.local`:
+```
+VITE_SUPABASE_URL=https://<project-ref>.supabase.co
+VITE_SUPABASE_ANON_KEY=<anon-public-key>
+```
+
+Add to `package.json`:
+```json
+"scripts": {
+  "perf:lh": "lhci autorun",
+  "perf:vitals": "echo 'check browser console after npm run preview'"
+}
+```
+
+Add `lighthouserc.cjs` at project root (see Section 3 config above).
+
+---
+
+## Alternatives Considered
+
+| Recommended | Alternative | When to Use Alternative |
+|-------------|-------------|-------------------------|
+| Roll-your-own sync | **RxDB + rxdb-supabase plugin** | When we need offline-first CRDT semantics, multi-user collaboration on the same record, or replication across more than 4 tables with complex relations |
+| Roll-your-own sync | **PowerSync** | When we have hundreds of thousands of rows per user, need partial-sync (only sync the active deck), or want server-pushed compaction. Counterflux is far below this scale |
+| Roll-your-own sync | **ElectricSQL** | When we want SQL-on-the-client with full Postgres semantics in SQLite-WASM. Overkill — Dexie's index queries cover our access patterns |
+| Roll-your-own sync | **Dexie Cloud** | When we don't already have a backend commitment. We're picking Supabase for auth, splitting vendors costs operationally |
+| `@supabase/supabase-js` | `@supabase/auth-js` direct + `postgrest-js` direct | If we wanted to shave 5-8KB by skipping the realtime/storage/functions sub-clients. Defer until v1.2 if bundle becomes a real problem — premature optimisation now |
+| `web-vitals` runtime | Manual `PerformanceObserver` | If we want zero dependencies. 2KB savings doesn't justify writing/maintaining the LCP/INP timing edge cases ourselves |
+| `@lhci/cli` | **`unlighthouse`** | When auditing many auto-discovered URLs across a content site. Counterflux has 5 known routes, lhci is simpler |
+| `@lhci/cli` | **PageSpeed Insights API** | If we wanted no-Chromium-install perf audits. PSI uses Google's lab environment, less reproducible locally |
+
+---
+
+## What NOT to Use
+
+| Avoid | Why | Use Instead |
+|-------|-----|-------------|
+| **Triplit** | Acquired by Supabase Oct 2025; Supabase explicitly did NOT make it the official offline solution. Future is "open-source community project" — uncertain trajectory | Roll-your-own on Dexie + Supabase Realtime |
+| **`@supabase/auth-helpers-react/-nextjs/-sveltekit`** | These are SSR-cookie helpers for full-stack frameworks. We are a pure SPA — `@supabase/supabase-js` already handles localStorage session persistence | Just `@supabase/supabase-js` |
+| **`firebase` / `firebase-auth`** | Replacing Supabase mid-milestone is out of scope. Firebase's bundle is heavier and Postgres is a better long-term fit for relational user data (decks → cards relations) | Stick with Supabase |
+| **`yjs` / `automerge`** | CRDTs for collaborative editing. Counterflux is single-user multi-device — we don't need conflict-free merging, LWW is fine | Timestamp-based LWW in custom sync |
+| **`pouchdb`** | Old-school CouchDB sync. Would replace Dexie entirely. Mature but the wrong shape for our backend (Supabase = Postgres, not CouchDB) | Keep Dexie |
+| **`workbox`** for sync background tasks | Workbox is for service-worker caching of HTTP responses, not for app-level data sync | Plain `online`/`offline` events + window focus listener |
+| **`localForage`** | Alternative storage abstraction. We're already on Dexie which is strictly better for our query needs | Keep Dexie |
+
+---
+
+## Stack Patterns by Variant
+
+**If a user is signed out:**
+- Skip importing `@supabase/supabase-js` entirely (lazy import on sign-in click)
+- All data stays in Dexie; outbox grows but never drains
+- App functions identically to v1.0
+
+**If a user is signed in but offline:**
+- Outbox accumulates writes; UI shows "X pending changes" badge
+- Realtime subscription is dropped; resubscribes on `online` event
+- Sync resumes automatically when connectivity restored
+
+**If a user signs in for the first time on a new device:**
+- Full pull: fetch all rows for `user_id = auth.uid()` from each synced table
+- If local Dexie has data (e.g. user used the app pre-auth), merge: prefer rows with newer `updated_at`, prompt user via Mila for ambiguous cases
+- After initial pull, switch to delta-based Realtime subscriptions
+
+---
+
+## Version Compatibility Matrix
+
+| Package | Version | Compatible With | Notes |
+|---------|---------|-----------------|-------|
+| `@supabase/supabase-js@^2.103.0` | 2.x | Alpine 3.15.x, Dexie 4.4.x, Vite 8.0.x (Rolldown), Node 22+ | Pure ESM; tree-shakes; no special Vite/Rolldown config needed |
+| `web-vitals@^5.2.0` | 5.x | All evergreen browsers; works in any bundler | v5 is current; v4→v5 migration not relevant (greenfield install) |
+| `@lhci/cli@^0.15.0` | 0.15.x | Lighthouse 12.6.1 internally; Node 22+ | Runs against `vite preview` build, no Rolldown awareness needed |
+| Dexie 4.4.x hooks | — | `creating`, `updating`, `deleting` hooks on every table — used for outbox enqueueing | Documented stable API since Dexie 3 |
+| Supabase Realtime filters | server-side | Single `eq` filter per channel (e.g. `user_id=eq.<uuid>`) — no AND/OR. One channel per table | Plan one channel per synced table; 4 tables = 4 WebSocket channels (well within free-tier limits) |
+
+---
+
+## Bundle Impact Summary
+
+| Phase | JS bundle (gzip) | Δ |
+|-------|------------------|---|
+| v1.0 baseline (current) | ~99KB | — |
+| v1.1 with eager Supabase load | ~127KB | +28KB |
+| v1.1 with **lazy** Supabase load (recommended) | ~99KB cold / ~127KB after first auth click | +0KB cold, +28KB warm |
+| v1.1 + web-vitals | +2KB to whichever above | negligible |
+
+**Recommendation:** Use Vite's dynamic import for the supabase service. Cold-start performance budget (item from milestone: "performance baseline") is preserved for unauthenticated visitors. Authenticated users pay the 28KB once and it's cached forever.
+
 ```javascript
-import tailwindcss from '@tailwindcss/vite';
-
-export default {
-  plugins: [tailwindcss()],
-  build: {
-    target: 'es2022',
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          charts: ['chart.js'],
-          db: ['dexie'],
-        }
-      }
-    }
-  }
-};
-```
-
-**CSS entry (`src/styles.css`):**
-```css
-@import "tailwindcss";
-@import "mana-font/css/mana.css";
-@import "keyrune/css/keyrune.css";
-
-@theme {
-  --color-izzet-blue: #0D52BD;
-  --color-izzet-red: #E23838;
-  --color-void: #0B0C10;
-  --color-aether: #1A1C2E;
-  --color-ghost: rgba(255, 255, 255, 0.06);
-  --font-display: 'Crimson Pro', serif;
-  --font-body: 'Space Grotesk', sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+// src/stores/auth.js — lazy load pattern
+async signInGoogle() {
+  const { supabase } = await import('../services/supabase.js');
+  return supabase.auth.signInWithOAuth({ provider: 'google' });
 }
 ```
 
@@ -337,20 +434,19 @@ export default {
 
 ## Sources
 
-- [Vite 8.0 announcement](https://vite.dev/blog/announcing-vite8) — HIGH confidence
-- [Vite 7.0 announcement](https://vite.dev/blog/announcing-vite7) — HIGH confidence
-- [Alpine.js GitHub releases](https://github.com/alpinejs/alpine/releases) — HIGH confidence
-- [Alpine.js Bundlephobia](https://bundlephobia.com/package/alpinejs) — HIGH confidence
-- [Petite Vue maintenance discussion](https://github.com/vuejs/petite-vue/discussions/53) — HIGH confidence
-- [Lit.dev official site](https://lit.dev/) — HIGH confidence
-- [Tailwind CSS v4 announcement](https://tailwindcss.com/blog/tailwindcss-v4) — HIGH confidence
-- [Tailwind CSS upgrade guide](https://tailwindcss.com/docs/upgrade-guide) — HIGH confidence
-- [Dexie.js npm](https://www.npmjs.com/package/dexie) — HIGH confidence
-- [Dexie.js Bundlephobia](https://bundlephobia.com/package/dexie) — HIGH confidence
-- [Chart.js tree-shaking docs](https://www.chartjs.org/docs/latest/getting-started/integration.html) — HIGH confidence
-- [uPlot GitHub](https://github.com/leeoniya/uPlot) — HIGH confidence
-- [SortableJS GitHub](https://github.com/SortableJS/Sortable) — HIGH confidence
-- [Navigo GitHub](https://github.com/krasimir/navigo) — MEDIUM confidence (last updated ~5 years ago)
-- [mana-font GitHub](https://github.com/andrewgioia/mana) — HIGH confidence
-- [Scryfall card symbols API](https://scryfall.com/docs/api/card-symbols) — HIGH confidence
-- [Vite 8 Rolldown benchmarks](https://www.theregister.com/2026/03/16/vite_8_rolldown/) — MEDIUM confidence
+- [supabase/supabase-js GitHub releases](https://github.com/supabase/supabase-js/releases) — verified v2.103.0 (April 2026), HIGH confidence
+- [@supabase/supabase-js npm](https://www.npmjs.com/package/@supabase/supabase-js) — bundle size 98.2KB min / 25.2KB gzip, HIGH confidence
+- [Triplit joins Supabase blog post](https://supabase.com/blog/triplit-joins-supabase) — Supabase explicitly NOT adopting Triplit as official offline solution, HIGH confidence
+- [ElectricSQL alternatives reference](https://electric-sql.com/docs/reference/alternatives) — independent comparison of sync engines, MEDIUM confidence
+- [RxDB Supabase replication plugin](https://rxdb.info/replication-supabase.html) — for "what if we did use a sync framework" context, HIGH confidence
+- [GoogleChrome/web-vitals npm](https://www.npmjs.com/package/web-vitals) — v5.2.0 (March 2026), 2KB brotli, HIGH confidence
+- [Lighthouse CI getting started](https://github.com/GoogleChrome/lighthouse-ci/blob/main/docs/getting-started.md) — v0.15.x with Lighthouse 12.6.1, HIGH confidence
+- [Scryfall API set objects](https://scryfall.com/docs/api) — `set_type` enumeration including `commander` for precons, HIGH confidence
+- [Scryfall Commander Sets browse](https://scryfall.com/sets?type=commander&order=set) — confirms `set_type=commander` filter behaviour, HIGH confidence
+- [Supabase Realtime Postgres Changes guide](https://supabase.com/docs/guides/realtime/postgres-changes) — documents `eq` filter semantics for `user_id` scoping, HIGH confidence
+- [Supabase Realtime filter discussion #1791](https://github.com/orgs/supabase/discussions/1791) — confirms single-filter-per-channel constraint, HIGH confidence
+
+---
+
+*Stack additions for v1.1 "Second Sunrise" — extends validated v1.0 stack with auth, sync, and perf tooling*
+*Researched: 2026-04-14*
