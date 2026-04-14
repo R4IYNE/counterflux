@@ -51,10 +51,19 @@ export function sidebarComponent() {
     },
 
     /**
-     * Toggle sidebar collapsed state manually (for a toggle button).
+     * Toggle sidebar collapsed state. Delegates to the app store so
+     * the localStorage persistence (POLISH-09 / D-28) happens in one place.
+     * Callers: the chevron toggle button in the sidebar header.
      */
     toggleSidebar() {
-      this.$store.app.sidebarCollapsed = !this.$store.app.sidebarCollapsed;
+      this.$store.app.toggleSidebar();
     }
   };
 }
+
+/**
+ * D-27 note: The sidebar collapses to a 64px (w-16) icon rail -- NEVER
+ * `w-0` or `hidden`. Nav items remain tappable in both states; labels
+ * hide via `x-show="!$store.app.sidebarCollapsed"`. Collapsed mode
+ * shows `:title="screen.label"` tooltips for discoverability.
+ */

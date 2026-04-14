@@ -1,9 +1,24 @@
 import Alpine from 'alpinejs';
 
+/**
+ * POLISH-09 (D-27/D-28/D-29): Sidebar collapsed preference lives in
+ * localStorage under key `sidebar_collapsed`. On first load we hydrate
+ * from the stored value (falling back to viewport-width default).
+ * `toggleSidebar()` flips the flag and writes it back.
+ */
+function hydrateSidebarCollapsed() {
+  try {
+    const raw = (typeof localStorage !== 'undefined') ? localStorage.getItem('sidebar_collapsed') : null;
+    if (raw === 'true') return true;
+    if (raw === 'false') return false;
+  } catch { /* ignore */ }
+  return (typeof window !== 'undefined' && window.innerWidth < 1024);
+}
+
 export function initAppStore() {
   Alpine.store('app', {
     currentScreen: 'epic-experiment',
-    sidebarCollapsed: window.innerWidth < 1024,
+    sidebarCollapsed: hydrateSidebarCollapsed(),
     gameFullscreen: false,
 
     screens: [
@@ -20,6 +35,15 @@ export function initAppStore() {
       this.currentScreen = screenId;
       // Exit fullscreen when leaving Vandalblast
       if (screenId !== 'vandalblast') this.gameFullscreen = false;
+    },
+
+    toggleSidebar() {
+      this.sidebarCollapsed = !this.sidebarCollapsed;
+      try {
+        if (typeof localStorage !== 'undefined') {
+          localStorage.setItem('sidebar_collapsed', String(this.sidebarCollapsed));
+        }
+      } catch { /* ignore */ }
     }
   });
 
@@ -80,8 +104,12 @@ export function initAppStore() {
     error(msg) { this.show(msg, 'error', 8000); },
   });
 
-  // Listen for viewport resize to toggle sidebar collapse
+  // D-28: viewport resize no longer overrides a user-set preference.
+  // Only apply the responsive default when the user has not made a choice.
   window.addEventListener('resize', () => {
+    try {
+      if (typeof localStorage !== 'undefined' && localStorage.getItem('sidebar_collapsed') !== null) return;
+    } catch { /* ignore */ }
     Alpine.store('app').sidebarCollapsed = window.innerWidth < 1024;
   });
 
