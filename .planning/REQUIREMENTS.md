@@ -116,11 +116,79 @@ Explicit exclusions for v1.1:
 
 ## Traceability
 
-*(Populated by roadmapper when ROADMAP.md is generated.)*
+Mapped by roadmapper 2026-04-14. All 56 REQ-IDs assigned to exactly one phase; 100% coverage, zero orphans.
 
 | REQ-ID | Phase |
 |--------|-------|
-| (pending roadmapper) | |
+| POLISH-01 | Phase 7 |
+| POLISH-02 | Phase 7 |
+| POLISH-03 | Phase 7 |
+| POLISH-04 | Phase 7 |
+| POLISH-05 | Phase 7 |
+| POLISH-06 | Phase 7 |
+| POLISH-07 | Phase 7 |
+| POLISH-08 | Phase 7 |
+| POLISH-09 | Phase 7 |
+| POLISH-10 | Phase 7 |
+| POLISH-11 | Phase 7 |
+| PERF-01 | Phase 7 |
+| PERF-02 | Phase 7 |
+| PERF-03 | Phase 7 |
+| PERF-04 | Phase 13 |
+| SCHEMA-01 | Phase 7 |
+| SCHEMA-02 | Phase 7 |
+| SCHEMA-03 | Phase 7 |
+| COLLECT-01 | Phase 8 |
+| COLLECT-02 | Phase 8 |
+| COLLECT-03 | Phase 8 |
+| COLLECT-04 | Phase 8 |
+| COLLECT-05 | Phase 8 |
+| COLLECT-06 | Phase 8 |
+| DECK-01 | Phase 9 |
+| DECK-02 | Phase 9 |
+| DECK-03 | Phase 9 |
+| DECK-04 | Phase 9 |
+| DECK-05 | Phase 9 |
+| GAME-01 | Phase 9 |
+| GAME-02 | Phase 9 |
+| GAME-03 | Phase 9 |
+| GAME-04 | Phase 9 |
+| GAME-05 | Phase 9 |
+| GAME-06 | Phase 9 |
+| GAME-07 | Phase 9 |
+| GAME-08 | Phase 9 |
+| GAME-09 | Phase 9 |
+| GAME-10 | Phase 9 |
+| AUTH-01 | Phase 10 |
+| AUTH-02 | Phase 10 |
+| AUTH-03 | Phase 10 |
+| AUTH-04 | Phase 10 |
+| AUTH-05 | Phase 10 |
+| AUTH-06 | Phase 10 |
+| SYNC-01 | Phase 11 |
+| SYNC-02 | Phase 11 |
+| SYNC-03 | Phase 11 |
+| SYNC-04 | Phase 11 |
+| SYNC-05 | Phase 11 |
+| SYNC-06 | Phase 11 |
+| SYNC-07 | Phase 11 |
+| SYNC-08 | Phase 12 |
+| MARKET-01 | Phase 12 |
+| MARKET-02 | Phase 12 |
+| MARKET-03 | Phase 12 |
+
+### Coverage by Phase
+
+| Phase | Name | REQ Count | Categories Covered |
+|-------|------|-----------|--------------------|
+| 7 | Polish Pass + Perf Baseline + Schema Migration | 17 | POLISH (11) + PERF (3 of 4) + SCHEMA (3) |
+| 8 | Treasure Cruise Rapid Entry | 6 | COLLECT (6) |
+| 9 | Deck Accuracy + Vandalblast Pod Experience | 15 | DECK (5) + GAME (10) |
+| 10 | Supabase Auth Foundation | 6 | AUTH (6) |
+| 11 | Cloud Sync Engine | 7 | SYNC (7 of 8) |
+| 12 | Notification Bell + Preordain Spoiler Refresh | 4 | SYNC-08 + MARKET (3) |
+| 13 | Performance Optimisation (conditional) | 1 | PERF-04 |
+| **Total** | | **56** | **9 categories, 100% coverage** |
 
 ---
-*Last updated: 2026-04-14 — v1.1 Second Sunrise requirements defined*
+*Last updated: 2026-04-14 — v1.1 Second Sunrise requirements defined; traceability populated by roadmapper*
