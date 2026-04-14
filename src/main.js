@@ -80,4 +80,16 @@ startBulkDataPipeline().catch((err) => {
   }
 });
 
+// PERF-01 — Web Vitals dev-mode reporter (lazy-loaded via requestIdleCallback per Pitfall E)
+// The lazy import + idle scheduling ensures this instrumentation cannot regress the LCP it measures.
+// Production builds skip the body of bootPerfMetrics() via the import.meta.env.DEV guard inside perf.js.
+if (import.meta.env.DEV) {
+  const idle = window.requestIdleCallback || ((cb) => setTimeout(cb, 1));
+  idle(() => {
+    import('./services/perf.js').then(m => m.bootPerfMetrics()).catch(err => {
+      console.warn('[Counterflux] perf bootstrap failed:', err);
+    });
+  });
+}
+
 console.log('Counterflux -- The Aetheric Archive');
