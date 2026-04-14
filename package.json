@@ -8,7 +8,9 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "perf": "lhci collect --config=lighthouserc.cjs",
+    "perf:open": "lhci collect --config=lighthouserc.cjs && start ./lighthouse-report/report.html"
   },
   "dependencies": {
     "@fontsource-variable/crimson-pro": "^5.2.8",
@@ -24,9 +26,11 @@
     "material-symbols": "^0.44.0",
     "navigo": "^8.11.1",
     "papaparse": "^5.5.3",
-    "sortablejs": "^1.15.7"
+    "sortablejs": "^1.15.7",
+    "web-vitals": "^5.2.0"
   },
   "devDependencies": {
+    "@lhci/cli": "^0.15.1",
     "@tailwindcss/vite": "^4.2.2",
     "fake-indexeddb": "^6.2.5",
     "jsdom": "^29.0.1",

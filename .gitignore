@@ -5,3 +5,7 @@ dist/
 .claude/worktrees/
 
 .vercel
+
+# Lighthouse CI
+lighthouse-report/
+.lighthouseci/
