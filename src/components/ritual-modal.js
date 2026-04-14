@@ -159,7 +159,7 @@ export function openRitualModal(options = {}) {
       <div style="display: flex; align-items: center; justify-content: space-between; padding-top: 8px;">
         <button
           id="ritual-abandon"
-          style="font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 400; color: #7A8498; background: transparent; border: none; cursor: pointer; padding: 8px 0;"
+          style="font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; color: var(--color-secondary, #E23838); background: transparent; border: none; cursor: pointer; padding: 8px 0;"
         >Abandon storm</button>
         <button
           id="ritual-confirm"

@@ -3,6 +3,8 @@
 @theme {
   --color-primary: #0D52BD;
   --color-secondary: #E23838;
+  --color-secondary-hover: #FF5555;
+  --color-secondary-active: #C42424;
   --color-background: #0B0C10;
   --color-surface: #14161C;
   --color-surface-hover: #1C1F28;
@@ -74,6 +76,39 @@ body {
   line-height: 1.5;
   margin: 0;
   min-height: 100vh;
+}
+
+/* POLISH-02 — Red accent uplift (D-30..D-33).
+   Izzet red (#E23838) is the destructive / warning / "hot" surface. These
+   rules land the red at the four canonical D-surfaces:
+     D-30: card-tile hover/focus glow
+     D-31: destructive CTAs (Abandon storm, Delete deck, Clear collection)
+     D-32: RAG-red states (gap warnings, price drops)
+     D-33: active tab underline + bell unread ping
+   Manual visual QA per 07-VALIDATION.md confirms ~15% coverage. */
+
+/* D-30: card-tile / card-img hover & focus glow */
+.card-tile-hover { transition: box-shadow 0.15s ease-out, border-color 0.15s ease-out; }
+.card-tile-hover:hover,
+.card-tile-hover:focus-visible {
+  box-shadow: 0 0 0 2px var(--color-secondary);
+  outline: none;
+}
+.cf-card-img { transition: box-shadow 0.15s ease-out; }
+.cf-card-img:hover { box-shadow: 0 0 0 2px var(--color-secondary); }
+
+/* D-32: RAG red utility classes. DECK-03 (Phase 9) will apply .rag-red to
+   gap-warning severity; movers-panel already uses `text-secondary` directly
+   so price drops inherit the red. .price-drop is a named alias for that. */
+.rag-red  { color: var(--color-secondary); }
+.price-drop { color: var(--color-secondary); }
+
+/* D-33: active nav item + notification bell unread badge override.
+   The nav underline lives inline in index.html via border-secondary;
+   the badge uses a dedicated `cf-badge-alert` class. */
+.cf-badge-alert {
+  background: var(--color-secondary);
+  color: var(--color-text-primary);
 }
 
 /* POLISH-04: Card-image rounded corners matching MTG physical card frame.

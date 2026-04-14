@@ -118,11 +118,11 @@
   100% { background-position: -200% 0; }
 }
 
-/* Phase 5: Preordain tabs */
+/* Phase 5 / POLISH-02 D-33: Preordain tabs — active underline uses Izzet red. */
 .tab-active {
   color: var(--color-text-primary);
-  border-bottom: 2px solid var(--color-primary);
-  box-shadow: 0 2px 8px var(--color-glow-blue);
+  border-bottom: 2px solid var(--color-secondary);
+  box-shadow: 0 2px 8px var(--color-glow-red);
 }
 .tab-inactive {
   color: var(--color-text-muted);
