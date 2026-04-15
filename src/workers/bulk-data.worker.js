@@ -66,6 +66,58 @@ db.version(5).stores({
   games: '++id, deck_id, started_at, ended_at'
 });
 
+// ============================================================
+// Phase 7 Plan 3 — mirror of main-thread v6 + v7 declarations.
+// The worker only TOUCHES `cards` and `meta`, but Dexie requires every
+// connection to the same IDB to declare the full schema chain. No .upgrade()
+// callbacks here — only the main thread runs the upgrade via
+// src/services/migration.js; the worker just needs matching store declarations
+// so Dexie's schema-version compare passes when it opens after the upgrade.
+// ============================================================
+db.version(6).stores({
+  cards: 'id, name, oracle_id, set, collector_number, cmc, color_identity, type_line, [set+collector_number]',
+  meta: 'key',
+  collection: '++id, scryfall_id, category, foil, [scryfall_id+foil], [scryfall_id+category]',
+  decks: '++id, name, format, updated_at',
+  deck_cards: '++id, deck_id, scryfall_id, [deck_id+scryfall_id]',
+  games: '++id, deck_id, started_at, ended_at',
+  watchlist: '++id, &scryfall_id',
+  price_history: '++id, scryfall_id, date, updated_at, [scryfall_id+date]',
+  edhrec_cache: 'commander',
+  combo_cache: 'deck_id',
+  card_salt_cache: 'sanitized',
+  collection_next: 'id, scryfall_id, category, foil, user_id, updated_at, synced_at, [scryfall_id+foil], [scryfall_id+category]',
+  decks_next: 'id, name, format, user_id, updated_at, synced_at',
+  deck_cards_next: 'id, deck_id, scryfall_id, user_id, updated_at, synced_at, [deck_id+scryfall_id]',
+  games_next: 'id, deck_id, user_id, started_at, ended_at, updated_at, synced_at',
+  watchlist_next: 'id, &scryfall_id, user_id, updated_at, synced_at',
+  profile: 'id, user_id, updated_at',
+  sync_queue: '++id, table_name, user_id, created_at',
+  sync_conflicts: '++id, table_name, detected_at'
+});
+
+db.version(7).stores({
+  collection: null,
+  decks: null,
+  deck_cards: null,
+  games: null,
+  watchlist: null,
+  collection_next: 'id, scryfall_id, category, foil, user_id, updated_at, synced_at, [scryfall_id+foil], [scryfall_id+category]',
+  decks_next: 'id, name, format, user_id, updated_at, synced_at',
+  deck_cards_next: 'id, deck_id, scryfall_id, user_id, updated_at, synced_at, [deck_id+scryfall_id]',
+  games_next: 'id, deck_id, user_id, started_at, ended_at, updated_at, synced_at',
+  watchlist_next: 'id, &scryfall_id, user_id, updated_at, synced_at',
+  cards: 'id, name, oracle_id, set, collector_number, cmc, color_identity, type_line, [set+collector_number]',
+  meta: 'key',
+  price_history: '++id, scryfall_id, date, updated_at, [scryfall_id+date]',
+  edhrec_cache: 'commander',
+  combo_cache: 'deck_id',
+  card_salt_cache: 'sanitized',
+  profile: 'id, user_id, updated_at',
+  sync_queue: '++id, table_name, user_id, created_at',
+  sync_conflicts: '++id, table_name, detected_at'
+});
+
 const SCRYFALL_BULK_API = 'https://api.scryfall.com/bulk-data/default-cards';
 const USER_AGENT = 'Counterflux/1.0 (MTG collection manager)';
 
