@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Second Sunrise
 status: executing
-stopped_at: Completed 07-01-PLAN.md (Polish Pass) — 11 POLISH items shipped, 57/57 plan tests pass
-last_updated: "2026-04-14T23:46:45.766Z"
-last_activity: 2026-04-14
+stopped_at: Completed 07-02-PLAN.md (Perf Baseline) — web-vitals + lhci wired, PERF-BASELINE.md committed with honest v1.0 numbers (Perf 54, CLS 1.00, LCP 3.7s), 5 gaps flagged for Phase 13
+last_updated: "2026-04-15T12:44:53.769Z"
+last_activity: 2026-04-15
 progress:
   total_phases: 7
   completed_phases: 0
   total_plans: 3
-  completed_plans: 1
+  completed_plans: 2
   percent: 0
 ---
 
@@ -26,9 +26,9 @@ See: .planning/PROJECT.md (updated 2026-04-14)
 ## Current Position
 
 Phase: 07 (polish-pass-perf-baseline-schema-migration) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 Status: Ready to execute
-Last activity: 2026-04-14
+Last activity: 2026-04-15
 
 Progress: [          ] 0%
 
@@ -60,6 +60,7 @@ Progress: [          ] 0%
 | Phase 04 P04 | 12min | 3 | 16 |
 | Phase 06 P04 | 5min | 2 | 7 |
 | Phase 07 P01 | 12min | 8 tasks | 16 files |
+| Phase 07 P02 | 3min | 5 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -86,6 +87,8 @@ Full decision log in PROJECT.md Key Decisions table.
 - [Phase 07]: Filter nameless movers rows (strategy A) with per-column empty state — cleaner UX than scryfall_id fallback
 - [Phase 07]: Sidebar collapse resize handler respects persisted user preference (D-28)
 - [Phase 07]: cf-card-img shared utility class applied to all card-image render sites (POLISH-04)
+- [Phase 07]: web-vitals v5 requires fresh opts literal per onX call — initUnique uses opts identity as WeakMap key, shared reference collides Manager instances (crashed INP/CLS with 'd.T is not a function' on interaction)
+- [Phase 07]: PERF-BASELINE.md captured honest median-of-3 numbers (FCP 1.0s, LCP 3.7s, CLS 1.00, Perf 54) — 5 gaps flagged for Phase 13: CLS critical, LCP exceeds 2.5s, bulk-data blocks UI ~5min, bfcache disabled, 1 non-composited animation
 
 ### Pending Todos
 
@@ -100,6 +103,6 @@ None — roadmap complete, next step is `/gsd:plan-phase 7`.
 
 ## Session Continuity
 
-Last session: 2026-04-14T23:46:45.764Z
-Stopped at: Completed 07-01-PLAN.md (Polish Pass) — 11 POLISH items shipped, 57/57 plan tests pass
+Last session: 2026-04-15T12:43:35.188Z
+Stopped at: Completed 07-02-PLAN.md (Perf Baseline) — web-vitals + lhci wired, PERF-BASELINE.md committed with honest v1.0 numbers (Perf 54, CLS 1.00, LCP 3.7s), 5 gaps flagged for Phase 13
 Resume file: None
