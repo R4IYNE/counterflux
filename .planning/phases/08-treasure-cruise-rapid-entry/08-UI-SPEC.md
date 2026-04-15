@@ -1,10 +1,11 @@
 ---
 phase: 8
 slug: treasure-cruise-rapid-entry
-status: draft
+status: approved
 shadcn_initialized: false
 preset: none
 created: 2026-04-15
+reviewed_at: 2026-04-15
 ---
 
 # Phase 8 — UI Design Contract
