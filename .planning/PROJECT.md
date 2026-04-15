@@ -119,4 +119,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-14 — milestone v1.1 Second Sunrise initialised*
+*Last updated: 2026-04-15 — Phase 07 (polish pass + perf baseline + schema v5→v8 migration) complete; 5 perf gaps flagged for Phase 13, schema pre-ready for Phases 9 and 11*
