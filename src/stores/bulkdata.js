@@ -15,6 +15,7 @@ export function initBulkDataStore() {
     totalCards: 0,        // total cards when complete
     error: null,          // error message string
     updatedAt: null,      // ISO timestamp of cached data
+    migrationProgress: null,  // 0..100 during v5→v7 migration; null otherwise (D-17a)
 
     get progress() {
       if (this.total === 0) return 0;
