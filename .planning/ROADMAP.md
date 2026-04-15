@@ -44,7 +44,7 @@
 **Plans**: 3 plans
   - [x] 07-01-PLAN.md — Polish batch: 11 cross-app polish fixes (POLISH-01..11)
   - [x] 07-02-PLAN.md — Perf baseline: web-vitals + Lighthouse CI tooling + committed PERF-BASELINE.md (PERF-01..03)
-  - [ ] 07-03-PLAN.md — Schema v6+v7 migration: temp-table shuffle to UUID PKs + sync_queue + sync_conflicts + profile (SCHEMA-01..03)
+  - [x] 07-03-PLAN.md — Schema v6+v7 migration: temp-table shuffle to UUID PKs + sync_queue + sync_conflicts + profile (SCHEMA-01..03)
 
 ### Phase 8: Treasure Cruise Rapid Entry
 **Goal**: Collectors can add cards faster than they could in v1.0 — whether entering one card, picking a specific printing, or importing a whole Commander precon
