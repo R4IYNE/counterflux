@@ -22,9 +22,12 @@ export function bootPerfMetrics() {
     render();
   };
 
-  onLCP(track);
-  onINP(track);
-  onCLS(track);
-  onFCP(track);
-  onTTFB(track);
+  // NOTE: each onX call gets a fresh opts literal because web-vitals v5 uses
+  // the opts object identity as a WeakMap key in initUnique — sharing a single
+  // reference between metrics collides their internal Manager instances.
+  onLCP(track, { reportAllChanges: true });
+  onINP(track, { reportAllChanges: true });
+  onCLS(track, { reportAllChanges: true });
+  onFCP(track, { reportAllChanges: true });
+  onTTFB(track, { reportAllChanges: true });
 }
