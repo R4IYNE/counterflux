@@ -83,6 +83,33 @@ src/
 - **Virtual scrolling**: Custom ~150-line vanilla JS implementation for card grids at 1000+ items. No library needed.
 - **Screen lazy loading**: Navigo router loads screen modules on navigation, not at startup.
 
+### Dexie Schema v6+v7 (Phase 7, v1.1)
+
+The schema chain extends through v7. v6 and v7 ship in the same PR (Phase 7 Plan 3, per `07-CONTEXT.md` D-01a) — a v1.0 user experiences a single upgrade event on first boot of v1.1.
+
+**What changed:**
+- Synced tables (`collection`, `decks`, `deck_cards`, `games`, `watchlist`) migrated from `++id` autoincrement to text UUID PKs via a temp-table shuffle. Dexie 4.x cannot change a table's PK type in-place (see `.planning/research/PITFALLS.md` §1), so v6 creates `*_next` shadow tables with the final shape and copies rows with freshly-generated UUIDs + FK remap, then v7 null-drops the legacy autoincrement tables.
+- **`*_next` is the canonical name consumed by Phases 9 and 11** — Dexie cannot rename within a single version, and the rename-spike test (`tests/schema-rename-spike.test.js` Test 3) confirmed a future v8 can collapse the suffix if desired.
+- New tables created with final shape: `sync_queue` (`++id, table_name, user_id, created_at`), `sync_conflicts` (`++id, table_name, detected_at`), `profile` (`id, user_id, updated_at`). Phase 11 populates sync tables; Phase 10 populates profile.
+- Backfilled fields on every migrated row: `updated_at` = `Date.now()` at migration time (D-07), `synced_at` = `null` (D-08), `user_id` = `null`; `games.turn_laps` defaults to `[]` when absent (D-09).
+- `price_history.updated_at` column added (no PK change, straight `.modify()` backfill — D-11).
+- `meta` table gets a `schema_version` row: `{ key: 'schema_version', version: 7, migrated_at: <ISO string> }` (D-12).
+
+**Migration safety:** `src/services/migration.js` orchestrates the upgrade — sweeps stale backups (7-day TTL, D-16), writes a pre-migration localStorage backup keyed `counterflux_v5_backup_<ISO-timestamp>` with JSON round-trip validation (D-17b), registers `db.on('blocked')` and `db.on('versionchange')` handlers BEFORE `db.open()` (Pitfall F), and surfaces failure via a blocking modal that stays up until the user acts. If another tab holds an old connection, `src/components/migration-blocked-modal.js` renders a "Counterflux is upgrading — please close other Counterflux tabs" overlay that auto-closes when the upgrade proceeds.
+
+**Progress UX (D-17a):** The v6 upgrade callback counts total rows first, then emits `Alpine.store('bulkdata').migrationProgress` updates at ~10% increments. The splash screen (`src/components/splash-screen.js`, wired in Plan 1) renders "Migrating your archive — N%" so 5000+ card collections don't appear frozen.
+
+**Phases 9 and 11** consume the new schema directly: Phase 9 persists `games_next.turn_laps`, Phase 11 populates `sync_queue` as the outbox, Phase 10 writes `profile` rows on auth.
+
+**Files of interest:**
+- `src/db/schema.js` — v1..v7 chain with v6 upgrade callback (UUID remap + backfills + schema_version)
+- `src/services/migration.js` — orchestrator; probe-at-v5 snapshot before production `db.open`
+- `src/services/migration-backup.js` — localStorage backup with round-trip validation + 7-day TTL sweep
+- `src/components/migration-blocked-modal.js` — vanilla-DOM blocking modal (Alpine not yet available mid-migration)
+- `src/workers/bulk-data.worker.js` — mirrors v6+v7 declarations (worker only touches `cards`+`meta` but must declare the full chain for schema-match)
+- `tests/migration-v5-to-v7.test.js` — D-17 hard-gate suite (12 tests covering v1..v5 fixtures × 4 realistic states)
+- `tests/schema-rename-spike.test.js` — documents the rename pattern chosen for this migration
+
 ## Constraints
 
 ### Scryfall API Compliance (mandatory)
