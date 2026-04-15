@@ -374,7 +374,7 @@ export async function reopenAtV7(dbName) {
     });
   });
 
-  // v7 — drop legacy autoincrement tables; *_next remains canonical.
+  // v7 — drop legacy autoincrement tables; *_next carries data forward.
   db.version(7).stores({
     cards: 'id, name, oracle_id, set, collector_number, cmc, color_identity, type_line, [set+collector_number]',
     meta: 'key',
@@ -403,6 +403,49 @@ export async function reopenAtV7(dbName) {
     });
   });
 
+  // v8 — collapse *_next back to clean names so v1.0 code keeps working.
+  db.version(8).stores({
+    collection: 'id, scryfall_id, category, foil, user_id, updated_at, synced_at, [scryfall_id+foil], [scryfall_id+category]',
+    decks: 'id, name, format, user_id, updated_at, synced_at',
+    deck_cards: 'id, deck_id, scryfall_id, user_id, updated_at, synced_at, [deck_id+scryfall_id]',
+    games: 'id, deck_id, user_id, started_at, ended_at, updated_at, synced_at',
+    watchlist: 'id, &scryfall_id, user_id, updated_at, synced_at',
+    collection_next: null,
+    decks_next: null,
+    deck_cards_next: null,
+    games_next: null,
+    watchlist_next: null,
+    cards: 'id, name, oracle_id, set, collector_number, cmc, color_identity, type_line, [set+collector_number]',
+    meta: 'key',
+    price_history: '++id, scryfall_id, date, updated_at, [scryfall_id+date]',
+    edhrec_cache: 'commander',
+    combo_cache: 'deck_id',
+    card_salt_cache: 'sanitized',
+    profile: 'id, user_id, updated_at',
+    sync_queue: '++id, table_name, user_id, created_at',
+    sync_conflicts: '++id, table_name, detected_at',
+  }).upgrade(async (tx) => {
+    const pairs = [
+      ['collection_next', 'collection'],
+      ['decks_next', 'decks'],
+      ['deck_cards_next', 'deck_cards'],
+      ['games_next', 'games'],
+      ['watchlist_next', 'watchlist'],
+    ];
+    for (const [src, dst] of pairs) {
+      const rows = await tx.table(src).toArray();
+      if (rows.length) await tx.table(dst).bulkAdd(rows);
+    }
+    await tx.table('meta').put({
+      key: 'schema_version',
+      version: 8,
+      migrated_at: new Date().toISOString(),
+    });
+  });
+
   await db.open();
   return db;
 }
+
+/** Alias — historical name from plan text; now opens at v8 final state. */
+export const reopenAtV8 = reopenAtV7;

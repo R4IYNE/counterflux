@@ -40,12 +40,12 @@ describe('migration v5 → v7 (SCHEMA-01, SCHEMA-02 — D-17 hard gate)', () => 
     const v5 = await openAtV5(TEST_DB);
     await v5.close();
     const v7 = await reopenAtV7(TEST_DB);
-    expect(v7.verno).toBe(7);
-    expect(await v7.collection_next.count()).toBe(0);
-    expect(await v7.decks_next.count()).toBe(0);
-    expect(await v7.deck_cards_next.count()).toBe(0);
-    expect(await v7.games_next.count()).toBe(0);
-    expect(await v7.watchlist_next.count()).toBe(0);
+    expect(v7.verno).toBe(8);
+    expect(await v7.collection.count()).toBe(0);
+    expect(await v7.decks.count()).toBe(0);
+    expect(await v7.deck_cards.count()).toBe(0);
+    expect(await v7.games.count()).toBe(0);
+    expect(await v7.watchlist.count()).toBe(0);
     await v7.close();
   });
 
@@ -54,7 +54,7 @@ describe('migration v5 → v7 (SCHEMA-01, SCHEMA-02 — D-17 hard gate)', () => 
     await seed500Cards(v5);
     await v5.close();
     const v7 = await reopenAtV7(TEST_DB);
-    const rows = await v7.collection_next.toArray();
+    const rows = await v7.collection.toArray();
     expect(rows).toHaveLength(500);
     for (const r of rows.slice(0, 10)) {
       expect(r.id).toMatch(/^[0-9a-f-]{36}$/); // UUID v4 shape
@@ -73,10 +73,10 @@ describe('migration v5 → v7 (SCHEMA-01, SCHEMA-02 — D-17 hard gate)', () => 
     const v5DcCount = await v5.deck_cards.count();
     await v5.close();
     const v7 = await reopenAtV7(TEST_DB);
-    expect(await v7.decks_next.count()).toBe(v5DecksCount);
-    expect(await v7.deck_cards_next.count()).toBe(v5DcCount);
-    const allDeckIds = new Set((await v7.decks_next.toArray()).map((d) => d.id));
-    const dcs = await v7.deck_cards_next.toArray();
+    expect(await v7.decks.count()).toBe(v5DecksCount);
+    expect(await v7.deck_cards.count()).toBe(v5DcCount);
+    const allDeckIds = new Set((await v7.decks.toArray()).map((d) => d.id));
+    const dcs = await v7.deck_cards.toArray();
     for (const dc of dcs) {
       expect(allDeckIds.has(dc.deck_id)).toBe(true);
     }
@@ -88,7 +88,7 @@ describe('migration v5 → v7 (SCHEMA-01, SCHEMA-02 — D-17 hard gate)', () => 
     await seedActiveGame(v5);
     await v5.close();
     const v7 = await reopenAtV7(TEST_DB);
-    const games = await v7.games_next.toArray();
+    const games = await v7.games.toArray();
     expect(games).toHaveLength(1);
     expect(Array.isArray(games[0].turn_laps)).toBe(true);
     expect(games[0].turn_laps).toEqual([]);
@@ -101,7 +101,7 @@ describe('migration v5 → v7 (SCHEMA-01, SCHEMA-02 — D-17 hard gate)', () => 
     const v1 = await openAtV1(TEST_DB);
     await v1.close();
     const v7 = await reopenAtV7(TEST_DB);
-    expect(v7.verno).toBe(7);
+    expect(v7.verno).toBe(8);
     await v7.close();
   });
 
@@ -121,13 +121,13 @@ describe('migration v5 → v7 (SCHEMA-01, SCHEMA-02 — D-17 hard gate)', () => 
     ]);
     await v2.close();
     const v7 = await reopenAtV7(TEST_DB);
-    expect(v7.verno).toBe(7);
-    expect(await v7.collection_next.count()).toBe(10);
-    expect(await v7.decks_next.count()).toBe(0);
-    expect(await v7.deck_cards_next.count()).toBe(0);
-    expect(await v7.games_next.count()).toBe(0);
-    expect(await v7.watchlist_next.count()).toBe(0);
-    const rows = await v7.collection_next.toArray();
+    expect(v7.verno).toBe(8);
+    expect(await v7.collection.count()).toBe(10);
+    expect(await v7.decks.count()).toBe(0);
+    expect(await v7.deck_cards.count()).toBe(0);
+    expect(await v7.games.count()).toBe(0);
+    expect(await v7.watchlist.count()).toBe(0);
+    const rows = await v7.collection.toArray();
     for (const r of rows.slice(0, 3)) {
       expect(r.id).toMatch(/^[0-9a-f-]{36}$/);
       expect(typeof r.updated_at).toBe('number');
@@ -151,10 +151,10 @@ describe('migration v5 → v7 (SCHEMA-01, SCHEMA-02 — D-17 hard gate)', () => 
     ]);
     await v3.close();
     const v7 = await reopenAtV7(TEST_DB);
-    expect(await v7.collection_next.count()).toBe(5);
-    expect(await v7.decks_next.count()).toBe(2);
-    expect(await v7.watchlist_next.count()).toBe(0);
-    expect(await v7.games_next.count()).toBe(0);
+    expect(await v7.collection.count()).toBe(5);
+    expect(await v7.decks.count()).toBe(2);
+    expect(await v7.watchlist.count()).toBe(0);
+    expect(await v7.games.count()).toBe(0);
     await v7.close();
   });
 
@@ -189,18 +189,18 @@ describe('migration v5 → v7 (SCHEMA-01, SCHEMA-02 — D-17 hard gate)', () => 
     await v4.close();
 
     const v7 = await reopenAtV7(TEST_DB);
-    expect(v7.verno).toBe(7);
-    expect(await v7.collection_next.count()).toBe(20);
-    expect(await v7.decks_next.count()).toBe(3);
-    expect(await v7.deck_cards_next.count()).toBe(6);
+    expect(v7.verno).toBe(8);
+    expect(await v7.collection.count()).toBe(20);
+    expect(await v7.decks.count()).toBe(3);
+    expect(await v7.deck_cards.count()).toBe(6);
     const edhrec = await v7.edhrec_cache.get('atraxa-praetors-voice');
     expect(edhrec).toBeDefined();
     expect(edhrec.recs).toEqual(['card-a', 'card-b']);
-    expect(await v7.watchlist_next.count()).toBe(0);
-    expect(await v7.games_next.count()).toBe(0);
+    expect(await v7.watchlist.count()).toBe(0);
+    expect(await v7.games.count()).toBe(0);
     expect(await v7.price_history.count()).toBe(0);
-    const allDeckIds = new Set((await v7.decks_next.toArray()).map((d) => d.id));
-    for (const dc of await v7.deck_cards_next.toArray()) {
+    const allDeckIds = new Set((await v7.decks.toArray()).map((d) => d.id));
+    for (const dc of await v7.deck_cards.toArray()) {
       expect(allDeckIds.has(dc.deck_id)).toBe(true);
     }
     await v7.close();
@@ -211,13 +211,13 @@ describe('migration v5 → v7 (SCHEMA-01, SCHEMA-02 — D-17 hard gate)', () => 
     await seed500Cards(v5);
     await v5.close();
     const first = await reopenAtV7(TEST_DB);
-    const beforeCount = await first.collection_next.count();
-    const beforeIds = (await first.collection_next.toArray()).map((r) => r.id).sort();
+    const beforeCount = await first.collection.count();
+    const beforeIds = (await first.collection.toArray()).map((r) => r.id).sort();
     await first.close();
     const second = await reopenAtV7(TEST_DB);
-    expect(second.verno).toBe(7);
-    expect(await second.collection_next.count()).toBe(beforeCount);
-    const afterIds = (await second.collection_next.toArray()).map((r) => r.id).sort();
+    expect(second.verno).toBe(8);
+    expect(await second.collection.count()).toBe(beforeCount);
+    const afterIds = (await second.collection.toArray()).map((r) => r.id).sort();
     // UUIDs stable — v6.upgrade did not re-run on second open
     expect(afterIds).toEqual(beforeIds);
     await second.close();
@@ -229,7 +229,7 @@ describe('migration v5 → v7 (SCHEMA-01, SCHEMA-02 — D-17 hard gate)', () => 
     const v7 = await reopenAtV7(TEST_DB);
     const sv = await v7.meta.get('schema_version');
     expect(sv).toBeDefined();
-    expect(sv.version).toBe(7);
+    expect(sv.version).toBe(8);
     expect(typeof sv.migrated_at).toBe('string');
     await v7.close();
   });
@@ -261,8 +261,8 @@ describe('migration v5 → v7 (SCHEMA-01, SCHEMA-02 — D-17 hard gate)', () => 
     await v5.close();
     const v7 = await reopenAtV7(TEST_DB);
     // Orphan skipped — only the 2 valid deck_cards rows survived.
-    expect(await v7.deck_cards_next.count()).toBe(2);
-    expect(await v7.decks_next.count()).toBe(1);
+    expect(await v7.deck_cards.count()).toBe(2);
+    expect(await v7.decks.count()).toBe(1);
     await v7.close();
   });
 });

@@ -275,16 +275,89 @@ db.version(7).stores({
 }).upgrade(async (tx) => {
   try {
     // Legacy autoincrement tables were dropped by the stores() declaration
-    // above. `*_next` carries all migrated rows forward. The only work here
-    // is updating the schema_version row so the meta table reflects the
-    // reached version — used by debug logs + future cloud error reports.
+    // above. `*_next` carries all migrated rows forward. v8 (below) collapses
+    // the `_next` suffix back to clean names so v1.0 code (which reads
+    // db.collection, db.decks, etc.) continues to work. We update the
+    // schema_version row here so the meta table reflects intermediate progress.
     await tx.table('meta').put({
       key: 'schema_version',
       version: 7,
       migrated_at: new Date().toISOString()
     });
+  } catch (e) {
+    console.error('[migration v7] FAILED', e);
+    throw e;
+  }
+});
 
-    // Reset migrationProgress to 100 so any lingering splash indicator clears
+// ============================================================
+// Schema v8 — collapse `*_next` suffix back to clean final names.
+//
+// Why this exists: v1.0 production code (stores/collection.js, stores/deck.js,
+// stores/market.js, stores/game.js, services/price-history.js, etc.) reads
+// db.collection, db.decks, db.deck_cards, db.games, db.watchlist directly.
+// Variant (a) alone would break every one of those paths. The rename-pattern
+// spike (tests/schema-rename-spike.test.js Test 3) proved a later version can
+// reuse a name that an earlier version nulled, so this v8 bump recreates the
+// clean names with the UUID-PK shape and copies all rows from `*_next`,
+// then drops `*_next`.
+//
+// Per `must_haves.truths` line 32: "clean-named tables (variant c — requires
+// v8 bump in this same PR)" is an accepted outcome. Phases 9 and 11 consume
+// unsuffixed names post-v8.
+// ============================================================
+db.version(8).stores({
+  // Recreate clean names with the UUID-PK shape
+  collection: 'id, scryfall_id, category, foil, user_id, updated_at, synced_at, [scryfall_id+foil], [scryfall_id+category]',
+  decks: 'id, name, format, user_id, updated_at, synced_at',
+  deck_cards: 'id, deck_id, scryfall_id, user_id, updated_at, synced_at, [deck_id+scryfall_id]',
+  games: 'id, deck_id, user_id, started_at, ended_at, updated_at, synced_at',
+  watchlist: 'id, &scryfall_id, user_id, updated_at, synced_at',
+
+  // Drop the shadow tables
+  collection_next: null,
+  decks_next: null,
+  deck_cards_next: null,
+  games_next: null,
+  watchlist_next: null,
+
+  // Unchanged pass-through
+  cards: 'id, name, oracle_id, set, collector_number, cmc, color_identity, type_line, [set+collector_number]',
+  meta: 'key',
+  price_history: '++id, scryfall_id, date, updated_at, [scryfall_id+date]',
+  edhrec_cache: 'commander',
+  combo_cache: 'deck_id',
+  card_salt_cache: 'sanitized',
+  profile: 'id, user_id, updated_at',
+  sync_queue: '++id, table_name, user_id, created_at',
+  sync_conflicts: '++id, table_name, detected_at'
+}).upgrade(async (tx) => {
+  try {
+    // Copy rows from *_next into the freshly-recreated clean-named tables.
+    // Dexie has just created the clean tables empty in this version, so a
+    // bulkAdd will not hit unique-constraint errors provided the data is
+    // well-formed (which v6's .upgrade guaranteed).
+    const pairs = [
+      ['collection_next', 'collection'],
+      ['decks_next', 'decks'],
+      ['deck_cards_next', 'deck_cards'],
+      ['games_next', 'games'],
+      ['watchlist_next', 'watchlist'],
+    ];
+    for (const [srcName, dstName] of pairs) {
+      const rows = await tx.table(srcName).toArray();
+      if (rows.length) {
+        await tx.table(dstName).bulkAdd(rows);
+      }
+    }
+
+    await tx.table('meta').put({
+      key: 'schema_version',
+      version: 8,
+      migrated_at: new Date().toISOString()
+    });
+
+    // Reset migrationProgress to 100 so any lingering splash indicator clears.
     try {
       if (typeof window !== 'undefined' && window.Alpine?.store) {
         const store = window.Alpine.store('bulkdata');
@@ -294,10 +367,31 @@ db.version(7).stores({
       /* decorative */
     }
   } catch (e) {
-    console.error('[migration v7] FAILED', e);
+    console.error('[migration v8] FAILED', e);
     throw e;
   }
 });
+
+// ============================================================
+// UUID auto-assign hooks (v8 tables).
+//
+// v1.0 code inserts rows via db.collection.add({ scryfall_id: ... }) without
+// supplying `id` — it relied on Dexie's `++id` autoincrement. At v8 the PK is
+// a text UUID with `auto === false`, so inserts without `id` throw DataError.
+// These creating-hooks supply `crypto.randomUUID()` when the caller omits
+// `id`, preserving the v1.0 call-site contract (no churn across 11+ files,
+// no risk of a missed site). Callers that pass an explicit `id` (e.g., the
+// migration upgrade callbacks, or future sync-engine code restoring a row
+// from the server) keep full control.
+// ============================================================
+const UUID_TABLES = ['collection', 'decks', 'deck_cards', 'games', 'watchlist', 'profile'];
+for (const tableName of UUID_TABLES) {
+  db.table(tableName).hook('creating', function (primKey, obj) {
+    if (obj && obj.id == null) {
+      obj.id = crypto.randomUUID();
+    }
+  });
+}
 
 export async function getBulkMeta() {
   return db.meta.get('bulk-data');

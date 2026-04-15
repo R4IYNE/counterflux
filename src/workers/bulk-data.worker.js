@@ -118,6 +118,28 @@ db.version(7).stores({
   sync_conflicts: '++id, table_name, detected_at'
 });
 
+db.version(8).stores({
+  collection: 'id, scryfall_id, category, foil, user_id, updated_at, synced_at, [scryfall_id+foil], [scryfall_id+category]',
+  decks: 'id, name, format, user_id, updated_at, synced_at',
+  deck_cards: 'id, deck_id, scryfall_id, user_id, updated_at, synced_at, [deck_id+scryfall_id]',
+  games: 'id, deck_id, user_id, started_at, ended_at, updated_at, synced_at',
+  watchlist: 'id, &scryfall_id, user_id, updated_at, synced_at',
+  collection_next: null,
+  decks_next: null,
+  deck_cards_next: null,
+  games_next: null,
+  watchlist_next: null,
+  cards: 'id, name, oracle_id, set, collector_number, cmc, color_identity, type_line, [set+collector_number]',
+  meta: 'key',
+  price_history: '++id, scryfall_id, date, updated_at, [scryfall_id+date]',
+  edhrec_cache: 'commander',
+  combo_cache: 'deck_id',
+  card_salt_cache: 'sanitized',
+  profile: 'id, user_id, updated_at',
+  sync_queue: '++id, table_name, user_id, created_at',
+  sync_conflicts: '++id, table_name, detected_at'
+});
+
 const SCRYFALL_BULK_API = 'https://api.scryfall.com/bulk-data/default-cards';
 const USER_AGENT = 'Counterflux/1.0 (MTG collection manager)';
 

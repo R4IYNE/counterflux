@@ -83,17 +83,21 @@ src/
 - **Virtual scrolling**: Custom ~150-line vanilla JS implementation for card grids at 1000+ items. No library needed.
 - **Screen lazy loading**: Navigo router loads screen modules on navigation, not at startup.
 
-### Dexie Schema v6+v7 (Phase 7, v1.1)
+### Dexie Schema v6+v7+v8 (Phase 7, v1.1)
 
-The schema chain extends through v7. v6 and v7 ship in the same PR (Phase 7 Plan 3, per `07-CONTEXT.md` D-01a) — a v1.0 user experiences a single upgrade event on first boot of v1.1.
+The schema chain extends through v8. v6, v7, and v8 all ship in the same PR (Phase 7 Plan 3, per `07-CONTEXT.md` D-01a + `must_haves.truths` variant c) — a v1.0 user experiences a single upgrade event on first boot of v1.1.
 
 **What changed:**
-- Synced tables (`collection`, `decks`, `deck_cards`, `games`, `watchlist`) migrated from `++id` autoincrement to text UUID PKs via a temp-table shuffle. Dexie 4.x cannot change a table's PK type in-place (see `.planning/research/PITFALLS.md` §1), so v6 creates `*_next` shadow tables with the final shape and copies rows with freshly-generated UUIDs + FK remap, then v7 null-drops the legacy autoincrement tables.
-- **`*_next` is the canonical name consumed by Phases 9 and 11** — Dexie cannot rename within a single version, and the rename-spike test (`tests/schema-rename-spike.test.js` Test 3) confirmed a future v8 can collapse the suffix if desired.
-- New tables created with final shape: `sync_queue` (`++id, table_name, user_id, created_at`), `sync_conflicts` (`++id, table_name, detected_at`), `profile` (`id, user_id, updated_at`). Phase 11 populates sync tables; Phase 10 populates profile.
+- Synced tables (`collection`, `decks`, `deck_cards`, `games`, `watchlist`) migrated from `++id` autoincrement to text UUID PKs via a three-step temp-table shuffle. Dexie 4.x cannot change a table's PK type in-place (see `.planning/research/PITFALLS.md` §1), so:
+  - **v6** creates `*_next` shadow tables with the final UUID-PK shape and copies rows with fresh UUIDs + FK remap (deckRemap Map ensures `deck_cards.deck_id` rewrites correctly).
+  - **v7** null-drops the legacy autoincrement tables.
+  - **v8** recreates the clean unsuffixed names with the UUID-PK shape, copies rows from `*_next`, and drops the shadow tables. Phases 9 and 11 consume the clean unsuffixed names directly (`db.collection`, `db.decks`, etc.).
+- The rename-pattern spike (`tests/schema-rename-spike.test.js` Test 3) front-loaded the question "can v8 recreate a previously-nulled name?" and confirmed it works against Dexie 4.x + fake-indexeddb.
+- New tables created in v6 with final shape: `sync_queue` (`++id, table_name, user_id, created_at`), `sync_conflicts` (`++id, table_name, detected_at`), `profile` (`id, user_id, updated_at`). Phase 11 populates sync tables; Phase 10 populates profile.
 - Backfilled fields on every migrated row: `updated_at` = `Date.now()` at migration time (D-07), `synced_at` = `null` (D-08), `user_id` = `null`; `games.turn_laps` defaults to `[]` when absent (D-09).
 - `price_history.updated_at` column added (no PK change, straight `.modify()` backfill — D-11).
-- `meta` table gets a `schema_version` row: `{ key: 'schema_version', version: 7, migrated_at: <ISO string> }` (D-12).
+- `meta` table gets a `schema_version` row: `{ key: 'schema_version', version: 8, migrated_at: <ISO string> }` (D-12).
+- **UUID auto-assign hook:** `src/db/schema.js` attaches a `creating` hook to the six UUID-PK tables (collection, decks, deck_cards, games, watchlist, profile) that supplies `crypto.randomUUID()` when the caller omits `id`. This preserves v1.0 call-site ergonomics (`db.collection.add({ scryfall_id: ... })` keeps working) without requiring churn across 11+ files. Callers that pass an explicit `id` retain full control — the hook is a no-op.
 
 **Migration safety:** `src/services/migration.js` orchestrates the upgrade — sweeps stale backups (7-day TTL, D-16), writes a pre-migration localStorage backup keyed `counterflux_v5_backup_<ISO-timestamp>` with JSON round-trip validation (D-17b), registers `db.on('blocked')` and `db.on('versionchange')` handlers BEFORE `db.open()` (Pitfall F), and surfaces failure via a blocking modal that stays up until the user acts. If another tab holds an old connection, `src/components/migration-blocked-modal.js` renders a "Counterflux is upgrading — please close other Counterflux tabs" overlay that auto-closes when the upgrade proceeds.
 
@@ -102,13 +106,13 @@ The schema chain extends through v7. v6 and v7 ship in the same PR (Phase 7 Plan
 **Phases 9 and 11** consume the new schema directly: Phase 9 persists `games_next.turn_laps`, Phase 11 populates `sync_queue` as the outbox, Phase 10 writes `profile` rows on auth.
 
 **Files of interest:**
-- `src/db/schema.js` — v1..v7 chain with v6 upgrade callback (UUID remap + backfills + schema_version)
+- `src/db/schema.js` — v1..v8 chain; v6 copies to `*_next`, v7 drops legacy, v8 renames `*_next` → clean; UUID creating-hook at module bottom
 - `src/services/migration.js` — orchestrator; probe-at-v5 snapshot before production `db.open`
 - `src/services/migration-backup.js` — localStorage backup with round-trip validation + 7-day TTL sweep
 - `src/components/migration-blocked-modal.js` — vanilla-DOM blocking modal (Alpine not yet available mid-migration)
-- `src/workers/bulk-data.worker.js` — mirrors v6+v7 declarations (worker only touches `cards`+`meta` but must declare the full chain for schema-match)
-- `tests/migration-v5-to-v7.test.js` — D-17 hard-gate suite (12 tests covering v1..v5 fixtures × 4 realistic states)
-- `tests/schema-rename-spike.test.js` — documents the rename pattern chosen for this migration
+- `src/workers/bulk-data.worker.js` — mirrors v6+v7+v8 declarations (worker only touches `cards`+`meta` but must declare the full chain for schema-match)
+- `tests/migration-v5-to-v7.test.js` — D-17 hard-gate suite (12 tests covering v1..v5 fixtures × 4 realistic states; asserts clean-named tables at v8)
+- `tests/schema-rename-spike.test.js` — front-loaded the rename-pattern question; proved Dexie can recreate a previously-nulled name in a later version
 
 ## Constraints
 

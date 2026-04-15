@@ -62,46 +62,39 @@ describe('Dexie schema', () => {
   });
 });
 
-describe('v7 schema shape (Phase 7 Plan 3 — SCHEMA-01)', () => {
-  it('db.verno is 7 after open', () => {
-    // db is opened lazily on first access — force-open via a trivial read
+describe('v8 schema shape (Phase 7 Plan 3 — SCHEMA-01, variant c with clean names)', () => {
+  it('db.verno is 8 after open', () => {
     expect(db.verno >= 0).toBe(true); // sanity
     return db.open().then(() => {
-      expect(db.verno).toBe(7);
+      expect(db.verno).toBe(8);
     });
   });
 
-  it('legacy autoincrement tables (collection/decks/deck_cards/games/watchlist) are absent at v7', async () => {
+  it('clean-named tables exist at v8 with text UUID PK (auto === false)', async () => {
     await db.open();
     const names = db.tables.map((t) => t.name);
-    expect(names).not.toContain('collection');
-    expect(names).not.toContain('decks');
-    expect(names).not.toContain('deck_cards');
-    expect(names).not.toContain('games');
-    expect(names).not.toContain('watchlist');
-  });
-
-  it('canonical *_next tables exist with text UUID PK (auto === false)', async () => {
-    await db.open();
-    const names = db.tables.map((t) => t.name);
-    for (const t of [
-      'collection_next',
-      'decks_next',
-      'deck_cards_next',
-      'games_next',
-      'watchlist_next',
-    ]) {
+    for (const t of ['collection', 'decks', 'deck_cards', 'games', 'watchlist']) {
       expect(names).toContain(t);
     }
-    const collectionNext = db.tables.find((t) => t.name === 'collection_next');
-    expect(collectionNext.schema.primKey.name).toBe('id');
-    expect(collectionNext.schema.primKey.auto).toBeFalsy();
+    const collection = db.tables.find((t) => t.name === 'collection');
+    expect(collection.schema.primKey.name).toBe('id');
+    expect(collection.schema.primKey.auto).toBeFalsy();
   });
 
-  it('collection_next indexes include user_id, updated_at, synced_at', async () => {
+  it('shadow *_next tables are dropped at v8', async () => {
     await db.open();
-    const collectionNext = db.tables.find((t) => t.name === 'collection_next');
-    const indexNames = collectionNext.schema.indexes.map((i) => i.name);
+    const names = db.tables.map((t) => t.name);
+    expect(names).not.toContain('collection_next');
+    expect(names).not.toContain('decks_next');
+    expect(names).not.toContain('deck_cards_next');
+    expect(names).not.toContain('games_next');
+    expect(names).not.toContain('watchlist_next');
+  });
+
+  it('collection indexes include user_id, updated_at, synced_at', async () => {
+    await db.open();
+    const collection = db.tables.find((t) => t.name === 'collection');
+    const indexNames = collection.schema.indexes.map((i) => i.name);
     expect(indexNames).toContain('user_id');
     expect(indexNames).toContain('updated_at');
     expect(indexNames).toContain('synced_at');
@@ -126,9 +119,8 @@ describe('v7 schema shape (Phase 7 Plan 3 — SCHEMA-01)', () => {
     expect(indexNames).toContain('detected_at');
   });
 
-  // schema_version meta row is written by the v7 upgrade callback during the
-  // first `db.open()` of the Dexie singleton. The parent describe's beforeEach
-  // clears `meta` for test isolation, so we can't assert the row on the shared
-  // singleton here — the migration-v5-to-v7 suite covers that behaviour against
-  // a fresh test DB.
+  // schema_version meta row is written by the v7/v8 upgrade callbacks during
+  // first `db.open()`. The parent describe's beforeEach clears `meta` for test
+  // isolation, so we can't assert the row on the shared singleton here — the
+  // migration-v5-to-v7 suite covers it against a fresh test DB.
 });

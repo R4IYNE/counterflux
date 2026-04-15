@@ -267,7 +267,9 @@ describe('Deck Store', () => {
         color_identity: ['U', 'R'],
       });
       expect(id).toBeDefined();
-      expect(typeof id).toBe('number');
+      // Post Phase 7 Plan 3: decks now use text UUID PKs (SCHEMA-01)
+      expect(typeof id).toBe('string');
+      expect(id).toMatch(/^[0-9a-f-]{36}$/);
       const deck = await db.decks.get(id);
       expect(deck.name).toBe('Test Deck');
       expect(deck.format).toBe('commander');
