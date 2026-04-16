@@ -6,7 +6,8 @@ import { readFileSync } from 'node:fs';
 // environment is node (no DOM).
 if (typeof globalThis.window === 'undefined') globalThis.window = {};
 
-const { renderAddCardModal } = await import('../src/components/add-card-modal.js');
+const { renderAddCardPanel } = await import('../src/components/add-card-panel.js');
+const renderAddCardModal = renderAddCardPanel; // Plan 2 rename
 
 /**
  * POLISH-11: Add-to-wishlist confirmation toast must read
@@ -15,7 +16,7 @@ const { renderAddCardModal } = await import('../src/components/add-card-modal.js
  * must still read "Added to collection".
  */
 describe('add-card-modal toasts (POLISH-11)', () => {
-  const src = readFileSync('src/components/add-card-modal.js', 'utf-8');
+  const src = readFileSync('src/components/add-card-panel.js', 'utf-8');
   const html = renderAddCardModal();
 
   it('source contains conditional wishlist/collection target selection', () => {

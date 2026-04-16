@@ -4,7 +4,8 @@ import { describe, it, expect } from 'vitest';
 // assigns to window.__cf_searchCards on first call.
 if (typeof globalThis.window === 'undefined') globalThis.window = {};
 
-const { renderAddCardModal } = await import('../src/components/add-card-modal.js');
+const { renderAddCardPanel } = await import('../src/components/add-card-panel.js');
+const renderAddCardModal = renderAddCardPanel; // Plan 2 rename; keep test body intact
 
 /**
  * COLLECT-03 (D-19..D-21): search dropdown rows must render thumbnail +
@@ -21,7 +22,8 @@ describe('COLLECT-03: dropdown row thumbnail', () => {
 
   it('img appears before the name span and set icon appears after', () => {
     const html = renderAddCardModal();
-    const rowMatch = html.match(/searchResults[\s\S]*?<\/template>/);
+    // Match the dropdown row block specifically (x-for iterates searchResults)
+    const rowMatch = html.match(/x-for="\(card, idx\) in searchResults"[\s\S]*?<\/template>/);
     expect(rowMatch).toBeTruthy();
     const row = rowMatch[0];
     const imgIdx = row.indexOf('<img');

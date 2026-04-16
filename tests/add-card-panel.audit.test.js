@@ -5,7 +5,8 @@ import { describe, it, expect } from 'vitest';
 // environment is node (no DOM by default).
 if (typeof globalThis.window === 'undefined') globalThis.window = {};
 
-const { renderAddCardModal } = await import('../src/components/add-card-modal.js');
+const { renderAddCardPanel } = await import('../src/components/add-card-panel.js');
+const renderAddCardModal = renderAddCardPanel; // Plan 2 rename; keep test body intact
 
 /**
  * COLLECT-01 (D-22, audit-only): the add-card search results and selected-card
