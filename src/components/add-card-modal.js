@@ -131,13 +131,23 @@ export function renderAddCardModal() {
             <template x-for="(card, idx) in searchResults" :key="card.id">
               <button
                 @click="selectCard(card)"
-                style="width: 100%; display: flex; align-items: center; gap: 8px; padding: 8px 12px; text-align: left; cursor: pointer; background: transparent; border: none; color: #EAECEE;"
-                onmouseenter="this.style.background='#1C1F28'"
+                class="cf-dropdown-row"
+                style="width: 100%; display: flex; align-items: center; gap: 16px; padding: 8px 12px; min-height: 56px; text-align: left; cursor: pointer; background: transparent; border: none; color: var(--color-text-primary);"
+                onmouseenter="this.style.background='var(--color-surface-hover)'"
                 onmouseleave="this.style.background='transparent'"
               >
-                <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; color: #EAECEE; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"
-                      x-text="card._name"></span>
-                <i class="ss" :class="'ss-' + card.set" style="font-size: 14px; color: #4A5064;"></i>
+                <img
+                  :src="card.image_uris?.small || ''"
+                  :alt="card.name"
+                  class="cf-card-img"
+                  style="height: 40px; width: auto; flex-shrink: 0;"
+                  loading="lazy"
+                  onerror="this.style.display='none'"
+                >
+                <span style="font-family: 'Space Grotesk', sans-serif; font-size: 14px; font-weight: 700; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"
+                      x-text="card.name"></span>
+                <i class="ss" :class="'ss-' + card.set"
+                   style="font-size: 14px; color: var(--color-text-dim);"></i>
               </button>
             </template>
           </div>
