@@ -65,16 +65,19 @@ describe('COLLECT-02: src/services/precons.js', () => {
     const { fetchPrecons } = await import('../src/services/precons.js');
     const precons = await fetchPrecons();
 
-    // D-09: only commander + duel_deck (expansion, core, starter filtered out)
-    expect(precons).toHaveLength(5);
+    // D-09 + FOLLOWUP-4A (Phase 08.1): commander + duel_deck PLUS allowlist
+    // codes (cmm, clb, pca, arc, pltc) — 4 baseline + 5 allowlist = 9 rows.
+    // Non-precons (expansion, core, starter) and mb2 (set_type masters but NOT
+    // allowlisted) are still filtered out.
+    expect(precons).toHaveLength(9);
     const setTypes = new Set(precons.map((p) => p.set_type));
-    expect(setTypes).toEqual(new Set(['commander', 'duel_deck']));
+    expect(setTypes).toEqual(new Set(['commander', 'duel_deck', 'masters', 'draft_innovation', 'planechase', 'archenemy', 'promo']));
 
     // D-12: sorted released_at DESC
     expect(precons[0].released_at).toBe('2023-09-08'); // woc (newest)
     expect(precons[0].code).toBe('woc');
 
-    // Last should be the oldest
+    // Last should be the oldest — dd2 (2008-11-07) is older than arc (2010-06-18).
     expect(precons[precons.length - 1].code).toBe('dd2'); // 2008-11-07
   });
 
@@ -117,12 +120,12 @@ describe('COLLECT-02: src/services/precons.js', () => {
     });
     const { fetchPrecons } = await import('../src/services/precons.js');
     const first = await fetchPrecons();
-    expect(first).toHaveLength(5);
+    expect(first).toHaveLength(9);
 
     // Force a refresh that fails — must fall back to stale cache
     fetchMock.mockRejectedValueOnce(new Error('Network down'));
     const stale = await fetchPrecons({ forceRefresh: true });
-    expect(stale).toHaveLength(5);
+    expect(stale).toHaveLength(9);
     // Still sorted
     expect(stale[0].code).toBe('woc');
   });
@@ -182,5 +185,89 @@ describe('COLLECT-02: src/services/precons.js', () => {
     const second = await fetchPreconDecklist('cmm');
     expect(second.length).toBe(first.length);
     expect(fetchMock.mock.calls.length).toBe(callCountAfterFirst);
+  });
+});
+
+describe('FOLLOWUP-4A: PRECON_EXTRA_CODES allowlist (Phase 08.1)', () => {
+  let fetchMock;
+
+  beforeEach(async () => {
+    for (const k of Object.keys(__alpineStores)) delete __alpineStores[k];
+    const queueMod = await import('../src/services/scryfall-queue.js');
+    if (typeof queueMod.__resetQueueForTests === 'function') queueMod.__resetQueueForTests();
+    const { db } = await import('../src/db/schema.js');
+    if (db.tables.find((t) => t.name === 'precons_cache')) await db.precons_cache.clear();
+    fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+  });
+
+  afterEach(() => vi.restoreAllMocks());
+
+  it('Test A1 — cmm (set_type masters, reclassified) is included via allowlist', async () => {
+    fetchMock.mockResolvedValueOnce({ ok: true, status: 200, json: async () => mockSetsResponse });
+    const { fetchPrecons } = await import('../src/services/precons.js');
+    const precons = await fetchPrecons();
+    expect(precons.find((p) => p.code === 'cmm')).toBeDefined();
+  });
+
+  it('Test A2 — clb / pca / arc / pltc (non-commander set_types) all included', async () => {
+    fetchMock.mockResolvedValueOnce({ ok: true, status: 200, json: async () => mockSetsResponse });
+    const { fetchPrecons } = await import('../src/services/precons.js');
+    const codes = (await fetchPrecons()).map((p) => p.code);
+    expect(codes).toContain('clb');
+    expect(codes).toContain('pca');
+    expect(codes).toContain('arc');
+    expect(codes).toContain('pltc');
+  });
+
+  it('Test A3 — mb2 (set_type masters but NOT in allowlist) is filtered out', async () => {
+    fetchMock.mockResolvedValueOnce({ ok: true, status: 200, json: async () => mockSetsResponse });
+    const { fetchPrecons } = await import('../src/services/precons.js');
+    const codes = (await fetchPrecons()).map((p) => p.code);
+    expect(codes).not.toContain('mb2');
+  });
+
+  it('Test A4 — total count = baseline (commander+duel_deck) + 5 allowlist additions', async () => {
+    fetchMock.mockResolvedValueOnce({ ok: true, status: 200, json: async () => mockSetsResponse });
+    const { fetchPrecons } = await import('../src/services/precons.js');
+    const precons = await fetchPrecons();
+    // After cmm reclassification: baseline = 4 (woc, ltc commander + dd2, ddu duel_deck)
+    // Allowlist additions = 5 (cmm now via allowlist, plus clb, pca, arc, pltc)
+    // Total = 9. mb2 (masters, not allowlisted) is correctly filtered out.
+    expect(precons).toHaveLength(9);
+  });
+
+  it('Test A5 — PRECON_EXTRA_CODES export shape', async () => {
+    const { PRECON_EXTRA_CODES } = await import('../src/services/precons.js');
+    expect(Array.isArray(PRECON_EXTRA_CODES)).toBe(true);
+    expect(new Set(PRECON_EXTRA_CODES)).toEqual(new Set([
+      'cmm', 'clb', 'cmr', 'cm1', 'cc1', 'cc2',
+      'pd2', 'pd3', 'h09', 'pca', 'pc2', 'hop',
+      'arc', 'e01', 'pltc', 'gnt', 'gn2', 'gn3',
+    ]));
+    expect(PRECON_EXTRA_CODES).toHaveLength(18);
+  });
+});
+
+describe('FOLLOWUP-4B: isMultiDeckBundle helper (Phase 08.1)', () => {
+  it('returns true when decklist.length > 200', async () => {
+    const { isMultiDeckBundle } = await import('../src/services/precons.js');
+    expect(isMultiDeckBundle({ decklist: new Array(201).fill({}) })).toBe(true);
+    expect(isMultiDeckBundle({ decklist: new Array(500).fill({}) })).toBe(true);
+  });
+
+  it('returns false at or below 200 cards', async () => {
+    const { isMultiDeckBundle } = await import('../src/services/precons.js');
+    expect(isMultiDeckBundle({ decklist: new Array(200).fill({}) })).toBe(false);
+    expect(isMultiDeckBundle({ decklist: new Array(99).fill({}) })).toBe(false);
+    expect(isMultiDeckBundle({ decklist: [] })).toBe(false);
+  });
+
+  it('returns false on missing/null/empty inputs', async () => {
+    const { isMultiDeckBundle } = await import('../src/services/precons.js');
+    expect(isMultiDeckBundle(null)).toBe(false);
+    expect(isMultiDeckBundle(undefined)).toBe(false);
+    expect(isMultiDeckBundle({})).toBe(false);
+    expect(isMultiDeckBundle({ decklist: null })).toBe(false);
   });
 });
