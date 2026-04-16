@@ -1,4 +1,5 @@
 import { db } from '../db/schema.js';
+import { queueScryfallRequest } from './scryfall-queue.js';
 
 const SETS_CACHE_KEY = 'scryfall-sets';
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
@@ -19,21 +20,20 @@ export async function fetchSets() {
     return _memoryCache;
   }
 
-  // Fetch from Scryfall
-  const response = await fetch('https://api.scryfall.com/sets', {
-    headers: { 'User-Agent': 'Counterflux/1.0' }
-  });
-
-  if (!response.ok) {
+  // Phase 8 Plan 2: route via the rate-limited queue (User-Agent + 100ms
+  // spacing enforced in src/services/scryfall-queue.js).
+  let json;
+  try {
+    json = await queueScryfallRequest('https://api.scryfall.com/sets');
+  } catch (err) {
     // Fall back to stale cache if available
     if (cached && cached.data) {
       _memoryCache = cached.data;
       return _memoryCache;
     }
-    throw new Error(`Failed to fetch sets: HTTP ${response.status}`);
+    throw new Error(`Failed to fetch sets: ${err.message}`);
   }
 
-  const json = await response.json();
   const sets = (json.data || [])
     .filter(s => RELEVANT_SET_TYPES.includes(s.set_type) && !s.parent_set_code)
     .map(s => ({
