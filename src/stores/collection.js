@@ -2,6 +2,7 @@ import Alpine from 'alpinejs';
 import { db } from '../db/schema.js';
 import { logActivity } from '../services/activity.js';
 import { queueScryfallRequest } from '../services/scryfall-queue.js';
+import { fetchPrecons, fetchPreconDecklist, invalidatePreconsCache } from '../services/precons.js';
 
 /**
  * Sort collection entries by the given sort key.
@@ -75,6 +76,15 @@ export function initCollectionStore() {
     // Keyed by the oracle card's scryfall id (card.id from search result).
     printingsByCardId: {},      // { [cardId]: { loading, error, printings: [] } }
     activePrintingIdByCard: {}, // { [cardId]: printingId }
+
+    // Phase 8 Plan 3 — COLLECT-02 precon browser state.
+    preconBrowserOpen: false,
+    selectedPreconCode: null,
+    preconsLoading: false,
+    preconsError: null,
+    precons: [], // sorted newest-first by fetchPrecons() (D-12)
+    preconDecklistLoading: false,
+    preconDecklistError: null,
 
     get filtered() {
       let items = this.entries;
@@ -316,6 +326,181 @@ export function initCollectionStore() {
           detail: { cardId, printing },
         }));
       }
+    },
+
+    /**
+     * Phase 8 Plan 3 — COLLECT-02.
+     * Load precon products via fetchPrecons() and populate this.precons.
+     * Called on BROWSE PRECONS click and on REFRESH button.
+     */
+    async loadPrecons({ forceRefresh = false } = {}) {
+      this.preconsLoading = true;
+      this.preconsError = null;
+      try {
+        this.precons = await fetchPrecons({ forceRefresh });
+      } catch (err) {
+        this.preconsError = err.message || 'Failed to load precons';
+        this.precons = [];
+      } finally {
+        this.preconsLoading = false;
+      }
+    },
+
+    /**
+     * Phase 8 Plan 3 — COLLECT-02.
+     * Click a tile → show decklist preview (D-10: preview required before
+     * commit). Lazy-loads the decklist for the selected precon and reflects
+     * it back into this.precons so Alpine re-renders the preview pane.
+     */
+    async selectPrecon(code) {
+      this.selectedPreconCode = code;
+      const precon = this.precons.find(p => p.code === code);
+      if (!precon) return;
+      if (precon.decklist && precon.decklist.length) return; // already loaded
+      this.preconDecklistLoading = true;
+      this.preconDecklistError = null;
+      try {
+        const decklist = await fetchPreconDecklist(code);
+        const idx = this.precons.findIndex(p => p.code === code);
+        if (idx >= 0) this.precons[idx] = { ...this.precons[idx], decklist };
+      } catch (err) {
+        this.preconDecklistError = err.message || 'Failed to load decklist';
+      } finally {
+        this.preconDecklistLoading = false;
+      }
+    },
+
+    /**
+     * Phase 8 Plan 3 — COLLECT-02 core.
+     * Commit the entire precon decklist to the collection as
+     * category:'owned', foil:false (D-08). CRITICAL (Pitfall 2): uses a
+     * Dexie transaction with direct bulk-write semantics — NOT a for-loop
+     * over addCard (which would trigger N+1 loadEntries calls). Fires
+     * loadEntries() EXACTLY ONCE at the end. Registers EXACTLY ONE undo
+     * entry (Pattern 6) whose inverse (a) bulkDeletes newly-inserted rows,
+     * and (b) restores prevQuantity on rows that were bumped (Pitfall 7
+     * structured payload so manual edits between add-all and undo don't
+     * corrupt the inverse).
+     *
+     * Closes the precon browser on success. Panel stays open (D-06).
+     *
+     * @param {string} code - Scryfall set code of the precon to add
+     */
+    async addAllFromPrecon(code) {
+      let precon = this.precons.find(p => p.code === code);
+      if (!precon) {
+        // Fall back to Dexie (e.g., if loadPrecons hasn't been called yet)
+        precon = await db.precons_cache.get(code);
+      }
+      if (!precon?.decklist?.length) {
+        throw new Error(`Precon ${code} has no decklist; call selectPrecon first.`);
+      }
+
+      const nowIso = new Date().toISOString();
+      const added = [];       // IDs of newly-inserted rows (for undo bulkDelete)
+      const updated = [];     // [{ id, prevQuantity }] for undo restore
+
+      // Atomic commit — all-or-nothing. On failure, nothing persists.
+      await db.transaction('rw', db.collection, async () => {
+        for (const entry of precon.decklist) {
+          // Merge on existing [scryfall_id+foil+category] composite (D-08)
+          const existing = await db.collection
+            .where('[scryfall_id+foil]')
+            .equals([entry.scryfall_id, 0])
+            .and(e => e.category === 'owned')
+            .first();
+
+          if (existing) {
+            updated.push({ id: existing.id, prevQuantity: existing.quantity });
+            await db.collection.update(existing.id, {
+              quantity: existing.quantity + entry.quantity,
+              updated_at: nowIso,
+              synced_at: null,
+            });
+          } else {
+            // creating-hook at schema.js bottom supplies UUID when `id` omitted
+            const row = {
+              scryfall_id: entry.scryfall_id,
+              quantity: entry.quantity,
+              foil: 0,
+              category: 'owned',
+              added_at: nowIso,
+              updated_at: nowIso,
+              synced_at: null,
+              user_id: null,
+            };
+            const newId = await db.collection.add(row);
+            added.push(newId);
+          }
+        }
+      });
+
+      // Pitfall 2: exactly ONE reload regardless of row count
+      await this.loadEntries();
+
+      // Single undo entry — inverse covers both new inserts AND bumped
+      // quantities (D-08 + Pitfall 7 structured payload).
+      const undoStore = (typeof window !== 'undefined') ? window.Alpine?.store?.('undo') : null;
+      if (undoStore?.push) {
+        const totalCount = precon.decklist.length;
+        const preconName = precon.name;
+        const message = `Added ${totalCount} cards from ${preconName}.`;
+        const invert = async () => {
+          await db.transaction('rw', db.collection, async () => {
+            if (added.length) {
+              await db.collection.bulkDelete(added);
+            }
+            for (const { id, prevQuantity } of updated) {
+              const row = await db.collection.get(id);
+              if (row) {
+                await db.collection.update(id, {
+                  quantity: prevQuantity,
+                  updated_at: new Date().toISOString(),
+                  synced_at: null,
+                });
+              }
+            }
+          });
+          await this.loadEntries();
+        };
+        // Mirror production undo signature:
+        //   push(type, data, message, commitFn, restoreFn)
+        // The writes have already committed above, so commitFn is a no-op.
+        // restoreFn is the inverse that reverses the whole batch.
+        undoStore.push('collection_add_batch', { added, updated, code }, message, async () => {}, invert);
+      }
+
+      // Activity log — mirror existing pattern in other add paths
+      try {
+        logActivity('precon_added', `Added ${precon.decklist.length} cards from ${precon.name}`);
+      } catch { /* decorative */ }
+
+      // Toast — EXACT string per 08-UI-SPEC §Copywriting Contract
+      const toast = (typeof window !== 'undefined') ? window.Alpine?.store?.('toast') : null;
+      if (toast?.success) {
+        toast.success(`Added ${precon.decklist.length} cards from ${precon.name} to collection.`);
+      }
+
+      // Close the browser; panel stays open (D-06)
+      this.preconBrowserOpen = false;
+      this.selectedPreconCode = null;
+    },
+
+    /**
+     * Phase 8 Plan 3 — close the precon browser without committing.
+     */
+    closePreconBrowser() {
+      this.preconBrowserOpen = false;
+      this.selectedPreconCode = null;
+    },
+
+    /**
+     * Phase 8 Plan 3 — manual REFRESH button (D-11). Clears the Dexie
+     * cache and re-fetches from Scryfall.
+     */
+    async refreshPrecons() {
+      await invalidatePreconsCache();
+      await this.loadPrecons({ forceRefresh: true });
     },
   });
 }
