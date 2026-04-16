@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Second Sunrise
-status: executing
-stopped_at: Completed 08.1-03-PLAN.md (FOLLOWUP-3 hover-checkbox); Plan 02 still in flight as parallel sibling
-last_updated: "2026-04-16T13:31:42.946Z"
+status: verifying
+stopped_at: Completed 08.1-02-PLAN.md (FOLLOWUP-4A allowlist + FOLLOWUP-4B bundle guard)
+last_updated: "2026-04-16T13:43:54.801Z"
 last_activity: 2026-04-16
 progress:
   total_phases: 8
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 9
-  completed_plans: 8
+  completed_plans: 9
   percent: 0
 ---
 
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-04-14)
 
 Phase: 08.1 (treasure-cruise-polish-precon-coverage) — EXECUTING
 Plan: 3 of 3
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-04-16
 
 Progress: [          ] 0%
@@ -66,6 +66,7 @@ Progress: [          ] 0%
 | Phase 08 P03 | 14m 21s | 6 tasks tasks | 7 files files |
 | Phase 08.1 P01 | 2m 55s | 2 tasks | 4 files |
 | Phase 08.1 P03 | 14m | 2 tasks | 5 files |
+| Phase 08.1 P02 | 6m 29s | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -109,6 +110,9 @@ Full decision log in PROJECT.md Key Decisions table.
 - [Phase 08.1]: Plan 3 reused the existing card-context-menu CustomEvent — hover-checkbox click + keyboard Enter/Space dispatch the SAME event right-click already fires. No new menu, no new actions, no new listener. Single source of truth.
 - [Phase 08.1]: Plan 3 used delegated click+keydown listeners on the virtual-scroller container — Alpine bindings cannot live inside renderItem's static HTML string. data-entry-id attribute bridges inert DOM back to reactive store.entries lookup.
 - [Phase 08.1]: Plan 3 + Plan 1 merged a single @media (prefers-reduced-motion: reduce) block in main.css covering tc-panel-column, tc-grid-column, cf-panel-reopen, card-quick-actions-checkbox — extended Phase 8 Plan 2's existing block rather than appending duplicates.
+- [Phase 08.1]: Plan 02: 18-code PRECON_EXTRA_CODES allowlist surfaces Commander Masters/Legends I+II/Planechase/Archenemy/Premium Deck Series/Commander's Arsenal/Commander Collection/Game Night/ToME Deluxe Commander Kit — surgical (code-level not set_type widening) so mb2 Mystery Booster 2 stays excluded
+- [Phase 08.1]: Plan 02: isMultiDeckBundle threshold = strictly > 200 cards. Bundle guard early-returns silently from addAllFromPrecon (no Dexie writes, no loadEntries, no toast, no undo entry) and precon-browser swaps the giant decklist for a MULTI-DECK PRODUCT warning + OPEN IN SCRYFALL link. Browser stays open so the warning stays visible.
+- [Phase 08.1]: Plan 02: Reclassified existing cmm fixture row in place from set_type 'commander' → 'masters' (matches Scryfall reality) rather than appending a duplicate. cmm now flows through the FOLLOWUP-4A allowlist path, dogfooding the new code.
 
 ### Roadmap Evolution
 
@@ -127,6 +131,6 @@ None — roadmap complete, next step is `/gsd:plan-phase 7`.
 
 ## Session Continuity
 
-Last session: 2026-04-16T13:31:42.944Z
-Stopped at: Completed 08.1-03-PLAN.md (FOLLOWUP-3 hover-checkbox); Plan 02 still in flight as parallel sibling
+Last session: 2026-04-16T13:43:54.799Z
+Stopped at: Completed 08.1-02-PLAN.md (FOLLOWUP-4A allowlist + FOLLOWUP-4B bundle guard)
 Resume file: None
