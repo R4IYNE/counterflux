@@ -373,6 +373,46 @@ db.version(8).stores({
 });
 
 // ============================================================
+// Schema v9 — Phase 8 Plan 3 (additive-only per D-07, D-24).
+//
+// Adds a single new table — precons_cache — keyed by the Scryfall set code
+// (string PK, NOT a UUID). Indexed on set_type, released_at, and updated_at
+// so the precon browser can filter commander/duel_deck and sort newest-first.
+//
+// All v8 tables are re-declared verbatim below (PITFALLS §1 — Dexie chains
+// migrations, so every prior table declaration must be preserved). No
+// .upgrade() callback is needed: this is a pure additive bump. Existing
+// collection/decks/games/watchlist/profile data is untouched.
+//
+// CRITICAL: precons_cache is NOT added to the UUID_TABLES array below. Its
+// PK is a real string (the Scryfall set code like 'cmm' or 'dd2'); callers
+// MUST supply `code`. Attempting to add() without a code must throw, by
+// design — the creating-hook is intentionally not attached.
+// ============================================================
+db.version(9).stores({
+  // Mirror all v8 tables verbatim (PITFALLS §1: keep prior declarations).
+  collection: 'id, scryfall_id, category, foil, user_id, updated_at, synced_at, [scryfall_id+foil], [scryfall_id+category]',
+  decks: 'id, name, format, user_id, updated_at, synced_at',
+  deck_cards: 'id, deck_id, scryfall_id, user_id, updated_at, synced_at, [deck_id+scryfall_id]',
+  games: 'id, deck_id, user_id, started_at, ended_at, updated_at, synced_at',
+  watchlist: 'id, &scryfall_id, user_id, updated_at, synced_at',
+  cards: 'id, name, oracle_id, set, collector_number, cmc, color_identity, type_line, [set+collector_number]',
+  meta: 'key',
+  price_history: '++id, scryfall_id, date, updated_at, [scryfall_id+date]',
+  edhrec_cache: 'commander',
+  combo_cache: 'deck_id',
+  card_salt_cache: 'sanitized',
+  profile: 'id, user_id, updated_at',
+  sync_queue: '++id, table_name, user_id, created_at',
+  sync_conflicts: '++id, table_name, detected_at',
+
+  // NEW in v9 — precons cache (D-07, D-24).
+  // PK = `code` (text, string-PK — NO UUID creating-hook needed).
+  precons_cache: 'code, set_type, released_at, updated_at'
+});
+// No .upgrade() callback — additive-only migration (D-24).
+
+// ============================================================
 // UUID auto-assign hooks (v8 tables).
 //
 // v1.0 code inserts rows via db.collection.add({ scryfall_id: ... }) without

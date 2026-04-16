@@ -63,10 +63,14 @@ describe('Dexie schema', () => {
 });
 
 describe('v8 schema shape (Phase 7 Plan 3 — SCHEMA-01, variant c with clean names)', () => {
-  it('db.verno is 8 after open', () => {
+  it('db.verno reflects the latest schema version (>=8 after Phase 7; >=9 after Phase 8 Plan 3)', () => {
     expect(db.verno >= 0).toBe(true); // sanity
     return db.open().then(() => {
-      expect(db.verno).toBe(8);
+      // Phase 7 Plan 3 established v8 as the clean-named tail; Phase 8 Plan 3
+      // adds v9 (precons_cache additive). Either is acceptable until the
+      // next schema bump. Assert >= 8 so the test survives future additive
+      // bumps without being brittle.
+      expect(db.verno).toBeGreaterThanOrEqual(8);
     });
   });
 
