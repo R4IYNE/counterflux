@@ -49,3 +49,53 @@ describe('COLLECT-03: dropdown row thumbnail', () => {
     expect(html).toMatch(/height:\s*40px/);
   });
 });
+
+/**
+ * FOLLOWUP-1 (Phase 08.1 Plan 1): the dropdown's scroll boundary lives on
+ * the dropdown container itself, NOT on the parent <aside class="tc-panel-column">.
+ * The aside must declare `overflow: visible` so absolutely-positioned dropdowns
+ * can escape its content box; the body content scrolls inside an inner
+ * `.tc-panel-body` wrapper that owns its own `overflow-y: auto`.
+ */
+describe('FOLLOWUP-1: dropdown scroll containment', () => {
+  it('dropdown wrapper declares max-height: 280px and overflow-y: auto in the same style', () => {
+    const html = renderAddCardModal();
+    // Find the substring containing the dropdown wrapper opening tag.
+    const dropdownMatch = html.match(/<div[^>]*x-show="searchResults\.length > 0"[^>]*>/);
+    expect(dropdownMatch).toBeTruthy();
+    const dropdownTag = dropdownMatch[0];
+    expect(dropdownTag).toMatch(/max-height:\s*280px/);
+    expect(dropdownTag).toMatch(/overflow-y:\s*auto/);
+    expect(dropdownTag).toMatch(/position:\s*absolute/);
+  });
+
+  it('parent <aside class="tc-panel-column"> has overflow: visible (NOT overflow-y: auto, NOT overflow: hidden)', () => {
+    const html = renderAddCardModal();
+    const asideMatch = html.match(/<aside[\s\S]*?class="tc-panel-column"[\s\S]*?style="[^"]*"/);
+    expect(asideMatch).toBeTruthy();
+    const asideOpen = asideMatch[0];
+    expect(asideOpen).toMatch(/overflow:\s*visible/);
+    expect(asideOpen).not.toMatch(/overflow-y:\s*auto/);
+    expect(asideOpen).not.toMatch(/overflow:\s*hidden/);
+  });
+
+  it('inner .tc-panel-body wrapper exists with overflow-y: auto + flex:1 + min-height:0 so the panel body still scrolls', () => {
+    const html = renderAddCardModal();
+    const bodyMatch = html.match(/class="tc-panel-body"[^>]*style="[^"]*"/);
+    expect(bodyMatch).toBeTruthy();
+    const bodyTag = bodyMatch[0];
+    expect(bodyTag).toMatch(/overflow-y:\s*auto/);
+    expect(bodyTag).toMatch(/flex:\s*1/);
+    expect(bodyTag).toMatch(/min-height:\s*0/);
+  });
+
+  it('panel body wrapper opens before the header row and closes before </aside>', () => {
+    const html = renderAddCardModal();
+    const bodyOpenIdx = html.search(/<div\s+class="tc-panel-body"/);
+    const headerIdx = html.indexOf('ADD TO COLLECTION');
+    const closeAsideIdx = html.indexOf('</aside>');
+    expect(bodyOpenIdx).toBeGreaterThan(-1);
+    expect(headerIdx).toBeGreaterThan(bodyOpenIdx);
+    expect(closeAsideIdx).toBeGreaterThan(headerIdx);
+  });
+});
