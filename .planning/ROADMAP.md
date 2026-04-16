@@ -73,12 +73,12 @@
   3. Collection grid card tiles expose a checkbox on hover that opens the same quick-action menu as the existing right-click context menu; keyboard-accessible
   4. BROWSE PRECONS surfaces previously-missing Commander products via a code-level allowlist: Commander Masters (`cmm`), Commander Legends (`cmr`/`clb`), Planechase (`pca`/`pc2`/`hop`), Archenemy (`arc`/`e01`), Premium Deck Series (`pd2`/`pd3`/`h09`), Commander's Arsenal (`cm1`), Commander Collection (`cc1`/`cc2`), Game Night (`gnt`/`gn2`/`gn3`), Tales of Middle-earth Deluxe Commander Kit (`pltc`)
   5. Multi-deck Commander products (any precon with `decklist.length > 200` such as Doctor Who, Fallout, Warhammer 40K, Tales of Middle-earth, Final Fantasy, all modern C-decks) display a "This product contains multiple decks — open in Scryfall to pick a specific deck" message instead of dumping a 400-1000 card list; ADD ALL is disabled for bundled products
-**Plans:** 1/3 plans executed
+**Plans:** 2/3 plans executed
 
 Plans:
 - [x] 08.1-01-PLAN.md — CSS polish batch: dropdown scroll containment + re-open affordance redesign (FOLLOWUP-1, FOLLOWUP-2)
 - [ ] 08.1-02-PLAN.md — Precon coverage A+B: PRECON_EXTRA_CODES allowlist + multi-deck bundle size guard (FOLLOWUP-4A, FOLLOWUP-4B)
-- [ ] 08.1-03-PLAN.md — Collection-grid hover-revealed quick-actions checkbox + keyboard a11y (FOLLOWUP-3)
+- [x] 08.1-03-PLAN.md — Collection-grid hover-revealed quick-actions checkbox + keyboard a11y (FOLLOWUP-3)
 **UI hint**: yes
 
 ### Phase 9: Deck Accuracy + Vandalblast Pod Experience

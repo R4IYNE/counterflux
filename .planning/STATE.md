@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Second Sunrise
 status: executing
-stopped_at: Completed 08.1-01-PLAN.md (parallel wave 1)
-last_updated: "2026-04-16T13:26:13.615Z"
+stopped_at: Completed 08.1-03-PLAN.md (FOLLOWUP-3 hover-checkbox); Plan 02 still in flight as parallel sibling
+last_updated: "2026-04-16T13:31:42.946Z"
 last_activity: 2026-04-16
 progress:
   total_phases: 8
   completed_phases: 2
   total_plans: 9
-  completed_plans: 7
+  completed_plans: 8
   percent: 0
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-14)
 ## Current Position
 
 Phase: 08.1 (treasure-cruise-polish-precon-coverage) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 Status: Ready to execute
 Last activity: 2026-04-16
 
@@ -65,6 +65,7 @@ Progress: [          ] 0%
 | Phase 08 P02 | 15min | 6 tasks tasks | 10 files files |
 | Phase 08 P03 | 14m 21s | 6 tasks tasks | 7 files files |
 | Phase 08.1 P01 | 2m 55s | 2 tasks | 4 files |
+| Phase 08.1 P03 | 14m | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -105,6 +106,9 @@ Full decision log in PROJECT.md Key Decisions table.
 - [Phase 08]: precons_cache PK is Scryfall set code (string) — deliberately EXCLUDED from UUID_TABLES creating-hook; callers MUST supply code
 - [Phase 08]: .ss.ss-fallback CSS rule ships defence-in-depth — spike confirmed 100% duel-deck coverage in keyrune 3.18.0 but keyrune release cadence is independent of Scryfall
 - [Phase 08.1]: Plan 1: re-open affordance migrated to class-only consumer (.cf-panel-reopen utility) — 48px primary-accent surface + OPEN PANEL mono label replaces the original 32px ghost chevron that failed UAT visibility
+- [Phase 08.1]: Plan 3 reused the existing card-context-menu CustomEvent — hover-checkbox click + keyboard Enter/Space dispatch the SAME event right-click already fires. No new menu, no new actions, no new listener. Single source of truth.
+- [Phase 08.1]: Plan 3 used delegated click+keydown listeners on the virtual-scroller container — Alpine bindings cannot live inside renderItem's static HTML string. data-entry-id attribute bridges inert DOM back to reactive store.entries lookup.
+- [Phase 08.1]: Plan 3 + Plan 1 merged a single @media (prefers-reduced-motion: reduce) block in main.css covering tc-panel-column, tc-grid-column, cf-panel-reopen, card-quick-actions-checkbox — extended Phase 8 Plan 2's existing block rather than appending duplicates.
 
 ### Roadmap Evolution
 
@@ -123,6 +127,6 @@ None — roadmap complete, next step is `/gsd:plan-phase 7`.
 
 ## Session Continuity
 
-Last session: 2026-04-16T13:26:13.612Z
-Stopped at: Completed 08.1-01-PLAN.md (parallel wave 1)
+Last session: 2026-04-16T13:31:42.944Z
+Stopped at: Completed 08.1-03-PLAN.md (FOLLOWUP-3 hover-checkbox); Plan 02 still in flight as parallel sibling
 Resume file: None
