@@ -62,6 +62,25 @@
   - [x] 08-03-PLAN.md — Precon browser + Dexie v9 + src/services/precons.js (COLLECT-02)
 **UI hint**: yes
 
+### Phase 08.1: Treasure Cruise Polish & Precon Coverage (INSERTED)
+
+**Goal:** Resolve four user-reported polish/bugfix items captured during Phase 8 human-UAT walkthrough — dropdown scroll cutoff, collapsed-panel re-open affordance, collection-grid hover-checkbox edit, and Commander precon coverage gap (allowlist widening + multi-deck size guard).
+**Depends on:** Phase 8 (touches Phase 8 surfaces — add-card-panel, precon-browser, collection grid)
+**Requirements**: None — polish phase, items derive from `phases/08-treasure-cruise-rapid-entry/follow-ups.md` and `debug/precon-browser-missing-commander-decks.md`
+**Success Criteria** (what must be TRUE):
+  1. LHS add-card panel dropdown shows all matching search results within an internally-scrollable area — no clipping by the panel boundary; scrollbar lives on the dropdown, not the panel
+  2. Collapsed-panel re-open affordance is unmistakable — visually obvious chevron_right button (brighter accent, larger, or paired label) at the top-left of the collection grid
+  3. Collection grid card tiles expose a checkbox on hover that opens the same quick-action menu as the existing right-click context menu; keyboard-accessible
+  4. BROWSE PRECONS surfaces previously-missing Commander products via a code-level allowlist: Commander Masters (`cmm`), Commander Legends (`cmr`/`clb`), Planechase (`pca`/`pc2`/`hop`), Archenemy (`arc`/`e01`), Premium Deck Series (`pd2`/`pd3`/`h09`), Commander's Arsenal (`cm1`), Commander Collection (`cc1`/`cc2`), Game Night (`gnt`/`gn2`/`gn3`), Tales of Middle-earth Deluxe Commander Kit (`pltc`)
+  5. Multi-deck Commander products (any precon with `decklist.length > 200` such as Doctor Who, Fallout, Warhammer 40K, Tales of Middle-earth, Final Fantasy, all modern C-decks) display a "This product contains multiple decks — open in Scryfall to pick a specific deck" message instead of dumping a 400-1000 card list; ADD ALL is disabled for bundled products
+**Plans:** 3 plans
+
+Plans:
+- [ ] 08.1-01-PLAN.md — CSS polish batch: dropdown scroll containment + re-open affordance redesign (FOLLOWUP-1, FOLLOWUP-2)
+- [ ] 08.1-02-PLAN.md — Precon coverage A+B: PRECON_EXTRA_CODES allowlist + multi-deck bundle size guard (FOLLOWUP-4A, FOLLOWUP-4B)
+- [ ] 08.1-03-PLAN.md — Collection-grid hover-revealed quick-actions checkbox + keyboard a11y (FOLLOWUP-3)
+**UI hint**: yes
+
 ### Phase 9: Deck Accuracy + Vandalblast Pod Experience
 **Goal**: Thousand-Year Storm's analytics tell the truth, and Vandalblast feels like a real pod-play companion — not a prototype
 **Depends on**: Phase 7 (schema v6 `turn_laps` field must exist before GAME-09 persistence ships)
@@ -134,6 +153,7 @@
 | 6. Dashboard + Polish | v1.0 | 4/4 | Complete | 2026-04-10 |
 | 7. Polish Pass + Perf Baseline + Schema Migration | v1.1 | 0/3 | Not started | — |
 | 8. Treasure Cruise Rapid Entry | v1.1 | 3/3 | Complete | 2026-04-16 |
+| 8.1. Treasure Cruise Polish & Precon Coverage | v1.1 | 0/3 | Planned | — |
 | 9. Deck Accuracy + Vandalblast Pod Experience | v1.1 | 0/? | Not started | — |
 | 10. Supabase Auth Foundation | v1.1 | 0/? | Not started | — |
 | 11. Cloud Sync Engine | v1.1 | 0/? | Not started | — |
