@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Second Sunrise
 status: executing
-stopped_at: "Phase 8 planned — 3 plans in 3 waves (sequential: Plan 1 polish → Plan 2 LHS panel + printings → Plan 3 precon browser)"
-last_updated: "2026-04-16T08:43:41.958Z"
-last_activity: 2026-04-15
+stopped_at: Phase 8 Plan 1 complete; Plan 2 (LHS panel + printing picker) ready to execute
+last_updated: "2026-04-16T08:52:07.039Z"
+last_activity: 2026-04-16
 progress:
   total_phases: 7
   completed_phases: 1
   total_plans: 6
-  completed_plans: 3
+  completed_plans: 4
   percent: 0
 ---
 
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-14)
 
 **Core value:** The deck builder knows what you own, and the collection knows what's in your decks — one interconnected data layer
-**Current focus:** Phase 07 — polish-pass-perf-baseline-schema-migration
+**Current focus:** Phase 08 — treasure-cruise-rapid-entry
 
 ## Current Position
 
-Phase: 8
-Plan: Not started
+Phase: 08 (treasure-cruise-rapid-entry) — EXECUTING
+Plan: 2 of 3
 Status: Ready to execute
-Last activity: 2026-04-15
+Last activity: 2026-04-16
 
 Progress: [          ] 0%
 
@@ -61,6 +61,7 @@ Progress: [          ] 0%
 | Phase 06 P04 | 5min | 2 | 7 |
 | Phase 07 P01 | 12min | 8 tasks | 16 files |
 | Phase 07 P02 | 3min | 5 tasks | 4 files |
+| Phase 08 P01 | 4min | 4 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -89,6 +90,8 @@ Full decision log in PROJECT.md Key Decisions table.
 - [Phase 07]: cf-card-img shared utility class applied to all card-image render sites (POLISH-04)
 - [Phase 07]: web-vitals v5 requires fresh opts literal per onX call — initUnique uses opts identity as WeakMap key, shared reference collides Manager instances (crashed INP/CLS with 'd.T is not a function' on interaction)
 - [Phase 07]: PERF-BASELINE.md captured honest median-of-3 numbers (FCP 1.0s, LCP 3.7s, CLS 1.00, Perf 54) — 5 gaps flagged for Phase 13: CLS critical, LCP exceeds 2.5s, bulk-data blocks UI ~5min, bfcache disabled, 1 non-composited animation
+- [Phase 08]: [Phase 08]: Plan 1 warm-up batch — dropdown uses var(--color-*) tokens (not hex) to align with Plan 2's token-first panel conversion
+- [Phase 08]: [Phase 08]: x-text binding switched card._name → card.name in search-results row (legacy alias; canonical property per UI-SPEC Anatomy 4)
 
 ### Pending Todos
 
@@ -103,6 +106,6 @@ None — roadmap complete, next step is `/gsd:plan-phase 7`.
 
 ## Session Continuity
 
-Last session: 2026-04-16T08:43:41.954Z
-Stopped at: Phase 8 planned — 3 plans in 3 waves (sequential: Plan 1 polish → Plan 2 LHS panel + printings → Plan 3 precon browser)
-Resume file: .planning/phases/08-treasure-cruise-rapid-entry/08-01-PLAN.md
+Last session: 2026-04-16T08:52:07.037Z
+Stopped at: Phase 8 Plan 1 complete; Plan 2 (LHS panel + printing picker) ready to execute
+Resume file: None
