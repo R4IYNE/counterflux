@@ -137,8 +137,12 @@ export function renderAddCardPanel() {
       x-init="window.addEventListener('cf:printing-selected', (e) => onPrintingSelected(e.detail))"
       x-cloak
       class="tc-panel-column"
-      style="width: 360px; flex-shrink: 0; background: var(--color-surface); border-right: 1px solid var(--color-border-ghost); padding: 24px; overflow-y: auto; height: 100%; display: flex; flex-direction: column; gap: 16px; transition: transform 200ms ease-out;"
+      style="width: 360px; flex-shrink: 0; background: var(--color-surface); border-right: 1px solid var(--color-border-ghost); height: 100%; display: flex; flex-direction: column; overflow: visible; transition: transform 200ms ease-out;"
     >
+      <!-- FOLLOWUP-1 (Phase 08.1): aside is overflow:visible so the
+           absolutely-positioned search dropdown can escape its content box;
+           the panel body's own scroll lives on this inner wrapper instead. -->
+      <div class="tc-panel-body" style="flex: 1; min-height: 0; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 16px;">
       <!-- Header row: title + chevron close -->
       <div style="display: flex; align-items: center; justify-content: space-between;">
         <h2 style="font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; line-height: 1.2; letter-spacing: 0.01em; color: var(--color-text-primary); margin: 0; text-transform: uppercase;">
@@ -333,6 +337,7 @@ export function renderAddCardPanel() {
           CLOSE PANEL
         </button>
       </div>
+      </div><!-- /.tc-panel-body -->
     </aside>
   `;
 }
