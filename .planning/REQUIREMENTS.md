@@ -40,9 +40,9 @@
 - [x] **COLLECT-01**: "Query database" results in add-card modal never show mana cost (audit confirms removed if previously present)
 - [ ] **COLLECT-02**: User can browse Scryfall precon products (`set_type: commander`, `duel_deck`, `starter`) in a precon drawer, view the full decklist, and one-click add all cards to collection
 - [x] **COLLECT-03**: Card image preview renders in the card entry selection dropdown (thumbnail visible alongside name before selection)
-- [ ] **COLLECT-04**: User can click through a list of paper printings (`games: paper` filter on `prints_search_uri`) displayed as clickable set icons to switch the selected printing; price and identity update on selection
+- [x] **COLLECT-04**: User can click through a list of paper printings (`games: paper` filter on `prints_search_uri`) displayed as clickable set icons to switch the selected printing; price and identity update on selection
 - [x] **COLLECT-05**: Mass entry terminal has a visible X close button in the header wired to the existing `discard()` method
-- [ ] **COLLECT-06**: Add-to-collection converts from modal overlay to a permanent left-hand-side pop-out panel; collection grid reflows to the right; user can add multiple cards in sequence without dismissing the panel
+- [x] **COLLECT-06**: Add-to-collection converts from modal overlay to a permanent left-hand-side pop-out panel; collection grid reflows to the right; user can add multiple cards in sequence without dismissing the panel
 
 ### Thousand-Year Storm (Deck Builder)
 

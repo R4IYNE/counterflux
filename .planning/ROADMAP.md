@@ -58,7 +58,7 @@
   5. Add-card modal results never render mana cost (audit confirms removed)
 **Plans**: 3 plans
   - [x] 08-01-PLAN.md — Polish batch: dropdown thumbnail, mass-entry X close, mana-cost audit (COLLECT-01, -03, -05)
-  - [ ] 08-02-PLAN.md — LHS panel conversion + printing picker + Scryfall queue (COLLECT-04, -06)
+  - [x] 08-02-PLAN.md — LHS panel conversion + printing picker + Scryfall queue (COLLECT-04, -06)
   - [ ] 08-03-PLAN.md — Precon browser + Dexie v9 + src/services/precons.js (COLLECT-02)
 **UI hint**: yes
 

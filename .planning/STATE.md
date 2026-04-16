@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Second Sunrise
 status: executing
-stopped_at: Phase 8 Plan 1 complete; Plan 2 (LHS panel + printing picker) ready to execute
-last_updated: "2026-04-16T08:52:07.039Z"
+stopped_at: Phase 8 Plan 2 complete; Plan 3 (precon browser + Dexie v9) ready to execute
+last_updated: "2026-04-16T09:12:27.799Z"
 last_activity: 2026-04-16
 progress:
   total_phases: 7
   completed_phases: 1
   total_plans: 6
-  completed_plans: 4
+  completed_plans: 5
   percent: 0
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-14)
 ## Current Position
 
 Phase: 08 (treasure-cruise-rapid-entry) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 Status: Ready to execute
 Last activity: 2026-04-16
 
@@ -62,6 +62,7 @@ Progress: [          ] 0%
 | Phase 07 P01 | 12min | 8 tasks | 16 files |
 | Phase 07 P02 | 3min | 5 tasks | 4 files |
 | Phase 08 P01 | 4min | 4 tasks | 5 files |
+| Phase 08 P02 | 15min | 6 tasks tasks | 10 files files |
 
 ## Accumulated Context
 
@@ -92,6 +93,11 @@ Full decision log in PROJECT.md Key Decisions table.
 - [Phase 07]: PERF-BASELINE.md captured honest median-of-3 numbers (FCP 1.0s, LCP 3.7s, CLS 1.00, Perf 54) — 5 gaps flagged for Phase 13: CLS critical, LCP exceeds 2.5s, bulk-data blocks UI ~5min, bfcache disabled, 1 non-composited animation
 - [Phase 08]: [Phase 08]: Plan 1 warm-up batch — dropdown uses var(--color-*) tokens (not hex) to align with Plan 2's token-first panel conversion
 - [Phase 08]: [Phase 08]: x-text binding switched card._name → card.name in search-results row (legacy alias; canonical property per UI-SPEC Anatomy 4)
+- [Phase 08]: [Phase 08]: Plan 2 spike outcome A — bulk-data-pipeline.js stores raw Scryfall card objects with no field projection; loadPrintings uses card.prints_search_uri fast path
+- [Phase 08]: [Phase 08]: Scryfall rate-limited queue shipped (src/services/scryfall-queue.js) — 100ms spacing + Counterflux/1.1 User-Agent; closes Pitfall 1 (primitive previously referenced but absent)
+- [Phase 08]: [Phase 08]: Printing selection uses cf:printing-selected CustomEvent pattern — store mutates activePrintingIdByCard + dispatches event; panel x-data listens and patches its selectedCard view (decouples store from panel instance)
+- [Phase 08]: [Phase 08]: tests/setup.js globally stubs MutationObserver + CustomEvent so node-only vitest tests can import alpinejs-dependent modules without jsdom overhead
+- [Phase 08]: [Phase 08]: vi.mock('alpinejs') over vi.spyOn — Alpine module init runs at import; only vi.mock's hoisted replacement intercepts the store call in time
 
 ### Pending Todos
 
@@ -106,6 +112,6 @@ None — roadmap complete, next step is `/gsd:plan-phase 7`.
 
 ## Session Continuity
 
-Last session: 2026-04-16T08:52:07.037Z
-Stopped at: Phase 8 Plan 1 complete; Plan 2 (LHS panel + printing picker) ready to execute
+Last session: 2026-04-16T09:12:09.143Z
+Stopped at: Phase 8 Plan 2 complete; Plan 3 (precon browser + Dexie v9) ready to execute
 Resume file: None
