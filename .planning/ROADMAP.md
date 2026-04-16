@@ -90,8 +90,12 @@ Plans:
   2. User starts a Vandalblast game and a coin-flip/spinner animation picks the first player; the active player has a visible highlight (border/glow) that advances on NEXT TURN
   3. At any point mid-game the life totals use RAG colouring (green > 20, amber ≤ 20, red ≤ 10); poison, tax, and commander-damage expansion widgets show representative icons; user can add/remove additional counters directly from the expanded player card; fullscreen toggle enters and exits without losing game state; player names don't clip in 2-col; 3-player games use a dynamic layout
   4. When the game ends, post-game stats surface longest turn, average turn, and per-player average computed from `turn_laps: number[]` persisted to the game record; laps remain accurate even if the tab was backgrounded mid-turn (wall-clock anchor, not interval counter)
-**Plans**: TBD
-**UI hint**: yes
+**Plans**: 3 plans
+
+Plans:
+- [ ] 09-01-PLAN.md — Deck accuracy + analytics polish (DECK-01..05): commander section, fixture-validated analytics, RAG gap badges, EDHREC top-salt rewrite
+- [ ] 09-02-PLAN.md — Vandalblast layout + visuals + router-test fix (GAME-01..06): clipping, 3-player T-shape, RAG life colours, counter glyphs, real Fullscreen API, in-card counters
+- [ ] 09-03-PLAN.md — Vandalblast turn mechanics + post-game stats (GAME-07..10): slot-machine spinner, active-player highlight, turn_laps persistence, wall-clock timer, TURN PACING tiles
 
 ### Phase 10: Supabase Auth Foundation
 **Goal**: Users can create a Counterflux account, sign in on any device, and the local-first promise stays intact — without forcing account creation on anyone who doesn't want one
@@ -154,7 +158,7 @@ Plans:
 | 7. Polish Pass + Perf Baseline + Schema Migration | v1.1 | 0/3 | Not started | — |
 | 8. Treasure Cruise Rapid Entry | v1.1 | 3/3 | Complete | 2026-04-16 |
 | 8.1. Treasure Cruise Polish & Precon Coverage | v1.1 | 3/3 | Complete | 2026-04-16 |
-| 9. Deck Accuracy + Vandalblast Pod Experience | v1.1 | 0/? | Not started | — |
+| 9. Deck Accuracy + Vandalblast Pod Experience | v1.1 | 0/3 | Not started | — |
 | 10. Supabase Auth Foundation | v1.1 | 0/? | Not started | — |
 | 11. Cloud Sync Engine | v1.1 | 0/? | Not started | — |
 | 12. Notification Bell + Preordain Spoiler Refresh | v1.1 | 0/? | Not started | — |
