@@ -22,6 +22,69 @@ import { queueScryfallRequest } from './scryfall-queue.js';
 // precons.
 const PRECON_SET_TYPES = ['commander', 'duel_deck'];
 
+// FOLLOWUP-4A (Phase 08.1) — code-level allowlist for confirmed Commander/
+// multiplayer precon products that Scryfall classifies under non-commander
+// set_types (per .planning/debug/precon-browser-missing-commander-decks.md
+// Cause 1). Surgical: NO set_type widening — that would let in ~60 unwanted
+// draft/reprint sets like Mystery Booster 2 (mb2), Double Masters 2022 (2x2),
+// Dominaria Remastered (dmr).
+//
+// Coverage:
+//   cmm                      Commander Masters (set_type: masters)
+//   cmr, clb                 Commander Legends I + II (set_type: draft_innovation)
+//   pca, pc2, hop            Planechase (set_type: planechase)
+//   arc, e01                 Archenemy (set_type: archenemy)
+//   pd2, pd3, h09            Premium Deck Series (set_type: premium_deck)
+//   cm1                      Commander's Arsenal (set_type: arsenal)
+//   cc1, cc2                 Commander Collection Green/Black (set_type: arsenal)
+//   gnt, gn2, gn3            Game Night (set_type: box)
+//   pltc                     Tales of Middle-earth Deluxe Commander Kit (set_type: promo)
+export const PRECON_EXTRA_CODES = [
+  'cmm',
+  'clb', 'cmr',
+  'pca', 'pc2', 'hop',
+  'arc', 'e01',
+  'pd2', 'pd3', 'h09',
+  'cm1',
+  'cc1', 'cc2',
+  'gnt', 'gn2', 'gn3',
+  'pltc',
+];
+
+// FOLLOWUP-4B (Phase 08.1) — multi-deck bundle threshold. Scryfall does not
+// expose deck-membership metadata, so several Commander products (Doctor Who
+// 1178 cards, Fallout 1068, Warhammer 40K 617, Tales of Middle-earth 591,
+// Final Fantasy 486, Commander Masters 1067 once allowlisted) load as a
+// single 'set' containing 4-5 separate WotC decks. ADD ALL would dump every
+// card from every deck into the user's collection — wrong. The bundle guard
+// detects these via decklist length and surfaces a warning state
+// (per .planning/debug/precon-browser-missing-commander-decks.md Cause 2).
+//
+// Picking 200 catches 4-deck bundles cleanly; an older 5-deck product like
+// Commander 2013 (356 cards) is also correctly flagged. False negatives
+// possible only if Scryfall ever ships a 199-card single deck (none observed).
+const MULTI_DECK_BUNDLE_THRESHOLD = 200;
+
+/**
+ * FOLLOWUP-4B (Phase 08.1) — bundle detector.
+ *
+ * Returns true iff the precon's decklist exceeds the multi-deck-bundle
+ * threshold (200 cards). Used by precon-browser.js to swap the decklist
+ * preview for a 'multi-deck product' warning, and by collection.js
+ * addAllFromPrecon to early-return without committing any writes.
+ *
+ * Defensive: handles missing/null/empty decklists by returning false
+ * (a precon with no decklist is not a bundle — it's a load-error state
+ * handled separately by preconDecklistError).
+ *
+ * @param {{ decklist?: Array }} precon
+ * @returns {boolean}
+ */
+export function isMultiDeckBundle(precon) {
+  if (!precon || !Array.isArray(precon.decklist)) return false;
+  return precon.decklist.length > MULTI_DECK_BUNDLE_THRESHOLD;
+}
+
 // D-11: 7-day TTL. Precon products rarely change post-release (Pitfall 16
 // mentions Scryfall DOES issue corrections, but 7 days is the sweet spot
 // between "too eager" and "stale").
@@ -56,7 +119,7 @@ export async function fetchPrecons({ forceRefresh = false } = {}) {
     const json = await queueScryfallRequest('https://api.scryfall.com/sets');
     const now = Date.now();
     const products = (json.data || [])
-      .filter((s) => PRECON_SET_TYPES.includes(s.set_type))
+      .filter((s) => PRECON_SET_TYPES.includes(s.set_type) || PRECON_EXTRA_CODES.includes(s.code))
       .map((s) => ({
         code: s.code,
         name: s.name,
