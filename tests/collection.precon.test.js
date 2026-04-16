@@ -11,6 +11,7 @@
  *   - Closes preconBrowserOpen; panel stays open (D-06)
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { mockBundlePages } from './fixtures/scryfall-precons.js';
 
 const __alpineStores = {};
 vi.mock('alpinejs', () => ({
@@ -191,5 +192,108 @@ describe('COLLECT-02: addAllFromPrecon (batch add, single reload, single undo)',
     const success = toast._calls.find((c) => c.type === 'success');
     expect(success).toBeDefined();
     expect(success.msg).toBe('Added 99 cards from Commander Masters to collection.');
+  });
+});
+
+describe('FOLLOWUP-4B: addAllFromPrecon multi-deck bundle guard (Phase 08.1)', () => {
+  let collectionStore;
+
+  beforeEach(async () => {
+    for (const k of Object.keys(__alpineStores)) delete __alpineStores[k];
+
+    const toastCalls = [];
+    __alpineStores.toast = {
+      success: (msg) => toastCalls.push({ type: 'success', msg }),
+      show: (msg) => toastCalls.push({ type: 'show', msg }),
+      _calls: toastCalls,
+    };
+    const undoCalls = [];
+    __alpineStores.undo = {
+      stack: [],
+      push: (...args) => {
+        const entry = { type: args[0], data: args[1], message: args[2], commitFn: args[3], restoreFn: args[4] };
+        __alpineStores.undo.stack.push(entry);
+        undoCalls.push(entry);
+        return entry;
+      },
+      _calls: undoCalls,
+    };
+    if (typeof globalThis.window === 'undefined') globalThis.window = globalThis;
+    globalThis.window.Alpine = { store: (n) => __alpineStores[n] };
+
+    const { db } = await import('../src/db/schema.js');
+    if (db.tables.find((t) => t.name === 'precons_cache')) await db.precons_cache.clear();
+    await db.collection.clear();
+    const queueMod = await import('../src/services/scryfall-queue.js');
+    if (typeof queueMod.__resetQueueForTests === 'function') queueMod.__resetQueueForTests();
+
+    const { initCollectionStore } = await import('../src/stores/collection.js');
+    initCollectionStore();
+    collectionStore = __alpineStores.collection;
+
+    // Seed a 250-card multi-deck precon (above the 200 threshold) — sourced
+    // from the shared mockBundlePages fixture so the seed shape is the
+    // single source of truth (no fixture drift between this test and
+    // future plans that consume the same bundle pattern).
+    const bundlePages = mockBundlePages('bundle-test');
+    const decklist = bundlePages[0].data.map((card) => ({
+      scryfall_id: card.id,
+      quantity: 1,
+      is_commander: false,
+    }));
+    collectionStore.precons = [{
+      code: 'bundle-test',
+      name: 'Multi-Deck Bundle Product',
+      set_type: 'commander',
+      released_at: '2024-01-01',
+      image_url: '',
+      search_uri: '',
+      decklist,
+      updated_at: Date.now(),
+    }];
+    // Open the browser so we can assert it stays open after the early-return
+    collectionStore.preconBrowserOpen = true;
+    collectionStore.selectedPreconCode = 'bundle-test';
+  });
+
+  afterEach(() => vi.restoreAllMocks());
+
+  it('Test C1 — addAllFromPrecon writes ZERO rows when decklist exceeds 200', async () => {
+    const { db } = await import('../src/db/schema.js');
+    await collectionStore.addAllFromPrecon('bundle-test');
+    expect(await db.collection.count()).toBe(0);
+  });
+
+  it('Test C2 — no toast fires on bundled precon', async () => {
+    await collectionStore.addAllFromPrecon('bundle-test');
+    expect(__alpineStores.toast._calls).toHaveLength(0);
+  });
+
+  it('Test C3 — no undo entry registered on bundled precon', async () => {
+    await collectionStore.addAllFromPrecon('bundle-test');
+    expect(__alpineStores.undo._calls).toHaveLength(0);
+  });
+
+  it('Test C4 — loadEntries NOT called on bundled precon', async () => {
+    const loadSpy = vi.spyOn(collectionStore, 'loadEntries');
+    await collectionStore.addAllFromPrecon('bundle-test');
+    expect(loadSpy).not.toHaveBeenCalled();
+  });
+
+  it('Test C5 — browser stays OPEN on bundled precon (warning is visible)', async () => {
+    await collectionStore.addAllFromPrecon('bundle-test');
+    expect(collectionStore.preconBrowserOpen).toBe(true);
+    expect(collectionStore.selectedPreconCode).toBe('bundle-test');
+  });
+});
+
+describe('FOLLOWUP-4B: precon-browser bundle warning render (Phase 08.1)', () => {
+  it('renderPreconBrowser HTML contains the multi-deck warning copy', async () => {
+    if (typeof globalThis.window === 'undefined') globalThis.window = globalThis;
+    const { renderPreconBrowser } = await import('../src/components/precon-browser.js');
+    const html = renderPreconBrowser();
+    expect(html).toMatch(/contains multiple decks/);
+    expect(html).toMatch(/MULTI-DECK PRODUCT/);
+    expect(html).toMatch(/isBundle/);
   });
 });
