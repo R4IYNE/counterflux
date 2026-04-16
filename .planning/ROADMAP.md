@@ -56,7 +56,10 @@
   3. User searching for a card sees a thumbnail preview in the entry dropdown and can click through a list of set icons (paper printings only) to switch the selected printing; price and card identity update live
   4. Mass-entry terminal has a visible X close button in the header that discards the open session
   5. Add-card modal results never render mana cost (audit confirms removed)
-**Plans**: TBD
+**Plans**: 3 plans
+  - [ ] 08-01-PLAN.md — Polish batch: dropdown thumbnail, mass-entry X close, mana-cost audit (COLLECT-01, -03, -05)
+  - [ ] 08-02-PLAN.md — LHS panel conversion + printing picker + Scryfall queue (COLLECT-04, -06)
+  - [ ] 08-03-PLAN.md — Precon browser + Dexie v9 + src/services/precons.js (COLLECT-02)
 **UI hint**: yes
 
 ### Phase 9: Deck Accuracy + Vandalblast Pod Experience
@@ -130,7 +133,7 @@
 | 5. Market Intel + Game Tracker | v1.0 | 8/8 | Complete | 2026-04-08 |
 | 6. Dashboard + Polish | v1.0 | 4/4 | Complete | 2026-04-10 |
 | 7. Polish Pass + Perf Baseline + Schema Migration | v1.1 | 0/3 | Not started | — |
-| 8. Treasure Cruise Rapid Entry | v1.1 | 0/? | Not started | — |
+| 8. Treasure Cruise Rapid Entry | v1.1 | 0/3 | Not started | — |
 | 9. Deck Accuracy + Vandalblast Pod Experience | v1.1 | 0/? | Not started | — |
 | 10. Supabase Auth Foundation | v1.1 | 0/? | Not started | — |
 | 11. Cloud Sync Engine | v1.1 | 0/? | Not started | — |
