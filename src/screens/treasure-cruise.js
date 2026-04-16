@@ -4,7 +4,7 @@ import { renderFilterBar } from '../components/filter-bar.js';
 import { renderGalleryView } from '../components/gallery-view.js';
 import { renderTableView } from '../components/table-view.js';
 import { renderSetCompletionView } from '../components/set-completion.js';
-import { renderAddCardModal } from '../components/add-card-modal.js';
+import { renderAddCardPanel } from '../components/add-card-panel.js';
 import { renderMassEntryPanel } from '../components/mass-entry-panel.js';
 import { renderCSVImportModal } from '../components/csv-import-modal.js';
 import { renderEditInline } from '../components/edit-card-inline.js';
@@ -27,9 +27,32 @@ export function mount(container) {
     store.loadEntries();
   }
 
-  // Build screen HTML
+  // Build screen HTML — Phase 8 Plan 2: LHS panel pushes the grid
+  // (flex row: [<aside tc-panel-column 360px> | <section tc-grid-column flex:1>]).
+  // The #tc-modals container continues to host the remaining modal surfaces
+  // (mass-entry, csv-import, edit-inline, delete-confirm).
   container.innerHTML = `
-    <div x-data class="flex flex-col gap-[24px]">
+    <div x-data class="treasure-cruise-screen" style="display: flex; flex-direction: row; height: 100%; width: 100%; position: relative;">
+
+      <!-- LHS panel column (persistent add surface per COLLECT-06 / D-01, D-02) -->
+      ${renderAddCardPanel()}
+
+      <!-- Re-open affordance: visible only when the panel is closed (D-28) -->
+      <button
+        x-show="!$store.collection.panelOpen"
+        @click="$store.collection.togglePanel()"
+        aria-label="Open add panel"
+        title="Open add panel"
+        style="position: absolute; top: 16px; left: 16px; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; background: var(--color-surface); border: 1px solid var(--color-border-ghost); color: var(--color-text-muted); cursor: pointer; z-index: 10; transition: opacity 150ms ease-out;"
+        onmouseenter="this.style.color='var(--color-text-primary)'; this.style.background='var(--color-surface-hover)'"
+        onmouseleave="this.style.color='var(--color-text-muted)'; this.style.background='var(--color-surface)'"
+      >
+        <span class="material-symbols-outlined" style="font-size: 20px;">chevron_right</span>
+      </button>
+
+      <!-- Grid column: flex-1, reflows to fill remaining width after panel push -->
+      <section class="tc-grid-column" style="flex: 1; min-width: 0; padding: 24px; overflow-y: auto; transition: margin-left 200ms ease-out;">
+        <div class="flex flex-col gap-[24px]">
 
       <!-- Screen header -->
       <div>
@@ -53,7 +76,7 @@ export function mount(container) {
           </p>
           <div style="display: flex; align-items: center; gap: 8px;">
             <button
-              @click="$store.collection.addCardOpen = true"
+              @click="$store.collection.panelOpen = true"
               style="font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; cursor: pointer; padding: 8px 16px; background: #0D52BD; color: #EAECEE; border: none;">ADD CARD</button>
             <button
               @click="$store.collection.massEntryOpen = true"
@@ -151,22 +174,34 @@ export function mount(container) {
         </div>
       </template>
 
+        </div>
+      </section>
+
     </div>
   `;
 
-  // Append modals to document.body so fixed positioning works correctly
-  // Remove previous modal container if it exists (e.g., from previous mount)
+  // Append modals to document.body so fixed positioning works correctly.
+  // Remove previous modal container if it exists (e.g., from previous mount).
+  // Phase 8 Plan 2: renderAddCardPanel no longer lives here — it's inline in
+  // the LHS column above. The remaining surfaces (mass-entry, csv-import,
+  // edit-inline, delete-confirm) stay modal per D-04.
   document.getElementById('tc-modals')?.remove();
   const modalContainer = document.createElement('div');
   modalContainer.id = 'tc-modals';
   modalContainer.innerHTML = `
-    ${renderAddCardModal()}
     ${renderMassEntryPanel()}
     ${renderCSVImportModal()}
     ${renderEditInline()}
     ${renderDeleteConfirm()}
   `;
   document.body.appendChild(modalContainer);
+
+  // Initialize Alpine on the inline panel too (it's now part of the screen
+  // container, not #tc-modals). Without this, the <aside x-data=...> doesn't
+  // bind and the panel never renders.
+  if (Alpine?.initTree) {
+    Alpine.initTree(container);
+  }
 
   // Initialize Alpine on the newly appended modal elements
   if (Alpine?.initTree) {

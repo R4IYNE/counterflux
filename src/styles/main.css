@@ -133,3 +133,22 @@ body {
   background: var(--color-success, #2ECC71);
   animation: cf-pulse 1.5s ease-in-out infinite;
 }
+
+/* Phase 8 Plan 2 — Treasure Cruise LHS panel transitions (D-28, UI-SPEC
+   Interaction & Motion). The panel slides 360px left/right; the grid
+   reflows via margin/width transitions. */
+.tc-panel-column {
+  transition: transform 200ms ease-out, width 200ms ease-out;
+}
+.tc-grid-column {
+  transition: margin-left 200ms ease-out;
+}
+
+/* Phase 8 Plan 2 — Accessibility: honour prefers-reduced-motion for all
+   Treasure Cruise panel transitions (UI-SPEC §Accessibility). */
+@media (prefers-reduced-motion: reduce) {
+  .tc-panel-column,
+  .tc-grid-column {
+    transition-duration: 0.01ms !important;
+  }
+}
