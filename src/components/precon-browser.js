@@ -25,6 +25,7 @@
 // never blanks out.
 
 import { db } from '../db/schema.js';
+import { isMultiDeckBundle } from '../services/precons.js';
 
 /**
  * Render the Precon Browser drawer HTML.
@@ -52,6 +53,13 @@ export function renderPreconBrowser() {
     window.__cf_getPreconCardName = (scryfallId) => {
       return window.__cf_preconCardNames.get(scryfallId) || scryfallId;
     };
+  }
+
+  // FOLLOWUP-4B (Phase 08.1) — expose the bundle detector to the Alpine
+  // x-data scope. The `isBundle` getter inside VIEW B reads it via window
+  // (Alpine x-data string templates can't import ES modules directly).
+  if (typeof window !== 'undefined' && !window.__cf_isMultiDeckBundle) {
+    window.__cf_isMultiDeckBundle = isMultiDeckBundle;
   }
 
   return `
@@ -180,6 +188,7 @@ export function renderPreconBrowser() {
           <template x-if="$store.collection.selectedPreconCode">
             <div x-data="{
               get precon() { return $store.collection.precons.find(p => p.code === $store.collection.selectedPreconCode); },
+              get isBundle() { return window.__cf_isMultiDeckBundle ? window.__cf_isMultiDeckBundle(this.precon) : false; },
               get sortedDecklist() {
                 const list = this.precon?.decklist || [];
                 return [...list].sort((a, b) => {
@@ -203,11 +212,12 @@ export function renderPreconBrowser() {
 
                 <button
                   @click="$store.collection.addAllFromPrecon($store.collection.selectedPreconCode)"
-                  :disabled="$store.collection.preconDecklistLoading || !(precon?.decklist?.length)"
-                  :style="(precon?.decklist?.length && !$store.collection.preconDecklistLoading)
+                  :disabled="$store.collection.preconDecklistLoading || !(precon?.decklist?.length) || isBundle"
+                  :title="isBundle ? 'Multi-deck product — open in Scryfall to pick a specific deck' : ''"
+                  :style="(precon?.decklist?.length && !$store.collection.preconDecklistLoading && !isBundle)
                     ? 'padding: 8px 16px; font-family: JetBrains Mono, monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; color: var(--color-text-primary); background: var(--color-primary); border: 1px solid var(--color-primary); cursor: pointer; text-transform: uppercase;'
                     : 'padding: 8px 16px; font-family: JetBrains Mono, monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; color: var(--color-text-dim); background: var(--color-surface-hover); border: 1px solid var(--color-border-ghost); cursor: not-allowed; text-transform: uppercase; opacity: 0.5;'"
-                  x-text="precon?.decklist?.length ? ('ADD ALL ' + precon.decklist.length + ' CARDS') : 'LOADING…'"
+                  x-text="isBundle ? 'MULTI-DECK PRODUCT' : (precon?.decklist?.length ? ('ADD ALL ' + precon.decklist.length + ' CARDS') : 'LOADING…')"
                 ></button>
               </div>
 
@@ -224,8 +234,30 @@ export function renderPreconBrowser() {
                 </div>
               </template>
 
+              <!-- FOLLOWUP-4B (Phase 08.1) — multi-deck bundle warning. Replaces
+                   the giant decklist render when isMultiDeckBundle(precon) is
+                   true. The user can BACK out to the tile grid or close the
+                   browser to escape. -->
+              <template x-if="!$store.collection.preconDecklistLoading && !$store.collection.preconDecklistError && isBundle">
+                <div style="padding: 48px 24px; text-align: center;">
+                  <h4 style="font-family: 'Syne', sans-serif; font-size: 20px; color: var(--color-warning); text-transform: uppercase; margin: 0 0 16px 0;">MULTI-DECK PRODUCT</h4>
+                  <p style="font-family: 'Space Grotesk', sans-serif; font-size: 14px; line-height: 1.5; color: var(--color-text-primary); margin: 0 0 8px 0; max-width: 480px; margin-left: auto; margin-right: auto;">
+                    This product contains multiple decks — open in Scryfall to pick a specific deck.
+                  </p>
+                  <p style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.15em; color: var(--color-text-muted); margin: 8px 0 24px 0; text-transform: uppercase;">
+                    <span x-text="precon?.decklist?.length || 0"></span> CARDS ACROSS BUNDLED DECKS
+                  </p>
+                  <a
+                    :href="'https://scryfall.com/sets/' + ($store.collection.selectedPreconCode || '')"
+                    target="_blank"
+                    rel="noopener"
+                    style="display: inline-block; padding: 8px 16px; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; color: var(--color-text-primary); background: var(--color-surface-hover); border: 1px solid var(--color-border-ghost); cursor: pointer; text-transform: uppercase; text-decoration: none;"
+                  >OPEN IN SCRYFALL</a>
+                </div>
+              </template>
+
               <!-- Decklist rows -->
-              <template x-if="precon?.decklist?.length && !$store.collection.preconDecklistLoading">
+              <template x-if="precon?.decklist?.length && !$store.collection.preconDecklistLoading && !isBundle">
                 <div style="display: flex; flex-direction: column;">
                   <template x-for="entry in sortedDecklist" :key="entry.scryfall_id">
                     <div
