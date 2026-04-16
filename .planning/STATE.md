@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Second Sunrise
-status: executing
-stopped_at: Phase 8 Plan 2 complete; Plan 3 (precon browser + Dexie v9) ready to execute
-last_updated: "2026-04-16T09:12:27.799Z"
+status: verifying
+stopped_at: "Completed 08-03-PLAN.md; Phase 8 feature-complete, ready for /gsd:verify-work"
+last_updated: "2026-04-16T09:32:18.632Z"
 last_activity: 2026-04-16
 progress:
   total_phases: 7
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 6
-  completed_plans: 5
+  completed_plans: 6
   percent: 0
 ---
 
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-04-14)
 
 Phase: 08 (treasure-cruise-rapid-entry) — EXECUTING
 Plan: 3 of 3
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-04-16
 
 Progress: [          ] 0%
@@ -63,6 +63,7 @@ Progress: [          ] 0%
 | Phase 07 P02 | 3min | 5 tasks | 4 files |
 | Phase 08 P01 | 4min | 4 tasks | 5 files |
 | Phase 08 P02 | 15min | 6 tasks tasks | 10 files files |
+| Phase 08 P03 | 14m 21s | 6 tasks tasks | 7 files files |
 
 ## Accumulated Context
 
@@ -98,6 +99,10 @@ Full decision log in PROJECT.md Key Decisions table.
 - [Phase 08]: [Phase 08]: Printing selection uses cf:printing-selected CustomEvent pattern — store mutates activePrintingIdByCard + dispatches event; panel x-data listens and patches its selectedCard view (decouples store from panel instance)
 - [Phase 08]: [Phase 08]: tests/setup.js globally stubs MutationObserver + CustomEvent so node-only vitest tests can import alpinejs-dependent modules without jsdom overhead
 - [Phase 08]: [Phase 08]: vi.mock('alpinejs') over vi.spyOn — Alpine module init runs at import; only vi.mock's hoisted replacement intercepts the store call in time
+- [Phase 08]: Plan 3 shipped Dexie v9 additive bump + precons_cache table — no .upgrade callback; worker mirror per PITFALLS §1; Phase 7 v5→v8 chain intact
+- [Phase 08]: addAllFromPrecon uses Dexie transaction + single loadEntries + single collection_add_batch undo entry with structured {added[], updated[{id,prevQuantity}]} payload (Pitfall 2 + 7)
+- [Phase 08]: precons_cache PK is Scryfall set code (string) — deliberately EXCLUDED from UUID_TABLES creating-hook; callers MUST supply code
+- [Phase 08]: .ss.ss-fallback CSS rule ships defence-in-depth — spike confirmed 100% duel-deck coverage in keyrune 3.18.0 but keyrune release cadence is independent of Scryfall
 
 ### Pending Todos
 
@@ -112,6 +117,6 @@ None — roadmap complete, next step is `/gsd:plan-phase 7`.
 
 ## Session Continuity
 
-Last session: 2026-04-16T09:12:09.143Z
-Stopped at: Phase 8 Plan 2 complete; Plan 3 (precon browser + Dexie v9) ready to execute
+Last session: 2026-04-16T09:32:03.648Z
+Stopped at: Completed 08-03-PLAN.md; Phase 8 feature-complete, ready for /gsd:verify-work
 Resume file: None
