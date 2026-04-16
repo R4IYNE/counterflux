@@ -25,11 +25,20 @@ User-reported items from the Phase 8 human-UAT walkthrough on 2026-04-16. Phase 
 ### 4. Precon browser — specific commander decks not pulling in
 **Reported:** 2026-04-16
 **Symptom:** Certain commander precons are either missing from the tile grid or fail to load their decklists when clicked.
-**Investigation needed:**
-- Confirm Scryfall `/sets` coverage — is the precon being filtered out by the `PRECON_SET_TYPES = ['commander', 'duel_deck']` whitelist in `src/services/precons.js:23`?
-- Test the `search_uri` decklist fetch path for failing precons — does `prints_search_uri` resolve, or does it 404?
-- Check the rate-limited queue (`src/services/scryfall-queue.js`) — is the request being throttled out or cached as an error?
-**Risk:** Medium — likely a data-coverage gap or an error-path bug; depends on which precons fail.
+**Status:** DIAGNOSED — see debug session at [.planning/debug/precon-browser-missing-commander-decks.md](../../debug/precon-browser-missing-commander-decks.md)
+
+**Two compounding root causes confirmed:**
+
+**Cause 1 — whitelist too narrow.** `PRECON_SET_TYPES = ['commander', 'duel_deck']` at `src/services/precons.js:23` silently excludes 9+ set_types that contain real WotC Commander products: `masters` (Commander Masters `cmm`), `draft_innovation` (Commander Legends `cmr`/`clb`), `planechase`, `archenemy`, `premium_deck`, `arsenal`, `box` (Game Night), `from_the_vault`, `promo`.
+
+**Cause 2 — Scryfall `set` ≠ "one decklist".** Modern multi-deck Commander products (Doctor Who 4-deck bundle, Fallout, Warhammer 40K, Tales of Middle-earth, all C20+ Commander products) load as 400–1000+ card "decklists" mixing all bundled decks. Scryfall has no deck-membership metadata.
+
+**Recommended fix path (3 tiers, full detail in debug file):**
+- **Tier A** — minimal code-level allowlist of confirmed-precon set codes (~30 min, low risk)
+- **Tier B** — A + decklist size guard renders "multi-deck product, open in Scryfall" instead of dumping 1000-card list (~2-3 hr, medium risk)
+- **Tier C** — hand-curated `src/data/precon-decks.js` deck-membership map (~6-10 hr, warrants its own phase)
+
+**Recommendation:** Land **A+B together** in Phase 8.1 polish (do NOT land A alone — exposes the multi-deck UX problem more visibly). Defer Tier C to its own future phase (Phase 8.2 or a Treasure Cruise polish phase). RESEARCH.md §5 already deferred curated deck membership to v1.2.
 
 ### 5. Add-to-collection — browse by set + faceted filtering
 **Reported:** 2026-04-16
