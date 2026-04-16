@@ -52,6 +52,7 @@ All six modules operational: Dashboard (Epic Experiment), Collection Manager (Tr
 - ✓ Mila (System Familiar) — sidebar presence, insights, empty states — v1.0
 - ✓ Keyboard-first interaction patterns, right-click context menus, undo support — v1.0
 - ✓ Offline capability for collection, decks, and game tracking — v1.0
+- ✓ Treasure Cruise rapid entry — LHS persistent add panel, paper-printings picker, Commander precon browser, mass-entry X close, dropdown thumbnails, mana-cost audit (COLLECT-01..06) — v1.1 Phase 8
 
 ### Active
 
@@ -119,4 +120,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-15 — Phase 07 (polish pass + perf baseline + schema v5→v8 migration) complete; 5 perf gaps flagged for Phase 13, schema pre-ready for Phases 9 and 11*
+*Last updated: 2026-04-16 — Phase 08 (Treasure Cruise rapid entry) complete; LHS persistent add panel, printings picker, Commander precon browser, Dexie v9 additive bump shipped. 5 polish follow-ups captured in `phases/08-treasure-cruise-rapid-entry/follow-ups.md` for promotion to a future polish phase.*
