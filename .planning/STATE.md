@@ -104,6 +104,10 @@ Full decision log in PROJECT.md Key Decisions table.
 - [Phase 08]: precons_cache PK is Scryfall set code (string) — deliberately EXCLUDED from UUID_TABLES creating-hook; callers MUST supply code
 - [Phase 08]: .ss.ss-fallback CSS rule ships defence-in-depth — spike confirmed 100% duel-deck coverage in keyrune 3.18.0 but keyrune release cadence is independent of Scryfall
 
+### Roadmap Evolution
+
+- Phase 08.1 inserted after Phase 8: Treasure Cruise Polish & Precon Coverage (URGENT) — covers 4 polish/bugfix items captured during Phase 8 human-UAT walkthrough; precon coverage gap diagnosed in `.planning/debug/precon-browser-missing-commander-decks.md` (landing fix tiers A+B; tier C deferred). Items 4C and 5 (browse-by-set + faceted filters) explicitly NOT in 8.1 scope.
+
 ### Pending Todos
 
 None — roadmap complete, next step is `/gsd:plan-phase 7`.
