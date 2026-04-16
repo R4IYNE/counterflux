@@ -4,7 +4,7 @@ milestone: v1.1
 milestone_name: Second Sunrise
 status: verifying
 stopped_at: Completed 08.1-02-PLAN.md (FOLLOWUP-4A allowlist + FOLLOWUP-4B bundle guard)
-last_updated: "2026-04-16T13:43:54.801Z"
+last_updated: "2026-04-16T15:01:08.244Z"
 last_activity: 2026-04-16
 progress:
   total_phases: 8
@@ -25,8 +25,8 @@ See: .planning/PROJECT.md (updated 2026-04-14)
 
 ## Current Position
 
-Phase: 08.1 (treasure-cruise-polish-precon-coverage) — EXECUTING
-Plan: 3 of 3
+Phase: 9
+Plan: Not started
 Status: Phase complete — ready for verification
 Last activity: 2026-04-16
 

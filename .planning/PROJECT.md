@@ -53,6 +53,7 @@ All six modules operational: Dashboard (Epic Experiment), Collection Manager (Tr
 - ✓ Keyboard-first interaction patterns, right-click context menus, undo support — v1.0
 - ✓ Offline capability for collection, decks, and game tracking — v1.0
 - ✓ Treasure Cruise rapid entry — LHS persistent add panel, paper-printings picker, Commander precon browser, mass-entry X close, dropdown thumbnails, mana-cost audit (COLLECT-01..06) — v1.1 Phase 8
+- ✓ Treasure Cruise polish + precon coverage — dropdown scroll containment, prominent re-open affordance, hover-checkbox quick actions on card tiles, 18-code precon allowlist (Commander Masters, Commander Legends, Planechase, Archenemy, Premium Deck, Game Night, Commander's Arsenal, Commander Collection, etc.), multi-deck bundle warning + ADD ALL guard — v1.1 Phase 8.1
 
 ### Active
 
@@ -120,4 +121,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-16 — Phase 08 (Treasure Cruise rapid entry) complete; LHS persistent add panel, printings picker, Commander precon browser, Dexie v9 additive bump shipped. 5 polish follow-ups captured in `phases/08-treasure-cruise-rapid-entry/follow-ups.md` for promotion to a future polish phase.*
+*Last updated: 2026-04-16 — Phase 08.1 (Treasure Cruise polish + precon coverage) complete; resolved 4 user-reported items from Phase 8 UAT walkthrough — dropdown scroll, re-open affordance, hover-checkbox quick actions, precon allowlist + multi-deck bundle guard. Items 4C (curated deck-membership map) and 5 (browse-by-set + faceted filtering) deferred to future Phase 08.2 per debug-session recommendation.*
