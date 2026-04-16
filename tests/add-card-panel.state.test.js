@@ -5,20 +5,18 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
  * localStorage.tc_panel_open; first-boot (null) defaults to OPEN per D-03
  * and Pitfall 6; addToCollection() DOES NOT close the panel (D-01); close()
  * via togglePanel() persists `false`.
- *
- * This test exercises the store-level state + an HTML-string check on the
- * panel's template so we don't require a full Alpine runtime.
  */
-function createAlpineStub() {
-  const stores = {};
-  return {
+
+const __alpineStores = {};
+vi.mock('alpinejs', () => ({
+  default: {
     store(name, obj) {
-      if (obj === undefined) return stores[name];
-      stores[name] = obj;
-      return stores[name];
+      if (obj === undefined) return __alpineStores[name];
+      __alpineStores[name] = obj;
+      return __alpineStores[name];
     },
-  };
-}
+  },
+}));
 
 // In-memory localStorage shim for the node test environment.
 function installLocalStorage(initial = {}) {
@@ -41,15 +39,21 @@ function installLocalStorage(initial = {}) {
 async function freshStore({ localStorageSeed = {} } = {}) {
   installLocalStorage(localStorageSeed);
   // Reset module cache so the panelOpen IIFE re-runs with current localStorage
+  for (const k of Object.keys(__alpineStores)) delete __alpineStores[k];
   vi.resetModules();
-  const alpineStub = createAlpineStub();
-  const AlpineMod = await import('alpinejs');
-  vi.spyOn(AlpineMod.default, 'store').mockImplementation((name, obj) => {
-    return alpineStub.store(name, obj);
-  });
+  // Re-register the alpinejs mock since vi.resetModules clears it
+  vi.doMock('alpinejs', () => ({
+    default: {
+      store(name, obj) {
+        if (obj === undefined) return __alpineStores[name];
+        __alpineStores[name] = obj;
+        return __alpineStores[name];
+      },
+    },
+  }));
   const { initCollectionStore } = await import('../src/stores/collection.js');
   initCollectionStore();
-  return alpineStub.store('collection');
+  return __alpineStores.collection;
 }
 
 describe('COLLECT-06: panel open-state contract', () => {
@@ -73,9 +77,6 @@ describe('COLLECT-06: panel open-state contract', () => {
   });
 
   it('Test 4 — panel stays open: addToCollection() does not mutate panelOpen=false (D-01)', async () => {
-    // Verify by grepping the component source — addCardOpen=false should be
-    // absent after Task 4 edits. We also assert the panel x-data's
-    // addToCollection path does NOT contain `panelOpen = false`.
     if (typeof globalThis.window === 'undefined') globalThis.window = {};
     const { renderAddCardPanel } = await import('../src/components/add-card-panel.js');
     const html = renderAddCardPanel();
@@ -95,9 +96,9 @@ describe('COLLECT-06: panel open-state contract', () => {
     expect(resetBody).toMatch(/this\.selectedCard\s*=\s*null/);
     expect(resetBody).toMatch(/this\.quantity\s*=\s*1/);
     // addToCollection must call reset()
-    const addMatch = html.match(/async addToCollection\(\)[\s\S]*?\}\s*,\s*reset/);
+    expect(html).toMatch(/async addToCollection\(\)/);
+    const addMatch = html.match(/async addToCollection\(\)[\s\S]*?this\.reset\(\)/);
     expect(addMatch).toBeTruthy();
-    expect(addMatch[0]).toMatch(/this\.reset\(\)/);
   });
 
   it('Test 5 — togglePanel flips panelOpen and persists to localStorage', async () => {

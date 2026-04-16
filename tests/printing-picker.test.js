@@ -2,47 +2,35 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 /**
  * COLLECT-04 component contract: selectPrinting(cardId, printingId) swaps the
- * active printing for the current card in the store, which in turn mutates
- * the panel's selectedCard (image + price + set + collector_number) in place.
- *
- * We test the store-level behaviour (activePrintingIdByCard mutation + event
- * dispatch) and the price-recompute via window.__cf_eurToGbp. The x-text DOM
- * verification is a string-level check on the rendered HTML — the printing
- * strip template must reference activePrintingIdByCard and selectedCard.id.
+ * active printing for the current card in the store, which in turn dispatches
+ * a `cf:printing-selected` CustomEvent that the panel listens for.
  */
-function createAlpineStub() {
-  const stores = {};
-  return {
+
+const __alpineStores = {};
+vi.mock('alpinejs', () => ({
+  default: {
     store(name, obj) {
-      if (obj === undefined) return stores[name];
-      stores[name] = obj;
-      return stores[name];
+      if (obj === undefined) return __alpineStores[name];
+      __alpineStores[name] = obj;
+      return __alpineStores[name];
     },
-  };
-}
+  },
+}));
 
 describe('COLLECT-04: printing picker live update', () => {
-  let alpineStub;
   let collectionStore;
-  let fetchMock;
 
   beforeEach(async () => {
+    for (const k of Object.keys(__alpineStores)) delete __alpineStores[k];
+
     const queueMod = await import('../src/services/scryfall-queue.js');
     if (typeof queueMod.__resetQueueForTests === 'function') {
       queueMod.__resetQueueForTests();
     }
-    fetchMock = vi.fn();
-    vi.stubGlobal('fetch', fetchMock);
-
-    alpineStub = createAlpineStub();
-    const AlpineMod = await import('alpinejs');
-    vi.spyOn(AlpineMod.default, 'store').mockImplementation((name, obj) => {
-      return alpineStub.store(name, obj);
-    });
 
     const { initCollectionStore } = await import('../src/stores/collection.js');
     initCollectionStore();
-    collectionStore = alpineStub.store('collection');
+    collectionStore = __alpineStores.collection;
   });
 
   afterEach(() => {
@@ -50,7 +38,7 @@ describe('COLLECT-04: printing picker live update', () => {
   });
 
   it('Test 1: selectPrinting mutates activePrintingIdByCard[cardId]', async () => {
-    // Seed the store with printings for a given card
+    // Seed printings for the card
     collectionStore.printingsByCardId['card-1'] = {
       loading: false,
       error: null,
@@ -71,31 +59,31 @@ describe('COLLECT-04: printing picker live update', () => {
         { id: 'x1', set: 'x', set_name: 'X', released_at: '2024-01-01', collector_number: '1', image_uris: { small: 'x.jpg' }, prices: { eur: '2.40' }, games: ['paper'] },
       ],
     };
+
+    // Provide a minimal window with add/dispatchEventListener if jsdom isn't loaded
+    if (typeof globalThis.window === 'undefined') globalThis.window = globalThis;
+    const listeners = {};
+    const origAdd = window.addEventListener;
+    const origDispatch = window.dispatchEvent;
+    window.addEventListener = (type, fn) => { (listeners[type] ||= []).push(fn); };
+    window.dispatchEvent = (ev) => {
+      (listeners[ev.type] || []).forEach(fn => fn(ev));
+      return true;
+    };
+
     let receivedEvent = null;
     const handler = (e) => { receivedEvent = e; };
-    // jsdom may or may not be loaded — provide a minimal window shim if needed
-    if (typeof globalThis.window === 'undefined') globalThis.window = globalThis;
-    if (typeof window.addEventListener !== 'function') {
-      const listeners = {};
-      window.addEventListener = (type, fn) => { (listeners[type] ||= []).push(fn); };
-      window.dispatchEvent = (ev) => { (listeners[ev.type] || []).forEach(fn => fn(ev)); return true; };
-      // CustomEvent polyfill
-      if (typeof globalThis.CustomEvent === 'undefined') {
-        globalThis.CustomEvent = class CustomEvent {
-          constructor(type, init = {}) {
-            this.type = type;
-            this.detail = init.detail;
-          }
-        };
-      }
-    }
     window.addEventListener('cf:printing-selected', handler);
     collectionStore.selectPrinting('card-2', 'x1');
+
     expect(receivedEvent).not.toBeNull();
     expect(receivedEvent.detail.cardId).toBe('card-2');
     expect(receivedEvent.detail.printing.id).toBe('x1');
     expect(receivedEvent.detail.printing.image_uris.small).toBe('x.jpg');
-    window.removeEventListener?.('cf:printing-selected', handler);
+
+    // Restore
+    if (origAdd) window.addEventListener = origAdd;
+    if (origDispatch) window.dispatchEvent = origDispatch;
   });
 
   it('Test 3: GBP price lookup via window.__cf_eurToGbp rounds to two decimals', async () => {

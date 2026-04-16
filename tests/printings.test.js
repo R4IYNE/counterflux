@@ -5,32 +5,31 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
  * card's oracle via Scryfall, filters to games:paper, sorts released_at DESC,
  * and paginates has_more/next_page.
  *
- * Implementation lives on $store.collection.loadPrintings — but the test
- * imports it through the store factory (initCollectionStore) + an Alpine shim.
+ * We stub `alpinejs` entirely so importing `src/stores/collection.js` doesn't
+ * touch Alpine's MutationObserver/window-dependent module init. Our stub
+ * exposes a minimal `.store(name, obj)` API the store module uses.
  */
 
-// Minimal Alpine shim so initCollectionStore can register the store without a
-// real Alpine runtime. We only need `.store(name, obj)` and `.store(name)`.
-function createAlpineStub() {
-  const stores = {};
-  return {
+const __alpineStores = {};
+vi.mock('alpinejs', () => ({
+  default: {
     store(name, obj) {
-      if (obj === undefined) return stores[name];
-      stores[name] = obj;
-      return stores[name];
+      if (obj === undefined) return __alpineStores[name];
+      __alpineStores[name] = obj;
+      return __alpineStores[name];
     },
-    __stores: stores,
-  };
-}
+  },
+}));
 
 describe('COLLECT-04: loadPrintings (paper filter + DESC sort + pagination)', () => {
   let fetchMock;
-  let alpineStub;
-  let originalAlpine;
   let collectionStore;
 
   beforeEach(async () => {
-    // Reset queue internal state between tests
+    // Clear stubbed Alpine stores between tests
+    for (const k of Object.keys(__alpineStores)) delete __alpineStores[k];
+
+    // Reset scryfall-queue internal state
     const queueMod = await import('../src/services/scryfall-queue.js');
     if (typeof queueMod.__resetQueueForTests === 'function') {
       queueMod.__resetQueueForTests();
@@ -39,23 +38,13 @@ describe('COLLECT-04: loadPrintings (paper filter + DESC sort + pagination)', ()
     fetchMock = vi.fn();
     vi.stubGlobal('fetch', fetchMock);
 
-    alpineStub = createAlpineStub();
-    originalAlpine = globalThis.Alpine;
-    // alpinejs ESM default export — we patch the live module's .store path.
-    // The store module `import Alpine from 'alpinejs'`, so we stub that export.
-    const AlpineMod = await import('alpinejs');
-    vi.spyOn(AlpineMod.default, 'store').mockImplementation((name, obj) => {
-      return alpineStub.store(name, obj);
-    });
-
     const { initCollectionStore } = await import('../src/stores/collection.js');
     initCollectionStore();
-    collectionStore = alpineStub.store('collection');
+    collectionStore = __alpineStores.collection;
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
-    globalThis.Alpine = originalAlpine;
   });
 
   it('Test 1: filters to paper-only printings (3 paper + 1 mtgo → 3 entries)', async () => {

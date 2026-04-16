@@ -1,6 +1,7 @@
 import Alpine from 'alpinejs';
 import { db } from '../db/schema.js';
 import { logActivity } from '../services/activity.js';
+import { queueScryfallRequest } from '../services/scryfall-queue.js';
 
 /**
  * Sort collection entries by the given sort key.
@@ -56,6 +57,24 @@ export function initCollectionStore() {
     massEntryOpen: false,
     importOpen: false,
     addCardOpen: false,
+    // Phase 8 Plan 2 — COLLECT-06 LHS panel open state. Pitfall 6: null (first
+    // boot) defaults to OPEN per D-03; subsequent state persists to localStorage
+    // key `tc_panel_open`.
+    panelOpen: (() => {
+      try {
+        const stored = typeof localStorage !== 'undefined'
+          ? localStorage.getItem('tc_panel_open')
+          : null;
+        if (stored === null) return true;
+        return stored === 'true';
+      } catch {
+        return true;
+      }
+    })(),
+    // Phase 8 Plan 2 — COLLECT-04 printing picker state (in-memory, per-card).
+    // Keyed by the oracle card's scryfall id (card.id from search result).
+    printingsByCardId: {},      // { [cardId]: { loading, error, printings: [] } }
+    activePrintingIdByCard: {}, // { [cardId]: printingId }
 
     get filtered() {
       let items = this.entries;
@@ -198,6 +217,105 @@ export function initCollectionStore() {
 
     setCategory(category) {
       this.filters.category = category;
+    },
+
+    /**
+     * Phase 8 Plan 2 — COLLECT-04.
+     * Flip the LHS panel open state; persist to localStorage tc_panel_open
+     * so the preference survives reloads. D-28 / Pitfall 6.
+     */
+    togglePanel() {
+      this.panelOpen = !this.panelOpen;
+      try {
+        if (typeof localStorage !== 'undefined') {
+          localStorage.setItem('tc_panel_open', String(this.panelOpen));
+        }
+      } catch { /* swallow — localStorage may be disabled in private mode */ }
+    },
+
+    /**
+     * Phase 8 Plan 2 — COLLECT-04.
+     * Fetch all paper printings of a card via Scryfall. Uses the rate-limited
+     * queue (scryfall-queue.js) + User-Agent per ToS. Filters games:paper,
+     * sorts released_at DESC (D-16), paginates has_more/next_page.
+     *
+     * Branch A per 08-02-SPIKE-NOTES.md: card.prints_search_uri is retained
+     * by the bulk-data pipeline, so we use it directly. The oracleid fallback
+     * is kept as defensive coverage for test fixtures or old-schema cards.
+     *
+     * @param {object} card - a Scryfall card object with at minimum `id`;
+     *   prefers `prints_search_uri`, falls back to constructing from `oracle_id`.
+     * @returns {Promise<Array>} the filtered + sorted paper printings.
+     */
+    async loadPrintings(card) {
+      if (!card || !card.id) return [];
+      const cached = this.printingsByCardId[card.id];
+      if (cached && !cached.loading && !cached.error && cached.printings?.length) {
+        return cached.printings;
+      }
+      this.printingsByCardId[card.id] = { loading: true, error: null, printings: [] };
+
+      try {
+        let url = card.prints_search_uri
+          || `https://api.scryfall.com/cards/search?q=oracleid%3A${encodeURIComponent(card.oracle_id || '')}&unique=prints`;
+
+        const printings = [];
+        while (url) {
+          const page = await queueScryfallRequest(url);
+          for (const p of (page.data || [])) {
+            if (p.games?.includes('paper')) {
+              printings.push({
+                id: p.id,
+                set: p.set,
+                set_name: p.set_name,
+                released_at: p.released_at,
+                collector_number: p.collector_number,
+                image_uris: p.image_uris,
+                prices: p.prices,
+                games: p.games,
+              });
+            }
+          }
+          url = page.has_more ? page.next_page : null;
+        }
+        // D-16: newest first. Use localeCompare on ISO date strings (lexicographic
+        // ordering is correct for YYYY-MM-DD).
+        printings.sort((a, b) => (b.released_at || '').localeCompare(a.released_at || ''));
+
+        this.printingsByCardId[card.id] = { loading: false, error: null, printings };
+        // D-14: default-pick = newest paper printing (index 0 after DESC sort)
+        if (printings.length && !this.activePrintingIdByCard[card.id]) {
+          this.activePrintingIdByCard[card.id] = printings[0].id;
+        }
+        return printings;
+      } catch (err) {
+        this.printingsByCardId[card.id] = {
+          loading: false,
+          error: err.message || String(err),
+          printings: [],
+        };
+        return [];
+      }
+    },
+
+    /**
+     * Phase 8 Plan 2 — COLLECT-04.
+     * Switch the active printing for the given card. Mutates
+     * activePrintingIdByCard and dispatches a `cf:printing-selected`
+     * CustomEvent so the panel's x-data can refresh its selectedCard view
+     * (image + price + set + collector_number in place).
+     */
+    selectPrinting(cardId, printingId) {
+      const bucket = this.printingsByCardId[cardId];
+      if (!bucket) return;
+      const printing = bucket.printings.find(p => p.id === printingId);
+      if (!printing) return;
+      this.activePrintingIdByCard[cardId] = printingId;
+      if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
+        window.dispatchEvent(new CustomEvent('cf:printing-selected', {
+          detail: { cardId, printing },
+        }));
+      }
     },
   });
 }
