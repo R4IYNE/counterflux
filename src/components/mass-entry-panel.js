@@ -95,10 +95,22 @@ export function renderMassEntryPanel() {
       <!-- Panel -->
       <div style="position: relative; z-index: 10; width: 100%; max-width: 680px; background: #14161C; border: 1px solid #2A2D3A; padding: 24px; display: flex; flex-direction: column; gap: 16px; max-height: 80vh; overflow-y: auto;"
            @click.stop>
-        <!-- Heading -->
-        <h2 style="font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; line-height: 1.2; letter-spacing: 0.01em; color: #EAECEE; margin: 0;">
-          MASS ENTRY TERMINAL
-        </h2>
+        <!-- Heading row: title + X close (COLLECT-05 / D-23) -->
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+          <h2 style="font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; line-height: 1.2; letter-spacing: 0.01em; color: var(--color-text-primary); margin: 0;">
+            MASS ENTRY TERMINAL
+          </h2>
+          <button
+            @click="discard()"
+            aria-label="Close mass entry"
+            title="Close mass entry"
+            style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; background: transparent; border: none; cursor: pointer; color: var(--color-text-muted); transition: all 120ms ease-out;"
+            onmouseenter="this.style.color='var(--color-text-primary)'; this.style.background='var(--color-surface-hover)'"
+            onmouseleave="this.style.color='var(--color-text-muted)'; this.style.background='transparent'"
+          >
+            <span class="material-symbols-outlined" style="font-size: 20px;">close</span>
+          </button>
+        </div>
 
         <!-- Textarea -->
         <textarea
