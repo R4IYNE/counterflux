@@ -144,11 +144,20 @@ body {
   transition: margin-left 200ms ease-out;
 }
 
-/* Phase 8 Plan 2 — Accessibility: honour prefers-reduced-motion for all
-   Treasure Cruise panel transitions (UI-SPEC §Accessibility). */
+/* Phase 8 Plan 2 + 08.1 Plan 1 — Accessibility: honour prefers-reduced-motion
+   for all Treasure Cruise panel transitions (UI-SPEC §Accessibility).
+   Selector list extends as Phase 8.1 plans land additional motion surfaces:
+     - .tc-panel-column, .tc-grid-column (Phase 8 Plan 2 — panel slide)
+     - .cf-panel-reopen (Phase 08.1 Plan 1 — re-open affordance hover/focus)
+     - .card-quick-actions-checkbox (Phase 08.1 Plan 3 — extended here when
+       Plan 3 lands; if this block is updated by Plan 3 first, this comment
+       still narrates the merge intent). */
 @media (prefers-reduced-motion: reduce) {
   .tc-panel-column,
-  .tc-grid-column {
+  .tc-grid-column,
+  .cf-panel-reopen,
+  .card-quick-actions-checkbox {
+    transition: none !important;
     transition-duration: 0.01ms !important;
   }
 }
@@ -163,4 +172,89 @@ body {
    future set releases where keyrune hasn't caught up yet. */
 .ss.ss-fallback::before {
   content: '?';
+}
+
+/* FOLLOWUP-2 (Phase 08.1 Plan 1) — re-open affordance must be unmistakable.
+   Replaces the original 32×32 ghost-bordered chevron from 08-UI-SPEC §Component
+   Anatomy 1 line 174-178 (which failed the human-UAT visibility test) with a
+   48px hit-target + primary accent surface + inline 'OPEN PANEL' mono label
+   paired with chevron_right glyph. Hover/focus/reduced-motion all handled here
+   so the screen markup stays a class-only consumer. */
+.cf-panel-reopen {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  height: 48px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 16px;
+  background: var(--color-primary);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-primary);
+  cursor: pointer;
+  z-index: 10;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  box-shadow: 0 0 12px var(--color-glow-blue);
+  transition: background 150ms ease-out, box-shadow 150ms ease-out;
+}
+.cf-panel-reopen:hover {
+  background: var(--color-primary);
+  box-shadow: 0 0 20px var(--color-glow-blue);
+}
+.cf-panel-reopen:focus-visible {
+  outline: 2px solid var(--color-text-primary);
+  outline-offset: 2px;
+}
+.cf-panel-reopen .material-symbols-outlined {
+  font-size: 24px;
+  line-height: 1;
+}
+
+/* FOLLOWUP-3 (Phase 08.1 Plan 3) — hover-revealed quick-actions checkbox per
+   follow-ups.md item 3. The checkbox sits at the top-right of every gallery
+   card tile, opacity 0 by default, fades to opacity 1 when the parent
+   .card-tile-hover is hovered OR contains focus, OR when the checkbox itself
+   is focused (keyboard tab into the tile reveals the affordance).
+   Click dispatches the same `card-context-menu` event the right-click handler
+   already wires to context-menu.js — single source of truth, no duplicate
+   menu wiring. The reduced-motion guard is merged into the existing
+   @media block above (lines 155-162) so we do NOT ship a duplicate block. */
+.card-quick-actions-checkbox {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-primary);
+  border: 1px solid var(--color-primary);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  opacity: 0;
+  z-index: 5;
+  transition: opacity 150ms ease-out, box-shadow 150ms ease-out;
+}
+.card-tile-hover:hover .card-quick-actions-checkbox,
+.card-tile-hover:focus-within .card-quick-actions-checkbox,
+.card-quick-actions-checkbox:focus,
+.card-quick-actions-checkbox:focus-visible {
+  opacity: 1;
+}
+.card-quick-actions-checkbox:hover {
+  box-shadow: 0 0 8px var(--color-glow-blue);
+}
+.card-quick-actions-checkbox:focus-visible {
+  outline: 2px solid var(--color-text-primary);
+  outline-offset: 2px;
+}
+.card-quick-actions-checkbox .material-symbols-outlined {
+  font-size: 16px;
+  line-height: 1;
 }

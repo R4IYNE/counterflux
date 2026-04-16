@@ -38,17 +38,19 @@ export function mount(container) {
       <!-- LHS panel column (persistent add surface per COLLECT-06 / D-01, D-02) -->
       ${renderAddCardPanel()}
 
-      <!-- Re-open affordance: visible only when the panel is closed (D-28) -->
+      <!-- Re-open affordance: visible only when the panel is closed (D-28 + FOLLOWUP-2).
+           Replaces the original 32×32 ghost chevron — now 48px tall, primary accent,
+           paired with OPEN PANEL label per Phase 08.1 follow-up #2.
+           All visual styling lives in .cf-panel-reopen (main.css). -->
       <button
         x-show="!$store.collection.panelOpen"
         @click="$store.collection.togglePanel()"
         aria-label="Open add panel"
         title="Open add panel"
-        style="position: absolute; top: 16px; left: 16px; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; background: var(--color-surface); border: 1px solid var(--color-border-ghost); color: var(--color-text-muted); cursor: pointer; z-index: 10; transition: opacity 150ms ease-out;"
-        onmouseenter="this.style.color='var(--color-text-primary)'; this.style.background='var(--color-surface-hover)'"
-        onmouseleave="this.style.color='var(--color-text-muted)'; this.style.background='var(--color-surface)'"
+        class="cf-panel-reopen"
       >
-        <span class="material-symbols-outlined" style="font-size: 20px;">chevron_right</span>
+        <span class="material-symbols-outlined">chevron_right</span>
+        <span>OPEN PANEL</span>
       </button>
 
       <!-- Grid column: flex-1, reflows to fill remaining width after panel push -->
