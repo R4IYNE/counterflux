@@ -18,9 +18,13 @@ export function renderGalleryView() {
         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-[24px]">
           <template x-for="(entry, idx) in items" :key="entry.id || idx">
             <div class="card-tile-hover cursor-pointer flex flex-col"
-                 style="background: #14161C; border: 1px solid #2A2D3A;"
+                 tabindex="0"
+                 :data-entry-id="entry.id || ''"
+                 style="background: #14161C; border: 1px solid #2A2D3A; position: relative;"
                  @click="$store.search.selectResult(entry.card)"
-                 @contextmenu.prevent="$dispatch('card-context-menu', { entry: entry, x: $event.clientX, y: $event.clientY })">
+                 @contextmenu.prevent="$dispatch('card-context-menu', { entry: entry, x: $event.clientX, y: $event.clientY })"
+                 @keydown.enter.prevent="(() => { const r = $event.currentTarget.getBoundingClientRect(); $dispatch('card-context-menu', { entry: entry, x: r.left + r.width/2, y: r.top + r.height/2 }); })()"
+                 @keydown.space.prevent="(() => { const r = $event.currentTarget.getBoundingClientRect(); $dispatch('card-context-menu', { entry: entry, x: r.left + r.width/2, y: r.top + r.height/2 }); })()">
               <!-- Image area -->
               <div class="relative overflow-hidden" style="aspect-ratio: 63/88;">
                 <img
@@ -32,6 +36,18 @@ export function renderGalleryView() {
                 >
                 <!-- Gradient overlay -->
                 <div class="absolute inset-x-0 bottom-0 h-[40%] bg-gradient-to-t from-[#14161C] to-transparent pointer-events-none"></div>
+                <!-- FOLLOWUP-3 hover-revealed quick-actions checkbox -->
+                <button
+                  type="button"
+                  class="card-quick-actions-checkbox"
+                  :aria-label="'Quick actions for ' + (entry.card?.name || 'card')"
+                  title="Quick actions"
+                  @click.stop="$dispatch('card-context-menu', { entry: entry, x: $event.clientX, y: $event.clientY })"
+                  @keydown.enter.stop.prevent="$dispatch('card-context-menu', { entry: entry, x: $event.currentTarget.getBoundingClientRect().left, y: $event.currentTarget.getBoundingClientRect().bottom + 4 })"
+                  @keydown.space.stop.prevent="$dispatch('card-context-menu', { entry: entry, x: $event.currentTarget.getBoundingClientRect().left, y: $event.currentTarget.getBoundingClientRect().bottom + 4 })"
+                >
+                  <span class="material-symbols-outlined" style="font-size: 16px;">more_vert</span>
+                </button>
                 <template x-if="entry.quantity > 1">
                   <span class="qty-badge" x-text="'x' + entry.quantity"></span>
                 </template>
@@ -64,6 +80,8 @@ export function renderGalleryView() {
             this.$watch('items', () => this.scroller?.update());
           },
           scroller: null,
+          _delegatedClick: null,
+          _delegatedKey: null,
           async setupVirtualScroller() {
             const { createVirtualScroller } = await import('./virtual-scroller.js');
             const store = this.$store.collection;
@@ -83,10 +101,13 @@ export function renderGalleryView() {
                 const setName = (card?.set_name || card?.set || '').toUpperCase();
                 const qtyBadge = entry.quantity > 1 ? '<span class=\"qty-badge\">x' + entry.quantity + '</span>' : '';
                 const foilBadge = entry.foil ? '<span class=\"foil-badge absolute bottom-0 left-0 mb-[8px] ml-[8px]\">FOIL</span>' : '';
-                return '<div class=\"card-tile-hover cursor-pointer flex flex-col\" style=\"background: #14161C; border: 1px solid #2A2D3A;\">'
+                // FOLLOWUP-3: escape name for safe inclusion in HTML attribute values
+                const safeName = String(name).replace(/\"/g, '&quot;');
+                return '<div class=\"card-tile-hover cursor-pointer flex flex-col\" tabindex=\"0\" data-entry-id=\"' + (entry.id || '') + '\" style=\"background: #14161C; border: 1px solid #2A2D3A; position: relative;\">'
                   + '<div class=\"relative overflow-hidden\" style=\"aspect-ratio: 63/88;\">'
-                  + '<img src=\"' + imgSrc + '\" alt=\"' + name + '\" class=\"w-full h-full object-cover opacity-80 transition-all duration-500\" loading=\"lazy\" onerror=\"this.style.display=\'none\'\">'
+                  + '<img src=\"' + imgSrc + '\" alt=\"' + safeName + '\" class=\"w-full h-full object-cover opacity-80 transition-all duration-500\" loading=\"lazy\" onerror=\"this.style.display=\'none\'\">'
                   + '<div class=\"absolute inset-x-0 bottom-0 h-[40%] bg-gradient-to-t from-[#14161C] to-transparent pointer-events-none\"></div>'
+                  + '<button type=\"button\" class=\"card-quick-actions-checkbox\" aria-label=\"Quick actions for ' + safeName + '\" title=\"Quick actions\"><span class=\"material-symbols-outlined\" style=\"font-size: 16px;\">more_vert</span></button>'
                   + qtyBadge + foilBadge
                   + '</div>'
                   + '<div class=\"p-[8px] flex flex-col gap-[2px]\">'
@@ -96,8 +117,42 @@ export function renderGalleryView() {
                   + '</div></div>';
               }
             });
+            // FOLLOWUP-3 — delegated click + keyboard handler for the virtual-scroller
+            // path. The renderItem returns a static HTML string with no Alpine bindings,
+            // so we attach a single delegated listener on the scroller container.
+            const scrollerEl = this.$el;
+            const dispatchMenuFor = (tileEl, x, y) => {
+              const entryId = tileEl.getAttribute('data-entry-id');
+              if (!entryId) return;
+              const entry = store.entries.find((e) => String(e.id) === String(entryId));
+              if (!entry) return;
+              tileEl.dispatchEvent(new CustomEvent('card-context-menu', {
+                detail: { entry, x, y },
+                bubbles: true,
+              }));
+            };
+            this._delegatedClick = (ev) => {
+              const checkbox = ev.target.closest('.card-quick-actions-checkbox');
+              if (!checkbox) return;
+              ev.stopPropagation();
+              const tileEl = checkbox.closest('.card-tile-hover');
+              if (tileEl) dispatchMenuFor(tileEl, ev.clientX, ev.clientY);
+            };
+            this._delegatedKey = (ev) => {
+              if (ev.key !== 'Enter' && ev.key !== ' ') return;
+              const tileEl = ev.target.closest('.card-tile-hover');
+              if (!tileEl || ev.target !== tileEl) return; // only the tile itself, not nested
+              ev.preventDefault();
+              const r = tileEl.getBoundingClientRect();
+              dispatchMenuFor(tileEl, r.left + r.width / 2, r.top + r.height / 2);
+            };
+            scrollerEl.addEventListener('click', this._delegatedClick);
+            scrollerEl.addEventListener('keydown', this._delegatedKey);
           },
           destroy() {
+            const scrollerEl = this.$el;
+            if (this._delegatedClick) scrollerEl.removeEventListener('click', this._delegatedClick);
+            if (this._delegatedKey) scrollerEl.removeEventListener('keydown', this._delegatedKey);
             this.scroller?.destroy();
           }
         }" class="min-h-[400px]" style="height: calc(100vh - 400px);"></div>
