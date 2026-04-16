@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Second Sunrise
-status: verifying
-stopped_at: "Completed 08-03-PLAN.md; Phase 8 feature-complete, ready for /gsd:verify-work"
-last_updated: "2026-04-16T10:13:10.619Z"
+status: executing
+stopped_at: Completed 08.1-01-PLAN.md (parallel wave 1)
+last_updated: "2026-04-16T13:26:13.615Z"
 last_activity: 2026-04-16
 progress:
-  total_phases: 7
+  total_phases: 8
   completed_phases: 2
-  total_plans: 6
-  completed_plans: 6
+  total_plans: 9
+  completed_plans: 7
   percent: 0
 ---
 
@@ -21,13 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-14)
 
 **Core value:** The deck builder knows what you own, and the collection knows what's in your decks — one interconnected data layer
-**Current focus:** Phase 08 — treasure-cruise-rapid-entry
+**Current focus:** Phase 08.1 — treasure-cruise-polish-precon-coverage
 
 ## Current Position
 
-Phase: 9
-Plan: Not started
-Status: Phase complete — ready for verification
+Phase: 08.1 (treasure-cruise-polish-precon-coverage) — EXECUTING
+Plan: 2 of 3
+Status: Ready to execute
 Last activity: 2026-04-16
 
 Progress: [          ] 0%
@@ -64,6 +64,7 @@ Progress: [          ] 0%
 | Phase 08 P01 | 4min | 4 tasks | 5 files |
 | Phase 08 P02 | 15min | 6 tasks tasks | 10 files files |
 | Phase 08 P03 | 14m 21s | 6 tasks tasks | 7 files files |
+| Phase 08.1 P01 | 2m 55s | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -103,6 +104,7 @@ Full decision log in PROJECT.md Key Decisions table.
 - [Phase 08]: addAllFromPrecon uses Dexie transaction + single loadEntries + single collection_add_batch undo entry with structured {added[], updated[{id,prevQuantity}]} payload (Pitfall 2 + 7)
 - [Phase 08]: precons_cache PK is Scryfall set code (string) — deliberately EXCLUDED from UUID_TABLES creating-hook; callers MUST supply code
 - [Phase 08]: .ss.ss-fallback CSS rule ships defence-in-depth — spike confirmed 100% duel-deck coverage in keyrune 3.18.0 but keyrune release cadence is independent of Scryfall
+- [Phase 08.1]: Plan 1: re-open affordance migrated to class-only consumer (.cf-panel-reopen utility) — 48px primary-accent surface + OPEN PANEL mono label replaces the original 32px ghost chevron that failed UAT visibility
 
 ### Roadmap Evolution
 
@@ -121,6 +123,6 @@ None — roadmap complete, next step is `/gsd:plan-phase 7`.
 
 ## Session Continuity
 
-Last session: 2026-04-16T09:32:03.648Z
-Stopped at: Completed 08-03-PLAN.md; Phase 8 feature-complete, ready for /gsd:verify-work
+Last session: 2026-04-16T13:26:13.612Z
+Stopped at: Completed 08.1-01-PLAN.md (parallel wave 1)
 Resume file: None
