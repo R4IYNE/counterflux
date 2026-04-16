@@ -152,3 +152,15 @@ body {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Phase 8 Plan 3 — keyrune missing-glyph fallback (Pitfall 4).
+   Renders '?' as the default ::before content for any .ss.ss-fallback
+   element whose companion .ss-<code> rule isn't declared in keyrune.css.
+   Real keyrune icons set their own ::before content which overrides this
+   via CSS cascade, so the '?' only appears when the glyph is genuinely
+   missing. Effective coverage for current duel-deck codes is 100% (per
+   08-03-SPIKE-NOTES.md), but the rule ships as defence-in-depth for
+   future set releases where keyrune hasn't caught up yet. */
+.ss.ss-fallback::before {
+  content: '?';
+}

@@ -7,6 +7,7 @@ import { renderSetCompletionView } from '../components/set-completion.js';
 import { renderAddCardPanel } from '../components/add-card-panel.js';
 import { renderMassEntryPanel } from '../components/mass-entry-panel.js';
 import { renderCSVImportModal } from '../components/csv-import-modal.js';
+import { renderPreconBrowser } from '../components/precon-browser.js';
 import { renderEditInline } from '../components/edit-card-inline.js';
 import { renderDeleteConfirm } from '../components/delete-confirm.js';
 import { renderAnalyticsPanel, analyticsPanel } from '../components/analytics-panel.js';
@@ -193,6 +194,7 @@ export function mount(container) {
     ${renderCSVImportModal()}
     ${renderEditInline()}
     ${renderDeleteConfirm()}
+    ${renderPreconBrowser()}
   `;
   document.body.appendChild(modalContainer);
 

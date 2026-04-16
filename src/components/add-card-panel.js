@@ -156,12 +156,13 @@ export function renderAddCardPanel() {
         </button>
       </div>
 
-      <!-- Action row: BROWSE PRECONS (disabled placeholder — Plan 3 wires it) + MASS ENTRY -->
+      <!-- Action row: BROWSE PRECONS (Plan 3 — wires to precon browser drawer) + MASS ENTRY -->
       <div style="display: flex; gap: 8px; flex-wrap: wrap;">
         <button
-          disabled
-          title="Available in Plan 3"
-          style="flex: 1; min-width: 120px; padding: 8px 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; color: var(--color-text-dim); background: var(--color-surface-hover); border: 1px solid var(--color-border-ghost); cursor: not-allowed; text-transform: uppercase;"
+          @click="$store.collection.preconBrowserOpen = true; $store.collection.loadPrecons()"
+          style="flex: 1; min-width: 120px; padding: 8px 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; color: var(--color-text-primary); background: var(--color-surface-hover); border: 1px solid var(--color-border-ghost); cursor: pointer; text-transform: uppercase;"
+          onmouseenter="this.style.background='var(--color-background)'"
+          onmouseleave="this.style.background='var(--color-surface-hover)'"
         >BROWSE PRECONS</button>
         <button
           @click="$store.collection.massEntryOpen = true"
