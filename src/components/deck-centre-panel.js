@@ -5,6 +5,67 @@ import { openDeckImportModal } from './deck-import-modal.js';
 import { openDeckExportModal } from './deck-export-modal.js';
 
 /**
+ * Resolve the Commander card for the active deck.
+ *
+ * Per 09-CONTEXT D-07 + 09-RESEARCH P-9:
+ * 1. Prefer `activeDeck.commander_id` (Phase 7 v8 row field, written by
+ *    `src/stores/deck.js` createDeck()).
+ * 2. Fall back to the first Legendary Creature/Planeswalker in
+ *    `activeCards` whose `color_identity` is a SUBSET of the deck's
+ *    aggregated colour-identity union — handles legacy v1.0 decks
+ *    migrated from before the field existed.
+ * 3. Return null if no candidate found (deck-centre-panel renders no
+ *    Commander section in that case — graceful degradation).
+ *
+ * Returns the wrapping store entry `{ card, quantity, ... }` (NOT the raw
+ * card) so callers can render via the same renderDeckCardTile path the
+ * other type sections use.
+ *
+ * @param {Object} store - Alpine deck store ({ activeDeck, activeCards }).
+ * @returns {Object|null} Entry wrapping the commander card, or null.
+ */
+function resolveCommanderEntry(store) {
+  if (!store?.activeDeck || !Array.isArray(store?.activeCards)) return null;
+  const entries = store.activeCards;
+  if (entries.length === 0) return null;
+
+  const cmdId = store.activeDeck.commander_id;
+  if (cmdId) {
+    const found = entries.find(
+      (e) => e?.card?.id === cmdId || e?.scryfall_id === cmdId,
+    );
+    if (found) return found;
+  }
+
+  // Fallback: first Legendary Creature / Planeswalker matching the deck's
+  // aggregated colour identity (per P-9). Allows users opening a legacy
+  // pre-D-07 deck row (commander_id never written) to still see the
+  // Commander section without re-saving the deck first.
+  const deckColours = new Set();
+  for (const e of entries) {
+    for (const ci of (e?.card?.color_identity || [])) deckColours.add(ci);
+  }
+  const legendaryEntry = entries.find((e) => {
+    const tl = (e?.card?.type_line || '').toLowerCase();
+    if (!tl.includes('legendary')) return false;
+    if (!tl.includes('creature') && !tl.includes('planeswalker')) return false;
+    const cardColours = e?.card?.color_identity || [];
+    return cardColours.every((c) => deckColours.has(c));
+  });
+  if (legendaryEntry) {
+    // eslint-disable-next-line no-console
+    console.warn(
+      '[deck-centre-panel] commander_id missing on deck',
+      store.activeDeck?.id,
+      '— derived fallback:',
+      legendaryEntry.card?.name,
+    );
+    return legendaryEntry;
+  }
+  return null;
+}
+
+/**
  * @typedef {Object} ActiveDeck
  * @property {string} id           UUID PK (Phase 7 v8 decks table; verified
  *                                 unindexed-but-stored row field).
@@ -183,9 +244,57 @@ export function renderDeckCentrePanel(container) {
     const grouped = store.groupedByType;
     const viewMode = store.viewMode || 'grid';
 
+    // === DECK-05: Commander as own type category (per 09-CONTEXT D-07) ===
+    // Render the COMMANDER section BEFORE the TYPE_ORDER iteration so it
+    // sits at the top of the centre panel. The commander entry is also
+    // suppressed from the regular Creature group below to avoid double
+    // rendering — `commanderEntryId` is the lookup key.
+    const commanderEntry = resolveCommanderEntry(store);
+    const commanderEntryId = commanderEntry?.id ?? null;
+    if (commanderEntry) {
+      const cmdGroup = document.createElement('div');
+      cmdGroup.dataset.typeGroup = 'Commander';
+      cmdGroup.dataset.commanderSection = 'true';
+
+      const cmdHeader = document.createElement('div');
+      cmdHeader.style.cssText = `
+        display: flex; align-items: center; gap: 8px;
+        padding: 8px 0; user-select: none;
+      `;
+
+      const cmdLabel = document.createElement('span');
+      cmdLabel.style.cssText = `
+        font-family: 'JetBrains Mono', monospace; font-size: 11px;
+        text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700;
+        color: #0D52BD;
+      `;
+      cmdLabel.textContent = `COMMANDER (1)`;
+      cmdHeader.appendChild(cmdLabel);
+      cmdGroup.appendChild(cmdHeader);
+
+      const cmdBody = document.createElement('div');
+      cmdBody.dataset.commanderBody = 'true';
+      // Commander tile uses the same render path as other groups so the
+      // hover affordances + context menu wiring stay consistent. The
+      // commander tile is intentionally NOT registered with SortableJS
+      // (commanders aren't draggable into other type sections — moving a
+      // commander card around is meaningless).
+      const cmdTile = renderDeckCardTile(commanderEntry, { mode: viewMode });
+      if (cmdTile) cmdBody.appendChild(cmdTile);
+      cmdGroup.appendChild(cmdBody);
+
+      groupsArea.appendChild(cmdGroup);
+    }
+
     for (const type of TYPE_ORDER) {
-      const cards = grouped[type];
-      if (!cards || cards.length === 0) continue;
+      const groupCards = grouped[type];
+      if (!groupCards || groupCards.length === 0) continue;
+      // Filter out the commander so it doesn't double-render in the
+      // Creature (or Planeswalker) group below.
+      const cards = commanderEntryId
+        ? groupCards.filter((e) => e?.id !== commanderEntryId)
+        : groupCards;
+      if (cards.length === 0) continue;
 
       const group = document.createElement('div');
       group.dataset.typeGroup = type;
