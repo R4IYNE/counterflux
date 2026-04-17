@@ -286,7 +286,16 @@ body {
  * Per RESEARCH §6: PLAYER-1-ALWAYS-TOP (override of CONTEXT default), the
  * D-16 border-glow handles the "whose turn is it?" affordance non-destructively.
  * Bound via :class="$store.game.players.length === 3 ? 'cf-player-grid-3' : '...'"
- * in player-card.js renderPlayerGrid(). */
+ * in player-card.js renderPlayerGrid().
+ *
+ * Plan 09-04 Gap 2 fix: defensive width: 100% + min-width: 0 ensure the grid
+ * spans the full viewport width regardless of any flex/inline-block parent
+ * that might otherwise constrain it (the HUMAN-UAT walkthrough showed the
+ * top player only spanning ~2/3 of the row, suggesting parent constraint).
+ * grid-area assignments moved to inline :style on each player card (see
+ * src/components/player-card.js renderPlayerGrid) keyed on pIdx — this is
+ * sibling-position-agnostic, so Alpine's <template x-for> sitting between
+ * the wrapper and the cards no longer shifts the :nth-child indices. */
 .cf-player-grid-3 {
   display: grid;
   grid-template-areas:
@@ -294,10 +303,9 @@ body {
     "p2 p3";
   grid-template-rows: 1fr 1fr;
   gap: 16px;
+  width: 100%;
+  min-width: 0;
 }
-.cf-player-grid-3 > :nth-child(1) { grid-area: p1; }
-.cf-player-grid-3 > :nth-child(2) { grid-area: p2; }
-.cf-player-grid-3 > :nth-child(3) { grid-area: p3; }
 
 /* GAME-05 (D-13 + P-4) — Real Fullscreen API.
  * Hides app chrome when the page is in fullscreen mode. Game DOM unchanged,

@@ -114,7 +114,7 @@ describe('player-card Plan 09-04 Gap 2 — 3-player grid DOM structure', () => {
     expect(typeof Alpine.store).toBe('function');
   });
 
-  it('when players.length === 3, .cf-player-grid-3 wrapper has exactly 3 direct element children after x-for materialises', () => {
+  it('when players.length === 3, .cf-player-grid-3 wrapper contains exactly 3 ghost-border player-card children (Alpine x-for materialised)', () => {
     document.body.innerHTML = `<div id="container">${renderPlayerGrid()}</div>`;
     const container = document.getElementById('container');
     bootAlpine(container, players3);
@@ -122,16 +122,28 @@ describe('player-card Plan 09-04 Gap 2 — 3-player grid DOM structure', () => {
     const wrapper = container.querySelector('.cf-player-grid-3');
     expect(wrapper).toBeTruthy();
 
-    // Filter to ELEMENT nodes only — whitespace text nodes don't count
-    // (and Alpine's <template x-for> may or may not leave a template sibling
-    // depending on the runtime version).
-    const elementChildren = Array.from(wrapper.children);
-    expect(elementChildren.length).toBe(3);
+    // Alpine 3.x leaves the <template x-for> element as a child of the
+    // wrapper (template tags don't render visually but ARE counted by
+    // :nth-child). Filter to ghost-border children specifically — those
+    // are the actual player cards. There must be exactly 3.
+    const cardChildren = Array.from(wrapper.children).filter((n) =>
+      n.classList && n.classList.contains('ghost-border'),
+    );
+    expect(cardChildren.length).toBe(3);
 
-    // Each direct element child must be a player-card root (ghost-border class)
-    elementChildren.forEach((child) => {
-      expect(child.classList.contains('ghost-border')).toBe(true);
-    });
+    // The presence of the <template> as a sibling is precisely WHY the
+    // original :nth-child(N) grid-area assignments broke — :nth-child(1)
+    // matched the <template>, not the first player card. The fix moves
+    // grid-area to inline :style on each card, sidestepping the issue.
+    // Document this constraint in the assertion so a future "remove the
+    // template wrapper" refactor doesn't accidentally re-introduce the
+    // broken :nth-child reliance.
+    const allChildren = Array.from(wrapper.children);
+    const templateSibling = allChildren.find((n) => n.tagName === 'TEMPLATE');
+    if (templateSibling) {
+      // Template present — confirms why we use inline grid-area instead of nth-child.
+      expect(allChildren.length).toBeGreaterThan(cardChildren.length);
+    }
   });
 
   it('each player card carries an inline grid-area style matching its pIdx (p1/p2/p3)', () => {

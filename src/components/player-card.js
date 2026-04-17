@@ -179,6 +179,7 @@ export function renderPlayerGrid() {
         <div class="ghost-border p-[16px] flex flex-col gap-[8px] cursor-pointer relative"
              :class="'player-border-' + (player.color_index + 1) + ' ' + ($store.game.activePlayerIndex === pIdx ? 'cf-player-active' : '')"
              style="background: #14161C; padding-bottom: 16px; transition: max-height 200ms ease-in-out, border-color 200ms ease-out, box-shadow 200ms ease-out; overflow: hidden;"
+             :style="$store.game.players.length === 3 ? { gridArea: 'p' + (pIdx + 1) } : {}"
              @click="$store.game.toggleExpanded(pIdx)">
 
           <!-- Eliminated overlay -->
