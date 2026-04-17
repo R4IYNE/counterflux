@@ -108,6 +108,18 @@ Ship the Supabase identity layer that unblocks Phase 11 sync. Scope is narrowly 
   - Verification steps (curl anon endpoint, cross-user RLS test)
 - **D-35:** Link `10-AUTH-PREFLIGHT.md` from README.md "Auth setup" section so future-James (or any returning dev) can re-provision quickly without re-reading the plan.
 
+### Household sharing model (added post-ship)
+- **D-38 (2026-04-18, post-ship):** RLS replaced from per-user (`auth.uid() = user_id`) to household-scoped via a `counterflux.shared_users` whitelist table. James and Sharon share the same physical card collection; both sign in with their own Google identity but see and edit the same data. Specific changes:
+  - New table `counterflux.shared_users(user_id uuid PK → auth.users.id, added_at timestamptz)`. RLS-gated so only existing members can enumerate the list.
+  - Seeded with James (`jamesarnall87@gmail.com`) + Sharon (`sharon.strom10@gmail.com`).
+  - 5 data tables (collection, decks, deck_cards, games, watchlist) use household RLS: `user_id IN (SELECT user_id FROM counterflux.shared_users) AND auth.uid() IN (SELECT user_id FROM counterflux.shared_users)` on both USING and WITH CHECK.
+  - `profile` table **unchanged** — per-user RLS (each user has their own name, avatar, Google identity).
+  - `user_id` column stays denormalised on every row (D-23 intact) for attribution/audit.
+  - Outsider isolation preserved at household boundary (same Lovable-class protection, different granularity).
+  - Migration file: `supabase/migrations/20260418_counterflux_shared_users_household.sql`.
+  - INSERT/UPDATE/DELETE of `shared_users` membership is admin-only via Supabase SQL Editor — intentional, prevents self-promotion attacks.
+  - Forward migration path to multi-household (future): add `counterflux.household` + `household_members` tables, copy shared_users rows, add `household_id` to 5 data tables, swap RLS. Client code unaffected.
+
 ### Delivery sequencing
 - **D-36:** Phase 10 ships as multiple plans (TBD count — planner decides). Logical groupings:
   1. Supabase project + schema provisioning + RLS policies + RLS isolation test (SQL + pre-flight doc)
