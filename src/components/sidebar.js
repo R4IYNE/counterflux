@@ -57,6 +57,53 @@ export function sidebarComponent() {
      */
     toggleSidebar() {
       this.$store.app.toggleSidebar();
+    },
+
+    /**
+     * Phase 10 D-09 — profile-widget click handler branches on auth status.
+     * Anonymous → open auth-modal. Authed → open settings-modal.
+     * Single sidebar touchpoint for every sign-in / settings entry path.
+     */
+    profileWidgetClick() {
+      const auth = this.$store.auth;
+      if (auth && auth.status === 'authed') {
+        if (typeof window.__openSettingsModal === 'function') window.__openSettingsModal();
+      } else {
+        if (typeof window.__openAuthModal === 'function') window.__openAuthModal();
+      }
+    },
+
+    /**
+     * Phase 10 — returns the display name to show in the authed sidebar widget.
+     * Priority: profile.name → auth.user.user_metadata.full_name →
+     *           auth.user.user_metadata.given_name → auth.user.email localpart.
+     * Plan 4 may extend this with profile.display_name overrides.
+     */
+    authedDisplayName() {
+      const profile = this.$store.profile;
+      const auth = this.$store.auth;
+      if (profile?.name) return profile.name;
+      const u = auth?.user;
+      if (!u) return '';
+      return u.user_metadata?.full_name
+        || u.user_metadata?.given_name
+        || (u.email?.split('@')[0])
+        || '';
+    },
+
+    /**
+     * Phase 10 D-15 (partial) — avatar source priority for the authed sidebar.
+     * profile.avatar (v1.0 user-uploaded) → auth.user.user_metadata.avatar_url
+     * (Google) → null (caller renders initials fallback).
+     *
+     * Plan 4 extends this to honour profile.avatar_url_override — update
+     * priority to: avatar_url_override → profile.avatar → Google → null.
+     */
+    authedAvatarUrl() {
+      const profile = this.$store.profile;
+      const auth = this.$store.auth;
+      if (profile?.avatar) return profile.avatar;
+      return auth?.user?.user_metadata?.avatar_url || null;
     }
   };
 }
