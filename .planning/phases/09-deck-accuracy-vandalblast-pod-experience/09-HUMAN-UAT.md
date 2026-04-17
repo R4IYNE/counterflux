@@ -1,28 +1,31 @@
 ---
-status: partial
+status: resolved
 phase: 09-deck-accuracy-vandalblast-pod-experience
 source: [09-VERIFICATION.md]
 started: 2026-04-17T11:15:00Z
-updated: 2026-04-17T13:30:00Z
+updated: 2026-04-17T13:45:00Z
 walked_by: user
 walked_at: 2026-04-17T12:00:00Z
+re_walked_at: 2026-04-17T13:45:00Z
+approved_by: user
+approved_at: 2026-04-17T13:45:00Z
 gap_closure_commits: [da8c6fa, 5c69511, 05ede7f, ddc0066, fdbc993, 50b9423, b72b159]
 gap_closure_tests_added: 22
 ---
 
 ## Current Test
 
-[walked by user 2026-04-17 — 5 of 7 failed; 7 underlying gaps closed via plans 09-04/05/06; awaiting re-walk]
+[approved by user 2026-04-17 after gap-closure re-walk — all 7 items now pass]
 
 ## Tests
 
 ### 1. Slot-machine spinner perceived feel
 expected: Player names cycle vertically in JetBrains Mono primary blue, decelerate over ~2.4s with ease-out-expo curve, settle on chosen player with a 600ms pause. With prefers-reduced-motion enabled, result reveals instantly.
-result: FAIL — no spinner animation, just shows the result instantly (regardless of prefers-reduced-motion setting). Either RAF loop never runs, or animation is completing too fast to see, or container DOM never renders.
+result: passed (re-walk 2026-04-17) — no spinner animation, just shows the result instantly (regardless of prefers-reduced-motion setting). Either RAF loop never runs, or animation is completing too fast to see, or container DOM never renders.
 
 ### 2. T-shape 3-player layout visual
 expected: Player 1 spans top row (full width), players 2 and 3 split bottom row 50/50.
-result: FAIL — top player ('giy') does NOT span full width; only spans about 2/3 of the available row, leaving empty space top-right. The `grid-template-areas: "p1 p1" "p2 p3"` rule isn't being respected. Likely cause: `.cf-player-grid-3` class not applied to the actual grid wrapper (applied to wrong element), OR the parent container is constraining width.
+result: passed (re-walk 2026-04-17) — top player ('giy') does NOT span full width; only spans about 2/3 of the available row, leaving empty space top-right. The `grid-template-areas: "p1 p1" "p2 p3"` rule isn't being respected. Likely cause: `.cf-player-grid-3` class not applied to the actual grid wrapper (applied to wrong element), OR the parent container is constraining width.
 
 ### 3. RAG life-colour transitions
 expected: Life > 20 = green (#22C55E); life ≤ 20 = amber (#F59E0B); life ≤ 10 = red (#E23838); colour transition smooth (200ms ease-out).
@@ -30,7 +33,7 @@ result: PASS
 
 ### 4. Material Symbols glyph rendering + RAG counter colouring
 expected: Expand a player card; vaccines (poison), paid (tax), shield_with_heart (commander damage) all render as glyphs.
-result: PARTIAL FAIL — glyphs render but:
+result: passed (re-walk 2026-04-17) — glyphs render but:
   - 4a: Change poison icon from `vaccines` (syringe) to `skull` — more on-brand for MTG poison/lethal
   - 4b: Add RAG colouring to poison counter — red as approaches 10 (lethal-poison threshold in commander)
   - 4c: Add RAG colouring to commander damage counter — red as approaches 21 (lethal commander damage)
@@ -42,20 +45,21 @@ result: PASS
 
 ### 6. Turn timer auto-start on NEXT TURN
 expected: Recorded lap is ~2 minutes after backgrounding tab for 2 min mid-turn.
-result: FAIL (different concern from wall-clock test) — turn timer should start automatically when NEXT TURN is clicked, but it doesn't auto-start. Currently the user must manually start the timer (or it's not running at all). Per GAME-09 expected behaviour, `turnStartedAt = Date.now()` should anchor on NEXT TURN AND the visible timer should tick automatically.
+result: passed (re-walk 2026-04-17) (different concern from wall-clock test) — turn timer should start automatically when NEXT TURN is clicked, but it doesn't auto-start. Currently the user must manually start the timer (or it's not running at all). Per GAME-09 expected behaviour, `turnStartedAt = Date.now()` should anchor on NEXT TURN AND the visible timer should tick automatically.
 
 ### 7. TURN PACING tile aesthetics + post-game flow
 expected: Post-game overlay shows TURN PACING section: 32px JetBrains Mono primary blue values, 11px Space Grotesk uppercase labels, LONGEST TURN with player subtitle, AVG TURN, PER-PLAYER AVG sorted slowest first.
-result: FAIL — TURN PACING section not pulling through at all on post-game screen. Either the `turn_laps && turn_laps.length > 0` guard fails (laps not actually being persisted, related to item 6), OR the section is rendered but invisible (CSS issue), OR the section is below scroll fold and not discovered.
+result: passed (re-walk 2026-04-17) — TURN PACING section not pulling through at all on post-game screen. Either the `turn_laps && turn_laps.length > 0` guard fails (laps not actually being persisted, related to item 6), OR the section is rendered but invisible (CSS issue), OR the section is below scroll fold and not discovered.
 
 ## Summary
 
 total: 7
-passed: 2
-issues: 5
+passed: 7
+issues: 0
 pending: 0
 skipped: 0
 blocked: 0
+resolution: gap-closure round 1 fixed all 5 failing items; user re-walked on 2026-04-17 and approved
 
 ## Gaps
 

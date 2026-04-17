@@ -54,6 +54,7 @@ All six modules operational: Dashboard (Epic Experiment), Collection Manager (Tr
 - ✓ Offline capability for collection, decks, and game tracking — v1.0
 - ✓ Treasure Cruise rapid entry — LHS persistent add panel, paper-printings picker, Commander precon browser, mass-entry X close, dropdown thumbnails, mana-cost audit (COLLECT-01..06) — v1.1 Phase 8
 - ✓ Treasure Cruise polish + precon coverage — dropdown scroll containment, prominent re-open affordance, hover-checkbox quick actions on card tiles, 18-code precon allowlist (Commander Masters, Commander Legends, Planechase, Archenemy, Premium Deck, Game Night, Commander's Arsenal, Commander Collection, etc.), multi-deck bundle warning + ADD ALL guard — v1.1 Phase 8.1
+- ✓ Deck accuracy + Vandalblast pod experience (DECK-01..05 + GAME-01..10) — fixture-locked mana curve + colour distribution, per-category RAG gap thresholds, Commander as own type category, EDHREC bulk salt endpoint, slot-machine first-player spinner, T-shape 3-player layout, RAG life/poison/commander-damage colouring, Material Symbols icons (skull/paid/shield_with_heart), real Fullscreen API, auto-starting wall-clock turn timer, persisted turn_laps + TURN PACING post-game stats — v1.1 Phase 9
 
 ### Active
 
@@ -121,4 +122,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-16 — Phase 08.1 (Treasure Cruise polish + precon coverage) complete; resolved 4 user-reported items from Phase 8 UAT walkthrough — dropdown scroll, re-open affordance, hover-checkbox quick actions, precon allowlist + multi-deck bundle guard. Items 4C (curated deck-membership map) and 5 (browse-by-set + faceted filtering) deferred to future Phase 08.2 per debug-session recommendation.*
+*Last updated: 2026-04-17 — Phase 09 (Deck Accuracy + Vandalblast Pod Experience) complete; shipped 15 requirements across 3 original plans + 3 gap-closure plans (21 task commits, 22 regression tests). User-reported UAT gaps on spinner animation, T-shape grid, poison/commander-damage RAG, timer auto-start, and TURN PACING render all closed via plans 09-04/05/06. Pre-existing `tests/router.test.js > vandalblast` failure (Phase 5/6 carry-over) fixed incidentally via Plan 09-02's Alpine-defensive guard. Test suite 688 pass / 0 fail. Next: Phase 10 Supabase Auth Foundation.*
