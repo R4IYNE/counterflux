@@ -195,6 +195,15 @@ export function initGameStore() {
       }
 
       _debouncedAutoSave();
+
+      // Gap 6 fix (Phase 9 Plan 06): auto-start the wall-clock timer now that
+      // the spinner has resolved and turnStartedAt has been re-anchored.
+      // Without this, the timer only runs if the user manually clicks the play
+      // button in the floating toolbar — turn_laps would still populate via
+      // the Date.now() anchor, but the visible timer display would freeze at
+      // 00:00 and users cannot see elapsed time during play.
+      this.startTimer();
+
       return true;
     },
 
@@ -286,7 +295,16 @@ export function initGameStore() {
         this.activePlayerIndex = next;
       }
 
-      this.pauseTimer();
+      // Gap 6 fix (Phase 9 Plan 06): re-start the timer for the new turn.
+      // Previously this was only pauseTimer() which forced the user to
+      // manually restart the timer on every NEXT TURN click. The lap anchor
+      // (turnStartedAt) was already re-set at the top of this method, so
+      // startTimer() picks up from the new anchor and the display ticks from
+      // 00:00 for the new turn. We call pauseTimer() FIRST to cancel the
+      // previous RAF loop cleanly — startTimer's `if (this.timerRunning) return`
+      // early-exit would otherwise prevent the new loop from starting.
+      this.pauseTimer();   // cancel the current RAF loop cleanly
+      this.startTimer();   // start a new RAF loop anchored to the new turnStartedAt
       _debouncedAutoSave();
     },
 
