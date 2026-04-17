@@ -18,6 +18,7 @@ import { initProfileStore } from './stores/profile.js';
 import { initAuthStore } from './stores/auth.js';
 import { openSettingsModal } from './components/settings-modal.js';
 import { openAuthModal } from './components/auth-modal.js';
+import { maybeShowFirstSignInPrompt } from './components/first-sign-in-prompt.js';
 import { splashScreen } from './components/splash-screen.js';
 import { sidebarComponent } from './components/sidebar.js';
 import { toggleShortcutModal, isShortcutModalOpen, closeShortcutModal } from './components/shortcut-modal.js';
@@ -93,15 +94,20 @@ async function bootApp() {
   // init() is async but fire-and-forget; it transitions status → authed when getSession resolves.
   Alpine.store('auth').init();
 
-  // Phase 10 Plan 4 — profile store re-hydrates whenever auth.status flips.
-  // Touching the reactive dep inside the effect subscribes us to it. Task 4.3
-  // extends this effect body to trigger maybeShowFirstSignInPrompt() after
-  // hydrate resolves.
+  // Phase 10 Plan 4 — profile store re-hydrates whenever auth.status flips,
+  // and after hydrate resolves we poll the first-sign-in migration prompt.
+  // Touching the reactive dep inside the effect subscribes us to it. The
+  // async IIFE keeps effect body synchronous while awaiting the two async
+  // steps in order (hydrate, then maybeShowFirstSignInPrompt — the prompt
+  // inspects profile._source/_loaded set by hydrate).
   Alpine.effect(() => {
     const status = Alpine.store('auth').status;   // reactive dep
     const profile = Alpine.store('profile');
     if (profile && typeof profile.hydrate === 'function') {
-      profile.hydrate();
+      (async () => {
+        await profile.hydrate();
+        await maybeShowFirstSignInPrompt();
+      })();
     }
     void status;
   });
