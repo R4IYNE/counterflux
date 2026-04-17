@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Second Sunrise
 status: verifying
-stopped_at: "Completed 09-04-PLAN.md (gap closure: spinner + T-shape grid)"
-last_updated: "2026-04-17T13:00:04.059Z"
+stopped_at: "Completed 09-06-PLAN.md (gap closure: timer auto-start + TURN PACING render cascade fix)"
+last_updated: "2026-04-17T13:09:35.050Z"
 last_activity: 2026-04-17
 progress:
   total_phases: 8
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 15
-  completed_plans: 14
+  completed_plans: 15
   percent: 0
 ---
 
@@ -72,6 +72,7 @@ Progress: [          ] 0%
 | Phase 09 P03 | 11m 49s | 4 tasks | 8 files |
 | Phase 09 P05 | 4m 44s | 3 tasks | 2 files |
 | Phase 09 P04 | 9m 17s | 2 tasks | 5 files |
+| Phase 09 P06 | ~10m | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -139,6 +140,9 @@ Full decision log in PROJECT.md Key Decisions table.
 - [Phase 09]: Plan 09-04 anchored spinner startTime INSIDE first RAF callback (not before the schedule) — Alpine template swap was eating the full 2.4s animation budget before frame 1 fired
 - [Phase 09]: Plan 09-04 moved T-shape grid-area from :nth-child CSS to inline :style keyed on pIdx — Alpine's <template x-for> counts as a DOM child, shifting :nth-child indices off by one
 - [Phase 09]: Plan 09-04 established pattern: DOM-structure regression tests live in a separate file with no top-level vi.mock — module-load-time mock hoisting defeats vi.doUnmock in the same file
+- [Phase 09]: Plan 09-06: Gap 6 root cause was missing wiring, not broken logic — startTimer() existed and worked but was only invoked from the floating-toolbar manual button; fix is additive call-sites in startGame() (post-spinner) + nextTurn() (pauseTimer-then-startTimer sequence to bypass the if-running guard)
+- [Phase 09]: Plan 09-06: Gap 7 (TURN PACING section missing post-game) was a CASCADE from Gap 6, NOT an independent render-path bug — Plan 3's render path was correct (_computePacing called in init at line 344, x-show guard is length > 0); empty turn_laps from frozen timer made the guard evaluate false; 4 new direct-GREEN regression tests lock down the existing-correct contract
+- [Phase 09]: Plan 09-06: pause-cancel-then-fresh-start sequence for re-anchoring guarded RAF loops — when startTimer() has an 'if (running) return' guard, call pauseTimer() first to clear the flag + cancel the RAF, THEN startTimer() to schedule a new loop with the new anchor; reusable for any RAF-based timer that supports re-anchoring
 
 ### Roadmap Evolution
 
@@ -157,6 +161,6 @@ None — roadmap complete, next step is `/gsd:plan-phase 7`.
 
 ## Session Continuity
 
-Last session: 2026-04-17T12:59:40.614Z
-Stopped at: Completed 09-04-PLAN.md (gap closure: spinner + T-shape grid)
+Last session: 2026-04-17T13:09:35.048Z
+Stopped at: Completed 09-06-PLAN.md (gap closure: timer auto-start + TURN PACING render cascade fix)
 Resume file: None

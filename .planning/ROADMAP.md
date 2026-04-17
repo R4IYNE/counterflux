@@ -98,7 +98,7 @@ Plans:
 - [x] 09-03-PLAN.md — Vandalblast turn mechanics + post-game stats (GAME-07..10): slot-machine spinner, active-player highlight, turn_laps persistence, wall-clock timer, TURN PACING tiles
 - [x] 09-04-PLAN.md — Gap closure (Gaps 1 + 2): spinner animates visibly (startTime anchored inside first RAF), T-shape grid renders correctly (inline :style grid-area keyed on pIdx, defensive width)
 - [x] 09-05-PLAN.md — Gap closure (Gaps 4a/4b/4c): poison glyph skull swap, poison counter RAG colouring, commander damage RAG colouring
-- [ ] 09-06-PLAN.md — Gap closure (Gaps 6 + 7): turn timer auto-start on NEXT TURN, TURN PACING post-game render cascade
+- [x] 09-06-PLAN.md — Gap closure (Gaps 6 + 7): turn timer auto-start on NEXT TURN, TURN PACING post-game render cascade
 
 ### Phase 10: Supabase Auth Foundation
 **Goal**: Users can create a Counterflux account, sign in on any device, and the local-first promise stays intact — without forcing account creation on anyone who doesn't want one
