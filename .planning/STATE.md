@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Second Sunrise
 status: verifying
-stopped_at: Completed 09-05-PLAN.md (gaps 4a/4b/4c — skull glyph swap + poison/commander damage three-tier RAG)
-last_updated: "2026-04-17T12:54:09.889Z"
+stopped_at: "Completed 09-04-PLAN.md (gap closure: spinner + T-shape grid)"
+last_updated: "2026-04-17T13:00:04.059Z"
 last_activity: 2026-04-17
 progress:
   total_phases: 8
   completed_phases: 3
   total_plans: 15
-  completed_plans: 13
+  completed_plans: 14
   percent: 0
 ---
 
@@ -71,6 +71,7 @@ Progress: [          ] 0%
 | Phase 09 P02 | 8m 22s | 4 tasks (8 commits w/ TDD pairs) tasks | 8 files files |
 | Phase 09 P03 | 11m 49s | 4 tasks | 8 files |
 | Phase 09 P05 | 4m 44s | 3 tasks | 2 files |
+| Phase 09 P04 | 9m 17s | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -135,6 +136,9 @@ Full decision log in PROJECT.md Key Decisions table.
 - [Phase 09]: Plan 09-05: D-12 reversed — skull replaces vaccines on poison row per HUMAN-UAT (more on-brand for MTG poison/lethal). Material Symbols Outlined ships skull glyph natively.
 - [Phase 09]: Plan 09-05: counter-digit RAG thresholds tier BELOW row-level lethal class (poison digit red at 8 / row lethal at 10; commander damage digit red at 16 / row lethal at 21) — dual-channel: digit narrates approach, row class confirms kill
 - [Phase 09]: Plan 09-05: test assertions use jsdom-neutral content-boundary anchoring (indexOf walks to Nth occurrence) instead of :style= attribute regex — jsdom innerHTML re-serialization breaks naive attribute-scoped patterns
+- [Phase 09]: Plan 09-04 anchored spinner startTime INSIDE first RAF callback (not before the schedule) — Alpine template swap was eating the full 2.4s animation budget before frame 1 fired
+- [Phase 09]: Plan 09-04 moved T-shape grid-area from :nth-child CSS to inline :style keyed on pIdx — Alpine's <template x-for> counts as a DOM child, shifting :nth-child indices off by one
+- [Phase 09]: Plan 09-04 established pattern: DOM-structure regression tests live in a separate file with no top-level vi.mock — module-load-time mock hoisting defeats vi.doUnmock in the same file
 
 ### Roadmap Evolution
 
@@ -153,6 +157,6 @@ None — roadmap complete, next step is `/gsd:plan-phase 7`.
 
 ## Session Continuity
 
-Last session: 2026-04-17T12:53:52.307Z
-Stopped at: Completed 09-05-PLAN.md (gaps 4a/4b/4c — skull glyph swap + poison/commander damage three-tier RAG)
+Last session: 2026-04-17T12:59:40.614Z
+Stopped at: Completed 09-04-PLAN.md (gap closure: spinner + T-shape grid)
 Resume file: None
