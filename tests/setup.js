@@ -26,3 +26,38 @@ if (typeof globalThis.CustomEvent === 'undefined') {
     }
   };
 }
+
+// Phase 09 Plan 3 — game-tracker tests need RAF / cancelAnimationFrame /
+// matchMedia in the node test environment.
+//   - first-player-spinner uses requestAnimationFrame for the deceleration loop
+//   - prefers-reduced-motion bypass uses window.matchMedia
+//   - turn-timer wall-clock display loop uses requestAnimationFrame
+// Shape mirrors the WHATWG/CSSOM stubs that Phase 8 added for MutationObserver.
+//
+// For tests that need DETERMINISTIC RAF (e.g. tests/first-player-spinner.test.js),
+// override per-test via:
+//   vi.spyOn(global, 'requestAnimationFrame').mockImplementation(cb => {
+//     cb(performance.now()); return 1;
+//   });
+//
+// For tests that need matchMedia to RETURN matches:true (reduced-motion bypass),
+// override per-test via:
+//   vi.spyOn(window, 'matchMedia').mockReturnValue({
+//     matches: true, addEventListener() {}, removeEventListener() {},
+//   });
+if (typeof globalThis.requestAnimationFrame === 'undefined') {
+  globalThis.requestAnimationFrame = (cb) => setTimeout(() => cb(performance.now()), 16);
+}
+if (typeof globalThis.cancelAnimationFrame === 'undefined') {
+  globalThis.cancelAnimationFrame = (id) => clearTimeout(id);
+}
+if (typeof globalThis.matchMedia === 'undefined') {
+  globalThis.matchMedia = () => ({
+    matches: false,
+    media: '',
+    addEventListener() {},
+    removeEventListener() {},
+    addListener() {},     // legacy API for older callers
+    removeListener() {},  // legacy API
+  });
+}
