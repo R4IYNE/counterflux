@@ -1,21 +1,22 @@
 // @vitest-environment jsdom
 // tests/auth-modal.test.js
 // Phase 10 Plan 3 — auth modal component tests.
+// Phase 10.2 (D-39): magic-link replaced with email+password.
 //
-// Covers 9 behaviours specified in 10-03-PLAN.md Task 3.1:
-//   1. Idle state scaffolding (heading, Google button, OR divider, EMAIL, SEND MAGIC LINK disabled)
-//   2. Email validation (enable/disable on input, inline error on blur)
-//   3. Magic-link flow (calls store, shows SENDING…, swaps to CHECK YOUR INBOX on success)
-//   4. Magic-link-sent body copy (heading, email interpolation, CLOSE MODAL, RESEND IN {N}s)
-//   5. Resend cooldown 30s wall-clock anchored — flips to RESEND MAGIC LINK when ready
+// Covers:
+//   1. Idle state scaffolding (heading, Google button, OR divider, EMAIL, PASSWORD, SIGN IN disabled)
+//   2. Email + password validation (SIGN IN only enabled when both present and email is valid;
+//      blur on invalid email shows inline error)
+//   3. Sign-in flow (calls signInWithPassword, shows SIGNING IN…, modal closes on success)
+//   4. Invalid credentials → inline error message
+//   5. Enter key on either field submits
 //   6. Google button flow (calls signInGoogle, swaps label to OPENING GOOGLE…)
 //   7. Google brand styling (#131314 bg + #8E918F border, NOT bg-primary)
 //   8. Close interactions (Escape, X icon, backdrop)
-//   9. Error toasts (rate-limited → warning, network error → error)
+//   9. Error toasts (rate-limited → warning, non-credential failure → error)
 
 import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 
-// --- Mock alpinejs store registry ------------------------------------------
 const storeRegistry = {};
 
 const toastCalls = { info: [], success: [], warning: [], error: [] };
@@ -33,7 +34,7 @@ function makeAuthStore(overrides = {}) {
     status: 'anonymous',
     user: null,
     session: null,
-    signInMagic: vi.fn().mockResolvedValue({ error: null }),
+    signInWithPassword: vi.fn().mockResolvedValue({ error: null }),
     signInGoogle: vi.fn().mockResolvedValue({ error: null }),
     signOut: vi.fn().mockResolvedValue({ error: null }),
     init: vi.fn(),
@@ -50,8 +51,6 @@ vi.mock('alpinejs', () => ({
   },
 }));
 
-// Mock the callback-overlay module so Task 3.1's import of
-// captureCurrentPreAuthRoute resolves even if Task 3.2 hasn't shipped yet.
 vi.mock('../src/components/auth-callback-overlay.js', () => ({
   captureCurrentPreAuthRoute: vi.fn(),
   handleAuthCallback: vi.fn(),
@@ -60,9 +59,7 @@ vi.mock('../src/components/auth-callback-overlay.js', () => ({
 let openAuthModal, closeAuthModal;
 
 beforeEach(async () => {
-  // Clean DOM
   document.body.innerHTML = '';
-  // Reset mocks
   for (const k of Object.keys(storeRegistry)) delete storeRegistry[k];
   storeRegistry.auth = makeAuthStore();
   storeRegistry.toast = makeToastStore();
@@ -70,7 +67,6 @@ beforeEach(async () => {
   toastCalls.success = [];
   toastCalls.warning = [];
   toastCalls.error = [];
-  // Expose Alpine on window for the module to read (mirrors main.js bootApp)
   window.Alpine = {
     store: (name, value) => {
       if (value !== undefined) storeRegistry[name] = value;
@@ -78,7 +74,6 @@ beforeEach(async () => {
     },
   };
   vi.resetModules();
-  // Re-register mocks after resetModules
   vi.doMock('alpinejs', () => ({
     default: {
       store: (name, value) => {
@@ -102,7 +97,7 @@ afterEach(() => {
 });
 
 describe('auth-modal — idle state (Test 1)', () => {
-  test('openAuthModal mounts modal with SIGN IN heading, Google button, OR divider, EMAIL, SEND MAGIC LINK disabled', () => {
+  test('openAuthModal mounts modal with SIGN IN heading, Google, OR, EMAIL, PASSWORD, SIGN IN disabled', () => {
     openAuthModal();
     const modal = document.querySelector('#cf-auth-modal');
     expect(modal).toBeTruthy();
@@ -110,107 +105,121 @@ describe('auth-modal — idle state (Test 1)', () => {
     expect(modal.textContent).toContain('SIGN IN WITH GOOGLE');
     expect(modal.textContent).toContain('OR');
     expect(modal.textContent).toContain('EMAIL');
-    expect(modal.textContent).toContain('SEND MAGIC LINK');
-    const sendBtn = modal.querySelector('#cf-auth-send-magic');
-    expect(sendBtn).toBeTruthy();
-    // Disabled because email is blank
-    expect(sendBtn.disabled).toBe(true);
+    expect(modal.textContent).toContain('PASSWORD');
+    const submitBtn = modal.querySelector('#cf-auth-submit');
+    const emailInput = modal.querySelector('#cf-auth-email');
+    const passwordInput = modal.querySelector('#cf-auth-password');
+    expect(submitBtn).toBeTruthy();
+    expect(emailInput).toBeTruthy();
+    expect(passwordInput).toBeTruthy();
+    expect(passwordInput.type).toBe('password');
+    // Disabled because both fields empty
+    expect(submitBtn.disabled).toBe(true);
   });
 });
 
-describe('auth-modal — email validation (Test 2)', () => {
-  test('typing a valid email enables SEND MAGIC LINK; invalid keeps it disabled; blur on invalid shows inline error', () => {
+describe('auth-modal — form validation (Test 2)', () => {
+  test('SIGN IN only enables when email is valid AND password is non-empty', () => {
     openAuthModal();
-    const input = document.querySelector('#cf-auth-email');
-    const sendBtn = document.querySelector('#cf-auth-send-magic');
-    expect(input).toBeTruthy();
+    const emailInput = document.querySelector('#cf-auth-email');
+    const passwordInput = document.querySelector('#cf-auth-password');
+    const submitBtn = document.querySelector('#cf-auth-submit');
 
-    // Invalid email
-    input.value = 'notanemail';
-    input.dispatchEvent(new Event('input'));
-    expect(sendBtn.disabled).toBe(true);
+    // Just email (invalid): disabled
+    emailInput.value = 'notanemail';
+    emailInput.dispatchEvent(new Event('input'));
+    expect(submitBtn.disabled).toBe(true);
 
-    // Valid email
-    input.value = 'user@example.com';
-    input.dispatchEvent(new Event('input'));
-    expect(sendBtn.disabled).toBe(false);
+    // Valid email, empty password: disabled
+    emailInput.value = 'user@example.com';
+    emailInput.dispatchEvent(new Event('input'));
+    expect(submitBtn.disabled).toBe(true);
 
-    // Invalid again, blur shows inline error
-    input.value = 'oops@';
-    input.dispatchEvent(new Event('input'));
-    input.dispatchEvent(new Event('blur'));
-    const modal = document.querySelector('#cf-auth-modal');
-    expect(modal.textContent).toContain('Enter a valid email address.');
+    // Valid email + password: enabled
+    passwordInput.value = 'secret123';
+    passwordInput.dispatchEvent(new Event('input'));
+    expect(submitBtn.disabled).toBe(false);
+
+    // Invalid email + password: disabled again
+    emailInput.value = 'bad@';
+    emailInput.dispatchEvent(new Event('input'));
+    expect(submitBtn.disabled).toBe(true);
+
+    // Blur on invalid email shows inline error
+    emailInput.dispatchEvent(new Event('blur'));
+    expect(document.querySelector('#cf-auth-modal').textContent).toContain('Enter a valid email address.');
   });
 });
 
-describe('auth-modal — magic-link flow (Test 3 + 4)', () => {
-  test('clicking SEND MAGIC LINK with valid email calls signInMagic exactly once, shows SENDING…, then swaps to CHECK YOUR INBOX', async () => {
+describe('auth-modal — sign-in flow (Test 3)', () => {
+  test('clicking SIGN IN with valid credentials calls signInWithPassword once, shows SIGNING IN…, then closes modal', async () => {
     let resolveStore;
-    storeRegistry.auth.signInMagic = vi.fn(() => new Promise(res => { resolveStore = res; }));
+    storeRegistry.auth.signInWithPassword = vi.fn(() => new Promise(res => { resolveStore = res; }));
 
     openAuthModal();
-    const input = document.querySelector('#cf-auth-email');
-    input.value = 'james@arnall.dev';
-    input.dispatchEvent(new Event('input'));
-    const sendBtn = document.querySelector('#cf-auth-send-magic');
-    sendBtn.click();
+    const emailInput = document.querySelector('#cf-auth-email');
+    const passwordInput = document.querySelector('#cf-auth-password');
+    emailInput.value = 'james@arnall.dev';
+    passwordInput.value = 'supersecret';
+    emailInput.dispatchEvent(new Event('input'));
+    passwordInput.dispatchEvent(new Event('input'));
+    document.querySelector('#cf-auth-submit').click();
 
-    // Store called exactly once
-    expect(storeRegistry.auth.signInMagic).toHaveBeenCalledTimes(1);
-    expect(storeRegistry.auth.signInMagic).toHaveBeenCalledWith('james@arnall.dev');
-    // SENDING label visible during the in-flight promise
-    expect(document.querySelector('#cf-auth-modal').textContent).toContain('SENDING…');
+    expect(storeRegistry.auth.signInWithPassword).toHaveBeenCalledTimes(1);
+    expect(storeRegistry.auth.signInWithPassword).toHaveBeenCalledWith('james@arnall.dev', 'supersecret');
+    expect(document.querySelector('#cf-auth-modal').textContent).toContain('SIGNING IN…');
 
-    // Resolve
     resolveStore({ error: null });
     await new Promise(r => setTimeout(r, 0));
 
-    const modal = document.querySelector('#cf-auth-modal');
-    expect(modal.textContent).toContain('CHECK YOUR INBOX');
-    expect(modal.textContent).toContain('We sent a link to james@arnall.dev. Click it to sign in.');
-    expect(modal.textContent).toContain('CLOSE MODAL');
-    expect(modal.textContent).toContain('RESEND IN 30s');
+    // Success: modal closes, success toast fired
+    expect(document.querySelector('#cf-auth-modal')).toBeNull();
+    expect(toastCalls.success.length).toBeGreaterThanOrEqual(1);
   });
 });
 
-describe('auth-modal — resend cooldown (Test 5)', () => {
-  test('30s wall-clock countdown flips RESEND IN {N}s → RESEND MAGIC LINK when elapsed', async () => {
-    const t0 = 1_000_000;
-    const nowSpy = vi.spyOn(Date, 'now').mockReturnValue(t0);
+describe('auth-modal — invalid credentials (Test 4)', () => {
+  test('invalid_credentials error shows inline message and re-enables form', async () => {
+    storeRegistry.auth.signInWithPassword = vi.fn().mockResolvedValue({
+      error: { message: 'Invalid login credentials' },
+    });
 
-    storeRegistry.auth.signInMagic = vi.fn().mockResolvedValue({ error: null });
     openAuthModal();
-    const input = document.querySelector('#cf-auth-email');
-    input.value = 'a@b.com';
-    input.dispatchEvent(new Event('input'));
-    document.querySelector('#cf-auth-send-magic').click();
+    const emailInput = document.querySelector('#cf-auth-email');
+    const passwordInput = document.querySelector('#cf-auth-password');
+    emailInput.value = 'test@example.com';
+    passwordInput.value = 'wrongpass';
+    emailInput.dispatchEvent(new Event('input'));
+    passwordInput.dispatchEvent(new Event('input'));
+    document.querySelector('#cf-auth-submit').click();
     await new Promise(r => setTimeout(r, 0));
 
-    // Initial countdown
-    let resendBtn = document.querySelector('#cf-auth-resend');
-    expect(resendBtn).toBeTruthy();
-    expect(resendBtn.textContent).toContain('RESEND IN 30s');
-    expect(resendBtn.getAttribute('aria-disabled')).toBe('true');
+    const modal = document.querySelector('#cf-auth-modal');
+    expect(modal).toBeTruthy();
+    expect(modal.textContent).toContain('Invalid email or password.');
+    // Form re-enabled for retry
+    expect(document.querySelector('#cf-auth-submit').disabled).toBe(false);
+    expect(emailInput.disabled).toBe(false);
+    expect(passwordInput.disabled).toBe(false);
+  });
+});
 
-    // Jump clock 31s and manually tick the interval
-    nowSpy.mockReturnValue(t0 + 31_000);
-    // Simulate interval tick — module uses setInterval, we force the tick by time advance:
-    vi.useFakeTimers({ shouldAdvanceTime: false });
-    // The interval was scheduled with real timers, so manually invoke the tick fn via DOM update.
-    // Strategy: the module exports no tick hook, so rely on setInterval being called and advance timers.
-    // Because we used spyOn(Date, 'now'), the next tick the interval fires will pick up t+31s.
-    // Bypass: directly call a short synchronous tick window.
-    vi.useRealTimers();
-    // Wait slightly longer than 1s — the interval will fire and see t+31s.
-    await new Promise(r => setTimeout(r, 1100));
+describe('auth-modal — Enter key submits (Test 5)', () => {
+  test('pressing Enter in either field submits when button is enabled', async () => {
+    openAuthModal();
+    const emailInput = document.querySelector('#cf-auth-email');
+    const passwordInput = document.querySelector('#cf-auth-password');
+    emailInput.value = 'test@example.com';
+    passwordInput.value = 'pass';
+    emailInput.dispatchEvent(new Event('input'));
+    passwordInput.dispatchEvent(new Event('input'));
 
-    resendBtn = document.querySelector('#cf-auth-resend');
-    expect(resendBtn.textContent).toContain('RESEND MAGIC LINK');
-    expect(resendBtn.hasAttribute('aria-disabled') && resendBtn.getAttribute('aria-disabled') === 'true').toBe(false);
+    passwordInput.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    await new Promise(r => setTimeout(r, 0));
 
-    nowSpy.mockRestore();
-  }, 5000);
+    expect(storeRegistry.auth.signInWithPassword).toHaveBeenCalledTimes(1);
+    expect(storeRegistry.auth.signInWithPassword).toHaveBeenCalledWith('test@example.com', 'pass');
+  });
 });
 
 describe('auth-modal — Google button (Test 6 + 7)', () => {
@@ -234,10 +243,9 @@ describe('auth-modal — Google button (Test 6 + 7)', () => {
     openAuthModal();
     const googleBtn = document.querySelector('#cf-auth-google');
     const style = googleBtn.getAttribute('style') || '';
-    // Look for the brand hexes (case-insensitive)
     expect(style.toLowerCase()).toMatch(/#131314/);
     expect(style.toLowerCase()).toMatch(/#8e918f/);
-    // Must NOT be the Counterflux primary colour (Google brand fidelity is mandatory)
+    // Must NOT use the Counterflux primary colour (Google brand fidelity is mandatory)
     expect(style).not.toMatch(/#0D52BD/i);
   });
 });
@@ -248,8 +256,6 @@ describe('auth-modal — close interactions (Test 8)', () => {
     expect(document.querySelector('#cf-auth-modal')).toBeTruthy();
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
     expect(document.querySelector('#cf-auth-modal')).toBeNull();
-
-    // Re-dispatching Escape on a now-closed modal should NOT throw
     expect(() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))).not.toThrow();
   });
 
@@ -264,7 +270,6 @@ describe('auth-modal — close interactions (Test 8)', () => {
   test('clicking the backdrop (event target === modal root) closes the modal', () => {
     openAuthModal();
     const modal = document.querySelector('#cf-auth-modal');
-    // Simulate a click whose target is the backdrop itself
     const evt = new MouseEvent('click', { bubbles: true });
     Object.defineProperty(evt, 'target', { value: modal });
     modal.dispatchEvent(evt);
@@ -273,37 +278,43 @@ describe('auth-modal — close interactions (Test 8)', () => {
 });
 
 describe('auth-modal — error toasts (Test 9)', () => {
-  test('rate-limit error fires WARNING toast; non-rate-limit error fires ERROR toast', async () => {
-    storeRegistry.auth.signInMagic = vi.fn().mockResolvedValue({
+  test('rate-limit error fires WARNING toast; non-credential network error fires ERROR toast', async () => {
+    storeRegistry.auth.signInWithPassword = vi.fn().mockResolvedValue({
       error: { message: 'For security purposes, rate limited. Try again in 60 seconds.' },
     });
 
     openAuthModal();
-    const input = document.querySelector('#cf-auth-email');
-    input.value = 'test@example.com';
-    input.dispatchEvent(new Event('input'));
-    document.querySelector('#cf-auth-send-magic').click();
+    let emailInput = document.querySelector('#cf-auth-email');
+    let passwordInput = document.querySelector('#cf-auth-password');
+    emailInput.value = 'test@example.com';
+    passwordInput.value = 'pass';
+    emailInput.dispatchEvent(new Event('input'));
+    passwordInput.dispatchEvent(new Event('input'));
+    document.querySelector('#cf-auth-submit').click();
     await new Promise(r => setTimeout(r, 0));
 
     expect(toastCalls.warning.length).toBeGreaterThanOrEqual(1);
-    expect(toastCalls.warning[0]).toMatch(/Magic link blocked/i);
+    expect(toastCalls.warning[0]).toMatch(/Too many attempts/i);
 
-    // Reset, try generic network error
+    // Reset, try network error
     toastCalls.warning.length = 0;
     toastCalls.error.length = 0;
     closeAuthModal();
 
-    storeRegistry.auth.signInMagic = vi.fn().mockResolvedValue({
+    storeRegistry.auth.signInWithPassword = vi.fn().mockResolvedValue({
       error: { message: 'fetch failed' },
     });
     openAuthModal();
-    const input2 = document.querySelector('#cf-auth-email');
-    input2.value = 'test@example.com';
-    input2.dispatchEvent(new Event('input'));
-    document.querySelector('#cf-auth-send-magic').click();
+    emailInput = document.querySelector('#cf-auth-email');
+    passwordInput = document.querySelector('#cf-auth-password');
+    emailInput.value = 'test@example.com';
+    passwordInput.value = 'pass';
+    emailInput.dispatchEvent(new Event('input'));
+    passwordInput.dispatchEvent(new Event('input'));
+    document.querySelector('#cf-auth-submit').click();
     await new Promise(r => setTimeout(r, 0));
 
     expect(toastCalls.error.length).toBeGreaterThanOrEqual(1);
-    expect(toastCalls.error[0]).toMatch(/Couldn't send magic link/i);
+    expect(toastCalls.error[0]).toMatch(/Couldn't sign in/i);
   });
 });

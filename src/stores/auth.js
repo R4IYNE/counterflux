@@ -1,12 +1,13 @@
 // src/stores/auth.js
 //
 // Phase 10 Plan 2 — Alpine auth store wrapping Supabase identity.
+// Phase 10.2 (D-39, 2026-04-18) — magic-link replaced with email+password.
 //
-// Store shape per D-30:
-//   { status, user, session, signInMagic, signInGoogle, signOut, init }
+// Store shape:
+//   { status, user, session, signInWithPassword, signInGoogle, signOut, init }
 //
 // Status transitions:
-//   anonymous → pending (during sign-in call + OAuth redirect + magic-link callback)
+//   anonymous → pending (during sign-in call + OAuth redirect)
 //   pending → authed (SIGNED_IN event delivered by onAuthStateChange)
 //   authed → anonymous (SIGNED_OUT event)
 //
@@ -53,9 +54,10 @@ function currentOrigin() {
 }
 
 /**
- * Redirect target Supabase hands to the magic-link email and to Google OAuth.
- * PKCE flow (D-07) puts the ?code in the query string, so Navigo's hash-based
- * router can safely register /auth-callback (D-06, PITFALLS §10).
+ * Redirect target Supabase hands to Google OAuth. PKCE flow (D-07) puts the
+ * ?code in the query string, so Navigo's hash-based router can safely register
+ * /auth-callback (D-06, PITFALLS §10). Email/password (D-39) does not use
+ * this callback — the signInWithPassword response is synchronous.
  */
 function callbackUrl() {
   return `${currentOrigin()}/#/auth-callback`;
@@ -118,17 +120,16 @@ export function initAuthStore() {
       });
     },
 
-    async signInMagic(email) {
+    async signInWithPassword(email, password) {
       this.status = 'pending';
       try {
         const { getSupabase } = await loadSupabase();
         const supabase = getSupabase();
         this._subscribeToStateChanges(supabase);
-        const { error } = await supabase.auth.signInWithOtp({
-          email,
-          options: { emailRedirectTo: callbackUrl() },
-        });
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) this.status = 'anonymous';
+        // On success, onAuthStateChange fires SIGNED_IN and flips status to authed.
+        // Return { error } so UI can surface credential failures.
         return { error };
       } catch (err) {
         this.status = 'anonymous';

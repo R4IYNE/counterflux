@@ -120,6 +120,18 @@ Ship the Supabase identity layer that unblocks Phase 11 sync. Scope is narrowly 
   - INSERT/UPDATE/DELETE of `shared_users` membership is admin-only via Supabase SQL Editor — intentional, prevents self-promotion attacks.
   - Forward migration path to multi-household (future): add `counterflux.household` + `household_members` tables, copy shared_users rows, add `household_id` to 5 data tables, swap RLS. Client code unaffected.
 
+### Auth method pivot (added post-ship)
+- **D-39 (2026-04-18, post-ship):** Magic-link sign-in removed; replaced with email + password sign-in. Google OAuth unchanged. Reason: the shared huxley Supabase project sends magic-link emails branded as "huxley" across all apps (Atlas, MWTA, loaf-lift, Counterflux). Per-app email-template branding isn't available on a shared project. Password auth doesn't traverse email, avoiding the branding conflict. Acceptable for a personal app with 2 known users who both have Supabase accounts with passwords set at user creation time. Changes:
+  - `src/components/auth-modal.js` replaces magic-link form with email+password form (PASSWORD field after EMAIL, `SIGN IN` button).
+  - In-modal `CHECK YOUR INBOX` swap state removed. 30s resend cooldown removed. `RESEND MAGIC LINK` removed.
+  - On successful sign-in: modal closes directly (no callback round-trip; `signInWithPassword` is synchronous).
+  - `src/stores/auth.js`: `signInMagic(email)` → `signInWithPassword(email, password)`. Calls `supabase.auth.signInWithPassword({ email, password })`.
+  - `/#/auth-callback` route stays — Google OAuth still uses it for PKCE exchange.
+  - Sign-ups stay disabled project-wide (D-household-policy). Passwords can only be set via Supabase Dashboard → Authentication → Users → Send recovery link OR direct admin action. For v1.1 the 2 existing users already have passwords; add-a-user flow is admin-only via MCP/dashboard.
+  - Inline credential error (`Invalid email or password.`) shown on bad password; rate-limit errors → warning toast; other errors → error toast.
+  - Enter key on either field submits.
+  - UI-SPEC section §2 magic-link flow is obsolete; see revised auth-modal section.
+
 ### Delivery sequencing
 - **D-36:** Phase 10 ships as multiple plans (TBD count — planner decides). Logical groupings:
   1. Supabase project + schema provisioning + RLS policies + RLS isolation test (SQL + pre-flight doc)

@@ -3,12 +3,31 @@ phase: 10
 slug: supabase-auth-foundation
 status: approved
 reviewed_at: 2026-04-17
+revised_at: 2026-04-18
 shadcn_initialized: false
 preset: none
 created: 2026-04-17
 ---
 
 # Phase 10 — UI Design Contract
+
+> **REVISION (D-39, 2026-04-18) — magic-link removed; email+password replaces it.**
+>
+> The shared huxley Supabase project sends magic-link emails branded as "huxley" across all apps, which is confusing. For Counterflux, email+password auth sidesteps the email-branding problem and is acceptable for a 2-user personal app with known users.
+>
+> **Sections below that reference magic-link flow are superseded for the auth-modal component.** Google OAuth sections, design tokens, typography, spacing, colour, and all non-auth-modal components remain as-approved. Specific changes:
+>
+> - Auth-modal body renders EMAIL + PASSWORD fields + `SIGN IN` CTA (not SEND MAGIC LINK)
+> - In-modal `CHECK YOUR INBOX` swap state is obsolete — removed
+> - 30-second resend cooldown + `RESEND MAGIC LINK` button — obsolete
+> - On successful sign-in: modal closes directly (no in-modal confirmation)
+> - Inline credential error: `Invalid email or password.` (new)
+> - Toast inventory: add "Signed in." success toast; "Too many attempts..." warning; "Couldn't sign in..." error
+>
+> Google OAuth + callback overlay + sidebar profile widget + settings modal are unchanged.
+> CONTEXT.md D-39 has the full change log.
+
+
 
 > Visual and interaction contract for the Supabase identity layer shipped in Phase 10: the new standalone auth-modal (AUTH-02 + AUTH-03), signed-in/signed-out refactor of settings-modal (AUTH-04), sidebar profile widget swap (AUTH-04), first-sign-in profile-migration prompt (D-16..D-20), and `/#auth-callback` transition UX (D-06, D-11).
 >

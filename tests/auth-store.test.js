@@ -5,7 +5,7 @@
 //   1. Fresh user with NO prior session → status 'anonymous', no supabase-js load (D-29)
 //   2. Prior session token in localStorage → lazy-imports supabase.js + getSession
 //   3. Prior token but getSession returns null → falls back to anonymous
-//   4. signInMagic calls signInWithOtp with emailRedirectTo = <origin>/#/auth-callback
+//   4. signInWithPassword calls supabase.auth.signInWithPassword({ email, password })
 //   5. signInGoogle calls signInWithOAuth with provider google
 //   6. signOut clears user/session/status
 //   7. onAuthStateChange registered exactly once across multiple lazy-loads
@@ -28,7 +28,7 @@ vi.mock('alpinejs', () => ({
 const supabaseAuthMock = {
   getSession: vi.fn().mockResolvedValue({ data: { session: null }, error: null }),
   onAuthStateChange: vi.fn().mockReturnValue({ data: { subscription: { unsubscribe: vi.fn() } } }),
-  signInWithOtp: vi.fn().mockResolvedValue({ error: null }),
+  signInWithPassword: vi.fn().mockResolvedValue({ error: null }),
   signInWithOAuth: vi.fn().mockResolvedValue({ error: null }),
   signOut: vi.fn().mockResolvedValue({ error: null }),
 };
@@ -70,7 +70,7 @@ beforeEach(async () => {
   // Reset the Supabase mock auth default responses.
   supabaseAuthMock.getSession.mockResolvedValue({ data: { session: null }, error: null });
   supabaseAuthMock.onAuthStateChange.mockReturnValue({ data: { subscription: { unsubscribe: vi.fn() } } });
-  supabaseAuthMock.signInWithOtp.mockResolvedValue({ error: null });
+  supabaseAuthMock.signInWithPassword.mockResolvedValue({ error: null });
   supabaseAuthMock.signInWithOAuth.mockResolvedValue({ error: null });
   supabaseAuthMock.signOut.mockResolvedValue({ error: null });
   getSupabaseMock.mockImplementation(() => ({ auth: supabaseAuthMock }));
@@ -144,12 +144,12 @@ describe('auth store — initial state (D-29 zero-latency anonymous)', () => {
 });
 
 describe('auth store — sign-in flows (D-30 contract)', () => {
-  test('signInMagic calls signInWithOtp with emailRedirectTo === <origin>/#/auth-callback', async () => {
+  test('signInWithPassword calls supabase.auth.signInWithPassword with { email, password }', async () => {
     initAuthStore();
-    const res = await storeRegistry.auth.signInMagic('a@b.com');
-    expect(supabaseAuthMock.signInWithOtp).toHaveBeenCalledWith({
+    const res = await storeRegistry.auth.signInWithPassword('a@b.com', 'secret123');
+    expect(supabaseAuthMock.signInWithPassword).toHaveBeenCalledWith({
       email: 'a@b.com',
-      options: { emailRedirectTo: expect.stringMatching(/\/#\/auth-callback$/) },
+      password: 'secret123',
     });
     expect(res.error).toBeFalsy();
   });
@@ -179,15 +179,15 @@ describe('auth store — sign-in flows (D-30 contract)', () => {
 describe('auth store — onAuthStateChange (single subscription)', () => {
   test('registers onAuthStateChange exactly once across multiple lazy-loads', async () => {
     initAuthStore();
-    await storeRegistry.auth.signInMagic('a@b.com');
-    await storeRegistry.auth.signInMagic('b@c.com');
+    await storeRegistry.auth.signInWithPassword('a@b.com', 'pw1');
+    await storeRegistry.auth.signInWithPassword('b@c.com', 'pw2');
     await storeRegistry.auth.signInGoogle();
     expect(supabaseAuthMock.onAuthStateChange).toHaveBeenCalledTimes(1);
   });
 
   test('subscription callback flips status on SIGNED_IN / SIGNED_OUT', async () => {
     initAuthStore();
-    await storeRegistry.auth.signInMagic('a@b.com');
+    await storeRegistry.auth.signInWithPassword('a@b.com', 'pw');
     const cb = supabaseAuthMock.onAuthStateChange.mock.calls[0][0];
 
     cb('SIGNED_IN', { user: { id: 'u9', email: 'u9@test.dev', user_metadata: {} }, access_token: 'x' });

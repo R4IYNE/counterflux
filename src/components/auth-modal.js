@@ -1,9 +1,11 @@
 /**
  * src/components/auth-modal.js
  *
- * Phase 10 Plan 3 — vanilla-DOM auth modal shipping every UI-SPEC §1 + §2
- * requirement (AUTH-02 magic-link + AUTH-03 Google OAuth + D-08 sibling-of-
- * settings-modal + D-10 Google-prominent + D-12 in-modal swap).
+ * Phase 10 Plan 3 — vanilla-DOM auth modal.
+ * Phase 10.2 (D-39, 2026-04-18): magic-link replaced with email+password.
+ *   - Shared Supabase project email templates are project-wide branded ("huxley"),
+ *     which is confusing across multiple apps. Personal apps with known users
+ *     (James + Sharon) prefer password sign-in anyway. Google OAuth stays.
  *
  * Mount pattern mirrors `src/components/settings-modal.js`:
  *   - Module-scoped `let modalEl = null` singleton guard
@@ -11,15 +13,15 @@
  *   - Appended to document.body
  *   - Escape key handler + backdrop click + X icon all close + cleanup
  *
- * Store contract (from Plan 10-02):
- *   Alpine.store('auth'): { signInMagic(email), signInGoogle(), status, user, session, ... }
+ * Store contract:
+ *   Alpine.store('auth'): { signInWithPassword(email, password), signInGoogle(), status, user, session, ... }
  *   Alpine.store('toast'): { info, success, warning, error }
  *
- * Pre-auth route capture (D-11):
+ * Pre-auth route capture (D-11) — Google OAuth only:
  *   captureCurrentPreAuthRoute() stashes window.location.hash into
- *   sessionStorage('cf_pre_auth_hash') BEFORE kicking off signInMagic /
- *   signInGoogle, so the auth-callback overlay can navigate back after the
- *   round trip.
+ *   sessionStorage('cf_pre_auth_hash') BEFORE kicking off signInGoogle,
+ *   so the auth-callback overlay can navigate back after the round trip.
+ *   Email/password sign-in is synchronous and doesn't need the callback.
  *
  * D-10 Google-brand fidelity: the Google button uses the brand-compliant
  *   dark-theme hex values (#131314 bg, #8E918F border, #E3E3E3 text) and
@@ -31,10 +33,6 @@ import { captureCurrentPreAuthRoute } from './auth-callback-overlay.js';
 
 let modalEl = null;
 let escHandler = null;
-let resendIntervalId = null;
-
-// 30-second cooldown between magic-link sends (D-12, UI-SPEC §2)
-const RESEND_COOLDOWN_MS = 30_000;
 
 // Strict email regex per UI-SPEC (matches Task 3.1 acceptance criteria)
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -90,11 +88,11 @@ export function openAuthModal() {
   `;
   card.appendChild(header);
 
-  // Body (idle state) -------------------------------------------------------
+  // Body --------------------------------------------------------------------
   const body = document.createElement('div');
   body.id = 'cf-auth-body';
   body.setAttribute('aria-live', 'polite');
-  _renderIdleBody(body);
+  _renderBody(body);
   card.appendChild(body);
 
   modalEl.appendChild(card);
@@ -107,14 +105,14 @@ export function openAuthModal() {
   escHandler = (e) => { if (e.key === 'Escape') closeAuthModal(); };
   document.addEventListener('keydown', escHandler);
 
-  // Autofocus email input (D-08 UX — keyboard-first user is always email-flow)
+  // Autofocus email input (keyboard-first user)
   const emailInput = card.querySelector('#cf-auth-email');
   if (emailInput && typeof emailInput.focus === 'function') {
     try { emailInput.focus(); } catch { /* ignore */ }
   }
 
-  // Wire idle-state handlers
-  _wireIdleHandlers(AlpineObj);
+  // Wire handlers
+  _wireHandlers(AlpineObj);
 }
 
 export function closeAuthModal() {
@@ -122,10 +120,6 @@ export function closeAuthModal() {
   if (escHandler) {
     document.removeEventListener('keydown', escHandler);
     escHandler = null;
-  }
-  if (resendIntervalId) {
-    clearInterval(resendIntervalId);
-    resendIntervalId = null;
   }
   modalEl.remove();
   modalEl = null;
@@ -138,10 +132,10 @@ export function closeAuthModal() {
 }
 
 // ---------------------------------------------------------------------------
-// Idle-state rendering
+// Rendering
 // ---------------------------------------------------------------------------
 
-function _renderIdleBody(body) {
+function _renderBody(body) {
   body.innerHTML = `
     <!-- Google button — brand-compliant dark theme (D-10). -->
     <button id="cf-auth-google" aria-label="Sign in with Google"
@@ -168,93 +162,122 @@ function _renderIdleBody(body) {
       onblur="this.style.borderColor='#2A2D3A';this.style.boxShadow='none';"
     >
 
-    <!-- Inline validation error slot -->
-    <div id="cf-auth-email-error" style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:400;color:#E23838;min-height:0;margin-top:4px;"></div>
+    <!-- PASSWORD field -->
+    <label for="cf-auth-password" style="display:block;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;letter-spacing:0.15em;color:#0D52BD;text-transform:uppercase;margin-top:16px;margin-bottom:8px;">PASSWORD</label>
+    <input type="password" id="cf-auth-password" placeholder="••••••••" autocomplete="current-password"
+      style="width:100%;height:40px;background:#0B0C10;border:1px solid #2A2D3A;color:#EAECEE;padding:0 12px;font-family:'Space Grotesk',sans-serif;font-size:14px;box-sizing:border-box;outline:none;"
+      onfocus="this.style.borderColor='#0D52BD';this.style.boxShadow='0 0 12px rgba(13,82,189,0.3)';"
+      onblur="this.style.borderColor='#2A2D3A';this.style.boxShadow='none';"
+    >
 
-    <!-- SEND MAGIC LINK button -->
-    <button id="cf-auth-send-magic" disabled
+    <!-- Inline validation / credential error slot -->
+    <div id="cf-auth-error" style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:400;color:#E23838;min-height:0;margin-top:8px;"></div>
+
+    <!-- SIGN IN button -->
+    <button id="cf-auth-submit" disabled
       style="width:100%;height:40px;margin-top:16px;background:#1C1F28;color:#4A5064;border:none;cursor:not-allowed;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;"
-    >SEND MAGIC LINK</button>
-
-    <!-- Helper text -->
-    <p style="margin:12px 0 0 0;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:400;letter-spacing:0.05em;color:#7A8498;">We'll send you a one-time link. No password needed.</p>
+    >SIGN IN</button>
   `;
 }
 
-function _wireIdleHandlers(AlpineObj) {
-  const input = modalEl.querySelector('#cf-auth-email');
-  const sendBtn = modalEl.querySelector('#cf-auth-send-magic');
-  const errorSlot = modalEl.querySelector('#cf-auth-email-error');
+function _wireHandlers(AlpineObj) {
+  const emailInput = modalEl.querySelector('#cf-auth-email');
+  const passwordInput = modalEl.querySelector('#cf-auth-password');
+  const submitBtn = modalEl.querySelector('#cf-auth-submit');
+  const errorSlot = modalEl.querySelector('#cf-auth-error');
   const googleBtn = modalEl.querySelector('#cf-auth-google');
   const googleLabel = modalEl.querySelector('#cf-auth-google-label');
 
-  function setSendEnabled(enabled) {
-    sendBtn.disabled = !enabled;
+  function setSubmitEnabled(enabled) {
+    submitBtn.disabled = !enabled;
     if (enabled) {
-      sendBtn.style.background = '#0D52BD';
-      sendBtn.style.color = '#EAECEE';
-      sendBtn.style.cursor = 'pointer';
+      submitBtn.style.background = '#0D52BD';
+      submitBtn.style.color = '#EAECEE';
+      submitBtn.style.cursor = 'pointer';
     } else {
-      sendBtn.style.background = '#1C1F28';
-      sendBtn.style.color = '#4A5064';
-      sendBtn.style.cursor = 'not-allowed';
+      submitBtn.style.background = '#1C1F28';
+      submitBtn.style.color = '#4A5064';
+      submitBtn.style.cursor = 'not-allowed';
     }
   }
 
-  input.addEventListener('input', () => {
-    const email = input.value.trim();
-    const valid = EMAIL_RE.test(email);
-    setSendEnabled(valid);
-    // Clear inline error on any input
+  function refreshSubmitState() {
+    const emailValid = EMAIL_RE.test(emailInput.value.trim());
+    const passwordPresent = passwordInput.value.length > 0;
+    setSubmitEnabled(emailValid && passwordPresent);
+  }
+
+  emailInput.addEventListener('input', () => {
     if (errorSlot) errorSlot.textContent = '';
+    refreshSubmitState();
   });
 
-  input.addEventListener('blur', () => {
-    const email = input.value.trim();
+  passwordInput.addEventListener('input', () => {
+    if (errorSlot) errorSlot.textContent = '';
+    refreshSubmitState();
+  });
+
+  emailInput.addEventListener('blur', () => {
+    const email = emailInput.value.trim();
     if (email.length > 0 && !EMAIL_RE.test(email)) {
       if (errorSlot) errorSlot.textContent = 'Enter a valid email address.';
     }
   });
 
-  sendBtn.addEventListener('click', async () => {
-    const email = input.value.trim();
-    if (!EMAIL_RE.test(email)) return;
+  async function submit() {
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
+    if (!EMAIL_RE.test(email) || password.length === 0) return;
 
-    sendBtn.textContent = 'SENDING…';
-    sendBtn.disabled = true;
-    input.disabled = true;
+    submitBtn.textContent = 'SIGNING IN…';
+    submitBtn.disabled = true;
+    emailInput.disabled = true;
+    passwordInput.disabled = true;
     googleBtn.disabled = true;
-
-    // Capture pre-auth route BEFORE triggering signInMagic (D-11).
-    try { captureCurrentPreAuthRoute(); } catch { /* ignore */ }
+    if (errorSlot) errorSlot.textContent = '';
 
     const auth = AlpineObj?.store?.('auth');
     const toast = AlpineObj?.store?.('toast');
     let result;
     try {
-      result = await auth?.signInMagic(email);
+      result = await auth?.signInWithPassword(email, password);
     } catch (err) {
       result = { error: err };
     }
 
     if (result && result.error) {
       const msg = String(result.error?.message || result.error || '');
-      if (/rate.?limit/i.test(msg)) {
-        toast?.warning?.('Magic link blocked — too many attempts. Wait a minute and try again.');
+      if (/invalid.*credentials/i.test(msg) || /invalid.*login/i.test(msg)) {
+        if (errorSlot) errorSlot.textContent = 'Invalid email or password.';
+      } else if (/rate.?limit/i.test(msg)) {
+        toast?.warning?.('Too many attempts. Wait a minute and try again.');
       } else {
-        toast?.error?.("Couldn't send magic link. Check your connection and try again.");
+        toast?.error?.("Couldn't sign in. Check your connection and try again.");
       }
-      // Re-enable idle form
-      sendBtn.textContent = 'SEND MAGIC LINK';
-      input.disabled = false;
+      submitBtn.textContent = 'SIGN IN';
+      emailInput.disabled = false;
+      passwordInput.disabled = false;
       googleBtn.disabled = false;
-      setSendEnabled(EMAIL_RE.test(input.value.trim()));
+      refreshSubmitState();
       return;
     }
 
-    // Success — swap body to CHECK YOUR INBOX state (D-12).
-    toast?.info?.('Magic link sent. Check your inbox.');
-    _swapToSentState(email, AlpineObj);
+    // Success — onAuthStateChange fires SIGNED_IN, status flips to 'authed',
+    // profile hydrates via Alpine.effect bridge. Close the modal directly.
+    toast?.success?.('Signed in.');
+    closeAuthModal();
+  }
+
+  submitBtn.addEventListener('click', submit);
+
+  // Enter key on either field submits (when enabled).
+  [emailInput, passwordInput].forEach((el) => {
+    el.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !submitBtn.disabled) {
+        e.preventDefault();
+        submit();
+      }
+    });
   });
 
   googleBtn.addEventListener('click', async () => {
@@ -282,10 +305,9 @@ function _wireIdleHandlers(AlpineObj) {
 
     // After await: if status is still anonymous (popup likely cancelled), re-enable + info toast.
     if (auth?.status === 'anonymous') {
-      // Brief grace window — the OAuth popup may legitimately take >2s on slow networks.
       setTimeout(() => {
         if (auth?.status === 'anonymous' && modalEl) {
-          toast?.info?.('Google sign-in cancelled. Try again or use a magic link.');
+          toast?.info?.('Google sign-in cancelled. Try again or use email + password.');
           if (googleLabel) googleLabel.textContent = 'SIGN IN WITH GOOGLE';
           googleBtn.disabled = false;
         }
@@ -294,110 +316,6 @@ function _wireIdleHandlers(AlpineObj) {
     // On success, the browser navigates to Google — modal stays open until
     // the callback overlay takes over on return. We do NOT close here.
   });
-}
-
-// ---------------------------------------------------------------------------
-// Magic-link sent state (D-12)
-// ---------------------------------------------------------------------------
-
-function _swapToSentState(email, AlpineObj) {
-  const body = modalEl.querySelector('#cf-auth-body');
-  if (!body) return;
-
-  body.innerHTML = `
-    <div style="display:flex;flex-direction:column;align-items:center;padding-top:16px;">
-      <span class="material-symbols-outlined" style="font-size:48px;color:#F39C12;margin-bottom:24px;">mail</span>
-      <h3 style="font-family:'Syne',sans-serif;font-size:20px;font-weight:700;color:#EAECEE;letter-spacing:0.01em;text-transform:uppercase;margin:0 0 16px 0;text-align:center;">CHECK YOUR INBOX</h3>
-      <p style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:400;color:#EAECEE;line-height:1.5;margin:0 0 16px 0;text-align:center;">We sent a link to ${_escapeHtml(email)}. Click it to sign in.</p>
-      <p style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:400;color:#7A8498;line-height:1.5;margin:0 0 24px 0;text-align:center;">Close this modal and keep working — your session will activate automatically when you click the link.</p>
-      <div style="display:flex;gap:8px;width:100%;">
-        <button id="cf-auth-close-modal" style="flex:1;height:40px;background:#1C1F28;color:#EAECEE;border:1px solid #2A2D3A;cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;">CLOSE MODAL</button>
-        <button id="cf-auth-resend" aria-disabled="true" style="flex:1;height:40px;background:#1C1F28;color:#7A8498;border:1px solid #2A2D3A;cursor:not-allowed;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:400;letter-spacing:0.15em;text-transform:uppercase;">RESEND IN 30s</button>
-      </div>
-    </div>
-  `;
-
-  body.querySelector('#cf-auth-close-modal').addEventListener('click', closeAuthModal);
-
-  // Wall-clock anchored 30s cooldown (UI-SPEC §Motion — immune to background-tab throttling).
-  const sentAt = Date.now();
-  _startResendCountdown(sentAt, email, AlpineObj);
-}
-
-function _startResendCountdown(sentAt, email, AlpineObj) {
-  if (resendIntervalId) clearInterval(resendIntervalId);
-
-  const tick = () => {
-    const btn = modalEl?.querySelector('#cf-auth-resend');
-    if (!btn) return;
-    const elapsedMs = Date.now() - sentAt;
-    const remaining = Math.max(0, Math.ceil((RESEND_COOLDOWN_MS - elapsedMs) / 1000));
-
-    if (remaining > 0) {
-      btn.textContent = `RESEND IN ${remaining}s`;
-      btn.setAttribute('aria-disabled', 'true');
-      btn.setAttribute('aria-label', `Resend magic link — available in ${remaining} seconds`);
-      btn.style.cursor = 'not-allowed';
-      btn.style.color = '#7A8498';
-    } else {
-      btn.textContent = 'RESEND MAGIC LINK';
-      btn.removeAttribute('aria-disabled');
-      btn.setAttribute('aria-label', 'Resend magic link');
-      btn.style.cursor = 'pointer';
-      btn.style.color = '#EAECEE';
-      // Wire click once (idempotent — replaceWith clone resets listeners on each transition)
-      btn.onclick = async () => {
-        btn.textContent = 'SENDING…';
-        btn.setAttribute('aria-disabled', 'true');
-        btn.style.cursor = 'not-allowed';
-        const auth = AlpineObj?.store?.('auth');
-        const toast = AlpineObj?.store?.('toast');
-        let result;
-        try {
-          result = await auth?.signInMagic(email);
-        } catch (err) {
-          result = { error: err };
-        }
-        if (result && result.error) {
-          const msg = String(result.error?.message || result.error || '');
-          if (/rate.?limit/i.test(msg)) {
-            toast?.warning?.('Magic link blocked — too many attempts. Wait a minute and try again.');
-          } else {
-            toast?.error?.("Couldn't send magic link. Check your connection and try again.");
-          }
-          btn.textContent = 'RESEND MAGIC LINK';
-          btn.removeAttribute('aria-disabled');
-          btn.style.cursor = 'pointer';
-          return;
-        }
-        toast?.info?.('Fresh magic link on the way.');
-        // Restart countdown
-        _startResendCountdown(Date.now(), email, AlpineObj);
-      };
-      // Stop ticking — next restart is driven by click.
-      if (resendIntervalId) {
-        clearInterval(resendIntervalId);
-        resendIntervalId = null;
-      }
-    }
-  };
-
-  // Immediate paint + 1s polling (wall-clock anchored via Date.now snapshot).
-  tick();
-  resendIntervalId = setInterval(tick, 1000);
-}
-
-// ---------------------------------------------------------------------------
-// Utilities
-// ---------------------------------------------------------------------------
-
-function _escapeHtml(s) {
-  return String(s)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
 }
 
 // Expose globally so sidebar + settings templates can invoke via
