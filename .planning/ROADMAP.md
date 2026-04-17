@@ -110,7 +110,13 @@ Plans:
   3. User can sign in with Google OAuth from a desktop browser and their profile name + avatar populate from the auth identity; the "Sign in" CTA in the settings modal flips to email + Sign out
   4. User signs out and their local Dexie data (collection, decks, games, watchlist) is fully preserved; only the Supabase session is cleared
   5. A second Supabase user context attempting to read or write the first user's rows (collection, decks, deck_cards, games, watchlist, profile) receives empty results — RLS policies enforce `auth.uid() = user_id` on every synced table with `WITH CHECK` on writes
-**Plans**: TBD
+**Plans**: 4 plans
+
+Plans:
+- [ ] 10-01-PLAN.md — Supabase schema + RLS + RLS isolation test (D-37 hard gate) + .env.example + 10-AUTH-PREFLIGHT.md (AUTH-06)
+- [ ] 10-02-PLAN.md — @supabase/supabase-js dependency + lazy services/supabase.js + stores/auth.js + router /auth-callback + AUTH-01 bundle-inspection test (AUTH-01, AUTH-02, AUTH-05)
+- [ ] 10-03-PLAN.md — auth-modal.js + auth-callback-overlay.js + sidebar anonymous/authed branch + reduced-motion CSS (AUTH-02, AUTH-03)
+- [ ] 10-04-PLAN.md — Auth-aware profile store + settings-modal signed-in/signed-out refactor + first-sign-in-prompt.js (AUTH-04, AUTH-05)
 **UI hint**: yes
 
 ### Phase 11: Cloud Sync Engine
@@ -146,7 +152,6 @@ Plans:
   1. A fresh Lighthouse run against the final v1.1 build meets or beats the TTI/LCP targets agreed in the Phase 7 baseline report
   2. If optimisations were applied (splash → bulk data deferral, store init sequencing, bundle splitting), before/after web-vitals samples are captured in `.planning/` showing the delta
   3. If no regressions were found, the Phase 7 baseline report is signed off with a "v1.1 meets perf budget" record and no code changes ship from this phase
-**Plans**: TBD
 
 ## Progress
 
@@ -162,7 +167,7 @@ Plans:
 | 8. Treasure Cruise Rapid Entry | v1.1 | 3/3 | Complete | 2026-04-16 |
 | 8.1. Treasure Cruise Polish & Precon Coverage | v1.1 | 3/3 | Complete | 2026-04-16 |
 | 9. Deck Accuracy + Vandalblast Pod Experience | v1.1 | 6/6 | Complete | 2026-04-17 |
-| 10. Supabase Auth Foundation | v1.1 | 0/? | Not started | — |
+| 10. Supabase Auth Foundation | v1.1 | 0/4 | Planned | — |
 | 11. Cloud Sync Engine | v1.1 | 0/? | Not started | — |
 | 12. Notification Bell + Preordain Spoiler Refresh | v1.1 | 0/? | Not started | — |
 | 13. Performance Optimisation (conditional) | v1.1 | 0/? | Not started | — |
