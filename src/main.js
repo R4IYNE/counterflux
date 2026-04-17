@@ -17,7 +17,9 @@ import { initUndoStore } from './stores/undo.js';
 import { initProfileStore } from './stores/profile.js';
 import { initAuthStore } from './stores/auth.js';
 import { openSettingsModal } from './components/settings-modal.js';
+import { openAuthModal } from './components/auth-modal.js';
 import { splashScreen } from './components/splash-screen.js';
+import { sidebarComponent } from './components/sidebar.js';
 import { toggleShortcutModal, isShortcutModalOpen, closeShortcutModal } from './components/shortcut-modal.js';
 import { initRouter } from './router.js';
 import { renderManaCost } from './utils/mana.js';
@@ -67,6 +69,7 @@ async function bootApp() {
   window.__shortcutModalOpen = isShortcutModalOpen;
   window.__closeShortcutModal = closeShortcutModal;
   window.__openSettingsModal = openSettingsModal;
+  window.__openAuthModal = openAuthModal;
 
   // Expose db globally for Alpine inline expressions (flyout, etc.)
   window.__cf_db = db;
@@ -77,6 +80,7 @@ async function bootApp() {
 
   // Register Alpine components
   Alpine.data('splashScreen', splashScreen);
+  Alpine.data('sidebarComponent', sidebarComponent);
 
   // Start Alpine (must be called after stores and components are registered)
   Alpine.start();
