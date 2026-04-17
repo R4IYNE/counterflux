@@ -42,11 +42,19 @@ describe('spinForFirstPlayer (GAME-07)', () => {
   });
 
   it('appends and removes .cf-first-player-spinner overlay during animation', async () => {
-    // Force RAF to fire synchronously and complete the animation immediately
+    // Plan 09-04 Gap 1 fix: spinner now captures startTime INSIDE the first
+    // RAF callback, so we need to drive two frames — the first seeds startTime,
+    // the second saturates t=1 by passing a timestamp far beyond totalMs.
+    let frameCount = 0;
     vi.spyOn(global, 'requestAnimationFrame').mockImplementation((cb) => {
-      // Pass `1e9` so the elapsed math saturates t = 1 immediately
-      cb(1e9);
-      return 1;
+      frameCount += 1;
+      if (frameCount === 1) {
+        cb(0);        // seed startTime = 0
+      } else if (frameCount === 2) {
+        cb(1e9);      // elapsed ~= 1e9ms => t=1 => settle
+      }
+      // Further RAFs during settle are ignored; settle uses setTimeout.
+      return frameCount;
     });
 
     const promise = spinForFirstPlayer(['Alice', 'Bob']);
