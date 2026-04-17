@@ -13,8 +13,14 @@ export function mount(container) {
   const Alpine = window.Alpine;
   const store = Alpine?.store('game');
 
-  // Register Alpine components for this screen
-  Alpine.data('postGameOverlay', postGameOverlay);
+  // Register Alpine components for this screen.
+  // Phase 09 Plan 2 (RESEARCH P-3): defensive guard so tests/router.test.js
+  // can mount the screen without first booting Alpine. Crashing here regresses
+  // the router smoke test; the data registration is decorative when the
+  // post-game overlay isn't shown.
+  if (Alpine?.data) {
+    Alpine.data('postGameOverlay', postGameOverlay);
+  }
 
   // Initialize game store if not yet initialized
   if (store && typeof store.init === 'function') {

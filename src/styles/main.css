@@ -144,19 +144,24 @@ body {
   transition: margin-left 200ms ease-out;
 }
 
-/* Phase 8 Plan 2 + 08.1 Plan 1 — Accessibility: honour prefers-reduced-motion
-   for all Treasure Cruise panel transitions (UI-SPEC §Accessibility).
-   Selector list extends as Phase 8.1 plans land additional motion surfaces:
+/* Phase 8 Plan 2 + 08.1 Plan 1 + 09 Plan 2 — Accessibility: honour
+   prefers-reduced-motion for all motion surfaces.
+   Selector list:
      - .tc-panel-column, .tc-grid-column (Phase 8 Plan 2 — panel slide)
      - .cf-panel-reopen (Phase 08.1 Plan 1 — re-open affordance hover/focus)
-     - .card-quick-actions-checkbox (Phase 08.1 Plan 3 — extended here when
-       Plan 3 lands; if this block is updated by Plan 3 first, this comment
-       still narrates the merge intent). */
+     - .card-quick-actions-checkbox (Phase 08.1 Plan 3 — checkbox reveal)
+     - .cf-player-active (Phase 09 Plan 2 — active player border-glow
+       transition; data binding wired by Plan 3)
+     - .cf-first-player-spinner (Phase 09 Plan 2 — spinner overlay; spinner
+       JS implementation lives in Plan 3 but the selector is declared here
+       per Phase 8.1 cross-plan coordination pattern). */
 @media (prefers-reduced-motion: reduce) {
   .tc-panel-column,
   .tc-grid-column,
   .cf-panel-reopen,
-  .card-quick-actions-checkbox {
+  .card-quick-actions-checkbox,
+  .cf-player-active,
+  .cf-first-player-spinner {
     transition: none !important;
     transition-duration: 0.01ms !important;
   }
@@ -257,4 +262,61 @@ body {
 .card-quick-actions-checkbox .material-symbols-outlined {
   font-size: 16px;
   line-height: 1;
+}
+
+/* ============================================================
+ * Phase 09 — Deck Accuracy + Vandalblast Pod Experience
+ * Plan 2 — Vandalblast layout + visuals
+ * ============================================================ */
+
+/* GAME-08 (D-16) — Active player border-glow.
+ * Mirrors the .cf-panel-reopen border-glow recipe from Phase 8.1 Plan 1.
+ * Data binding (`:class="{ 'cf-player-active': $store.game.activePlayerIndex === pIdx }"`)
+ * is wired by Plan 2 with the activePlayerIndex field consumed once Plan 3
+ * ships it on the game store. The class is a no-op until then.
+ *
+ * Reduced-motion handled via the merged @media block above (line ~155). */
+.cf-player-active {
+  border: 2px solid var(--color-primary, #0D52BD) !important;
+  box-shadow: 0 0 12px var(--color-glow-blue, rgba(13, 82, 189, 0.6)) !important;
+  transition: border-color 200ms ease-out, box-shadow 200ms ease-out;
+}
+
+/* GAME-02 (D-10) — 3-player T-shape layout.
+ * Per RESEARCH §6: PLAYER-1-ALWAYS-TOP (override of CONTEXT default), the
+ * D-16 border-glow handles the "whose turn is it?" affordance non-destructively.
+ * Bound via :class="$store.game.players.length === 3 ? 'cf-player-grid-3' : '...'"
+ * in player-card.js renderPlayerGrid(). */
+.cf-player-grid-3 {
+  display: grid;
+  grid-template-areas:
+    "p1 p1"
+    "p2 p3";
+  grid-template-rows: 1fr 1fr;
+  gap: 16px;
+}
+.cf-player-grid-3 > :nth-child(1) { grid-area: p1; }
+.cf-player-grid-3 > :nth-child(2) { grid-area: p2; }
+.cf-player-grid-3 > :nth-child(3) { grid-area: p3; }
+
+/* GAME-05 (D-13 + P-4) — Real Fullscreen API.
+ * Hides app chrome when the page is in fullscreen mode. Game DOM unchanged,
+ * so Alpine state survives. Per P-4: disable existing transitions on body
+ * chrome to avoid flicker during the fullscreen transition. */
+:fullscreen aside,
+:fullscreen header {
+  display: none !important;
+}
+:fullscreen main {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+/* Defensive: also handle the WebKit-prefixed pseudo-class for Safari ≤16.4 */
+:-webkit-full-screen aside,
+:-webkit-full-screen header {
+  display: none !important;
+}
+:-webkit-full-screen main {
+  margin: 0 !important;
+  padding: 0 !important;
 }
