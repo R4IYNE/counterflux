@@ -407,6 +407,7 @@ import { spinForFirstPlayer } from '../src/components/first-player-spinner.js';
 
 describe('game-store Plan 3 turn mechanics', () => {
   let game;
+  let _dateNowSpy;
 
   beforeEach(async () => {
     vi.clearAllMocks();
@@ -420,7 +421,11 @@ describe('game-store Plan 3 turn mechanics', () => {
     initGameStore();
     game = _alpineStores.game;
 
-    // Bootstrap a 3-player game (You + Bob + Carol) for tests
+    // Bootstrap a 3-player game (You + Bob + Carol) for tests.
+    // We deliberately DO NOT use vi.useFakeTimers() here — it deadlocks with
+    // fake-indexeddb's internal timer-based microtask ordering. Instead, we
+    // spy on Date.now() to control the wall clock used by nextTurn() and
+    // saveGame(); RAF stays real (or stubbed via tests/setup.js).
     game.opponents = [
       { name: 'Bob', commander: 'Krenko', partner: null },
       { name: 'Carol', commander: 'Niv-Mizzet', partner: null },
@@ -428,11 +433,11 @@ describe('game-store Plan 3 turn mechanics', () => {
     game.manualCommander = 'You';
     game.selectedDeckId = null;
     game.startingLife = 40;
-    vi.useFakeTimers();
   });
 
   afterEach(async () => {
-    vi.useRealTimers();
+    if (_dateNowSpy) _dateNowSpy.mockRestore();
+    _dateNowSpy = null;
     await db.games.clear();
     await db.meta.delete('active_game');
     // Reset Alpine state between tests
@@ -442,8 +447,19 @@ describe('game-store Plan 3 turn mechanics', () => {
       game.activePlayerIndex = null;
       game.turn_laps = [];
       game.turnStartedAt = null;
+      game.pauseTimer?.();
     }
   });
+
+  /** Helper: pin Date.now() to a controllable value across the test. */
+  function pinDateNow(initial) {
+    let now = initial;
+    _dateNowSpy = vi.spyOn(Date, 'now').mockImplementation(() => now);
+    return {
+      set(t) { now = t; },
+      advance(ms) { now += ms; },
+    };
+  }
 
   describe('GAME-07 store-side', () => {
     it('startGame() awaits spinner; sets activePlayerIndex + is_first on chosen player', async () => {
@@ -481,30 +497,31 @@ describe('game-store Plan 3 turn mechanics', () => {
   describe('GAME-09 turn_laps push + persistence', () => {
     it('nextTurn pushes Date.now() - turnStartedAt onto turn_laps', async () => {
       const t0 = 1_700_000_000_000;
-      vi.setSystemTime(t0);
+      const clock = pinDateNow(t0);
       spinForFirstPlayer.mockResolvedValue(0);
       await game.startGame();
-      // startGame re-anchors turnStartedAt after spinner; align fake timer
-      game.turnStartedAt = t0;
+      // startGame re-anchored turnStartedAt to t0 (Date.now() pinned to t0).
+      expect(game.turnStartedAt).toBe(t0);
 
-      vi.setSystemTime(t0 + 5000);
+      clock.set(t0 + 5000);
       game.nextTurn();
       expect(game.turn_laps).toEqual([5000]);
 
-      vi.setSystemTime(t0 + 5000 + 12000);
+      clock.set(t0 + 5000 + 12000);
       game.nextTurn();
       expect(game.turn_laps).toEqual([5000, 12000]);
     });
 
     it('saveGame persists turn_laps to db.games row', async () => {
       const t0 = 1_700_000_000_000;
-      vi.setSystemTime(t0);
+      const clock = pinDateNow(t0);
       spinForFirstPlayer.mockResolvedValue(0);
       await game.startGame();
-      game.turnStartedAt = t0;
-      vi.setSystemTime(t0 + 8000);
+      expect(game.turnStartedAt).toBe(t0);
+
+      clock.set(t0 + 8000);
       game.nextTurn();
-      vi.setSystemTime(t0 + 8000 + 3000);
+      clock.set(t0 + 8000 + 3000);
       await game.saveGame(0, []);
 
       const saved = await db.games.toArray();
@@ -514,15 +531,15 @@ describe('game-store Plan 3 turn mechanics', () => {
   });
 
   describe('GAME-10 wall-clock anchor', () => {
-    it('lap accurate after 30min vi.setSystemTime jump (proves wall-clock not setInterval)', async () => {
+    it('lap accurate after 30min jump (proves wall-clock not setInterval)', async () => {
       const t0 = 1_700_000_000_000;
-      vi.setSystemTime(t0);
+      const clock = pinDateNow(t0);
       spinForFirstPlayer.mockResolvedValue(0);
       await game.startGame();
-      game.turnStartedAt = t0;
+      expect(game.turnStartedAt).toBe(t0);
 
       // Jump 30 minutes forward without any timer ticks
-      vi.setSystemTime(t0 + 30 * 60 * 1000);
+      clock.set(t0 + 30 * 60 * 1000);
       game.nextTurn();
 
       expect(game.turn_laps[0]).toBe(30 * 60 * 1000);

@@ -1,6 +1,7 @@
 import Alpine from 'alpinejs';
 import { db } from '../db/schema.js';
 import { computeGameStats } from '../utils/game-stats.js';
+import { spinForFirstPlayer } from '../components/first-player-spinner.js';
 
 /**
  * Debounce helper for auto-save.
@@ -37,6 +38,10 @@ export function initGameStore() {
       timerSeconds: store.timerSeconds,
       gameStartedAt: store.gameStartedAt,
       expandedPlayer: store.expandedPlayer,
+      // Plan 3 (D-17, D-18): persist active player + lap history + wall-clock anchor
+      activePlayerIndex: store.activePlayerIndex,
+      turn_laps: [...(store.turn_laps || [])],
+      turnStartedAt: store.turnStartedAt,
     };
     await db.meta.put({ key: 'active_game', ...snapshot });
   }, 2000);
@@ -53,10 +58,21 @@ export function initGameStore() {
     currentTurn: 0,
     timerSeconds: 0,
     timerRunning: false,
-    _timerInterval: null,
+    _timerInterval: null,    // legacy — set to null and superseded by _timerRafId
+    _timerRafId: null,       // GAME-10 (D-18) — RAF id for display tick
     gameStartedAt: null,
     games: [],
     expandedPlayer: null,
+
+    // GAME-08 (D-16): active player rotation (0-indexed). null when no game active.
+    activePlayerIndex: null,
+    // GAME-09 (D-17): per-turn lap durations in ms. Schema field exists since
+    // Phase 7 v6 migration; this store field mirrors what gets persisted.
+    turn_laps: [],
+    // GAME-10 (D-18): wall-clock anchor for turn timer (Date.now() snapshot at
+    // turn start). Replaces setInterval accumulation which is throttled to 1Hz
+    // in background tabs (Pitfall P-1).
+    turnStartedAt: null,
 
     // === Computed ===
     get stats() {
@@ -76,7 +92,7 @@ export function initGameStore() {
 
     // === Game Lifecycle ===
 
-    startGame() {
+    async startGame() {
       // Validate: must have deck or manual commander
       if (!this.selectedDeckId && !this.manualCommander.trim()) {
         Alpine.store('toast')?.error('Select a deck or enter a commander name.');
@@ -146,9 +162,39 @@ export function initGameStore() {
       this.timerSeconds = 0;
       this.timerRunning = false;
 
-      // Auto-save initial state
+      // GAME-09 + GAME-10 init: clear lap history, snapshot wall-clock anchor.
+      this.turn_laps = [];
+      this.turnStartedAt = Date.now();
+
+      // Auto-save initial state BEFORE spinner so a partial game survives crash
       _debouncedAutoSave();
 
+      // GAME-07 (D-15): pick first player via slot-machine spinner. Awaits ~3s
+      // in normal motion; instant under prefers-reduced-motion: reduce.
+      try {
+        const winnerIndex = await spinForFirstPlayer(this.players.map((p) => p.name));
+        if (
+          typeof winnerIndex === 'number' &&
+          winnerIndex >= 0 &&
+          winnerIndex < this.players.length
+        ) {
+          this.players[winnerIndex].is_first = true;
+          this.activePlayerIndex = winnerIndex;
+          // Re-anchor turnStartedAt to the moment the spinner concluded so the
+          // first player's lap timer starts when the spinner unveils them, not
+          // ~3 seconds before.
+          this.turnStartedAt = Date.now();
+        } else {
+          this.activePlayerIndex = 0;
+          this.players[0].is_first = true;
+        }
+      } catch {
+        // Graceful fallback: pick player 0 if spinner throws
+        this.activePlayerIndex = 0;
+        this.players[0].is_first = true;
+      }
+
+      _debouncedAutoSave();
       return true;
     },
 
@@ -215,11 +261,31 @@ export function initGameStore() {
     // === Turn Management ===
 
     nextTurn() {
+      // GAME-09 (D-17): push wall-clock lap onto turn_laps before re-anchoring
+      if (this.turnStartedAt != null) {
+        const lap = Date.now() - this.turnStartedAt;
+        if (lap >= 0) this.turn_laps.push(lap);
+      }
+      // GAME-10 (D-18): re-anchor for the next turn
+      this.turnStartedAt = Date.now();
+
+      // Existing behaviour: increment counter + snapshot life history
       this.currentTurn++;
-      // Snapshot all players' current life into life_history
       for (const player of this.players) {
         player.life_history.push(player.life);
       }
+
+      // GAME-08 (D-16): advance active player (skip eliminated players)
+      if (this.activePlayerIndex != null && this.players.length > 0) {
+        let next = (this.activePlayerIndex + 1) % this.players.length;
+        let safety = this.players.length;
+        while (this.players[next]?.eliminated && safety > 0) {
+          next = (next + 1) % this.players.length;
+          safety--;
+        }
+        this.activePlayerIndex = next;
+      }
+
       this.pauseTimer();
       _debouncedAutoSave();
     },
@@ -229,13 +295,27 @@ export function initGameStore() {
     startTimer() {
       if (this.timerRunning) return;
       this.timerRunning = true;
-      this._timerInterval = setInterval(() => {
-        this.timerSeconds++;
-      }, 1000);
+      // GAME-10 (D-18 / P-1): wall-clock anchor + RAF display tick.
+      // setInterval is throttled to 1Hz in background tabs; a 30-min backgrounded
+      // turn would record as ~5min via interval counting. The Date.now() anchor
+      // stays accurate regardless of background throttling.
+      if (this.turnStartedAt == null) this.turnStartedAt = Date.now();
+
+      const tick = () => {
+        if (!this.timerRunning) return;
+        this.timerSeconds = Math.floor((Date.now() - this.turnStartedAt) / 1000);
+        this._timerRafId = requestAnimationFrame(tick);
+      };
+      this._timerRafId = requestAnimationFrame(tick);
     },
 
     pauseTimer() {
       this.timerRunning = false;
+      if (this._timerRafId != null) {
+        cancelAnimationFrame(this._timerRafId);
+        this._timerRafId = null;
+      }
+      // Defensive: clear legacy interval if any code path still set it
       if (this._timerInterval) {
         clearInterval(this._timerInterval);
         this._timerInterval = null;
@@ -245,6 +325,7 @@ export function initGameStore() {
     resetTimer() {
       this.pauseTimer();
       this.timerSeconds = 0;
+      this.turnStartedAt = null;
     },
 
     // === Game End ===
@@ -255,14 +336,25 @@ export function initGameStore() {
     },
 
     async saveGame(winnerIndex, eliminationOrder) {
+      // GAME-09: push final lap before saving (turn that ended without nextTurn)
+      if (this.turnStartedAt != null) {
+        const finalLap = Date.now() - this.turnStartedAt;
+        if (finalLap >= 0) this.turn_laps.push(finalLap);
+        this.turnStartedAt = null;
+      }
+
       const gameRecord = {
         deck_id: this.selectedDeckId,
         started_at: this.gameStartedAt,
         ended_at: new Date().toISOString(),
         turn_count: this.currentTurn,
         winner_index: winnerIndex,
-        players: JSON.parse(JSON.stringify(this.players)),
+        players: JSON.parse(JSON.stringify(this.players)),  // includes is_first per-player
         elimination_order: eliminationOrder ? [...eliminationOrder] : null,
+        // GAME-09 (D-17): turn_laps persisted to schema field (Phase 7 v6 backfill)
+        turn_laps: [...this.turn_laps],
+        // GAME-08 snapshot of final activePlayerIndex (replay reference)
+        active_player_index: this.activePlayerIndex,
       };
 
       await db.games.add(gameRecord);
@@ -309,6 +401,10 @@ export function initGameStore() {
         this.timerSeconds = saved.timerSeconds || 0;
         this.gameStartedAt = saved.gameStartedAt;
         this.expandedPlayer = saved.expandedPlayer;
+        // Plan 3: restore lap state + active player + wall-clock anchor
+        this.activePlayerIndex = saved.activePlayerIndex ?? null;
+        this.turn_laps = saved.turn_laps || [];
+        this.turnStartedAt = saved.turnStartedAt ?? null;
       }
     },
 
@@ -332,6 +428,10 @@ export function initGameStore() {
       this.timerRunning = false;
       this.gameStartedAt = null;
       this.expandedPlayer = null;
+      // Plan 3: clear new fields
+      this.activePlayerIndex = null;
+      this.turn_laps = [];
+      this.turnStartedAt = null;
       this.pauseTimer();
     },
   });
