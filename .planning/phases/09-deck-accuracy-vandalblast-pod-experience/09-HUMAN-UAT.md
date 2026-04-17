@@ -1,16 +1,18 @@
 ---
-status: gaps_found
+status: partial
 phase: 09-deck-accuracy-vandalblast-pod-experience
 source: [09-VERIFICATION.md]
 started: 2026-04-17T11:15:00Z
-updated: 2026-04-17T12:00:00Z
+updated: 2026-04-17T13:30:00Z
 walked_by: user
 walked_at: 2026-04-17T12:00:00Z
+gap_closure_commits: [da8c6fa, 5c69511, 05ede7f, ddc0066, fdbc993, 50b9423, b72b159]
+gap_closure_tests_added: 22
 ---
 
 ## Current Test
 
-[walked by user 2026-04-17 — 5 of 7 failed, gap closure required]
+[walked by user 2026-04-17 — 5 of 7 failed; 7 underlying gaps closed via plans 09-04/05/06; awaiting re-walk]
 
 ## Tests
 
