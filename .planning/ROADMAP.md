@@ -114,7 +114,7 @@ Plans:
 
 Plans:
 - [x] 10-01-PLAN.md — Supabase schema + RLS + RLS isolation test (D-37 hard gate) + .env.example + 10-AUTH-PREFLIGHT.md (AUTH-06)
-- [ ] 10-02-PLAN.md — @supabase/supabase-js dependency + lazy services/supabase.js + stores/auth.js + router /auth-callback + AUTH-01 bundle-inspection test (AUTH-01, AUTH-02, AUTH-05)
+- [x] 10-02-PLAN.md — @supabase/supabase-js dependency + lazy services/supabase.js + stores/auth.js + router /auth-callback + AUTH-01 bundle-inspection test (AUTH-01, AUTH-02, AUTH-05)
 - [ ] 10-03-PLAN.md — auth-modal.js + auth-callback-overlay.js + sidebar anonymous/authed branch + reduced-motion CSS (AUTH-02, AUTH-03)
 - [ ] 10-04-PLAN.md — Auth-aware profile store + settings-modal signed-in/signed-out refactor + first-sign-in-prompt.js (AUTH-04, AUTH-05)
 **UI hint**: yes
@@ -167,7 +167,7 @@ Plans:
 | 8. Treasure Cruise Rapid Entry | v1.1 | 3/3 | Complete | 2026-04-16 |
 | 8.1. Treasure Cruise Polish & Precon Coverage | v1.1 | 3/3 | Complete | 2026-04-16 |
 | 9. Deck Accuracy + Vandalblast Pod Experience | v1.1 | 6/6 | Complete | 2026-04-17 |
-| 10. Supabase Auth Foundation | v1.1 | 1/4 | In Progress|  |
+| 10. Supabase Auth Foundation | v1.1 | 2/4 | In Progress|  |
 | 11. Cloud Sync Engine | v1.1 | 0/? | Not started | — |
 | 12. Notification Bell + Preordain Spoiler Refresh | v1.1 | 0/? | Not started | — |
 | 13. Performance Optimisation (conditional) | v1.1 | 0/? | Not started | — |

@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Second Sunrise
 status: executing
-stopped_at: Completed 10-01-PLAN.md — counterflux schema + RLS + isolation test + pre-flight runbook
-last_updated: "2026-04-17T15:02:21.229Z"
+stopped_at: Completed 10-02-PLAN.md — auth store + lazy-loaded supabase client + AUTH-01 proof
+last_updated: "2026-04-17T15:14:58.796Z"
 last_activity: 2026-04-17
 progress:
   total_phases: 8
   completed_phases: 4
   total_plans: 19
-  completed_plans: 16
+  completed_plans: 17
   percent: 0
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-14)
 ## Current Position
 
 Phase: 10 (supabase-auth-foundation) — EXECUTING
-Plan: 2 of 4
+Plan: 3 of 4
 Status: Ready to execute
 Last activity: 2026-04-17
 
@@ -74,6 +74,7 @@ Progress: [          ] 0%
 | Phase 09 P04 | 9m 17s | 2 tasks | 5 files |
 | Phase 09 P06 | ~10m | 2 tasks | 3 files |
 | Phase 10 P01 | 6m 0s | 3 tasks | 5 files |
+| Phase 10 P02 | 7m 27s | 3 tasks (4 commits w/ TDD RED/GREEN pair) tasks | 9 files files |
 
 ## Accumulated Context
 
@@ -147,6 +148,9 @@ Full decision log in PROJECT.md Key Decisions table.
 - [Phase 10]: Plan 10-01: RLS test uses dynamic import of @supabase/supabase-js inside beforeAll — static imports resolve at Vitest collection time regardless of describe.skip, which would break npm test before Plan 10-02 installs the package. Dynamic import + describeIf skip-gate keeps npm test green (9 tests skipped cleanly) while preserving the D-37 hard-gate contract.
 - [Phase 10]: Plan 10-01: RLS migration ships 12 policies using the D-24 template verbatim (6 SELECT + 6 ALL with WITH CHECK on writes — non-negotiable per PITFALLS §2.2). Every user_id column carries a B-tree index (D-25; PITFALLS §2.4 — unindexed user_id times out at 1M rows). counterflux schema mirrors Dexie v8 shape exactly so Phase 11 sync can push/pull 1:1.
 - [Phase 10]: Plan 10-01: Pre-flight runbook (10-AUTH-PREFLIGHT.md) is standalone (D-34) — covers Supabase SQL Editor + PostgREST exposed-schemas + Google Cloud Console OAuth + Vercel env vars + local .env.local bootstrap + verification + rotation. README.md created (did not exist) with Auth Setup section linking per D-35.
+- [Phase 10]: Plan 10-02: AUTH-01 lazy-load proof locked at BOTH test-time (walkStaticImports regex assertions in tests/supabase-lazy-load.test.js) and production-bundle time (dist/assets/supabase-*.js = 187KB code-split chunk, zero refs in index-*.js). Rollup/Rolldown resolves dynamic imports at build time, so a stub at src/components/auth-callback-overlay.js ships in Plan 2 to unblock router wiring before Plan 3's real overlay overwrites it.
+- [Phase 10]: Plan 10-02: Auth store exposes D-30 shape exactly — { status: 'anonymous'|'pending'|'authed', user, session, signInMagic(email), signInGoogle(), signOut(), init() }. hasPriorSession() regex /^sb-.*-auth-token$/ probes localStorage BEFORE any dynamic import, giving anonymous users zero boot latency (D-29). _stateChangeSubscribed module flag makes onAuthStateChange registration idempotent so repeat sign-in attempts don't stack listeners.
+- [Phase 10]: Plan 10-02: PKCE flow config (flowType: 'pkce' + persistSession + autoRefreshToken + detectSessionInUrl) ships in src/services/supabase.js getSupabase() — prevents Navigo hash-fragment collision (PITFALLS §10). /auth-callback route registers FIRST in initRouter() (line 47 vs screenLoaders loop at line 60) so Supabase PKCE redirects don't fall through to notFound().
 
 ### Roadmap Evolution
 
@@ -165,6 +169,6 @@ None — roadmap complete, next step is `/gsd:plan-phase 7`.
 
 ## Session Continuity
 
-Last session: 2026-04-17T15:02:21.227Z
-Stopped at: Completed 10-01-PLAN.md — counterflux schema + RLS + isolation test + pre-flight runbook
+Last session: 2026-04-17T15:14:58.794Z
+Stopped at: Completed 10-02-PLAN.md — auth store + lazy-loaded supabase client + AUTH-01 proof
 Resume file: None
