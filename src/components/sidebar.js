@@ -92,18 +92,15 @@ export function sidebarComponent() {
     },
 
     /**
-     * Phase 10 D-15 (partial) — avatar source priority for the authed sidebar.
-     * profile.avatar (v1.0 user-uploaded) → auth.user.user_metadata.avatar_url
-     * (Google) → null (caller renders initials fallback).
-     *
-     * Plan 4 extends this to honour profile.avatar_url_override — update
-     * priority to: avatar_url_override → profile.avatar → Google → null.
+     * Phase 10 D-15 — avatar source priority for the authed sidebar.
+     * Plan 4 upgrade: delegates to profile.effectiveAvatarUrl which implements
+     * the canonical priority chain (avatar_url_override → Google → legacy
+     * profile.avatar → ''). Returning '' here means the template falls back
+     * to initials rendering.
      */
     authedAvatarUrl() {
       const profile = this.$store.profile;
-      const auth = this.$store.auth;
-      if (profile?.avatar) return profile.avatar;
-      return auth?.user?.user_metadata?.avatar_url || null;
+      return profile?.effectiveAvatarUrl || null;
     }
   };
 }

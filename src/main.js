@@ -93,6 +93,19 @@ async function bootApp() {
   // init() is async but fire-and-forget; it transitions status → authed when getSession resolves.
   Alpine.store('auth').init();
 
+  // Phase 10 Plan 4 — profile store re-hydrates whenever auth.status flips.
+  // Touching the reactive dep inside the effect subscribes us to it. Task 4.3
+  // extends this effect body to trigger maybeShowFirstSignInPrompt() after
+  // hydrate resolves.
+  Alpine.effect(() => {
+    const status = Alpine.store('auth').status;   // reactive dep
+    const profile = Alpine.store('profile');
+    if (profile && typeof profile.hydrate === 'function') {
+      profile.hydrate();
+    }
+    void status;
+  });
+
   // Fetch EUR→GBP exchange rate (once per session, cached 24h)
   getEurToGbpRate().then(rate => {
     console.log(`[Counterflux] EUR→GBP rate: ${rate}`);
