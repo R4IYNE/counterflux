@@ -83,7 +83,7 @@ Four-role scale. Sizes and weights map 1:1 to the canonical 01-UI-SPEC scale.
 | Display | 48px | 700 | 1.1 | Syne | -0.02em | normal | **Not used in this phase** (reserved for screen heroes) |
 | Heading | 20px | 700 | 1.2 | Syne | 0.01em | UPPERCASE | Auth modal title (`SIGN IN`); magic-link sent state title (`CHECK YOUR INBOX`); first-sign-in prompt title (`WELCOME BACK`); settings modal title (`SETTINGS`, unchanged); auth-callback overlay title (`COMPLETING SIGN-IN`) |
 | Body | 14px | 400 (regular) or 700 (bold values) | 1.5 | Space Grotesk | normal | normal | Magic-link confirmation copy (`We sent a link to you@email.com…`); first-sign-in Mila copy; signed-in email value (400); signed-in display-name input text (400); OAuth-error toast body |
-| Label | 11px | 400 or 700 | 1.3 | JetBrains Mono | 0.15em | UPPERCASE | Every CTA (`SIGN IN WITH GOOGLE`, `SEND MAGIC LINK`, `RESEND IN 27s`, `KEEP LOCAL PROFILE`, `START FRESH`, `SIGN OUT`, `USE GOOGLE AVATAR`, `UPLOAD PHOTO`, `SAVE`, `CANCEL`); field labels (`EMAIL`, `DISPLAY NAME`, `AVATAR`); meta (`SIGNED IN AS`, `COOLDOWN`); OR divider letters; callback-overlay caption |
+| Label | 11px | 400 or 700 | 1.3 | JetBrains Mono | 0.15em | UPPERCASE | Every CTA (`SIGN IN WITH GOOGLE`, `SEND MAGIC LINK`, `RESEND IN 27s`, `KEEP LOCAL PROFILE`, `START FRESH`, `SIGN OUT`, `USE GOOGLE AVATAR`, `UPLOAD PHOTO`, `SAVE PROFILE`, `DISCARD CHANGES`); field labels (`EMAIL`, `DISPLAY NAME`, `AVATAR`); meta (`SIGNED IN AS`, `COOLDOWN`); OR divider letters; callback-overlay caption |
 
 **Label weight guidance** (continues the canonical pattern):
 
@@ -106,12 +106,12 @@ Neo-Occult Terminal 60/30/10 distribution. Every hex below is already in `@theme
 |------|-------|-------|------------------|-------------------|
 | Dominant (60%) | `--color-background` | `#0B0C10` | `bg-background` | Backdrop (at 0.85 alpha), text-input insets, Google button background (fallback when brand white reads too hot against the dark modal — see note below) |
 | Dominant (60%) | `--color-surface` | `#14161C` | `bg-surface` | Modal card background, first-sign-in prompt card, auth-callback overlay content block, "Sign in to sync" CTA card in signed-out settings |
-| Secondary (30%) | `--color-surface-hover` | `#1C1F28` | `bg-surface-hover` | Secondary CTA background (`CANCEL`, `CLOSE`, `RESEND` cooldown state), Google button hover, email-input hover, "Start fresh" button default background |
+| Secondary (30%) | `--color-surface-hover` | `#1C1F28` | `bg-surface-hover` | Secondary CTA background (`DISCARD CHANGES`, `CLOSE MODAL`, `RESEND` cooldown state), Google button hover, email-input hover, "Start fresh" button default background |
 | Secondary (30%) | `--color-border-ghost` | `#2A2D3A` | `border-border-ghost` | Every 1px border — modal edge, email input, OR divider rules, Google button border, first-sign-in prompt card, read-only email chip |
 | Secondary (30%) | `--color-text-primary` | `#EAECEE` | `text-text-primary` | Card body copy, CTA text on primary CTAs, modal headings, display-name input value |
 | Secondary (30%) | `--color-text-muted` | `#7A8498` | `text-text-muted` | Field labels, helper text (`We'll send you a link…`), OR divider glyph, resend-cooldown countdown, read-only email value, "SIGNED IN AS" meta |
 | Secondary (30%) | `--color-text-dim` | `#4A5064` | `text-text-dim` | Disabled CTA text (`SEND MAGIC LINK` when email blank), inactive state glyphs |
-| **Accent (10%)** — Izzet blue | `--color-primary` | `#0D52BD` | `bg-primary` / `text-primary` / `border-primary` | **Primary CTA backgrounds ONLY** (`SEND MAGIC LINK`, `KEEP LOCAL PROFILE`, `SAVE`); active focus ring on email input; sidebar "SIGN IN" CTA background; first-sign-in prompt primary action; field-label overline colour (matches existing settings-modal pattern at line 42) |
+| **Accent (10%)** — Izzet blue | `--color-primary` | `#0D52BD` | `bg-primary` / `text-primary` / `border-primary` | **Primary CTA backgrounds ONLY** (`SEND MAGIC LINK`, `KEEP LOCAL PROFILE`, `SAVE PROFILE`); active focus ring on email input; sidebar "SIGN IN" CTA background; first-sign-in prompt primary action; field-label overline colour (matches existing settings-modal pattern at line 42) |
 | **Accent (10%)** — Izzet red | `--color-secondary` | `#E23838` | `text-secondary` / `border-secondary` | **Destructive only** — `SIGN OUT` button hover glow; X close icon hover on auth-modal and first-sign-in prompt; inline validation error text (`Enter a valid email address`); auth-error toast left border (inherits existing `toast.js` error mapping) |
 | Success | `--color-success` | `#2ECC71` | `text-success` | Auth-callback "✓ SIGNED IN" confirmation state (200ms flash before redirect) |
 | Warning | `--color-warning` | `#F39C12` | `text-warning` | Magic-link-sent state icon tint (the `mail` glyph that replaces the form); gentle "your session is on the way" semantic — not blue (not a primary action), not red (not an error) |
@@ -134,7 +134,7 @@ Google brand guidelines ship both "light" and "dark" button variants. On Counter
 ### Accent reserved for
 
 `#0D52BD` (blue) is reserved for:
-1. Primary CTA backgrounds — `SEND MAGIC LINK`, `SAVE`, `KEEP LOCAL PROFILE`
+1. Primary CTA backgrounds — `SEND MAGIC LINK`, `SAVE PROFILE`, `KEEP LOCAL PROFILE`
 2. Sidebar "SIGN IN" CTA background (anonymous profile-widget state)
 3. Email input `:focus-within` border + 12px `glow-blue` box-shadow
 4. First-sign-in prompt primary button (`KEEP LOCAL PROFILE` — preserves user's existing work, the empathetic default)
@@ -153,7 +153,7 @@ Google brand guidelines ship both "light" and "dark" button variants. On Counter
 - The OR divider (stays `text-muted` on `border-border-ghost`)
 - Field labels in signed-in settings modal (stay `text-primary` at 11/mono/700 — the overline treatment stays blue per existing line 123)
 - Modal card backgrounds (stay `bg-surface`)
-- `CLOSE` / `CANCEL` / secondary CTA backgrounds (stay `bg-surface-hover`)
+- `CLOSE MODAL` / `DISCARD CHANGES` / secondary CTA backgrounds (stay `bg-surface-hover`)
 - Magic-link-sent confirmation icon (uses `text-warning` per table above — gently tan, not accent-loud)
 
 ### Distribution audit
@@ -244,7 +244,7 @@ Swaps the modal body after `magic-link-sending` resolves. Same card, same X clos
 │   activate automatically when you click the link.            │
 │                                                               │
 │   ┌────────────────────────┐  ┌──────────────────────┐      │
-│   │      CLOSE             │  │  RESEND IN 27s       │      │  ← Two 40px CTAs, flex:1 each,
+│   │     CLOSE MODAL        │  │  RESEND IN 27s       │      │  ← Two 40px CTAs, flex:1 each,
 │   └────────────────────────┘  └──────────────────────┘      │     8px gap
 │                                                               │
 └──────────────────────────────────────────────────────────────┘
@@ -265,7 +265,7 @@ Single button that swaps text + `aria-disabled` based on cooldown state. **No se
 
 **Countdown implementation note (for planner):** Use `setInterval(fn, 1000)` anchored to `Date.now()` at send time; compute `remaining = max(0, 30 - floor((Date.now() - sentAt) / 1000))`. Immune to background-tab throttling the same way the Phase 9 turn timer is (wall-clock, not interval counter). Clear interval on modal close.
 
-**CLOSE button:** `bg-surface-hover` + `border-border-ghost`, label `CLOSE`, 11/mono/700. Closes the modal and dismisses — the pending magic-link session stays valid; `onAuthStateChange` will catch the activation when the user clicks their email link, regardless of whether the modal is open at that moment (D-12 rationale).
+**CLOSE MODAL button:** `bg-surface-hover` + `border-border-ghost`, label `CLOSE MODAL`, 11/mono/700. Closes the modal and dismisses — the pending magic-link session stays valid; `onAuthStateChange` will catch the activation when the user clicks their email link, regardless of whether the modal is open at that moment (D-12 rationale). The `CLOSE MODAL` label (vs bare `CLOSE`) reinforces the invitation to keep working with Counterflux while the magic link waits.
 
 ### 3. `/#auth-callback` Transition Overlay (D-06, D-11)
 
@@ -385,10 +385,10 @@ Refactor of `src/components/settings-modal.js`. Same 420px footprint, same heade
 │  │ James Arnall                                          │   │  ← 40px input, existing shape
 │  └──────────────────────────────────────────────────────┘   │
 │                                                              │
-│  ┌─ 40px ────────────┐  ┌─ 40px ────────────┐              │
-│  │      SAVE          │  │     CANCEL         │              │  ← existing action row
-│  └────────────────────┘  └────────────────────┘              │
-│                                                              │
+│  ┌─ 40px ──────────────┐  ┌─ 40px ──────────────────────┐  │
+│  │    SAVE PROFILE      │  │     DISCARD CHANGES         │  │  ← noun-anchored action row
+│  └──────────────────────┘  └─────────────────────────────┘  │     (replaces bare SAVE/CANCEL;
+│                                                              │     see Copywriting Contract)
 │  ─────────────────────────────────────────────────          │  ← 1px border-ghost separator,
 │                                                              │     24px top + bottom margin
 │                                                              │
@@ -407,6 +407,7 @@ Refactor of `src/components/settings-modal.js`. Same 420px footprint, same heade
 |---------|----------------------------|------------------------|
 | Email field | Editable 40px input | Read-only 32px chip with `bg-background` + `border-border-ghost`, `text-primary`, no focus ring (not interactive) |
 | `SIGNED IN AS` overline | Not present | New 11/mono/700/text-muted overline above the email chip |
+| Save / Cancel CTAs | Bare `SAVE` / `CANCEL` labels | Noun-anchored `SAVE PROFILE` / `DISCARD CHANGES` — clarifies what is being saved and what is being thrown away (display name + avatar edits). `DISCARD CHANGES` reads as an action rather than a bail-out, which is the correct semantic when the user may have typed into the display-name field. |
 | "Use Google avatar" button | Not present | **Conditionally rendered** — only if `auth.user.user_metadata.avatar_url` exists. Placed to the right of "UPLOAD PHOTO". If Google is not the auth provider (magic-link user without a Google-linked identity), **the button is omitted entirely** (not disabled, not hidden with opacity — removed from the DOM). D-15 rationale: don't tease a feature the user can't use. |
 | Sign Out button | Not present | New — separator rule + 40px full-width destructive-styled button at bottom. On click: calls `auth.signOut()`, closes modal (D-21), profile store re-hydrates to local — all without navigation. |
 
@@ -428,7 +429,7 @@ Same footprint as today's modal plus one added surface at the top.
 │  │   device — but you can sync them to the cloud.        │  │
 │  │                                                        │  │
 │  │   ┌────────────────────────────────────────────────┐ │  │
-│  │   │               SIGN IN                           │ │  │  ← 40px primary CTA,
+│  │   │            SIGN IN TO SYNC                      │ │  │  ← 40px primary CTA,
 │  │   └────────────────────────────────────────────────┘ │  │     opens auth-modal,
 │  │                                                        │  │     closes settings-modal
 │  └────────────────────────────────────────────────────────┘  │
@@ -444,7 +445,8 @@ Same footprint as today's modal plus one added surface at the top.
 │                                                              │     users can still write here,
 │                                                              │     cloud doesn't own it yet)
 │                                                              │
-│  [SAVE] [CANCEL]                                             │
+│  [SAVE PROFILE] [DISCARD CHANGES]                            │  ← same noun-anchored action row
+│                                                              │     as signed-in state
 └──────────────────────────────────────────────────────────────┘
 ```
 
@@ -453,9 +455,11 @@ Same footprint as today's modal plus one added surface at the top.
 | Element | Today | Refactored (signed-out) |
 |---------|-------|-------------------------|
 | Sync CTA card | Not present | New — 24px padded card at the top, `bg-surface-hover` + 1px `border-primary` (not ghost-border — this is the only in-modal surface that uses primary as a border, exactly to pull the eye). |
+| Sync CTA button label | — | `SIGN IN TO SYNC` — mirrors the card heading, reinforces benefit clarity (not a bare "SIGN IN"). |
+| Save / Cancel CTAs | Bare `SAVE` / `CANCEL` | Upgraded to `SAVE PROFILE` / `DISCARD CHANGES` in step with the signed-in refactor. One label vocabulary across both states avoids surprise when a user signs in and the action row shifts identity. |
 | Rest of modal | Unchanged | Unchanged. |
 
-**`SIGN IN` CTA behaviour:** Click closes settings-modal, opens auth-modal. This means users can open settings → see the CTA → click through to auth without interrupting their flow. Rationale: some users will explore settings before signing in (checking "is this an account-less app?") and the CTA needs to be **in the place they'll look**.
+**`SIGN IN TO SYNC` CTA behaviour:** Click closes settings-modal, opens auth-modal. This means users can open settings → see the CTA → click through to auth without interrupting their flow. Rationale: some users will explore settings before signing in (checking "is this an account-less app?") and the CTA needs to be **in the place they'll look**.
 
 ### 7. Sidebar Profile Widget (refactor per D-09)
 
@@ -511,7 +515,7 @@ Click opens settings-modal.
 | Magic-link-sent swap (within modal) | `opacity` cross-fade of body content (header stays mounted) | 180ms | ease-out |
 | Google button hover | `background-color` `#131314 → #1F1F1F` | 120ms | ease-out |
 | Email input focus | `border-color` + `box-shadow` (glow-blue) | 150ms | ease-out |
-| Primary CTA hover (`SEND MAGIC LINK`, `SAVE`, `KEEP LOCAL PROFILE`) | `box-shadow: 0 0 12px var(--color-glow-blue)` fade-in | 150ms | ease-out |
+| Primary CTA hover (`SEND MAGIC LINK`, `SAVE PROFILE`, `KEEP LOCAL PROFILE`, `SIGN IN TO SYNC`) | `box-shadow: 0 0 12px var(--color-glow-blue)` fade-in | 150ms | ease-out |
 | `SIGN OUT` hover | `background-color` transparent → `rgba(226,56,56,0.1)` + `box-shadow: 0 0 8px var(--color-glow-red)` | 120ms | ease-out |
 | Resend cooldown tick | Text content swap every 1s — no transition (instant) | 0ms | n/a |
 | First-sign-in prompt open | `opacity 0 → 1` backdrop + `scale 0.96 → 1` card (slightly more dramatic than auth-modal — consequential decision deserves presence) | 240ms | ease-out |
@@ -555,7 +559,7 @@ All terminal chrome + CTAs use JetBrains Mono 11/700 uppercase. Body copy uses S
 | Swapped heading | `CHECK YOUR INBOX` |
 | Primary body | `We sent a link to {email}. Click it to sign in.` (user's email interpolated) |
 | Secondary body | `Close this modal and keep working — your session will activate automatically when you click the link.` |
-| CLOSE CTA | `CLOSE` |
+| Close CTA | `CLOSE MODAL` |
 | Resend CTA (cooldown active) | `RESEND IN {Ns}` (ticks every second) |
 | Resend CTA (ready) | `RESEND MAGIC LINK` |
 | Resend CTA (sending) | `SENDING…` |
@@ -601,8 +605,8 @@ All terminal chrome + CTAs use JetBrains Mono 11/700 uppercase. Body copy uses S
 | Use Google avatar CTA | `USE GOOGLE AVATAR` |
 | Remove avatar CTA | `REMOVE` (existing) |
 | Display name label | `DISPLAY NAME` |
-| Save CTA | `SAVE` (existing) |
-| Cancel CTA | `CANCEL` (existing) |
+| Save CTA | `SAVE PROFILE` — noun-anchored, replaces legacy bare `SAVE`. Disambiguates from any future "save deck / save collection / save setting" action and anchors the label to the "Profile updated." success toast already declared on the next line. |
+| Cancel CTA | `DISCARD CHANGES` — noun-anchored, replaces legacy bare `CANCEL`. Communicates the actual effect (display-name + avatar edits are thrown away) rather than a generic "bail out" semantic, and keeps parity with the destructive-but-reversible tone of the surrounding modal. |
 | Sign out CTA | `SIGN OUT` |
 | Save success toast | `Profile updated.` (existing) |
 | Sign-out success toast | `Signed out. Your data stays on this device.` (anchors D-22 — explicitly reassures that local Dexie is untouched) |
@@ -615,7 +619,9 @@ All terminal chrome + CTAs use JetBrains Mono 11/700 uppercase. Body copy uses S
 |---------|------|
 | Sync CTA card heading | `Sign in to sync across devices` |
 | Sync CTA card body | `Your collection, decks, and games stay on this device — but you can sync them to the cloud.` |
-| Sync CTA button | `SIGN IN` |
+| Sync CTA button | `SIGN IN TO SYNC` — mirrors the card heading, keeps benefit-clarity in the CTA itself (not a bare `SIGN IN`). |
+| Save CTA | `SAVE PROFILE` (same noun-anchored label as the signed-in state — one vocabulary across both auth states) |
+| Cancel CTA | `DISCARD CHANGES` (same noun-anchored label as the signed-in state) |
 
 ### Sidebar profile widget
 
@@ -626,6 +632,8 @@ All terminal chrome + CTAs use JetBrains Mono 11/700 uppercase. Body copy uses S
 | Authed widget name line | `{profile.name}` or `{auth.user.user_metadata.full_name}` or `{auth.user.email.split('@')[0]}` (priority order) |
 | Authed widget email line | `{auth.user.email}` |
 | Authed widget aria-label | `Open settings — signed in as {name}` |
+
+> **Sidebar CTA note:** The sidebar `SIGN IN` label stays bare (not `SIGN IN TO SYNC`) because the widget is spatially anchored, persistent chrome — the user sees it constantly, and a single verb + subject on repeat chrome reads cleaner than a 3-word phrase. The settings-modal sync CTA, by contrast, is only visible when the user explicitly opens settings; there, the longer benefit-clarity label earns its keep. Same action, different surface, different copy budget.
 
 ### Toasts (wired through existing `toast.js` store)
 
@@ -654,12 +662,14 @@ All terminal chrome + CTAs use JetBrains Mono 11/700 uppercase. Body copy uses S
 - Numbers as digits (`30s`, `60 minutes`), never spelled out.
 - The word "password" appears exactly zero times in user-facing copy (Counterflux is passwordless — mentioning passwords would confuse the mental model).
 - Error copy always pairs a problem statement with a next action (`...try sending a fresh magic link`, `...check your connection and try again`, `...wait a minute and try again`). No dead-ends.
+- **CTAs are noun-anchored.** Labels name what the action operates on (`SAVE PROFILE`, `DISCARD CHANGES`, `SEND MAGIC LINK`, `CLOSE MODAL`, `SIGN IN TO SYNC`) rather than relying on bare verbs (`SAVE`, `CANCEL`, `SEND`, `CLOSE`, `OK`). Exception: single-word CTAs where the surrounding context fully disambiguates — the sidebar `SIGN IN` (persistent chrome, one action), `REMOVE` (sits next to the avatar it removes), `START FRESH` (its sibling `KEEP LOCAL PROFILE` tells the user what "fresh" means), `SIGN OUT` (universally understood, and the destructive styling reinforces it).
 
 ### Destructive actions in Phase 10
 
 | Action | Confirmation approach |
 |--------|----------------------|
 | Sign out | **No `window.confirm` dialog.** Single click → session cleared → toast surfaces `Signed out. Your data stays on this device.`. Rationale: the destructive signal is already in the button colour (secondary red + glow-red on hover), the local data is untouched (D-22), and the user can simply sign back in. Confirmation dialogs for reversible actions are friction, not safety. |
+| Discard changes (`DISCARD CHANGES` in settings modal) | **No `window.confirm` dialog.** The label itself names the consequence (changes discarded, not "cancelled"). Pressing the button reverts the display-name + avatar fields to their last-saved values and closes the edit mode. The user can re-enter edits if they misclicked. Reversible action; no dialog-on-top-of-dialog. |
 | Clear local profile (`REMOVE` avatar, blank display name, save) | No confirmation — non-destructive, fully reversible by re-entering. Existing pattern. |
 | "Start fresh" in first-sign-in prompt | **The prompt itself is the confirmation.** Two explicit buttons, impossible to dismiss by accident (Escape + backdrop disabled). "Start fresh" does not delete the localStorage profile per D-19 — it's still there if the user signs out. No dialog-on-top-of-dialog. |
 
@@ -670,9 +680,9 @@ All terminal chrome + CTAs use JetBrains Mono 11/700 uppercase. Body copy uses S
 | Dimension | Contract |
 |-----------|----------|
 | Colour contrast | Primary CTA white on `#0D52BD` = 7.0:1 (AAA). Text-primary `#EAECEE` on `bg-surface #14161C` = 15.7:1 (AAA). Text-muted `#7A8498` on `#14161C` = 4.6:1 (AA body). Text-secondary `#E23838` on `#14161C` = 5.2:1 (AA body — validated for error copy + sign-out label). Google button text `#E3E3E3` on Google's `#131314` = 13.4:1 (AAA). |
-| Keyboard navigation | Auth modal tab order: Google button → email input → SEND MAGIC LINK → X close. Magic-link-sent state: CLOSE → RESEND. First-sign-in prompt: KEEP LOCAL PROFILE → START FRESH (no other focusable surfaces — Escape and backdrop are disabled). Settings modal (signed-in): X close → SIGNED IN AS chip (skipped, not focusable) → avatar UPLOAD → USE GOOGLE AVATAR (if present) → REMOVE → DISPLAY NAME → SAVE → CANCEL → SIGN OUT. Settings modal (signed-out): X → sync-CTA SIGN IN → AVATAR UPLOAD → REMOVE → DISPLAY NAME → EMAIL → SAVE → CANCEL. |
+| Keyboard navigation | Auth modal tab order: Google button → email input → SEND MAGIC LINK → X close. Magic-link-sent state: CLOSE MODAL → RESEND. First-sign-in prompt: KEEP LOCAL PROFILE → START FRESH (no other focusable surfaces — Escape and backdrop are disabled). Settings modal (signed-in): X close → SIGNED IN AS chip (skipped, not focusable) → avatar UPLOAD → USE GOOGLE AVATAR (if present) → REMOVE → DISPLAY NAME → SAVE PROFILE → DISCARD CHANGES → SIGN OUT. Settings modal (signed-out): X → sync-CTA SIGN IN TO SYNC → AVATAR UPLOAD → REMOVE → DISPLAY NAME → EMAIL → SAVE PROFILE → DISCARD CHANGES. |
 | Focus ring | `2px solid var(--color-primary)` with `outline-offset: 2px` on every focusable surface except the Google button, which uses its own `2px solid var(--color-primary)` outline with 2px offset (Google brand guidelines don't prescribe a focus style; we supply one that matches the rest of the app). Never suppress. |
-| Screen reader labels | Auth modal: `aria-labelledby` pointing to the `SIGN IN` heading. X close: `aria-label="Close sign in"`. Google button: `aria-label="Sign in with Google"`. Email input: `aria-label="Email"` + linked `<label>`. SEND MAGIC LINK button: inherits visible text. Resend button in cooldown: `aria-label="Resend magic link — available in 27 seconds"` (interpolated seconds). First-sign-in prompt: `role="dialog"` + `aria-modal="true"` + `aria-labelledby="welcome-back-heading"` + `aria-describedby="welcome-back-body"`. Sidebar profile widget (anonymous): `aria-label="Sign in"`. Sidebar profile widget (authed): `aria-label="Open settings — signed in as {name}"`. Sign out button: `aria-label="Sign out"` (visible text is clear enough, but explicit for screen readers). |
+| Screen reader labels | Auth modal: `aria-labelledby` pointing to the `SIGN IN` heading. X close: `aria-label="Close sign in"`. Google button: `aria-label="Sign in with Google"`. Email input: `aria-label="Email"` + linked `<label>`. SEND MAGIC LINK button: inherits visible text. Resend button in cooldown: `aria-label="Resend magic link — available in 27 seconds"` (interpolated seconds). First-sign-in prompt: `role="dialog"` + `aria-modal="true"` + `aria-labelledby="welcome-back-heading"` + `aria-describedby="welcome-back-body"`. Sidebar profile widget (anonymous): `aria-label="Sign in"`. Sidebar profile widget (authed): `aria-label="Open settings — signed in as {name}"`. Sign out button: `aria-label="Sign out"` (visible text is clear enough, but explicit for screen readers). Settings modal save/cancel: `aria-label="Save profile"` / `aria-label="Discard changes"` inherit visible text — no override needed. |
 | ARIA live regions | Magic-link-sent body content (the `CHECK YOUR INBOX` swap) wraps in `aria-live="polite"` so screen readers announce the new state without being abrasive. Resend countdown is **not** wrapped in `aria-live` — announcing every second would be deafening; the button's `aria-label` update on click is sufficient. |
 | Focus trap | Auth modal, first-sign-in prompt, and settings modal all trap focus inside the card (tab from last element wraps to first). Implement via a thin `focus-trap` utility inside each component's open handler — no library required. |
 | Focus restoration | Auth modal close → focus returns to the sidebar "SIGN IN" CTA (anonymous) or to whatever triggered it. Settings modal close → focus returns to the sidebar profile widget. First-sign-in prompt closes into settings-modal being auto-hidden → focus lands on the sidebar profile widget. Auth-callback overlay unmounts → focus lands on the first element of the destination screen (same behaviour as any route change — no special handling needed). |
@@ -686,7 +696,7 @@ All terminal chrome + CTAs use JetBrains Mono 11/700 uppercase. Body copy uses S
 | Surface | State | Heading | Body | CTA |
 |---------|-------|---------|------|-----|
 | Auth modal | Default (no interaction yet) | `SIGN IN` | *(none — the modal itself is the empty state)* | Google + magic-link |
-| Settings modal (signed-out) | User has never signed in | Standard form + sync-CTA card at top | `Your collection, decks, and games stay on this device — but you can sync them to the cloud.` | `SIGN IN` |
+| Settings modal (signed-out) | User has never signed in | Standard form + sync-CTA card at top | `Your collection, decks, and games stay on this device — but you can sync them to the cloud.` | `SIGN IN TO SYNC` |
 | Sidebar profile widget | Anonymous | `SIGN IN` | *(widget body)* | *(the CTA is the widget)* |
 | First-sign-in prompt | User has no localStorage profile | **Prompt is skipped entirely (D-20)** — fresh cloud row written silently | n/a | n/a |
 
@@ -730,7 +740,7 @@ Phase 10 ships zero third-party UI registry imports. Every new component is auth
 | `src/components/auth-modal.js` | **New** — vanilla-DOM modal mirroring `settings-modal.js` mount pattern; two body states (idle / magic-link-sent) swap via DOM replacement | AUTH-02 + AUTH-03, D-08, D-10, D-12 |
 | `src/components/first-sign-in-prompt.js` | **New** — vanilla-DOM modal mirroring `migration-blocked-modal.js` mount pattern (no Escape / backdrop dismiss; consequential decision) | D-16..D-20 |
 | `src/components/auth-callback-overlay.js` | **New** — splash-style full-screen overlay mounted by router on `/auth-callback` match; torn down after `exchangeCodeForSession` resolves + navigation fires | D-06, D-11 |
-| `src/components/settings-modal.js` | **Refactor** — branch on `Alpine.store('auth').status` at render time; signed-in path adds `SIGNED IN AS` chip + `USE GOOGLE AVATAR` button (conditional) + separator + `SIGN OUT` button; signed-out path adds the sync-CTA card at top | D-13, D-14 |
+| `src/components/settings-modal.js` | **Refactor** — branch on `Alpine.store('auth').status` at render time; signed-in path adds `SIGNED IN AS` chip + `USE GOOGLE AVATAR` button (conditional) + separator + `SIGN OUT` button; both paths upgrade the action row from bare `SAVE`/`CANCEL` to noun-anchored `SAVE PROFILE`/`DISCARD CHANGES`; signed-out path adds the sync-CTA card at top with a `SIGN IN TO SYNC` button | D-13, D-14 |
 | `src/components/sidebar.js` | **Edit** — profile-widget click handler branches on `auth.status`; anonymous shows `SIGN IN` CTA, authed shows name + avatar opening settings-modal. Label `Set up profile` / `displayName` binding swaps out. (Layout is rendered via Alpine directives in `index.html`; the `.js` helper just provides the branch.) | D-09 |
 | `index.html` | **Edit** — sidebar profile widget Alpine template gets signed-in / signed-out branch. Add `<div id="cf-auth-modal-root">` + `<div id="cf-first-sign-in-root">` empty mount points near `<body>` bottom if the modals need named roots (or they can mount to `body` directly — Claude's discretion during planning). | D-09, D-13 |
 | `src/stores/auth.js` | **New** — Alpine store with shape from D-30: `{ status, user, session, signInMagic, signInGoogle, signOut, init }`; subscribes to Supabase `onAuthStateChange` and flips `status` | D-28, D-30, AUTH-05 |
@@ -755,11 +765,12 @@ For the executor + auditor: these are the seven QA anchors the finished Phase 10
 
 1. **Lazy-load discipline** — Open DevTools Network tab, cold-boot the app as anonymous, navigate every screen: **no `supabase-js` chunk loads**. Only when the user clicks the sidebar `SIGN IN` CTA does the chunk fetch. (Not strictly visual, but the promise of AUTH-01 and the foundation for every other Phase 10 surface behaving correctly.)
 2. **Google button brand fidelity** — Open auth-modal. Google button renders with the official "G" multi-colour SVG, dark-theme `#131314` background, `#8E918F` 1px border, `#E3E3E3` text. No `bg-primary` tint, no mono G mark.
-3. **In-modal swap without screen takeover** — Submit a magic-link email. The modal body swaps to `CHECK YOUR INBOX` with the warning-tinted mail icon. The X close still works. Clicking CLOSE dismisses the modal; the Counterflux app behind it is still usable — not blocked by an overlay. Clicking the magic link in the user's email (separate tab) activates the session transparently; `onAuthStateChange` fires; the app's sidebar profile widget flips from anonymous to authed without the user revisiting the tab.
+3. **In-modal swap without screen takeover** — Submit a magic-link email. The modal body swaps to `CHECK YOUR INBOX` with the warning-tinted mail icon. The X close still works. Clicking `CLOSE MODAL` dismisses the modal; the Counterflux app behind it is still usable — not blocked by an overlay. Clicking the magic link in the user's email (separate tab) activates the session transparently; `onAuthStateChange` fires; the app's sidebar profile widget flips from anonymous to authed without the user revisiting the tab.
 4. **Pre-auth route preservation** — Anonymous user navigates to `/#/thousand-year-storm/{deckId}`, clicks sidebar `SIGN IN`, completes Google OAuth. The auth-callback overlay shows for <2s, then the app lands back at `/#/thousand-year-storm/{deckId}` — not the dashboard.
 5. **First-sign-in prompt, then skipped** — First sign-in with a non-empty localStorage profile triggers the `WELCOME BACK` prompt. Clicking `KEEP LOCAL PROFILE` closes it and writes the cloud row. Sign out and sign back in → prompt does not appear a second time (the cloud row exists, so there's nothing to reconcile). A user with no localStorage profile never sees the prompt on first sign-in.
 6. **Sign-out preserves local data** — Sign in, add a card to collection, sign out. Collection count unchanged. Settings modal (if reopened) shows the signed-out view with the sync-CTA card at top. The route the user was on is unchanged — no navigation.
 7. **Google avatar conditional button** — Sign in with Google → settings modal shows three avatar CTAs in a row (`UPLOAD PHOTO`, `USE GOOGLE AVATAR`, `REMOVE`). Sign in with magic link (no Google identity) → settings modal shows only two avatar CTAs (`UPLOAD PHOTO`, `REMOVE`). The `USE GOOGLE AVATAR` button is **not rendered** at all for magic-link users — not disabled, not hidden, absent.
+8. **Noun-anchored settings CTAs** — Open settings modal (signed-in or signed-out). Action row reads `SAVE PROFILE` / `DISCARD CHANGES`, never bare `SAVE` / `CANCEL`. Tab order matches the accessibility contract. `SAVE PROFILE` hover shows the glow-blue shadow; `DISCARD CHANGES` uses `bg-surface-hover` (secondary treatment — reversible, non-destructive action styling).
 
 ---
 
@@ -776,4 +787,4 @@ For the executor + auditor: these are the seven QA anchors the finished Phase 10
 
 ---
 
-*Generated by gsd-ui-researcher 2026-04-17. Anchored to `src/styles/main.css` `@theme` tokens and canonical `.planning/milestones/v1.0-phases/01-foundation-data-layer/01-UI-SPEC.md`. All decisions pre-populated from `10-CONTEXT.md` D-08..D-22 (identity UX) + D-28..D-31 (store init UX) + Claude's Discretion items resolved inline — no new user input required.*
+*Generated by gsd-ui-researcher 2026-04-17. Revised 2026-04-17 — fixed copywriting BLOCK (SAVE → SAVE PROFILE, CANCEL → DISCARD CHANGES); applied optional FLAGs (CLOSE → CLOSE MODAL in magic-link-sent state, SIGN IN → SIGN IN TO SYNC on settings-modal sync card). Anchored to `src/styles/main.css` `@theme` tokens and canonical `.planning/milestones/v1.0-phases/01-foundation-data-layer/01-UI-SPEC.md`. All decisions pre-populated from `10-CONTEXT.md` D-08..D-22 (identity UX) + D-28..D-31 (store init UX) + Claude's Discretion items resolved inline — no new user input required.*
