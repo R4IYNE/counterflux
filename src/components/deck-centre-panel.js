@@ -5,6 +5,35 @@ import { openDeckImportModal } from './deck-import-modal.js';
 import { openDeckExportModal } from './deck-export-modal.js';
 
 /**
+ * @typedef {Object} ActiveDeck
+ * @property {string} id           UUID PK (Phase 7 v8 decks table; verified
+ *                                 unindexed-but-stored row field).
+ * @property {string} name
+ * @property {string} format       Always 'commander' for v1.x.
+ * @property {string|null} commander_id  Scryfall ID. NOT an indexed column on
+ *                                 the v8/v9 decks declaration (see
+ *                                 src/db/schema.js:312/395 — `decks: 'id, name,
+ *                                 format, user_id, updated_at, synced_at'`),
+ *                                 but Dexie accepts arbitrary row fields and
+ *                                 src/stores/deck.js createDeck() writes it
+ *                                 alongside the indexed columns. Per
+ *                                 09-CONTEXT D-07 + 09-RESEARCH P-9, legacy
+ *                                 v1.0 decks predating the field carry it as
+ *                                 null; downstream consumers (DECK-05 commander
+ *                                 section) must fall back to deriving the
+ *                                 commander from the deck's first Legendary
+ *                                 Creature/Planeswalker matching the deck's
+ *                                 colour-identity union.
+ * @property {string|null} partner_id
+ * @property {string|null} companion_id
+ * @property {string[]} color_identity
+ * @property {string[]} tags
+ * @property {number} deck_size
+ * @property {string} created_at
+ * @property {string} updated_at
+ */
+
+/**
  * Deck centre panel -- the 99.
  * Shows cards grouped by type with grid/list views and SortableJS drag-and-drop.
  *
