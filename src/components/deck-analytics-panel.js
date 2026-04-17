@@ -597,33 +597,65 @@ export function renderDeckAnalyticsPanel(container) {
       nearMissContainer.appendChild(noneEl);
     }
 
-    // --- Intelligence: Gap warnings inline in tag breakdown ---
+    // --- Intelligence: Gap warnings inline in tag breakdown (DECK-03 RAG) ---
+    // Per 09-CONTEXT D-04: badge format `[RED] +N` or `[AMBER] +N`. NO
+    // category-name duplication (the category already labels the parent
+    // tag row). NO badge for green severity (suppressed entirely).
+    // Brand colours per CLAUDE.md: red `#E23838`, amber `#F59E0B`, with
+    // 20% alpha background fill (hex `33` suffix) and full-saturation text.
+    //
+    // Where the matching tag row exists, append the badge to it (visual
+    // locality wins). For categories without a corresponding row (Lands,
+    // Creatures — they live in typeBreakdown), fall back to a panel-level
+    // chip so the warning stays visible.
     if (intel?.gaps?.length > 0) {
       const tagRows = tagBarsContainer.querySelectorAll(':scope > div');
+      const renderedCategories = new Set();
+
       for (const gap of intel.gaps) {
-        // Find matching tag row by name
+        if (gap.severity === 'green') continue;
+        if (renderedCategories.has(gap.category)) continue;
+        renderedCategories.add(gap.category);
+
+        const colour = gap.severity === 'red' ? '#E23838' : '#F59E0B';
+        const badge = document.createElement('span');
+        badge.className = `gap-badge-rag gap-badge-${gap.severity}`;
+        badge.dataset.gapCategory = gap.category;
+        badge.textContent = `[${gap.severity.toUpperCase()}] +${gap.suggestedAdd}`;
+        badge.style.cssText = `
+          margin-left: 8px;
+          padding: 2px 6px;
+          font-family: 'JetBrains Mono', monospace;
+          font-size: 10px;
+          font-weight: 700;
+          letter-spacing: 0.05em;
+          color: ${colour};
+          background: ${colour}33;
+          border: 1px solid ${colour};
+          flex-shrink: 0;
+          display: inline-flex;
+          align-items: center;
+        `;
+
+        // Try to attach to the matching tag row first (visual locality wins);
+        // fall back to a panel-level chips container otherwise.
+        let attached = false;
         for (const row of tagRows) {
           const nameSpan = row.querySelector('span');
           if (nameSpan && nameSpan.textContent.trim() === gap.category) {
-            // Check if warning already exists
-            if (row.querySelector('.gap-warning, .gap-critical')) break;
-            const warnEl = document.createElement('span');
-            warnEl.className = gap.severity === 'critical' ? 'gap-critical' : 'gap-warning';
-            warnEl.style.cssText += ` ${LABEL_400} margin-left: 8px; flex-shrink: 0;`;
-            const iconEl = document.createElement('span');
-            iconEl.className = 'material-symbols-outlined';
-            iconEl.style.fontSize = '14px';
-            iconEl.textContent = 'warning';
-            warnEl.appendChild(iconEl);
-            const textNode = document.createTextNode(
-              gap.severity === 'critical'
-                ? ` ${gap.category}: ${gap.count} CARDS -- CRITICALLY LOW`
-                : ` ${gap.category}: ${gap.count} CARDS -- BELOW ${gap.threshold}`
-            );
-            warnEl.appendChild(textNode);
-            row.appendChild(warnEl);
+            if (row.querySelector(`[data-gap-category="${gap.category}"]`)) {
+              attached = true;
+              break;
+            }
+            row.appendChild(badge);
+            attached = true;
             break;
           }
+        }
+        if (!attached) {
+          // Lands / Creatures / categories without a tag row — render at the
+          // tail of the tag-bars container so the warning stays visible.
+          tagBarsContainer.appendChild(badge);
         }
       }
     }

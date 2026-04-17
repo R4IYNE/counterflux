@@ -21,7 +21,12 @@ vi.mock('alpinejs', () => ({
 }));
 
 vi.mock('chart.js', () => {
-  const ChartCtor = vi.fn(function () {
+  const ChartCtor = vi.fn(function (canvas, config) {
+    // Carry the original config through so the panel's update path
+    // (`chart.data.datasets[0].data = ...`) doesn't crash on second render.
+    this.canvas = canvas;
+    this.data = config?.data ? JSON.parse(JSON.stringify(config.data)) : { labels: [], datasets: [{ data: [] }] };
+    this.options = config?.options;
     this.destroy = vi.fn();
     this.update = vi.fn();
   });
@@ -63,12 +68,25 @@ import { renderDeckAnalyticsPanel } from '../src/components/deck-analytics-panel
 
 function seedStores(intel = {}) {
   __stores.deck = {
-    activeDeck: { id: 'd1', name: 'Test Deck', commander_id: null },
+    activeDeck: { id: 'd1', name: 'Test Deck', commander_id: null, tags: ['Ramp'] },
     activeCards: [
       { card: { id: 'c1', name: 'Card 1', cmc: 2, type_line: 'Sorcery', mana_cost: '{1}{R}', prices: { eur: '0.10' } }, quantity: 1, tags: ['Ramp'], owned: true },
     ],
     cardCount: 1,
     activeEntries: [],
+    // updateAllSections() pulls store.analytics as `analytics`. Provide a
+    // minimal but well-shaped object so the gap-warning render path
+    // downstream still runs even when the analytics path is mocked.
+    analytics: {
+      manaCurve: { 0: 0, 1: 0, 2: 1, 3: 0, 4: 0, 5: 0, 6: 0, '7+': 0 },
+      colourPie: { W: 0, U: 0, B: 0, R: 1, G: 0, C: 0 },
+      typeBreakdown: { Sorcery: 1 },
+      tagBreakdown: { Ramp: 1 },
+      averageCmc: 2,
+      totalPrice: 0.1,
+      unownedPrice: 0,
+      mostExpensive: { name: 'Card 1', price: 0.1 },
+    },
   };
   __stores.intelligence = {
     synergies: [],
@@ -84,13 +102,25 @@ function seedStores(intel = {}) {
 }
 
 describe('deck-analytics-panel gap badge (DECK-03)', () => {
+  let originalAlpine;
+
   beforeEach(() => {
     document.body.innerHTML = '<div id="container"></div>';
     Object.keys(__stores).forEach((k) => delete __stores[k]);
+    // The panel reads `window.Alpine` directly (not the import). Stub
+    // window.Alpine onto the same __stores backing the vi.mock so the
+    // panel and vi.mock'd consumers share state.
+    originalAlpine = window.Alpine;
+    window.Alpine = {
+      store: (name) => __stores[name] || null,
+      effect: () => () => {},
+      data: () => {},
+    };
   });
 
   afterEach(() => {
     document.body.innerHTML = '';
+    window.Alpine = originalAlpine;
   });
 
   it('renders [RED] +6 badge for red severity gap, no category name in badge body', () => {

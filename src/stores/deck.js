@@ -112,9 +112,12 @@ export function initDeckStore() {
           intel.fetchCombos(deckInfo, this.activeCards);
         }
         intel.loadDeckThresholds(deckId);
-        // Gap detection is synchronous — runs immediately from local analytics
+        // Gap detection is synchronous — runs immediately from local analytics.
+        // Phase 9 Plan 1 Task 3 (DECK-03): pass deck.tags so the creature
+        // threshold archetype-switch (Tribal/Aggro vs Spellslinger/Control)
+        // resolves correctly.
         const analytics = computeDeckAnalytics(this.activeCards);
-        intel.updateGaps(analytics, this.activeDeck.deck_size || 100);
+        intel.updateGaps(analytics, this.activeDeck.deck_size || 100, this.activeDeck.tags || []);
       }
     },
 

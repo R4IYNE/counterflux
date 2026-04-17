@@ -7,7 +7,12 @@ import {
   fetchTopSaltMap,
 } from '../services/edhrec.js';
 import { findDeckCombos } from '../services/spellbook.js';
-import { detectGaps, DEFAULT_THRESHOLDS } from '../utils/gap-detection.js';
+import {
+  detectGaps,
+  DEFAULT_THRESHOLDS,
+  detectGapsRAG,
+  RAG_THRESHOLDS,
+} from '../utils/gap-detection.js';
 
 /**
  * Cache staleness threshold for combo data (24 hours).
@@ -189,15 +194,37 @@ export function initIntelligenceStore() {
 
     /**
      * Detect category gaps by comparing analytics against thresholds.
+     *
+     * Phase 9 Plan 1 Task 3 (DECK-03): switched from the two-tier
+     * critical/warning detector to the three-tier RAG detector. The new
+     * shape carries `severity: 'red' | 'amber' | 'green'` plus
+     * `suggestedAdd` so deck-analytics-panel can render the
+     * `[RED|AMBER] +N` badge format mandated by D-04. Per-deck custom
+     * thresholds (this.thresholds, set via saveDeckThresholds) override
+     * RAG_THRESHOLDS keys defensively — callers historically passed
+     * single-number values (legacy DEFAULT_THRESHOLDS shape), so we
+     * normalise those into { green: N, amber: round(N * 0.6) } before
+     * feeding detectGapsRAG.
+     *
      * @param {Object} analytics - Output from computeDeckAnalytics
      * @param {number} deckSize - Total deck size (default 100)
+     * @param {string[]} deckTags - Strategy tags for archetype-aware
+     *                              creature threshold pick (D-03 RESEARCH).
      */
-    updateGaps(analytics, deckSize = 100) {
-      this.gaps = detectGaps(
-        analytics,
-        this.thresholds || DEFAULT_THRESHOLDS,
-        deckSize
-      );
+    updateGaps(analytics, deckSize = 100, deckTags = []) {
+      let ragMap = RAG_THRESHOLDS;
+      if (this.thresholds) {
+        // Normalise legacy single-number thresholds into { green, amber }
+        // so saveDeckThresholds doesn't have to be touched in this PR.
+        const normalised = {};
+        for (const [k, v] of Object.entries(this.thresholds)) {
+          normalised[k] = (typeof v === 'number')
+            ? { green: v, amber: Math.max(1, Math.round(v * 0.6)) }
+            : v;
+        }
+        ragMap = normalised;
+      }
+      this.gaps = detectGapsRAG(analytics, ragMap, deckTags, deckSize);
     },
 
     // === Per-deck threshold management ===
