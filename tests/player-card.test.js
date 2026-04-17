@@ -123,6 +123,44 @@ describe('player-card GAME-04 (Material Symbols counter glyphs)', () => {
   });
 });
 
+describe('player-card gap 4b (poison RAG colouring)', () => {
+  beforeEach(() => { mockPlayers = players2; });
+
+  it('poison count :style binding includes all three RAG colours', () => {
+    const container = mountGrid();
+    const html = container.innerHTML;
+    // Find the poison count span by proximity to skull glyph
+    const poisonPattern = /skull<\/span>[\s\S]{0,500}?player\.poison[\s\S]{0,300}?:style=["']([^"']+)["']/;
+    const match = html.match(poisonPattern);
+    expect(match).toBeTruthy();
+    const styleBinding = match[1];
+    expect(styleBinding).toContain('#22C55E'); // green
+    expect(styleBinding).toContain('#F59E0B'); // amber
+    expect(styleBinding).toContain('#E23838'); // red
+  });
+
+  it('poison RAG thresholds: 0-3 green, 4-7 amber, 8+ red (parsed ternary)', () => {
+    const container = mountGrid();
+    const html = container.innerHTML;
+    // The binding uses: (player.poison || 0) >= 8 ? #E23838 : (player.poison || 0) >= 4 ? #F59E0B : #22C55E
+    // Assert thresholds appear as literal 8 and 4 in the binding
+    const poisonBindingBlock = html.match(/player\.poison[\s\S]{0,300}?:style=["']([^"']+)["']/);
+    expect(poisonBindingBlock).toBeTruthy();
+    const binding = poisonBindingBlock[1];
+    expect(binding).toMatch(/player\.poison[^#]*>=\s*8[^#]*#E23838/);
+    expect(binding).toMatch(/player\.poison[^#]*>=\s*4[^#]*#F59E0B/);
+    // Default (green) must be last in the ternary chain
+    expect(binding).toContain('#22C55E');
+  });
+
+  it('existing row-level lethal-highlight at poison >= 10 remains intact', () => {
+    const container = mountGrid();
+    const html = container.innerHTML;
+    // The outer div binding on the poison row stays >= 10 for row lethal glow
+    expect(html).toMatch(/player\.poison[\s\S]{0,80}?>=\s*10[\s\S]{0,50}?lethal-highlight/);
+  });
+});
+
 describe('player-card GAME-06 (in-card counter +/- buttons)', () => {
   it('renders +/- buttons in expanded section that call $store.game.adjustCounter', () => {
     mockPlayers = players3;
