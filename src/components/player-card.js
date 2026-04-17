@@ -246,7 +246,7 @@ export function renderPlayerGrid() {
                 <span class="material-symbols-outlined" style="font-size: 16px;">remove</span>
               </button>
               <span class="font-mono text-[11px] font-bold min-w-[24px] text-center"
-                    :style="(player.poison || 0) >= 10 ? 'color: #E23838;' : 'color: #EAECEE;'"
+                    :style="'color: ' + ((player.poison || 0) >= 8 ? '#E23838' : (player.poison || 0) >= 4 ? '#F59E0B' : '#22C55E') + '; transition: color 200ms ease-out;'"
                     x-text="player.poison ?? 0"></span>
               <button
                 @click="$store.game.adjustPoison(pIdx, 1)"
