@@ -335,7 +335,7 @@ export function renderPlayerGrid() {
                           <span class="material-symbols-outlined" style="font-size: 16px;">remove</span>
                         </button>
                         <span class="syne-header text-[20px] font-bold min-w-[32px] text-center"
-                              style="color: #EAECEE;"
+                              :style="'color: ' + ((player.commander_damage[sIdx] || 0) >= 16 ? '#E23838' : (player.commander_damage[sIdx] || 0) >= 10 ? '#F59E0B' : '#22C55E') + '; transition: color 200ms ease-out;'"
                               x-text="player.commander_damage[sIdx] || 0"></span>
                         <button
                           @click="$store.game.adjustCommanderDamage(pIdx, sIdx, 1)"

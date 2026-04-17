@@ -167,13 +167,16 @@ describe('player-card gap 4c (commander damage RAG colouring)', () => {
   it('commander damage count :style binding includes all three RAG colours', () => {
     const container = mountGrid();
     const html = container.innerHTML;
-    // Find the commander damage count area — bounded by the shield_with_heart glyph
-    // and the x-text="player.commander_damage[sIdx] || 0" display.
+    // Find the commander damage count span — the x-text="player.commander_damage[sIdx] || 0" display.
+    // The first occurrence of commander_damage[sIdx] is in the row lethal-highlight :class binding;
+    // we want the second occurrence (the count span's x-text). Search from shield anchor, skip first.
     const shieldIdx = html.indexOf('>shield_with_heart<');
     expect(shieldIdx).toBeGreaterThan(-1);
-    const cdXTextIdx = html.indexOf('player.commander_damage[sIdx] || 0', shieldIdx);
-    expect(cdXTextIdx).toBeGreaterThan(shieldIdx);
-    const slice = html.slice(shieldIdx, cdXTextIdx + 100);
+    const firstCdIdx = html.indexOf('player.commander_damage[sIdx]', shieldIdx);
+    const countXTextIdx = html.indexOf('x-text="player.commander_damage[sIdx]', firstCdIdx + 1);
+    expect(countXTextIdx).toBeGreaterThan(firstCdIdx);
+    // Slice a window around the count-span — the :style binding is immediately before x-text
+    const slice = html.slice(countXTextIdx - 400, countXTextIdx + 100);
     expect(slice).toContain('#22C55E'); // green
     expect(slice).toContain('#F59E0B'); // amber
     expect(slice).toContain('#E23838'); // red
