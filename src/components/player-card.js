@@ -172,13 +172,13 @@ export function renderPlayerCard(playerIndex) {
  */
 export function renderPlayerGrid() {
   return `
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-[16px] pb-[80px]"
+    <div :class="$store.game.players.length === 3 ? 'cf-player-grid-3 pb-[80px]' : 'grid grid-cols-1 md:grid-cols-2 gap-[16px] pb-[80px]'"
          x-data
          x-init="$nextTick(() => { wireLifeButtons($el); })">
       <template x-for="(player, pIdx) in $store.game.players" :key="pIdx">
         <div class="ghost-border p-[16px] flex flex-col gap-[8px] cursor-pointer relative"
-             :class="'player-border-' + (player.color_index + 1)"
-             style="background: #14161C; transition: max-height 200ms ease-in-out; overflow: hidden;"
+             :class="'player-border-' + (player.color_index + 1) + ' ' + ($store.game.activePlayerIndex === pIdx ? 'cf-player-active' : '')"
+             style="background: #14161C; padding-bottom: 16px; transition: max-height 200ms ease-in-out, border-color 200ms ease-out, box-shadow 200ms ease-out; overflow: hidden;"
              @click="$store.game.toggleExpanded(pIdx)">
 
           <!-- Eliminated overlay -->
@@ -189,14 +189,15 @@ export function renderPlayerGrid() {
             </div>
           </template>
 
-          <!-- Player name + expand icon -->
-          <div class="flex items-center justify-between">
+          <!-- Player name + expand icon (GAME-01: ellipsis-truncate, full name in :title) -->
+          <div class="flex items-center justify-between" style="min-width: 0; gap: 8px;">
             <span class="syne-header text-[20px] font-bold"
-                  style="color: #EAECEE;"
+                  style="color: #EAECEE; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; flex: 1;"
+                  :title="player.name || 'Player'"
                   x-text="player.name || 'Player'"></span>
             <span class="material-symbols-outlined transition-transform"
                   :style="$store.game.expandedPlayer === pIdx ? 'transform: rotate(180deg); color: #0D52BD;' : 'color: #7A8498;'"
-                  style="font-size: 20px;">expand_more</span>
+                  style="font-size: 20px; flex-shrink: 0;">expand_more</span>
           </div>
 
           <!-- Commander name -->
@@ -215,7 +216,7 @@ export function renderPlayerGrid() {
             </button>
 
             <span class="syne-header text-[48px] font-bold min-w-[80px] text-center select-none life-display"
-                  style="color: #EAECEE; transition: transform 150ms ease-out;"
+                  :style="'color: ' + ((player.life ?? 40) > 20 ? '#22C55E' : (player.life ?? 40) > 10 ? '#F59E0B' : '#E23838') + '; transition: transform 150ms ease-out, color 200ms ease-out;'"
                   :data-player-index="pIdx"
                   x-text="player.life ?? 40"></span>
 
@@ -228,11 +229,14 @@ export function renderPlayerGrid() {
             </button>
           </div>
 
-          <!-- Poison counter -->
+          <!-- Poison counter (GAME-04: vaccines glyph) -->
           <div class="flex items-center justify-between px-[8px]" @click.stop
                :class="(player.poison || 0) >= 10 ? 'lethal-highlight' : ''">
-            <span class="font-mono text-[11px] uppercase tracking-[0.15em] font-bold"
-                  style="color: #7A8498;">POISON</span>
+            <div class="flex items-center gap-[6px]">
+              <span class="material-symbols-outlined" style="font-size: 16px; color: #7A8498;">vaccines</span>
+              <span class="font-mono text-[11px] uppercase tracking-[0.15em] font-bold"
+                    style="color: #7A8498;">POISON</span>
+            </div>
             <div class="flex items-center gap-[8px]">
               <button
                 @click="$store.game.adjustPoison(pIdx, -1)"
@@ -254,13 +258,16 @@ export function renderPlayerGrid() {
             </div>
           </div>
 
-          <!-- Tax counter -->
+          <!-- Tax counter (GAME-04: paid glyph) -->
           <div class="flex items-center justify-between px-[8px]" @click.stop>
-            <span class="font-mono text-[11px] tracking-[0.15em]"
-                  style="color: #7A8498;">
-              TAX: <span x-text="player.tax_count ?? 0"></span>
-              (<span x-text="(player.tax_count ?? 0) * 2"></span>)
-            </span>
+            <div class="flex items-center gap-[6px]">
+              <span class="material-symbols-outlined" style="font-size: 16px; color: #7A8498;">paid</span>
+              <span class="font-mono text-[11px] tracking-[0.15em]"
+                    style="color: #7A8498;">
+                TAX: <span x-text="player.tax_count ?? 0"></span>
+                (<span x-text="(player.tax_count ?? 0) * 2"></span>)
+              </span>
+            </div>
             <div class="flex items-center gap-[8px]">
               <button
                 @click="$store.game.adjustTax(pIdx, -1)"
@@ -306,10 +313,13 @@ export function renderPlayerGrid() {
           <!-- Expanded content (commander damage + counters) -->
           <template x-if="$store.game.expandedPlayer === pIdx">
             <div @click.stop>
-              <!-- Commander damage -->
+              <!-- Commander damage (GAME-04: shield_with_heart glyph) -->
               <div class="flex flex-col gap-[8px] mt-[16px]">
-                <span class="font-mono text-[11px] uppercase tracking-[0.15em] font-bold"
-                      style="color: #7A8498;">COMMANDER DAMAGE</span>
+                <div class="flex items-center gap-[6px]">
+                  <span class="material-symbols-outlined" style="font-size: 16px; color: #7A8498;">shield_with_heart</span>
+                  <span class="font-mono text-[11px] uppercase tracking-[0.15em] font-bold"
+                        style="color: #7A8498;">COMMANDER DAMAGE</span>
+                </div>
                 <template x-for="(source, sIdx) in $store.game.players" :key="'cd-' + sIdx">
                   <template x-if="sIdx !== pIdx">
                     <div class="flex items-center justify-between gap-[8px] px-[8px] py-[4px]"
