@@ -1,0 +1,19 @@
+{
+  "container": {
+    "json_dict": {
+      "cardlists": [
+        {
+          "tag": "topsalt",
+          "header": "Top Saltiest",
+          "cardviews": [
+            { "name": "Stasis", "sanitized": "stasis", "label": "Salt Score: 3.06\n15918 decks" },
+            { "name": "Smothering Tithe", "sanitized": "smothering-tithe", "label": "Salt Score: 2.84\n38201 decks" },
+            { "name": "Cyclonic Rift", "sanitized": "cyclonic-rift", "label": "Salt Score: 2.71\n92451 decks" },
+            { "name": "Armageddon", "sanitized": "armageddon", "label": "Salt Score: 2.65\n8743 decks" },
+            { "name": "Winter Orb", "sanitized": "winter-orb", "label": "Salt Score: 2.42\n4521 decks" }
+          ]
+        }
+      ]
+    }
+  }
+}
