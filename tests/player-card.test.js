@@ -161,6 +161,42 @@ describe('player-card gap 4b (poison RAG colouring)', () => {
   });
 });
 
+describe('player-card gap 4c (commander damage RAG colouring)', () => {
+  beforeEach(() => { mockPlayers = players3; }); // expandedPlayer === 2 renders damage tracker
+
+  it('commander damage count :style binding includes all three RAG colours', () => {
+    const container = mountGrid();
+    const html = container.innerHTML;
+    // Find the commander damage count area — bounded by the shield_with_heart glyph
+    // and the x-text="player.commander_damage[sIdx] || 0" display.
+    const shieldIdx = html.indexOf('>shield_with_heart<');
+    expect(shieldIdx).toBeGreaterThan(-1);
+    const cdXTextIdx = html.indexOf('player.commander_damage[sIdx] || 0', shieldIdx);
+    expect(cdXTextIdx).toBeGreaterThan(shieldIdx);
+    const slice = html.slice(shieldIdx, cdXTextIdx + 100);
+    expect(slice).toContain('#22C55E'); // green
+    expect(slice).toContain('#F59E0B'); // amber
+    expect(slice).toContain('#E23838'); // red
+  });
+
+  it('commander damage RAG thresholds: 0-9 green, 10-15 amber, 16+ red', () => {
+    const container = mountGrid();
+    const html = container.innerHTML;
+    // The count-span binding uses: (player.commander_damage[sIdx] || 0) >= 16 ? red : >= 10 ? amber : green
+    expect(html).toMatch(/commander_damage\[sIdx\][^)]*\)\s*>=\s*16[\s\S]{0,40}?#E23838/);
+    expect(html).toMatch(/commander_damage\[sIdx\][^)]*\)\s*>=\s*10[\s\S]{0,40}?#F59E0B/);
+    // Green default appears in the ternary fallback
+    expect(html).toContain('#22C55E');
+  });
+
+  it('existing row-level lethal-highlight at commander_damage >= 21 remains intact', () => {
+    const container = mountGrid();
+    const html = container.innerHTML;
+    // Outer row div still uses >= 21 for the lethal-highlight class
+    expect(html).toMatch(/commander_damage\[sIdx\][\s\S]{0,100}?>=\s*21[\s\S]{0,100}?lethal-highlight/);
+  });
+});
+
 describe('player-card GAME-06 (in-card counter +/- buttons)', () => {
   it('renders +/- buttons in expanded section that call $store.game.adjustCounter', () => {
     mockPlayers = players3;
