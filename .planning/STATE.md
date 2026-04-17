@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Second Sunrise
 status: executing
-stopped_at: Completed 09-01-PLAN.md (DECK-01..05 deck accuracy + analytics polish)
-last_updated: "2026-04-17T09:17:41.661Z"
+stopped_at: Completed 09-02-PLAN.md (GAME-01..06 Vandalblast layout + visuals + router-test fix)
+last_updated: "2026-04-17T09:32:21.545Z"
 last_activity: 2026-04-17
 progress:
   total_phases: 8
   completed_phases: 3
   total_plans: 12
-  completed_plans: 10
+  completed_plans: 11
   percent: 0
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-14)
 ## Current Position
 
 Phase: 09 (deck-accuracy-vandalblast-pod-experience) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 Status: Ready to execute
 Last activity: 2026-04-17
 
@@ -68,6 +68,7 @@ Progress: [          ] 0%
 | Phase 08.1 P03 | 14m | 2 tasks | 5 files |
 | Phase 08.1 P02 | 6m 29s | 2 tasks | 6 files |
 | Phase 09 P01 | 25min | 5 tasks tasks | 20 files files |
+| Phase 09 P02 | 8m 22s | 4 tasks (8 commits w/ TDD pairs) tasks | 8 files files |
 
 ## Accumulated Context
 
@@ -119,6 +120,12 @@ Full decision log in PROJECT.md Key Decisions table.
 - [Phase 09]: Plan 1: DECK-03 RAG keeps legacy DEFAULT_THRESHOLDS + detectGaps as back-compat alias — existing 10 two-tier tests stay green, no test rewrites needed. Custom per-deck thresholds get auto-normalised in updateGaps from single-number → { green, amber } shape so saveDeckThresholds API is untouched.
 - [Phase 09]: Plan 1: Commander section uses fallback derivation (first Legendary Creature/Planeswalker matching deck colour-identity union) for legacy v1.0 decks lacking commander_id. Console.warn surfaces the fallback for diagnostic visibility. Commander tile is intentionally NOT SortableJS-registered — moving the commander between type sections is meaningless.
 - [Phase 09]: Plan 1: deck-analytics-panel + deck-centre-panel read window.Alpine directly (NOT the import). Test mocking via vi.mock('alpinejs') has no effect on these components — pattern is to set window.Alpine = { store, effect, data } in beforeEach + restore in afterEach. Plan 2's player-card.test.js + floating-toolbar.test.js will likely need the same setup.
+- [Phase 09]: Phase 09 Plan 2: GAME-05 was net-new wiring, not a bugfix — replaced dead $store.app.gameFullscreen toggle with real document.documentElement.requestFullscreen() / exitFullscreen() called synchronously from @click (P-2 user-gesture)
+- [Phase 09]: Phase 09 Plan 2: 3-player layout uses PLAYER-1-ALWAYS-TOP (RESEARCH OVERRIDE of CONTEXT D-10 'auto-rotate to active player'). Auto-rotation is disorienting; D-16 active-player border-glow handles 'whose turn' affordance
+- [Phase 09]: Phase 09 Plan 2: cf-player-active CSS body + :class binding hook ship in Plan 2 keyed off $store.game.activePlayerIndex (Plan 3 dependency). Until Plan 3 lands, binding is a no-op — Plan 3 needs ZERO player-card.js edits
+- [Phase 09]: Phase 09 Plan 2: single merged @media (prefers-reduced-motion) block in main.css — extended Phase 8.1's existing block (4→6 selectors) including .cf-first-player-spinner (Plan 3 ships body only); NO duplicate block
+- [Phase 09]: Phase 09 Plan 2: removed dead $store.app.gameFullscreen field from app store (Rule 1 cleanup) — three writers, zero readers after Plan 2's wiring fix; navigate() + hashchange handler now read document.fullscreenElement as source-of-truth
+- [Phase 09]: Phase 09 Plan 2: Material Symbols glyphs LOCKED in source — vaccines (poison) / paid (tax) / shield_with_heart (commander damage) per RESEARCH §4; visual UAT capture deferred to Phase 9 HUMAN-UAT walk per CONTEXT D-00
 
 ### Roadmap Evolution
 
@@ -137,6 +144,6 @@ None — roadmap complete, next step is `/gsd:plan-phase 7`.
 
 ## Session Continuity
 
-Last session: 2026-04-17T09:17:12.988Z
-Stopped at: Completed 09-01-PLAN.md (DECK-01..05 deck accuracy + analytics polish)
+Last session: 2026-04-17T09:31:59.208Z
+Stopped at: Completed 09-02-PLAN.md (GAME-01..06 Vandalblast layout + visuals + router-test fix)
 Resume file: None

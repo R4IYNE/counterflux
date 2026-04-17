@@ -60,12 +60,12 @@
 
 ### Vandalblast (Game Tracker)
 
-- [ ] **GAME-01**: Player name no longer clips at the bottom of the player card in the 2-col grid (padding/overflow audit)
-- [ ] **GAME-02**: 3-player match grid uses dynamic layout (e.g. one player takes half-screen, other two stacked) rather than reusing the 2-col template
-- [ ] **GAME-03**: Life totals apply a RAG colour system: green > 20, amber ≤ 20, red ≤ 10; matches the existing poison lethal-highlight treatment
-- [ ] **GAME-04**: Poison, tax, and commander-damage expansion widgets show representative icons next to their counts
-- [ ] **GAME-05**: Fullscreen toggle on floating toolbar correctly enters and exits fullscreen without breaking layout or losing game state
-- [ ] **GAME-06**: User can add/remove additional counters directly from the expanded player card section (not only via the global counter panel)
+- [x] **GAME-01**: Player name no longer clips at the bottom of the player card in the 2-col grid (padding/overflow audit)
+- [x] **GAME-02**: 3-player match grid uses dynamic layout (e.g. one player takes half-screen, other two stacked) rather than reusing the 2-col template
+- [x] **GAME-03**: Life totals apply a RAG colour system: green > 20, amber ≤ 20, red ≤ 10; matches the existing poison lethal-highlight treatment
+- [x] **GAME-04**: Poison, tax, and commander-damage expansion widgets show representative icons next to their counts
+- [x] **GAME-05**: Fullscreen toggle on floating toolbar correctly enters and exits fullscreen without breaking layout or losing game state
+- [x] **GAME-06**: User can add/remove additional counters directly from the expanded player card section (not only via the global counter panel)
 - [ ] **GAME-07**: At game start, a coin-flip/spinner picks the first player with visible animation; result persists for the game record
 - [ ] **GAME-08**: Active player is visually highlighted (border/glow); NEXT TURN button advances the highlight and resets the turn timer
 - [ ] **GAME-09**: Per-turn durations persist to the game record as `turn_laps: number[]`; post-game stats surface longest turn, avg turn, per-player avg
