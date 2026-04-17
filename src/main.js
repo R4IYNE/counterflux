@@ -15,6 +15,7 @@ import { initGameStore } from './stores/game.js';
 import { initBulkDataStore, startBulkDataPipeline } from './stores/bulkdata.js';
 import { initUndoStore } from './stores/undo.js';
 import { initProfileStore } from './stores/profile.js';
+import { initAuthStore } from './stores/auth.js';
 import { openSettingsModal } from './components/settings-modal.js';
 import { splashScreen } from './components/splash-screen.js';
 import { toggleShortcutModal, isShortcutModalOpen, closeShortcutModal } from './components/shortcut-modal.js';
@@ -49,6 +50,7 @@ async function bootApp() {
   // Initialize remaining stores AFTER migration completes
   initAppStore();
   initProfileStore();
+  initAuthStore();            // Phase 10 Plan 2 — slots AFTER profile so Plan 4's Alpine.effect has both stores available at init time
   initUndoStore();
   initSearchStore();
   initCollectionStore();
@@ -81,6 +83,11 @@ async function bootApp() {
 
   // Initialize router after Alpine is ready
   initRouter();
+
+  // Phase 10 Plan 2 — kick off auth init AFTER router resolve so the /auth-callback
+  // handler (if this is a magic-link return) runs first with a fresh anonymous state.
+  // init() is async but fire-and-forget; it transitions status → authed when getSession resolves.
+  Alpine.store('auth').init();
 
   // Fetch EUR→GBP exchange rate (once per session, cached 24h)
   getEurToGbpRate().then(rate => {

@@ -38,6 +38,25 @@ export function initRouter() {
   // Expose router globally for sidebar navigation
   window.__counterflux_router = router;
 
+  // Phase 10 D-06, D-11: /auth-callback route MUST register BEFORE screen routes
+  // and BEFORE notFound(). Navigo matches in registration order; registering
+  // this first prevents the fall-through to notFound() when Supabase redirects
+  // users back with /#/auth-callback?code=<pkce>. The handler dynamically
+  // imports the overlay component (shipped by Plan 3) so this file stays
+  // compiler-happy even before that component exists.
+  router.on('/auth-callback', async () => {
+    try {
+      const overlayModule = await import('./components/auth-callback-overlay.js');
+      if (typeof overlayModule.handleAuthCallback === 'function') {
+        await overlayModule.handleAuthCallback(window.location.href);
+      }
+    } catch (err) {
+      console.error('[Counterflux] auth callback overlay failed:', err);
+      // Fallback — land on dashboard so the user isn't stuck on a blank hash.
+      router.navigate('/');
+    }
+  });
+
   Object.entries(screenLoaders).forEach(([path, loader]) => {
     router.on(path, async () => {
       const screenId = ROUTE_MAP[path];
