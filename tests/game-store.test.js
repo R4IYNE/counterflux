@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { db } from '../src/db/schema.js';
 import { computeGameStats } from '../src/utils/game-stats.js';
 
@@ -374,6 +374,180 @@ describe('Game Store', () => {
 
       await store.deleteGame(id);
       expect(store.games).toHaveLength(0);
+    });
+  });
+});
+
+// ============================================================
+// Phase 9 Plan 3 — Vandalblast turn mechanics + post-game stats
+// (GAME-07 store-side / GAME-08 / GAME-09 / GAME-10)
+//
+// These tests exercise the REAL Alpine-backed initGameStore() — not the
+// plain-object createGameStore() harness above. We mock alpinejs so the store
+// registration is captured into a local registry; the spinner is mocked so
+// startGame() awaits resolve immediately with a deterministic winnerIndex.
+// ============================================================
+
+vi.mock('../src/components/first-player-spinner.js', () => ({
+  spinForFirstPlayer: vi.fn().mockResolvedValue(0),
+}));
+
+const _alpineStores = {};
+vi.mock('alpinejs', () => ({
+  default: {
+    store(name, def) {
+      if (def !== undefined) _alpineStores[name] = def;
+      return _alpineStores[name];
+    },
+  },
+}));
+
+import { initGameStore } from '../src/stores/game.js';
+import { spinForFirstPlayer } from '../src/components/first-player-spinner.js';
+
+describe('game-store Plan 3 turn mechanics', () => {
+  let game;
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    // Register a no-op toast store BEFORE initGameStore (toast lookups can occur).
+    _alpineStores.toast = {
+      error: vi.fn(),
+      warning: vi.fn(),
+      success: vi.fn(),
+      show: vi.fn(),
+    };
+    initGameStore();
+    game = _alpineStores.game;
+
+    // Bootstrap a 3-player game (You + Bob + Carol) for tests
+    game.opponents = [
+      { name: 'Bob', commander: 'Krenko', partner: null },
+      { name: 'Carol', commander: 'Niv-Mizzet', partner: null },
+    ];
+    game.manualCommander = 'You';
+    game.selectedDeckId = null;
+    game.startingLife = 40;
+    vi.useFakeTimers();
+  });
+
+  afterEach(async () => {
+    vi.useRealTimers();
+    await db.games.clear();
+    await db.meta.delete('active_game');
+    // Reset Alpine state between tests
+    if (game) {
+      game.view = 'setup';
+      game.players = [];
+      game.activePlayerIndex = null;
+      game.turn_laps = [];
+      game.turnStartedAt = null;
+    }
+  });
+
+  describe('GAME-07 store-side', () => {
+    it('startGame() awaits spinner; sets activePlayerIndex + is_first on chosen player', async () => {
+      spinForFirstPlayer.mockResolvedValue(2);
+      await game.startGame();
+      expect(game.activePlayerIndex).toBe(2);
+      expect(game.players[2].is_first).toBe(true);
+      expect(game.players[0].is_first).toBeFalsy();
+      expect(game.players[1].is_first).toBeFalsy();
+    });
+  });
+
+  describe('GAME-08 active player advance', () => {
+    it('nextTurn advances activePlayerIndex modulo players.length', async () => {
+      spinForFirstPlayer.mockResolvedValue(0);
+      await game.startGame();
+      expect(game.activePlayerIndex).toBe(0);
+      game.nextTurn();
+      expect(game.activePlayerIndex).toBe(1);
+      game.nextTurn();
+      expect(game.activePlayerIndex).toBe(2);
+      game.nextTurn();
+      expect(game.activePlayerIndex).toBe(0); // wrap
+    });
+
+    it('nextTurn skips eliminated players', async () => {
+      spinForFirstPlayer.mockResolvedValue(0);
+      await game.startGame();
+      game.players[1].eliminated = true;
+      game.nextTurn();
+      expect(game.activePlayerIndex).toBe(2); // skipped 1
+    });
+  });
+
+  describe('GAME-09 turn_laps push + persistence', () => {
+    it('nextTurn pushes Date.now() - turnStartedAt onto turn_laps', async () => {
+      const t0 = 1_700_000_000_000;
+      vi.setSystemTime(t0);
+      spinForFirstPlayer.mockResolvedValue(0);
+      await game.startGame();
+      // startGame re-anchors turnStartedAt after spinner; align fake timer
+      game.turnStartedAt = t0;
+
+      vi.setSystemTime(t0 + 5000);
+      game.nextTurn();
+      expect(game.turn_laps).toEqual([5000]);
+
+      vi.setSystemTime(t0 + 5000 + 12000);
+      game.nextTurn();
+      expect(game.turn_laps).toEqual([5000, 12000]);
+    });
+
+    it('saveGame persists turn_laps to db.games row', async () => {
+      const t0 = 1_700_000_000_000;
+      vi.setSystemTime(t0);
+      spinForFirstPlayer.mockResolvedValue(0);
+      await game.startGame();
+      game.turnStartedAt = t0;
+      vi.setSystemTime(t0 + 8000);
+      game.nextTurn();
+      vi.setSystemTime(t0 + 8000 + 3000);
+      await game.saveGame(0, []);
+
+      const saved = await db.games.toArray();
+      expect(saved.length).toBe(1);
+      expect(saved[0].turn_laps).toEqual([8000, 3000]);
+    });
+  });
+
+  describe('GAME-10 wall-clock anchor', () => {
+    it('lap accurate after 30min vi.setSystemTime jump (proves wall-clock not setInterval)', async () => {
+      const t0 = 1_700_000_000_000;
+      vi.setSystemTime(t0);
+      spinForFirstPlayer.mockResolvedValue(0);
+      await game.startGame();
+      game.turnStartedAt = t0;
+
+      // Jump 30 minutes forward without any timer ticks
+      vi.setSystemTime(t0 + 30 * 60 * 1000);
+      game.nextTurn();
+
+      expect(game.turn_laps[0]).toBe(30 * 60 * 1000);
+    });
+
+    it('startTimer uses requestAnimationFrame (not setInterval)', async () => {
+      spinForFirstPlayer.mockResolvedValue(0);
+      await game.startGame();
+      game.startTimer();
+      expect(game._timerRafId).not.toBeNull();
+      expect(game._timerInterval).toBeNull();
+      game.pauseTimer();
+      expect(game._timerRafId).toBeNull();
+    });
+  });
+
+  describe('reset state', () => {
+    it('_resetState clears Plan 3 fields', async () => {
+      spinForFirstPlayer.mockResolvedValue(0);
+      await game.startGame();
+      game.turn_laps.push(1000);
+      game._resetState();
+      expect(game.activePlayerIndex).toBeNull();
+      expect(game.turn_laps).toEqual([]);
+      expect(game.turnStartedAt).toBeNull();
     });
   });
 });
