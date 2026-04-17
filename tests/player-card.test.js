@@ -101,10 +101,12 @@ describe('player-card GAME-03 (RAG life colours)', () => {
 });
 
 describe('player-card GAME-04 (Material Symbols counter glyphs)', () => {
-  it('poison row contains material-symbols span with text vaccines', () => {
+  it('poison row contains material-symbols span with text skull (gap 4a: reversed from vaccines per HUMAN-UAT)', () => {
     const container = mountGrid();
     const html = container.innerHTML;
-    expect(html).toMatch(/<span[^>]*material-symbols-outlined[^>]*>vaccines<\/span>/);
+    expect(html).toMatch(/<span[^>]*material-symbols-outlined[^>]*>skull<\/span>/);
+    // Regression: ensure the old vaccines glyph is fully removed
+    expect(html).not.toMatch(/>vaccines</);
   });
 
   it('tax row contains material-symbols span with text paid', () => {
