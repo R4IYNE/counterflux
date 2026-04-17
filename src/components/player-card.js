@@ -229,11 +229,11 @@ export function renderPlayerGrid() {
             </button>
           </div>
 
-          <!-- Poison counter (GAME-04: vaccines glyph) -->
+          <!-- Poison counter (GAME-04 + gap 4a: skull glyph per HUMAN-UAT reversal) -->
           <div class="flex items-center justify-between px-[8px]" @click.stop
                :class="(player.poison || 0) >= 10 ? 'lethal-highlight' : ''">
             <div class="flex items-center gap-[6px]">
-              <span class="material-symbols-outlined" style="font-size: 16px; color: #7A8498;">vaccines</span>
+              <span class="material-symbols-outlined" style="font-size: 16px; color: #7A8498;">skull</span>
               <span class="font-mono text-[11px] uppercase tracking-[0.15em] font-bold"
                     style="color: #7A8498;">POISON</span>
             </div>
