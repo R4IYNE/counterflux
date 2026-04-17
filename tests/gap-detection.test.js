@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { detectGaps, DEFAULT_THRESHOLDS } from '../src/utils/gap-detection.js';
+import {
+  detectGaps,
+  DEFAULT_THRESHOLDS,
+  detectGapsRAG,
+  RAG_THRESHOLDS,
+  getCreatureThresholds,
+} from '../src/utils/gap-detection.js';
 
 describe('gap detection', () => {
   const healthyAnalytics = {
@@ -117,5 +123,173 @@ describe('gap detection', () => {
         expect(['critical', 'warning']).toContain(gap.severity);
       }
     });
+  });
+});
+
+// ============================================================================
+// DECK-03: Three-tier RAG gap detection (Phase 9 Plan 1 Task 3)
+// Per 09-CONTEXT D-03 + 09-RESEARCH §"DECK-03 Per-Category Dynamic RAG
+// Thresholds" — derived from EDHREC + Draftsim + Burgess formula + Frank
+// Karsten ramp/draw baselines.
+// ============================================================================
+
+describe('RAG_THRESHOLDS export (DECK-03)', () => {
+  it('contains Ramp / Card Draw / Draw / Removal / Board Wipe / Lands keys with { green, amber } shape', () => {
+    expect(RAG_THRESHOLDS.Ramp).toEqual({ green: 10, amber: 6 });
+    expect(RAG_THRESHOLDS['Card Draw']).toEqual({ green: 10, amber: 6 });
+    expect(RAG_THRESHOLDS.Draw).toEqual({ green: 10, amber: 6 });
+    expect(RAG_THRESHOLDS.Removal).toEqual({ green: 8, amber: 6 });
+    expect(RAG_THRESHOLDS['Board Wipe']).toEqual({ green: 3, amber: 2 });
+    expect(RAG_THRESHOLDS.Lands).toEqual({ green: 36, amber: 33 });
+  });
+});
+
+describe('detectGapsRAG severity tiers (DECK-03)', () => {
+  it('Ramp count 4 → red severity, suggestedAdd 6 (10 green - 4 count)', () => {
+    const gaps = detectGapsRAG({ tagBreakdown: { Ramp: 4 }, typeBreakdown: {} });
+    const ramp = gaps.find((g) => g.category === 'Ramp');
+    expect(ramp).toBeDefined();
+    expect(ramp.severity).toBe('red');
+    expect(ramp.suggestedAdd).toBe(6);
+  });
+
+  it('Ramp count 7 → amber severity, suggestedAdd 3 (10 green - 7 count)', () => {
+    const gaps = detectGapsRAG({ tagBreakdown: { Ramp: 7 }, typeBreakdown: {} });
+    const ramp = gaps.find((g) => g.category === 'Ramp');
+    expect(ramp).toBeDefined();
+    expect(ramp.severity).toBe('amber');
+    expect(ramp.suggestedAdd).toBe(3);
+  });
+
+  it('Ramp count 12 → green severity, suggestedAdd 0', () => {
+    const gaps = detectGapsRAG({ tagBreakdown: { Ramp: 12 }, typeBreakdown: {} });
+    const ramp = gaps.find((g) => g.category === 'Ramp');
+    expect(ramp).toBeDefined();
+    expect(ramp.severity).toBe('green');
+    expect(ramp.suggestedAdd).toBe(0);
+  });
+
+  it('Lands count 30 → red, threshold 36 (uses typeBreakdown.Land, not tagBreakdown)', () => {
+    const gaps = detectGapsRAG({ tagBreakdown: {}, typeBreakdown: { Land: 30 } });
+    const lands = gaps.find((g) => g.category === 'Lands');
+    expect(lands).toBeDefined();
+    expect(lands.severity).toBe('red');
+    expect(lands.suggestedAdd).toBe(6);
+    expect(lands.threshold).toBe(36);
+  });
+
+  it('Removal count 7 → amber (6 ≤ count < 8 = green)', () => {
+    const gaps = detectGapsRAG({ tagBreakdown: { Removal: 7 }, typeBreakdown: {} });
+    const removal = gaps.find((g) => g.category === 'Removal');
+    expect(removal.severity).toBe('amber');
+    expect(removal.suggestedAdd).toBe(1);
+  });
+
+  it('returns gaps sorted red → amber → green', () => {
+    const gaps = detectGapsRAG({
+      tagBreakdown: { Ramp: 4, 'Card Draw': 12, Removal: 7 },
+      typeBreakdown: { Land: 36 },
+    });
+    const order = { red: 0, amber: 1, green: 2 };
+    for (let i = 0; i < gaps.length - 1; i++) {
+      expect(order[gaps[i].severity]).toBeLessThanOrEqual(order[gaps[i + 1].severity]);
+    }
+  });
+
+  it('scales thresholds for 60-card decks', () => {
+    const gaps = detectGapsRAG(
+      { tagBreakdown: { Ramp: 5 }, typeBreakdown: {} },
+      RAG_THRESHOLDS,
+      [],
+      60,
+    );
+    const ramp = gaps.find((g) => g.category === 'Ramp');
+    // 60/100 scale: green = round(10*0.6) = 6, amber = round(6*0.6) = 4.
+    // count 5 falls in [4,6) → amber severity, suggestedAdd 6 - 5 = 1.
+    expect(ramp.threshold).toBe(6);
+    expect(ramp.severity).toBe('amber');
+    expect(ramp.suggestedAdd).toBe(1);
+  });
+
+  it('emits objects with { category, count, threshold, severity, suggestedAdd } shape', () => {
+    const gaps = detectGapsRAG({
+      tagBreakdown: { Ramp: 4 },
+      typeBreakdown: { Land: 36 },
+    });
+    expect(gaps.length).toBeGreaterThan(0);
+    for (const gap of gaps) {
+      expect(gap).toHaveProperty('category');
+      expect(gap).toHaveProperty('count');
+      expect(gap).toHaveProperty('threshold');
+      expect(gap).toHaveProperty('severity');
+      expect(gap).toHaveProperty('suggestedAdd');
+      expect(['red', 'amber', 'green']).toContain(gap.severity);
+      expect(typeof gap.suggestedAdd).toBe('number');
+    }
+  });
+});
+
+describe('getCreatureThresholds archetype switch (DECK-03)', () => {
+  it('Tribal tag → green 30 / amber 20', () => {
+    expect(getCreatureThresholds(['Tribal'])).toEqual({ green: 30, amber: 20 });
+  });
+
+  it('Aggro tag → green 30 / amber 20', () => {
+    expect(getCreatureThresholds(['Aggro'])).toEqual({ green: 30, amber: 20 });
+  });
+
+  it('Spellslinger tag → green 12 / amber 8', () => {
+    expect(getCreatureThresholds(['Spellslinger'])).toEqual({ green: 12, amber: 8 });
+  });
+
+  it('Control tag → green 12 / amber 8', () => {
+    expect(getCreatureThresholds(['Control'])).toEqual({ green: 12, amber: 8 });
+  });
+
+  it('default (no recognised tags) → green 20 / amber 12', () => {
+    expect(getCreatureThresholds([])).toEqual({ green: 20, amber: 12 });
+    expect(getCreatureThresholds(['SomethingRandom'])).toEqual({ green: 20, amber: 12 });
+  });
+
+  it('case-insensitive matching', () => {
+    expect(getCreatureThresholds(['tribal'])).toEqual({ green: 30, amber: 20 });
+    expect(getCreatureThresholds(['SPELLSLINGER'])).toEqual({ green: 12, amber: 8 });
+  });
+});
+
+describe('detectGapsRAG creature category (DECK-03)', () => {
+  it('Tribal deck with 25 creatures → amber (≥ 20 amber, < 30 green)', () => {
+    const gaps = detectGapsRAG(
+      { tagBreakdown: {}, typeBreakdown: { Creature: 25 } },
+      RAG_THRESHOLDS,
+      ['Tribal'],
+    );
+    const creature = gaps.find((g) => g.category === 'Creatures');
+    expect(creature).toBeDefined();
+    expect(creature.severity).toBe('amber');
+    expect(creature.suggestedAdd).toBe(5);
+  });
+
+  it('Spellslinger deck with 10 creatures → amber (8 amber, < 12 green)', () => {
+    const gaps = detectGapsRAG(
+      { tagBreakdown: {}, typeBreakdown: { Creature: 10 } },
+      RAG_THRESHOLDS,
+      ['Spellslinger'],
+    );
+    const creature = gaps.find((g) => g.category === 'Creatures');
+    expect(creature).toBeDefined();
+    expect(creature.severity).toBe('amber');
+    expect(creature.suggestedAdd).toBe(2);
+  });
+
+  it('default-archetype deck with 8 creatures → red (< 12 amber)', () => {
+    const gaps = detectGapsRAG(
+      { tagBreakdown: {}, typeBreakdown: { Creature: 8 } },
+      RAG_THRESHOLDS,
+      [],
+    );
+    const creature = gaps.find((g) => g.category === 'Creatures');
+    expect(creature.severity).toBe('red');
+    expect(creature.suggestedAdd).toBe(12);
   });
 });
