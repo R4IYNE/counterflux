@@ -2,9 +2,9 @@ import Alpine from 'alpinejs';
 import { db } from '../db/schema.js';
 import {
   getCommanderSynergies,
-  getCardSalt,
   normalizeSalt,
   aggregateDeckSalt,
+  fetchTopSaltMap,
 } from '../services/edhrec.js';
 import { findDeckCombos } from '../services/spellbook.js';
 import { detectGaps, DEFAULT_THRESHOLDS } from '../utils/gap-detection.js';
@@ -71,13 +71,50 @@ export function initIntelligenceStore() {
         }
         this.synergies = filtered;
 
-        // Compute normalized salt from commander salt
-        if (result.commanderSalt != null) {
-          this.saltScore = normalizeSalt(result.commanderSalt);
-          this.saltLabel = saltLabel(this.saltScore);
-        } else {
-          this.saltScore = null;
-          this.saltLabel = '';
+        // === DECK-04 root-cause fix (09-RESEARCH §"DECK-04") ===
+        // Salt is the AGGREGATE across the deck's cards, not just the
+        // commander's own salt score.  fetchTopSaltMap pulls EDHREC's
+        // Top-100 saltiest in a single cached request; we look up each
+        // active card by name (default 0 for cards outside the top 100)
+        // and run the values through aggregateDeckSalt (existing math
+        // primitive, unchanged).  v1.0 only ever showed `commanderSalt`,
+        // which is why the gauge always read near-zero for "salty" decks
+        // built around stax pieces — Stasis/Winter Orb/etc. dominate the
+        // aggregate but the commander itself is usually mild.
+        try {
+          const saltMap = await fetchTopSaltMap();
+          const activeCards = Alpine.store('deck')?.activeCards || [];
+          // activeCards entries carry `card` (Scryfall projection) per
+          // src/stores/deck.js loadDeck() — fall back to entry.name for
+          // any callers that pass a flatter shape.
+          const saltValues = activeCards.map((entry) => {
+            const name = entry?.card?.name || entry?.name;
+            return name ? (saltMap[name] ?? 0) : 0;
+          });
+          const aggregate = aggregateDeckSalt(saltValues);
+          if (aggregate != null && aggregate > 0) {
+            this.saltScore = aggregate;
+            this.saltLabel = saltLabel(this.saltScore);
+          } else if (result.commanderSalt != null) {
+            // Backward-compat fallback: commander salt only when no deck
+            // cards land in the Top-100 (e.g. Mila's first-boot empty
+            // deck, or a freshly-imported deck whose card data hasn't
+            // hydrated yet).
+            this.saltScore = normalizeSalt(result.commanderSalt);
+            this.saltLabel = saltLabel(this.saltScore);
+          } else {
+            this.saltScore = null;
+            this.saltLabel = '';
+          }
+        } catch {
+          // Network or schema failure — degrade to commander-only path.
+          if (result.commanderSalt != null) {
+            this.saltScore = normalizeSalt(result.commanderSalt);
+            this.saltLabel = saltLabel(this.saltScore);
+          } else {
+            this.saltScore = null;
+            this.saltLabel = '';
+          }
         }
       }
 

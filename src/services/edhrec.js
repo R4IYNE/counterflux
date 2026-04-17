@@ -99,37 +99,75 @@ export async function getCommanderSynergies(commanderName) {
   }
 }
 
+// === Top-Saltiest bulk fetch (DECK-04 root-cause fix) =====================
+//
+// 09-RESEARCH headline finding: the v1.0 `getCardSalt(name)` path queried
+// `/pages/cards/{slug}.json` for a `container.json_dict.card.salt` field
+// that EDHREC has NEVER returned at that location.  Per direct HTTP probe
+// during research:
+//
+//   • `/pages/commanders/{slug}.json` → carries the COMMANDER's own salt
+//     under `container.json_dict.card.salt` (already consumed via
+//     getCommanderSynergies above).
+//   • `/pages/cards/{slug}.json` → no `card.salt`; only `similar[].salt`
+//     for the card-page's related-card list.
+//   • `/pages/top/salt.json` → returns the canonical Top-100 saltiest
+//     cards as `cardlists[0].cardviews[]`, with each entry's `label`
+//     formatted as the string `"Salt Score: 3.06\n15918 decks"`.  This
+//     is the only endpoint that exposes per-card salt in a usable form.
+//
+// We fetch the Top-100 ONCE per 7d, parse it into a name → score map,
+// and cache the whole map in the existing `meta` table (per 09-RESEARCH
+// §"Salt Cache Schema Decision" — single row, no schema bump, mirrors
+// the edhrec_cache + combo_cache "one fetch one row" philosophy).
+//
+// Cards outside the Top-100 carry effectively zero salt (< ~0.4 in the
+// EDHREC database) and are treated as 0 in deck aggregates.
+//
+// The legacy `getCardSalt` function is REMOVED (was structurally broken,
+// never returned non-null in any production scenario).
+const TOP_SALT_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+const TOP_SALT_META_KEY = 'top_salt_map';
+
 /**
- * Fetch a single card's salt score from EDHREC.
- * @param {string} cardName
- * @returns {Promise<number|null>}
+ * Fetch EDHREC's Top-100 Saltiest cards as a name → raw salt-score map.
+ * Cached for 7 days in the meta table (key: 'top_salt_map').
+ *
+ * @returns {Promise<Record<string, number>>} name → raw salt score (0..~3)
  */
-export async function getCardSalt(cardName) {
-  const sanitized = sanitizeCommanderName(cardName);
+export async function fetchTopSaltMap() {
+  // Cache hit?
+  let cached = null;
+  try {
+    cached = await db.meta.get(TOP_SALT_META_KEY);
+  } catch {
+    // db.meta unavailable in some contexts; fall through to network
+  }
+  if (cached && cached.map && (Date.now() - cached.fetched_at) < TOP_SALT_TTL_MS) {
+    return cached.map;
+  }
 
   try {
-    // Check cache
-    const cached = await db.card_salt_cache.get(sanitized);
-    if (cached && Date.now() - cached.fetched_at < CACHE_TTL_MS) {
-      return cached.salt;
+    const data = await rateLimitedFetch(`${EDHREC_BASE}/pages/top/salt.json`);
+    const cardviews = data?.container?.json_dict?.cardlists?.[0]?.cardviews ?? [];
+    const map = {};
+    for (const cv of cardviews) {
+      const label = cv.label || '';
+      const m = label.match(/Salt Score:\s*([\d.]+)/);
+      if (m && cv.name) {
+        map[cv.name] = parseFloat(m[1]);
+      }
     }
-
-    // Fetch fresh
-    const data = await rateLimitedFetch(`${EDHREC_BASE}/cards/${sanitized}`);
-    const salt = data.container?.json_dict?.card?.salt ?? null;
-
-    // Cache
-    if (salt !== null) {
-      await db.card_salt_cache.put({
-        sanitized,
-        salt,
-        fetched_at: Date.now(),
-      });
+    try {
+      await db.meta.put({ key: TOP_SALT_META_KEY, map, fetched_at: Date.now() });
+    } catch {
+      // Cache write failure is non-fatal — return the fresh map anyway.
     }
-
-    return salt;
+    return map;
   } catch {
-    return null;
+    // Network failure with no cache → empty map (Mila stays quiet).
+    // Network failure WITH cache (even stale) → keep serving stale per D-05.
+    return (cached && cached.map) ? cached.map : {};
   }
 }
 
