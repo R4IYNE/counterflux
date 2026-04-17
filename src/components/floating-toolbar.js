@@ -65,16 +65,23 @@ export function renderFloatingToolbar() {
       <!-- Counter panel -->
       ${renderCounterPanel()}
 
-      <!-- Fullscreen toggle -->
+      <!-- Fullscreen toggle (GAME-05) — real Fullscreen API per RESEARCH headline #4.
+           Per §P-2: requestFullscreen() must be called synchronously from the user
+           gesture (the click handler). Do NOT mutate Alpine state first and react to
+           it; the gesture context will be lost.
+           Per §P-4: transition flicker prevented by :fullscreen CSS rules in main.css. -->
       <button
+        x-data="{ isFullscreen: false }"
+        x-init="document.addEventListener('fullscreenchange', () => { isFullscreen = !!document.fullscreenElement; });
+                document.addEventListener('webkitfullscreenchange', () => { isFullscreen = !!document.fullscreenElement; });"
         class="flex items-center justify-center w-[48px] h-[48px] cursor-pointer"
         style="background: #1C1F28; border: 1px solid #2A2D3A; color: #EAECEE;"
         @mouseenter="$el.style.background = '#2A2D3A'"
         @mouseleave="$el.style.background = '#1C1F28'"
-        @click="$store.app.gameFullscreen = !$store.app.gameFullscreen"
+        @click="if (document.fullscreenElement) { document.exitFullscreen(); } else { document.documentElement.requestFullscreen(); }"
         aria-label="Toggle Fullscreen">
         <span class="material-symbols-outlined" style="font-size: 24px;"
-              x-text="$store.app.gameFullscreen ? 'fullscreen_exit' : 'fullscreen'"></span>
+              x-text="isFullscreen ? 'fullscreen_exit' : 'fullscreen'"></span>
       </button>
 
       <!-- Separator -->
@@ -111,7 +118,7 @@ export function renderFloatingToolbar() {
               <button
                 class="cursor-pointer font-mono text-[11px] tracking-[0.15em] font-bold uppercase py-[8px] px-[16px]"
                 style="background: #E23838; border: 1px solid #E23838; color: #EAECEE;"
-                @click="showEndConfirm = false; $store.app.gameFullscreen = false; $store.game.endGame()"
+                @click="showEndConfirm = false; if (document.fullscreenElement) document.exitFullscreen(); $store.game.endGame()"
               >End Game</button>
             </div>
           </div>

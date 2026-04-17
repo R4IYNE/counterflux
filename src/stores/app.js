@@ -19,7 +19,11 @@ export function initAppStore() {
   Alpine.store('app', {
     currentScreen: 'epic-experiment',
     sidebarCollapsed: hydrateSidebarCollapsed(),
-    gameFullscreen: false,
+    // gameFullscreen field removed in Phase 09 Plan 2 — the real Fullscreen
+    // API now lives in floating-toolbar.js (document.documentElement.requestFullscreen),
+    // and document.fullscreenElement is the source of truth. The hashchange
+    // handler at the bottom of this file calls document.exitFullscreen() on
+    // navigation away from vandalblast.
 
     screens: [
       { id: 'epic-experiment', label: 'Epic Experiment', icon: 'dashboard', route: '/', locked: false },
@@ -33,8 +37,10 @@ export function initAppStore() {
       const screen = this.screens.find(s => s.id === screenId);
       if (!screen || screen.locked) return;
       this.currentScreen = screenId;
-      // Exit fullscreen when leaving Vandalblast
-      if (screenId !== 'vandalblast') this.gameFullscreen = false;
+      // Exit fullscreen when leaving Vandalblast (Phase 09 Plan 2 — real API)
+      if (screenId !== 'vandalblast' && typeof document !== 'undefined' && document.fullscreenElement) {
+        document.exitFullscreen?.();
+      }
     },
 
     toggleSidebar() {
@@ -113,11 +119,12 @@ export function initAppStore() {
     Alpine.store('app').sidebarCollapsed = window.innerWidth < 1024;
   });
 
-  // Exit game fullscreen on any navigation (back button, hash change)
+  // Exit game fullscreen on any navigation (back button, hash change).
+  // Phase 09 Plan 2 — uses real Fullscreen API; document.fullscreenElement
+  // is the source of truth.
   window.addEventListener('hashchange', () => {
-    const app = Alpine.store('app');
-    if (app.gameFullscreen && !window.location.hash.includes('vandalblast')) {
-      app.gameFullscreen = false;
+    if (typeof document !== 'undefined' && document.fullscreenElement && !window.location.hash.includes('vandalblast')) {
+      document.exitFullscreen?.();
     }
   });
 }
