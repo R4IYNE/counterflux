@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Second Sunrise
 status: verifying
-stopped_at: "Completed 09-03-PLAN.md (GAME-07..10 spinner + activePlayerIndex + turn_laps + wall-clock timer + TURN PACING) — Phase 9 ready for /gsd:verify-work"
-last_updated: "2026-04-17T09:51:06.000Z"
+stopped_at: Completed 09-05-PLAN.md (gaps 4a/4b/4c — skull glyph swap + poison/commander damage three-tier RAG)
+last_updated: "2026-04-17T12:54:09.889Z"
 last_activity: 2026-04-17
 progress:
   total_phases: 8
-  completed_phases: 4
-  total_plans: 12
-  completed_plans: 12
+  completed_phases: 3
+  total_plans: 15
+  completed_plans: 13
   percent: 0
 ---
 
@@ -70,6 +70,7 @@ Progress: [          ] 0%
 | Phase 09 P01 | 25min | 5 tasks tasks | 20 files files |
 | Phase 09 P02 | 8m 22s | 4 tasks (8 commits w/ TDD pairs) tasks | 8 files files |
 | Phase 09 P03 | 11m 49s | 4 tasks | 8 files |
+| Phase 09 P05 | 4m 44s | 3 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -131,6 +132,9 @@ Full decision log in PROJECT.md Key Decisions table.
 - [Phase 09]: Phase 09 Plan 3: wall-clock anchor pattern (Date.now snapshot + RAF display tick) replaces setInterval — immune to background-tab throttling; 30-min vi.spyOn(Date.now) jump test proves accuracy
 - [Phase 09]: Phase 09 Plan 3: cross-plan CSS-class shipping pattern validated end-to-end — Plan 2 shipped .cf-player-active body + binding hook, Plan 3 shipped activePlayerIndex data field; ZERO further player-card.js edits required
 - [Phase 09]: Phase 09 Plan 3: TURN PACING section x-show gated on turn_laps.length > 0 — legacy v1.0 saved games (no turn_laps field) hide section cleanly instead of rendering NaN/0:00 tiles; final lap pushed in saveGame so the END-GAME turn (often the longest) is captured
+- [Phase 09]: Plan 09-05: D-12 reversed — skull replaces vaccines on poison row per HUMAN-UAT (more on-brand for MTG poison/lethal). Material Symbols Outlined ships skull glyph natively.
+- [Phase 09]: Plan 09-05: counter-digit RAG thresholds tier BELOW row-level lethal class (poison digit red at 8 / row lethal at 10; commander damage digit red at 16 / row lethal at 21) — dual-channel: digit narrates approach, row class confirms kill
+- [Phase 09]: Plan 09-05: test assertions use jsdom-neutral content-boundary anchoring (indexOf walks to Nth occurrence) instead of :style= attribute regex — jsdom innerHTML re-serialization breaks naive attribute-scoped patterns
 
 ### Roadmap Evolution
 
@@ -149,6 +153,6 @@ None — roadmap complete, next step is `/gsd:plan-phase 7`.
 
 ## Session Continuity
 
-Last session: 2026-04-17T09:51:05.998Z
-Stopped at: Completed 09-03-PLAN.md (GAME-07..10 spinner + activePlayerIndex + turn_laps + wall-clock timer + TURN PACING) — Phase 9 ready for /gsd:verify-work
+Last session: 2026-04-17T12:53:52.307Z
+Stopped at: Completed 09-05-PLAN.md (gaps 4a/4b/4c — skull glyph swap + poison/commander damage three-tier RAG)
 Resume file: None
