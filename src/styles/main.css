@@ -165,6 +165,34 @@ body {
     transition: none !important;
     transition-duration: 0.01ms !important;
   }
+
+  /* Phase 10 Plan 3 — auth surfaces honour reduced-motion
+     (auth-modal, callback overlay, + Plan 4 first-sign-in prompt) */
+  #cf-auth-modal,
+  #cf-auth-modal *,
+  #cf-auth-callback-overlay,
+  #cf-auth-callback-overlay *,
+  #cf-first-sign-in-prompt,
+  #cf-first-sign-in-prompt * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+  .cf-auth-spin {
+    animation: none !important;
+  }
+}
+
+/* Phase 10 — auth-callback overlay spinner.
+   Paired with the reduced-motion override inside the @media block above
+   (animation: none !important) so the glyph stops rotating without losing
+   the caption. */
+@keyframes cf-auth-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+.cf-auth-spin {
+  animation: cf-auth-spin 1s linear infinite;
+  display: inline-block;
 }
 
 /* Phase 8 Plan 3 — keyrune missing-glyph fallback (Pitfall 4).
