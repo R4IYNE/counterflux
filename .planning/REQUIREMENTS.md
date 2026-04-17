@@ -78,7 +78,7 @@
 - [ ] **AUTH-03**: Google OAuth sign-in flow works end-to-end (desktop browser)
 - [ ] **AUTH-04**: Settings modal email field removed; profile name and avatar populate from auth identity when signed in; unauthenticated users see a "Sign in" CTA
 - [ ] **AUTH-05**: Session persists across reloads; explicit sign-out clears Supabase session but preserves local Dexie data (local-first promise)
-- [ ] **AUTH-06**: Row Level Security policies written for every synced table (`collection`, `decks`, `deck_cards`, `games`, `watchlist`, `profile`) enforcing `auth.uid() = user_id`; policies tested against a second user context
+- [x] **AUTH-06**: Row Level Security policies written for every synced table (`collection`, `decks`, `deck_cards`, `games`, `watchlist`, `profile`) enforcing `auth.uid() = user_id`; policies tested against a second user context
 
 ### Cloud Sync
 

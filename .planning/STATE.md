@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Second Sunrise
-status: verifying
-stopped_at: Phase 10 context gathered
-last_updated: "2026-04-17T13:43:14.229Z"
+status: executing
+stopped_at: Completed 10-01-PLAN.md — counterflux schema + RLS + isolation test + pre-flight runbook
+last_updated: "2026-04-17T15:02:21.229Z"
 last_activity: 2026-04-17
 progress:
   total_phases: 8
   completed_phases: 4
-  total_plans: 15
-  completed_plans: 15
+  total_plans: 19
+  completed_plans: 16
   percent: 0
 ---
 
@@ -21,13 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-14)
 
 **Core value:** The deck builder knows what you own, and the collection knows what's in your decks — one interconnected data layer
-**Current focus:** Phase 09 — deck-accuracy-vandalblast-pod-experience
+**Current focus:** Phase 10 — supabase-auth-foundation
 
 ## Current Position
 
-Phase: 10
-Plan: Not started
-Status: Phase complete — ready for verification
+Phase: 10 (supabase-auth-foundation) — EXECUTING
+Plan: 2 of 4
+Status: Ready to execute
 Last activity: 2026-04-17
 
 Progress: [          ] 0%
@@ -73,6 +73,7 @@ Progress: [          ] 0%
 | Phase 09 P05 | 4m 44s | 3 tasks | 2 files |
 | Phase 09 P04 | 9m 17s | 2 tasks | 5 files |
 | Phase 09 P06 | ~10m | 2 tasks | 3 files |
+| Phase 10 P01 | 6m 0s | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -143,6 +144,9 @@ Full decision log in PROJECT.md Key Decisions table.
 - [Phase 09]: Plan 09-06: Gap 6 root cause was missing wiring, not broken logic — startTimer() existed and worked but was only invoked from the floating-toolbar manual button; fix is additive call-sites in startGame() (post-spinner) + nextTurn() (pauseTimer-then-startTimer sequence to bypass the if-running guard)
 - [Phase 09]: Plan 09-06: Gap 7 (TURN PACING section missing post-game) was a CASCADE from Gap 6, NOT an independent render-path bug — Plan 3's render path was correct (_computePacing called in init at line 344, x-show guard is length > 0); empty turn_laps from frozen timer made the guard evaluate false; 4 new direct-GREEN regression tests lock down the existing-correct contract
 - [Phase 09]: Plan 09-06: pause-cancel-then-fresh-start sequence for re-anchoring guarded RAF loops — when startTimer() has an 'if (running) return' guard, call pauseTimer() first to clear the flag + cancel the RAF, THEN startTimer() to schedule a new loop with the new anchor; reusable for any RAF-based timer that supports re-anchoring
+- [Phase 10]: Plan 10-01: RLS test uses dynamic import of @supabase/supabase-js inside beforeAll — static imports resolve at Vitest collection time regardless of describe.skip, which would break npm test before Plan 10-02 installs the package. Dynamic import + describeIf skip-gate keeps npm test green (9 tests skipped cleanly) while preserving the D-37 hard-gate contract.
+- [Phase 10]: Plan 10-01: RLS migration ships 12 policies using the D-24 template verbatim (6 SELECT + 6 ALL with WITH CHECK on writes — non-negotiable per PITFALLS §2.2). Every user_id column carries a B-tree index (D-25; PITFALLS §2.4 — unindexed user_id times out at 1M rows). counterflux schema mirrors Dexie v8 shape exactly so Phase 11 sync can push/pull 1:1.
+- [Phase 10]: Plan 10-01: Pre-flight runbook (10-AUTH-PREFLIGHT.md) is standalone (D-34) — covers Supabase SQL Editor + PostgREST exposed-schemas + Google Cloud Console OAuth + Vercel env vars + local .env.local bootstrap + verification + rotation. README.md created (did not exist) with Auth Setup section linking per D-35.
 
 ### Roadmap Evolution
 
@@ -161,6 +165,6 @@ None — roadmap complete, next step is `/gsd:plan-phase 7`.
 
 ## Session Continuity
 
-Last session: 2026-04-17T13:43:14.227Z
-Stopped at: Phase 10 context gathered
-Resume file: .planning/phases/10-supabase-auth-foundation/10-CONTEXT.md
+Last session: 2026-04-17T15:02:21.227Z
+Stopped at: Completed 10-01-PLAN.md — counterflux schema + RLS + isolation test + pre-flight runbook
+Resume file: None
