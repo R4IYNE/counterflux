@@ -21,6 +21,73 @@ function formatDuration(ms) {
 }
 
 /**
+ * Format milliseconds as mm:ss for turn-pacing tiles (GAME-09 / D-19).
+ * @param {number} ms
+ * @returns {string}
+ */
+function formatLap(ms) {
+  if (!ms || ms <= 0 || isNaN(ms)) return '0:00';
+  const totalSeconds = Math.floor(ms / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${String(seconds).padStart(2, '0')}`;
+}
+
+/**
+ * Compute pacing stats from turn_laps + players.
+ * Per CONTEXT D-19 + RESEARCH GAME-09 third row.
+ *
+ * @param {number[]} turnLaps - per-turn durations in ms
+ * @param {Array} players - $store.game.players (we use .name; lap index modulo
+ *   players.length identifies which player owned which turn)
+ * @returns {{
+ *   longestTurn: number,
+ *   longestPlayerName: string,
+ *   avgTurn: number,
+ *   perPlayerAvg: Array<{ name: string, avgMs: number }>,
+ * }}
+ */
+export function computePacingStats(turnLaps, players) {
+  const laps = (turnLaps || []).filter(
+    (n) => typeof n === 'number' && n > 0 && !isNaN(n)
+  );
+  if (laps.length === 0 || !players || players.length === 0) {
+    return { longestTurn: 0, longestPlayerName: '', avgTurn: 0, perPlayerAvg: [] };
+  }
+
+  // longestTurn + which player took it (lap index modulo player count maps to
+  // player index — turn order rotates predictably from activePlayerIndex=0)
+  let longestIdx = 0;
+  for (let i = 1; i < laps.length; i++) {
+    if (laps[i] > laps[longestIdx]) longestIdx = i;
+  }
+  const longestTurn = laps[longestIdx];
+  const longestPlayerIndex = longestIdx % players.length;
+  const longestPlayerName = players[longestPlayerIndex]?.name || `Player ${longestPlayerIndex + 1}`;
+
+  // avgTurn (overall mean)
+  const avgTurn = laps.reduce((sum, n) => sum + n, 0) / laps.length;
+
+  // perPlayerAvg: group by index modulo player count
+  const buckets = players.map(() => []);
+  for (let i = 0; i < laps.length; i++) {
+    buckets[i % players.length].push(laps[i]);
+  }
+  const perPlayerAvg = players.map((p, idx) => {
+    const playerLaps = buckets[idx];
+    const avgMs =
+      playerLaps.length > 0
+        ? playerLaps.reduce((s, n) => s + n, 0) / playerLaps.length
+        : 0;
+    return { name: p.name || `Player ${idx + 1}`, avgMs };
+  });
+  // Sort slowest first per D-19
+  perPlayerAvg.sort((a, b) => b.avgMs - a.avgMs);
+
+  return { longestTurn, longestPlayerName, avgTurn, perPlayerAvg };
+}
+
+/**
  * Render the post-game summary overlay HTML with Alpine bindings.
  * Visible when $store.game.view === 'summary'.
  *
@@ -86,6 +153,70 @@ export function renderPostGameOverlay() {
             style="font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; color: #EAECEE;"
             x-text="$store.game.currentTurn"
           ></span>
+        </div>
+      </div>
+
+      <!-- TURN PACING (GAME-09 / D-19) — three tiles computed from turn_laps -->
+      <div class="mb-lg" x-show="$store.game.turn_laps && $store.game.turn_laps.length > 0">
+        <h2
+          class="mb-md"
+          style="font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; color: #EAECEE; letter-spacing: 0.01em;"
+        >TURN PACING</h2>
+        <div class="flex gap-md" style="padding: 24px; background: #14161C; border: 1px solid #2A2D3A;">
+
+          <!-- LONGEST TURN tile -->
+          <div class="flex flex-col" style="flex: 1; min-width: 120px;">
+            <span
+              class="block mb-xs"
+              style="font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: #7A8498;"
+            >LONGEST TURN</span>
+            <span
+              style="font-family: 'JetBrains Mono', monospace; font-size: 32px; font-weight: 700; color: #0D52BD; line-height: 1;"
+              x-text="pacing.longestTurnDisplay"
+            ></span>
+            <span
+              class="mt-xs"
+              style="font-family: 'Space Grotesk', sans-serif; font-size: 11px; color: #7A8498; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"
+              :title="pacing.longestPlayerName"
+              x-text="pacing.longestPlayerName"
+            ></span>
+          </div>
+
+          <!-- AVG TURN tile -->
+          <div class="flex flex-col" style="flex: 1; min-width: 120px;">
+            <span
+              class="block mb-xs"
+              style="font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: #7A8498;"
+            >AVG TURN</span>
+            <span
+              style="font-family: 'JetBrains Mono', monospace; font-size: 32px; font-weight: 700; color: #0D52BD; line-height: 1;"
+              x-text="pacing.avgTurnDisplay"
+            ></span>
+          </div>
+
+          <!-- PER-PLAYER AVG tile -->
+          <div class="flex flex-col" style="flex: 2; min-width: 200px;">
+            <span
+              class="block mb-xs"
+              style="font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: #7A8498;"
+            >PER-PLAYER AVG</span>
+            <div class="flex flex-col gap-xs">
+              <template x-for="(p, idx) in pacing.perPlayerAvg" :key="'pp-' + idx">
+                <div class="flex items-center justify-between gap-md">
+                  <span
+                    style="font-family: 'Space Grotesk', sans-serif; font-size: 14px; color: #EAECEE; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; flex: 1;"
+                    :title="p.name"
+                    x-text="p.name"
+                  ></span>
+                  <span
+                    style="font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700; color: #0D52BD; flex-shrink: 0;"
+                    x-text="p.avgDisplay"
+                  ></span>
+                </div>
+              </template>
+            </div>
+          </div>
+
         </div>
       </div>
 
@@ -196,10 +327,21 @@ export function postGameOverlay() {
     showDiscardConfirm: false,
     readOnly: false,
     computedDuration: '0m',
+    // GAME-09 (D-19): TURN PACING tile data, populated by _computePacing
+    pacing: {
+      longestTurn: 0,
+      longestPlayerName: '',
+      avgTurn: 0,
+      perPlayerAvg: [],
+      longestTurnDisplay: '0:00',
+      avgTurnDisplay: '0:00',
+    },
 
     init() {
       // Compute duration
       this._computeDuration();
+      // GAME-09 (D-19): compute TURN PACING stats
+      this._computePacing();
 
       // Render life chart after DOM settles
       this.$nextTick(() => {
@@ -220,6 +362,25 @@ export function postGameOverlay() {
           this.eliminationOrder = [...this.$store.game._historyElimination];
         }
       }
+    },
+
+    _computePacing() {
+      const stats = computePacingStats(
+        this.$store.game.turn_laps,
+        this.$store.game.players
+      );
+      this.pacing = {
+        longestTurn: stats.longestTurn,
+        longestPlayerName: stats.longestPlayerName,
+        avgTurn: stats.avgTurn,
+        perPlayerAvg: stats.perPlayerAvg.map((p) => ({
+          name: p.name,
+          avgMs: p.avgMs,
+          avgDisplay: formatLap(p.avgMs),
+        })),
+        longestTurnDisplay: formatLap(stats.longestTurn),
+        avgTurnDisplay: formatLap(stats.avgTurn),
+      };
     },
 
     _computeDuration() {
