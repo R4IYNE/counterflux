@@ -24,7 +24,7 @@
 - [ ] **Phase 7: Polish Pass + Perf Baseline + Schema Migration** — 11 cross-app polish fixes, web-vitals + Lighthouse baseline, Dexie v5→v6 migration with safe backfill of `updated_at`, `turn_laps`, and sync tables
 - [ ] **Phase 8: Treasure Cruise Rapid Entry** — LHS persistent pop-out add panel, Commander precon browser with add-all, set-icon printing picker, mass-entry close button
 - [ ] **Phase 9: Deck Accuracy + Vandalblast Pod Experience** — Deck analytics QA, RAG gap warning redesign, Commander-as-own-type, full Vandalblast layout/colour/counter uplift, first-player picker, visual turn indicator, persisted per-turn laps
-- [ ] **Phase 10: Supabase Auth Foundation** — Lazy-loaded Supabase client, email magic-link + Google OAuth, PKCE flow, auth-aware profile, RLS policies on every synced table
+- [x] **Phase 10: Supabase Auth Foundation** — Lazy-loaded Supabase client, email magic-link + Google OAuth, PKCE flow, auth-aware profile, RLS policies on every synced table (completed 2026-04-17)
 - [ ] **Phase 11: Cloud Sync Engine** — Postgres schema, Dexie hook outbox, batched RPC flush, first-sign-in reconciliation, LWW conflict resolution, offline queue, topbar sync-status chip
 - [ ] **Phase 12: Notification Bell + Preordain Spoiler Refresh** — Unified notification inbox with sync-error surfacing, set icons in spoiler dropdown, visual spoiler overhaul with NEW badges, quick add-to-watchlist
 - [ ] **Phase 13: Performance Optimisation (conditional)** — Targeted fixes if baseline measurement reveals regressions vs agreed targets; documentation-only pass if targets already met
@@ -116,7 +116,7 @@ Plans:
 - [x] 10-01-PLAN.md — Supabase schema + RLS + RLS isolation test (D-37 hard gate) + .env.example + 10-AUTH-PREFLIGHT.md (AUTH-06)
 - [x] 10-02-PLAN.md — @supabase/supabase-js dependency + lazy services/supabase.js + stores/auth.js + router /auth-callback + AUTH-01 bundle-inspection test (AUTH-01, AUTH-02, AUTH-05)
 - [x] 10-03-PLAN.md — auth-modal.js + auth-callback-overlay.js + sidebar anonymous/authed branch + reduced-motion CSS (AUTH-02, AUTH-03)
-- [ ] 10-04-PLAN.md — Auth-aware profile store + settings-modal signed-in/signed-out refactor + first-sign-in-prompt.js (AUTH-04, AUTH-05)
+- [x] 10-04-PLAN.md — Auth-aware profile store + settings-modal signed-in/signed-out refactor + first-sign-in-prompt.js (AUTH-04, AUTH-05)
 **UI hint**: yes
 
 ### Phase 11: Cloud Sync Engine
@@ -167,7 +167,7 @@ Plans:
 | 8. Treasure Cruise Rapid Entry | v1.1 | 3/3 | Complete | 2026-04-16 |
 | 8.1. Treasure Cruise Polish & Precon Coverage | v1.1 | 3/3 | Complete | 2026-04-16 |
 | 9. Deck Accuracy + Vandalblast Pod Experience | v1.1 | 6/6 | Complete | 2026-04-17 |
-| 10. Supabase Auth Foundation | v1.1 | 3/4 | In Progress|  |
+| 10. Supabase Auth Foundation | v1.1 | 4/4 | Complete   | 2026-04-17 |
 | 11. Cloud Sync Engine | v1.1 | 0/? | Not started | — |
 | 12. Notification Bell + Preordain Spoiler Refresh | v1.1 | 0/? | Not started | — |
 | 13. Performance Optimisation (conditional) | v1.1 | 0/? | Not started | — |

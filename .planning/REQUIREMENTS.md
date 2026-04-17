@@ -76,7 +76,7 @@
 - [x] **AUTH-01**: Supabase JS client (`@supabase/supabase-js` 2.103.x) added as dependency and lazy-imported only when user initiates auth (preserves unauthenticated cold-boot bundle)
 - [x] **AUTH-02**: Email magic-link sign-in flow works end-to-end; Supabase auth configured with PKCE flow to avoid hash-fragment collision with Navigo router
 - [x] **AUTH-03**: Google OAuth sign-in flow works end-to-end (desktop browser)
-- [ ] **AUTH-04**: Settings modal email field removed; profile name and avatar populate from auth identity when signed in; unauthenticated users see a "Sign in" CTA
+- [x] **AUTH-04**: Settings modal email field removed; profile name and avatar populate from auth identity when signed in; unauthenticated users see a "Sign in" CTA
 - [x] **AUTH-05**: Session persists across reloads; explicit sign-out clears Supabase session but preserves local Dexie data (local-first promise)
 - [x] **AUTH-06**: Row Level Security policies written for every synced table (`collection`, `decks`, `deck_cards`, `games`, `watchlist`, `profile`) enforcing `auth.uid() = user_id`; policies tested against a second user context
 

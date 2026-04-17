@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Second Sunrise
-status: executing
-stopped_at: "Completed 10-03-PLAN.md — auth-modal + callback overlay + sidebar branch + reduced-motion CSS; Visual Regression Anchors #2 + #3 + #4 implementation-complete"
-last_updated: "2026-04-17T15:30:49.882Z"
+status: verifying
+stopped_at: "Completed 10-04-PLAN.md — auth-aware profile store + settings-modal auth branches + first-sign-in migration prompt; Visual Regression Anchors 5-8 implementation-complete; Phase 10 ready for /gsd:complete-phase"
+last_updated: "2026-04-17T15:47:17.242Z"
 last_activity: 2026-04-17
 progress:
   total_phases: 8
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 19
-  completed_plans: 18
+  completed_plans: 19
   percent: 0
 ---
 
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-04-14)
 
 Phase: 10 (supabase-auth-foundation) — EXECUTING
 Plan: 4 of 4
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-04-17
 
 Progress: [          ] 0%
@@ -76,6 +76,7 @@ Progress: [          ] 0%
 | Phase 10 P01 | 6m 0s | 3 tasks | 5 files |
 | Phase 10 P02 | 7m 27s | 3 tasks (4 commits w/ TDD RED/GREEN pair) tasks | 9 files files |
 | Phase 10 P03 | 8m 30s | 4 tasks (6 commits w/ TDD RED/GREEN pairs) tasks | 7 files files |
+| Phase 10 P04 | 10m 12s | 3 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -155,6 +156,10 @@ Full decision log in PROJECT.md Key Decisions table.
 - [Phase 10]: Plan 10-03: auth-modal ships with captureCurrentPreAuthRoute STATICALLY imported from auth-callback-overlay — route must stash BEFORE window.location navigates to Google/Supabase; dynamic import would race the redirect. Rolldown emits INEFFECTIVE_DYNAMIC_IMPORT (overlay lands in main bundle, ~3KB gz cost) but AUTH-01 preserved: supabase-js 187KB chunk still 100% code-split.
 - [Phase 10]: Plan 10-03: RESEND countdown uses setInterval(tick, 1000) + Date.now snapshot anchor (wall-clock immune to background-tab throttling, Phase 9 Vandalblast timer precedent). Magic-link-sent swap uses innerHTML replacement of #cf-auth-body — preserves header + X close + escape handler across idle↔sent state flip, no listener churn. Google button hover wired via inline onmouseover/onmouseout matching existing settings-modal inline-style pattern.
 - [Phase 10]: Plan 10-03: Sidebar widget registered via Alpine.data('sidebarComponent', sidebarComponent) in main.js — template x-data='sidebarComponent()' resolves new profileWidgetClick/authedDisplayName/authedAvatarUrl helpers via registry (HTML can't import). Reduced-motion selector list front-loads #cf-first-sign-in-prompt (Plan 4 component) to avoid editing main.css twice — invalid selectors for not-yet-mounted elements are a harmless no-op per established convention.
+- [Phase 10]: Plan 10-04: Auth-aware profile store uses _source ('local'|'cloud') state machine + id-fetch-first upsert pattern for counterflux.profile (text UUID PK); update() always mirrors to localStorage (D-19) so sign-out re-hydrate has fresh snapshot
+- [Phase 10]: Plan 10-04: D-22 sign-out preservation enforced by static grep gate in tests/settings-modal-auth.test.js Test 8 — reads settings-modal.js source and regex-asserts no db.(collection|decks|deck_cards|games|watchlist|profile) matches; cheaper + more durable than Dexie mock
+- [Phase 10]: Plan 10-04: first-sign-in-prompt uses capture-phase Escape blocker (addEventListener third-arg true) to intercept before any downstream document-level Escape handler; preventDefault + stopPropagation on keydown, preventDefault on backdrop — D-16 lockdown
+- [Phase 10]: Plan 10-04: Alpine.effect in main.js uses async IIFE to sequence profile.hydrate() then maybeShowFirstSignInPrompt() — prompt guards depend on _source/_loaded flags set by hydrate, so sequential await is mandatory; IIFE keeps effect body synchronous while awaiting internally
 
 ### Roadmap Evolution
 
@@ -173,6 +178,6 @@ None — roadmap complete, next step is `/gsd:plan-phase 7`.
 
 ## Session Continuity
 
-Last session: 2026-04-17T15:30:49.880Z
-Stopped at: Completed 10-03-PLAN.md — auth-modal + callback overlay + sidebar branch + reduced-motion CSS; Visual Regression Anchors #2 + #3 + #4 implementation-complete
+Last session: 2026-04-17T15:47:17.240Z
+Stopped at: Completed 10-04-PLAN.md — auth-aware profile store + settings-modal auth branches + first-sign-in migration prompt; Visual Regression Anchors 5-8 implementation-complete; Phase 10 ready for /gsd:complete-phase
 Resume file: None
