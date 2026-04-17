@@ -93,7 +93,7 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 09-01-PLAN.md — Deck accuracy + analytics polish (DECK-01..05): commander section, fixture-validated analytics, RAG gap badges, EDHREC top-salt rewrite
+- [x] 09-01-PLAN.md — Deck accuracy + analytics polish (DECK-01..05): commander section, fixture-validated analytics, RAG gap badges, EDHREC top-salt rewrite
 - [ ] 09-02-PLAN.md — Vandalblast layout + visuals + router-test fix (GAME-01..06): clipping, 3-player T-shape, RAG life colours, counter glyphs, real Fullscreen API, in-card counters
 - [ ] 09-03-PLAN.md — Vandalblast turn mechanics + post-game stats (GAME-07..10): slot-machine spinner, active-player highlight, turn_laps persistence, wall-clock timer, TURN PACING tiles
 

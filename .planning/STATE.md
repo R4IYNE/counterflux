@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Second Sunrise
-status: verifying
-stopped_at: Completed 08.1-02-PLAN.md (FOLLOWUP-4A allowlist + FOLLOWUP-4B bundle guard)
-last_updated: "2026-04-16T15:01:08.244Z"
-last_activity: 2026-04-16
+status: executing
+stopped_at: Completed 09-01-PLAN.md (DECK-01..05 deck accuracy + analytics polish)
+last_updated: "2026-04-17T09:17:41.661Z"
+last_activity: 2026-04-17
 progress:
   total_phases: 8
   completed_phases: 3
-  total_plans: 9
-  completed_plans: 9
+  total_plans: 12
+  completed_plans: 10
   percent: 0
 ---
 
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-14)
 
 **Core value:** The deck builder knows what you own, and the collection knows what's in your decks — one interconnected data layer
-**Current focus:** Phase 08.1 — treasure-cruise-polish-precon-coverage
+**Current focus:** Phase 09 — deck-accuracy-vandalblast-pod-experience
 
 ## Current Position
 
-Phase: 9
-Plan: Not started
-Status: Phase complete — ready for verification
-Last activity: 2026-04-16
+Phase: 09 (deck-accuracy-vandalblast-pod-experience) — EXECUTING
+Plan: 2 of 3
+Status: Ready to execute
+Last activity: 2026-04-17
 
 Progress: [          ] 0%
 
@@ -67,6 +67,7 @@ Progress: [          ] 0%
 | Phase 08.1 P01 | 2m 55s | 2 tasks | 4 files |
 | Phase 08.1 P03 | 14m | 2 tasks | 5 files |
 | Phase 08.1 P02 | 6m 29s | 2 tasks | 6 files |
+| Phase 09 P01 | 25min | 5 tasks tasks | 20 files files |
 
 ## Accumulated Context
 
@@ -113,6 +114,11 @@ Full decision log in PROJECT.md Key Decisions table.
 - [Phase 08.1]: Plan 02: 18-code PRECON_EXTRA_CODES allowlist surfaces Commander Masters/Legends I+II/Planechase/Archenemy/Premium Deck Series/Commander's Arsenal/Commander Collection/Game Night/ToME Deluxe Commander Kit — surgical (code-level not set_type widening) so mb2 Mystery Booster 2 stays excluded
 - [Phase 08.1]: Plan 02: isMultiDeckBundle threshold = strictly > 200 cards. Bundle guard early-returns silently from addAllFromPrecon (no Dexie writes, no loadEntries, no toast, no undo entry) and precon-browser swaps the giant decklist for a MULTI-DECK PRODUCT warning + OPEN IN SCRYFALL link. Browser stays open so the warning stays visible.
 - [Phase 08.1]: Plan 02: Reclassified existing cmm fixture row in place from set_type 'commander' → 'masters' (matches Scryfall reality) rather than appending a duplicate. cmm now flows through the FOLLOWUP-4A allowlist path, dogfooding the new code.
+- [Phase 09]: Plan 1: DECK-04 root cause was structural — getCardSalt queried /pages/cards/{slug}.json card.salt path EDHREC has never returned. Fix is rewrite to /pages/top/salt.json bulk endpoint (single fetch, name-keyed map, 7d meta-table cache), NOT a wiring patch. RESEARCH live HTTP probes caught this before implementation.
+- [Phase 09]: Plan 1: salt cache lives in existing meta table (single row, key 'top_salt_map') instead of new salt_cache table — no Dexie schema bump, mirrors edhrec_cache + combo_cache 'one fetch one row' philosophy.
+- [Phase 09]: Plan 1: DECK-03 RAG keeps legacy DEFAULT_THRESHOLDS + detectGaps as back-compat alias — existing 10 two-tier tests stay green, no test rewrites needed. Custom per-deck thresholds get auto-normalised in updateGaps from single-number → { green, amber } shape so saveDeckThresholds API is untouched.
+- [Phase 09]: Plan 1: Commander section uses fallback derivation (first Legendary Creature/Planeswalker matching deck colour-identity union) for legacy v1.0 decks lacking commander_id. Console.warn surfaces the fallback for diagnostic visibility. Commander tile is intentionally NOT SortableJS-registered — moving the commander between type sections is meaningless.
+- [Phase 09]: Plan 1: deck-analytics-panel + deck-centre-panel read window.Alpine directly (NOT the import). Test mocking via vi.mock('alpinejs') has no effect on these components — pattern is to set window.Alpine = { store, effect, data } in beforeEach + restore in afterEach. Plan 2's player-card.test.js + floating-toolbar.test.js will likely need the same setup.
 
 ### Roadmap Evolution
 
@@ -131,6 +137,6 @@ None — roadmap complete, next step is `/gsd:plan-phase 7`.
 
 ## Session Continuity
 
-Last session: 2026-04-16T13:43:54.799Z
-Stopped at: Completed 08.1-02-PLAN.md (FOLLOWUP-4A allowlist + FOLLOWUP-4B bundle guard)
+Last session: 2026-04-17T09:17:12.988Z
+Stopped at: Completed 09-01-PLAN.md (DECK-01..05 deck accuracy + analytics polish)
 Resume file: None

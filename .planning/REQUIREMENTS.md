@@ -46,11 +46,11 @@
 
 ### Thousand-Year Storm (Deck Builder)
 
-- [ ] **DECK-01**: Deck editor back button is verified to return user to the deck list (QA existing implementation at `components/deck-editor.js:27-37`)
-- [ ] **DECK-02**: Mana curve and colour distribution charts validated against hand-calculated expected values for 3 representative decks; any data accuracy bugs fixed
-- [ ] **DECK-03**: Gap warning label removes the redundant category name; shows an RAG severity badge (red/amber/green) and the suggested count of cards to add (e.g. "+5")
-- [ ] **DECK-04**: Salt gauge shows a non-zero score for decks with salty cards; zero-score bug traced and fixed in `intelligence.js`
-- [ ] **DECK-05**: Commander renders as its own type category (separate from Creature) in the deck centre panel card grouping, using the deck's `commander_id`
+- [x] **DECK-01**: Deck editor back button is verified to return user to the deck list (QA existing implementation at `components/deck-editor.js:27-37`)
+- [x] **DECK-02**: Mana curve and colour distribution charts validated against hand-calculated expected values for 3 representative decks; any data accuracy bugs fixed
+- [x] **DECK-03**: Gap warning label removes the redundant category name; shows an RAG severity badge (red/amber/green) and the suggested count of cards to add (e.g. "+5")
+- [x] **DECK-04**: Salt gauge shows a non-zero score for decks with salty cards; zero-score bug traced and fixed in `intelligence.js`
+- [x] **DECK-05**: Commander renders as its own type category (separate from Creature) in the deck centre panel card grouping, using the deck's `commander_id`
 
 ### Preordain (Market Intel)
 
