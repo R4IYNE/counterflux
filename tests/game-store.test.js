@@ -567,4 +567,63 @@ describe('game-store Plan 3 turn mechanics', () => {
       expect(game.turnStartedAt).toBeNull();
     });
   });
+
+  // ============================================================
+  // Phase 9 Plan 06 — Gap 6 (timer auto-start on startGame + nextTurn)
+  //
+  // BUG: in Plan 3's shipped source, startTimer() is only invoked via the
+  // floating-toolbar's manual play/pause button (floating-toolbar.js:59). When
+  // the user clicks Start Game, the spinner resolves and the game becomes
+  // active, but the visible turn-timer never ticks — users have to find the
+  // floating-toolbar button and press it manually. Per GAME-09/GAME-10 spec,
+  // the timer should auto-start when a game begins AND re-start on each
+  // NEXT TURN.
+  //
+  // FIX: startGame() calls this.startTimer() after the spinner resolves;
+  // nextTurn() calls this.pauseTimer() → this.startTimer() so the current RAF
+  // loop is cancelled cleanly and a new loop starts anchored to the new
+  // turnStartedAt.
+  // ============================================================
+
+  describe('gap 6 (timer auto-start on startGame + nextTurn)', () => {
+    it('startGame auto-starts the timer (timerRunning === true post-resolve)', async () => {
+      spinForFirstPlayer.mockResolvedValue(0);
+      const ok = await game.startGame();
+      expect(ok).toBe(true);
+      expect(game.timerRunning).toBe(true);
+    });
+
+    it('nextTurn auto-restarts the timer (timerRunning true after turn advance)', async () => {
+      const t0 = 1_700_000_000_000;
+      const clock = pinDateNow(t0);
+      spinForFirstPlayer.mockResolvedValue(0);
+      await game.startGame();
+      expect(game.timerRunning).toBe(true);
+
+      clock.advance(5000); // 5s into turn 1
+      game.nextTurn();
+      // Without the fix, pauseTimer() at the end of nextTurn leaves this false.
+      expect(game.timerRunning).toBe(true);
+    });
+
+    it('turn_laps accumulates one entry per nextTurn (3 clicks = 3 laps)', async () => {
+      const t0 = 1_700_000_000_000;
+      const clock = pinDateNow(t0);
+      spinForFirstPlayer.mockResolvedValue(0);
+      await game.startGame();
+      expect(game.turnStartedAt).toBe(t0);
+
+      clock.advance(10_000);
+      game.nextTurn();
+      clock.advance(15_000);
+      game.nextTurn();
+      clock.advance(8_000);
+      game.nextTurn();
+
+      expect(game.turn_laps.length).toBe(3);
+      expect(game.turn_laps[0]).toBe(10_000);
+      expect(game.turn_laps[1]).toBe(15_000);
+      expect(game.turn_laps[2]).toBe(8_000);
+    });
+  });
 });
