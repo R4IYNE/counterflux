@@ -66,10 +66,10 @@
 - [x] **GAME-04**: Poison, tax, and commander-damage expansion widgets show representative icons next to their counts
 - [x] **GAME-05**: Fullscreen toggle on floating toolbar correctly enters and exits fullscreen without breaking layout or losing game state
 - [x] **GAME-06**: User can add/remove additional counters directly from the expanded player card section (not only via the global counter panel)
-- [ ] **GAME-07**: At game start, a coin-flip/spinner picks the first player with visible animation; result persists for the game record
-- [ ] **GAME-08**: Active player is visually highlighted (border/glow); NEXT TURN button advances the highlight and resets the turn timer
-- [ ] **GAME-09**: Per-turn durations persist to the game record as `turn_laps: number[]`; post-game stats surface longest turn, avg turn, per-player avg
-- [ ] **GAME-10**: Turn timer uses a wall-clock anchor (e.g. `performance.now()` at turn start + wall delta) so background-tab throttling does not corrupt lap durations
+- [x] **GAME-07**: At game start, a coin-flip/spinner picks the first player with visible animation; result persists for the game record
+- [x] **GAME-08**: Active player is visually highlighted (border/glow); NEXT TURN button advances the highlight and resets the turn timer
+- [x] **GAME-09**: Per-turn durations persist to the game record as `turn_laps: number[]`; post-game stats surface longest turn, avg turn, per-player avg
+- [x] **GAME-10**: Turn timer uses a wall-clock anchor (e.g. `performance.now()` at turn start + wall delta) so background-tab throttling does not corrupt lap durations
 
 ### Authentication (Supabase)
 
