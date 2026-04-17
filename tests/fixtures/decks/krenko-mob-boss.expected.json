@@ -1,0 +1,35 @@
+{
+  "commander_id": "9f5ee5cf-3b04-4ce0-8c4d-1d23c5b09b56",
+  "commander_name": "Krenko, Mob Boss",
+  "color_identity": ["R"],
+  "total_cards": 100,
+  "land_count": 36,
+  "non_land_count": 64,
+  "mana_curve": {
+    "0": 1,
+    "1": 14,
+    "2": 14,
+    "3": 20,
+    "4": 8,
+    "5": 3,
+    "6": 3,
+    "7+": 1
+  },
+  "colour_distribution": {
+    "W": 0,
+    "U": 0,
+    "B": 0,
+    "R": 1,
+    "G": 0,
+    "C": 0
+  },
+  "type_breakdown": {
+    "Creature": 30,
+    "Sorcery": 9,
+    "Enchantment": 8,
+    "Instant": 3,
+    "Artifact": 14,
+    "Land": 36
+  },
+  "average_cmc": 2.75
+}

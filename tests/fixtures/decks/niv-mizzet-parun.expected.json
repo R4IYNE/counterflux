@@ -1,0 +1,35 @@
+{
+  "commander_id": "3fe6dccd-19ac-4415-a48a-446b9b34ed13",
+  "commander_name": "Niv-Mizzet, Parun",
+  "color_identity": ["U", "R"],
+  "total_cards": 100,
+  "land_count": 36,
+  "non_land_count": 64,
+  "mana_curve": {
+    "0": 0,
+    "1": 19,
+    "2": 20,
+    "3": 9,
+    "4": 7,
+    "5": 3,
+    "6": 3,
+    "7+": 3
+  },
+  "colour_distribution": {
+    "W": 0,
+    "U": 0.6053,
+    "B": 0,
+    "R": 0.3947,
+    "G": 0,
+    "C": 0
+  },
+  "type_breakdown": {
+    "Creature": 9,
+    "Instant": 25,
+    "Sorcery": 14,
+    "Artifact": 11,
+    "Enchantment": 5,
+    "Land": 36
+  },
+  "average_cmc": 2.6875
+}

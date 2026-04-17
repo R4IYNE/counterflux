@@ -1,0 +1,35 @@
+{
+  "commander_id": "5c01c48d-faec-4458-8ec0-1efe4f2b39be",
+  "commander_name": "The Ur-Dragon",
+  "color_identity": ["W", "U", "B", "R", "G"],
+  "total_cards": 100,
+  "land_count": 36,
+  "non_land_count": 64,
+  "mana_curve": {
+    "0": 3,
+    "1": 10,
+    "2": 5,
+    "3": 13,
+    "4": 9,
+    "5": 7,
+    "6": 9,
+    "7+": 8
+  },
+  "colour_distribution": {
+    "W": 0.1287,
+    "U": 0.1287,
+    "B": 0.1485,
+    "R": 0.3366,
+    "G": 0.2475,
+    "C": 0.0099
+  },
+  "type_breakdown": {
+    "Creature": 29,
+    "Artifact": 9,
+    "Sorcery": 10,
+    "Instant": 8,
+    "Enchantment": 8,
+    "Land": 36
+  },
+  "average_cmc": 3.8594
+}

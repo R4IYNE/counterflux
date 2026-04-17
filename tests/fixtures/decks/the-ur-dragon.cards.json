@@ -1,0 +1,2197 @@
+[
+  {
+    "card": {
+      "id": "5c01c48d-faec-4458-8ec0-1efe4f2b39be",
+      "name": "The Ur-Dragon",
+      "type_line": "Legendary Creature — Dragon Avatar",
+      "mana_cost": "{4}{W}{U}{B}{R}{G}",
+      "cmc": 9,
+      "color_identity": [
+        "W",
+        "U",
+        "B",
+        "R",
+        "G"
+      ],
+      "colors": [
+        "W",
+        "U",
+        "B",
+        "R",
+        "G"
+      ],
+      "set": "c17",
+      "prices": {
+        "eur": "40.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Tribal"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "u001",
+      "name": "Lathliss, Dragon Queen",
+      "type_line": "Legendary Creature — Dragon",
+      "mana_cost": "{3}{R}{R}",
+      "cmc": 5,
+      "color_identity": [
+        "R"
+      ],
+      "colors": [
+        "R"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "2.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "u002",
+      "name": "Dragonlord Ojutai",
+      "type_line": "Legendary Creature — Elder Dragon",
+      "mana_cost": "{2}{W}{U}",
+      "cmc": 4,
+      "color_identity": [
+        "W",
+        "U"
+      ],
+      "colors": [
+        "W",
+        "U"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "2.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "u003",
+      "name": "Dragonlord Dromoka",
+      "type_line": "Legendary Creature — Elder Dragon",
+      "mana_cost": "{4}{G}{W}",
+      "cmc": 6,
+      "color_identity": [
+        "G",
+        "W"
+      ],
+      "colors": [
+        "G",
+        "W"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "2.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "u004",
+      "name": "Dragonlord Silumgar",
+      "type_line": "Legendary Creature — Elder Dragon",
+      "mana_cost": "{3}{U}{B}",
+      "cmc": 5,
+      "color_identity": [
+        "U",
+        "B"
+      ],
+      "colors": [
+        "U",
+        "B"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "2.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "u005",
+      "name": "Niv-Mizzet, Dracogenius",
+      "type_line": "Legendary Creature — Dragon Wizard",
+      "mana_cost": "{2}{U}{U}{R}{R}",
+      "cmc": 6,
+      "color_identity": [
+        "U",
+        "R"
+      ],
+      "colors": [
+        "U",
+        "R"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "2.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "u006",
+      "name": "Bladewing the Risen",
+      "type_line": "Legendary Creature — Zombie Dragon",
+      "mana_cost": "{3}{B}{R}",
+      "cmc": 5,
+      "color_identity": [
+        "B",
+        "R"
+      ],
+      "colors": [
+        "B",
+        "R"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "2.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "u007",
+      "name": "Kolaghan, the Storm's Fury",
+      "type_line": "Legendary Creature — Elder Dragon",
+      "mana_cost": "{3}{B}{R}",
+      "cmc": 5,
+      "color_identity": [
+        "B",
+        "R"
+      ],
+      "colors": [
+        "B",
+        "R"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "2.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "u008",
+      "name": "Balefire Dragon",
+      "type_line": "Creature — Dragon",
+      "mana_cost": "{4}{R}{R}",
+      "cmc": 6,
+      "color_identity": [
+        "R"
+      ],
+      "colors": [
+        "R"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "2.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "u009",
+      "name": "Hellkite Tyrant",
+      "type_line": "Creature — Dragon",
+      "mana_cost": "{4}{R}{R}",
+      "cmc": 6,
+      "color_identity": [
+        "R"
+      ],
+      "colors": [
+        "R"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "2.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "u010",
+      "name": "Utvara Hellkite",
+      "type_line": "Creature — Dragon",
+      "mana_cost": "{6}{R}{R}",
+      "cmc": 8,
+      "color_identity": [
+        "R"
+      ],
+      "colors": [
+        "R"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "2.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "u011",
+      "name": "Scourge of the Throne",
+      "type_line": "Creature — Dragon",
+      "mana_cost": "{4}{R}{R}",
+      "cmc": 6,
+      "color_identity": [
+        "R"
+      ],
+      "colors": [
+        "R"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "2.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "u012",
+      "name": "Terror of the Peaks",
+      "type_line": "Creature — Dragon",
+      "mana_cost": "{3}{R}{R}",
+      "cmc": 5,
+      "color_identity": [
+        "R"
+      ],
+      "colors": [
+        "R"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "2.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "u013",
+      "name": "Rapacious Dragon",
+      "type_line": "Creature — Dragon",
+      "mana_cost": "{3}{R}",
+      "cmc": 4,
+      "color_identity": [
+        "R"
+      ],
+      "colors": [
+        "R"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "2.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "u014",
+      "name": "Hoarding Dragon",
+      "type_line": "Creature — Dragon",
+      "mana_cost": "{3}{R}",
+      "cmc": 4,
+      "color_identity": [
+        "R"
+      ],
+      "colors": [
+        "R"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "2.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "u015",
+      "name": "Dragonlord Atarka",
+      "type_line": "Legendary Creature — Elder Dragon",
+      "mana_cost": "{4}{R}{R}{G}{G}",
+      "cmc": 8,
+      "color_identity": [
+        "R",
+        "G"
+      ],
+      "colors": [
+        "R",
+        "G"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "2.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "u016",
+      "name": "Atarka, World Render",
+      "type_line": "Legendary Creature — Elder Dragon",
+      "mana_cost": "{5}{R}{G}",
+      "cmc": 7,
+      "color_identity": [
+        "R",
+        "G"
+      ],
+      "colors": [
+        "R",
+        "G"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "2.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "u017",
+      "name": "Tiamat",
+      "type_line": "Legendary Creature — Dragon God",
+      "mana_cost": "{4}{W}{U}{B}{R}{G}",
+      "cmc": 9,
+      "color_identity": [
+        "W",
+        "U",
+        "B",
+        "R",
+        "G"
+      ],
+      "colors": [
+        "W",
+        "U",
+        "B",
+        "R",
+        "G"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "2.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "u018",
+      "name": "Scion of the Ur-Dragon",
+      "type_line": "Legendary Creature — Dragon Avatar",
+      "mana_cost": "{3}{W}{U}{B}{R}{G}",
+      "cmc": 8,
+      "color_identity": [
+        "W",
+        "U",
+        "B",
+        "R",
+        "G"
+      ],
+      "colors": [
+        "W",
+        "U",
+        "B",
+        "R",
+        "G"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "2.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "u019",
+      "name": "O-Kagachi, Vengeful Kami",
+      "type_line": "Legendary Creature — Spirit Dragon",
+      "mana_cost": "{1}{W}{U}{B}{R}{G}",
+      "cmc": 6,
+      "color_identity": [
+        "W",
+        "U",
+        "B",
+        "R",
+        "G"
+      ],
+      "colors": [
+        "W",
+        "U",
+        "B",
+        "R",
+        "G"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "2.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "u020",
+      "name": "Karrthus, Tyrant of Jund",
+      "type_line": "Legendary Creature — Dragon",
+      "mana_cost": "{3}{B}{R}{G}",
+      "cmc": 6,
+      "color_identity": [
+        "B",
+        "R",
+        "G"
+      ],
+      "colors": [
+        "B",
+        "R",
+        "G"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "2.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "u021",
+      "name": "Crosis, the Purger",
+      "type_line": "Legendary Creature — Dragon Legend",
+      "mana_cost": "{3}{U}{B}{R}",
+      "cmc": 6,
+      "color_identity": [
+        "U",
+        "B",
+        "R"
+      ],
+      "colors": [
+        "U",
+        "B",
+        "R"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "2.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "u022",
+      "name": "Vrondiss, Rage of Ancients",
+      "type_line": "Legendary Creature — Dragon Berserker",
+      "mana_cost": "{R}{R}{G}{G}",
+      "cmc": 4,
+      "color_identity": [
+        "R",
+        "G"
+      ],
+      "colors": [
+        "R",
+        "G"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "2.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "u023",
+      "name": "Hangarback Walker",
+      "type_line": "Artifact Creature — Construct",
+      "mana_cost": "{X}{X}",
+      "cmc": 0,
+      "color_identity": [],
+      "colors": [],
+      "set": "tst",
+      "prices": {
+        "eur": "2.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "u024",
+      "name": "Endless One",
+      "type_line": "Creature — Eldrazi",
+      "mana_cost": "{X}",
+      "cmc": 0,
+      "color_identity": [],
+      "colors": [],
+      "set": "tst",
+      "prices": {
+        "eur": "2.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "u025",
+      "name": "Walker of the Wastes",
+      "type_line": "Creature — Eldrazi",
+      "mana_cost": "{6}{C}",
+      "cmc": 7,
+      "color_identity": [],
+      "colors": [],
+      "set": "tst",
+      "prices": {
+        "eur": "2.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "u026",
+      "name": "Sol Ring",
+      "type_line": "Artifact",
+      "mana_cost": "{1}",
+      "cmc": 1,
+      "color_identity": [],
+      "colors": [],
+      "set": "tst",
+      "prices": {
+        "eur": "2.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Ramp"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "u027",
+      "name": "Arcane Signet",
+      "type_line": "Artifact",
+      "mana_cost": "{2}",
+      "cmc": 2,
+      "color_identity": [],
+      "colors": [],
+      "set": "tst",
+      "prices": {
+        "eur": "2.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Ramp"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "u028",
+      "name": "Chromatic Lantern",
+      "type_line": "Artifact",
+      "mana_cost": "{3}",
+      "cmc": 3,
+      "color_identity": [],
+      "colors": [],
+      "set": "tst",
+      "prices": {
+        "eur": "2.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Ramp"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "u029",
+      "name": "Coalition Relic",
+      "type_line": "Artifact",
+      "mana_cost": "{3}",
+      "cmc": 3,
+      "color_identity": [],
+      "colors": [],
+      "set": "tst",
+      "prices": {
+        "eur": "2.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Ramp"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "u030",
+      "name": "Darksteel Ingot",
+      "type_line": "Artifact",
+      "mana_cost": "{3}",
+      "cmc": 3,
+      "color_identity": [],
+      "colors": [],
+      "set": "tst",
+      "prices": {
+        "eur": "2.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Ramp"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "u031",
+      "name": "Mana Crypt",
+      "type_line": "Artifact",
+      "mana_cost": "{0}",
+      "cmc": 0,
+      "color_identity": [],
+      "colors": [],
+      "set": "tst",
+      "prices": {
+        "eur": "2.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Ramp"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "u032",
+      "name": "Mana Vault",
+      "type_line": "Artifact",
+      "mana_cost": "{1}",
+      "cmc": 1,
+      "color_identity": [],
+      "colors": [],
+      "set": "tst",
+      "prices": {
+        "eur": "2.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Ramp"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "u033",
+      "name": "Cultivate",
+      "type_line": "Sorcery",
+      "mana_cost": "{2}{G}",
+      "cmc": 3,
+      "color_identity": [
+        "G"
+      ],
+      "colors": [
+        "G"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "2.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Ramp"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "u034",
+      "name": "Kodama's Reach",
+      "type_line": "Sorcery",
+      "mana_cost": "{2}{G}",
+      "cmc": 3,
+      "color_identity": [
+        "G"
+      ],
+      "colors": [
+        "G"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "2.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Ramp"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "u035",
+      "name": "Farseek",
+      "type_line": "Sorcery",
+      "mana_cost": "{1}{G}",
+      "cmc": 2,
+      "color_identity": [
+        "G"
+      ],
+      "colors": [
+        "G"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "2.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Ramp"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "u036",
+      "name": "Nature's Lore",
+      "type_line": "Sorcery",
+      "mana_cost": "{G}",
+      "cmc": 1,
+      "color_identity": [
+        "G"
+      ],
+      "colors": [
+        "G"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "2.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Ramp"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "u037",
+      "name": "Three Visits",
+      "type_line": "Sorcery",
+      "mana_cost": "{G}",
+      "cmc": 1,
+      "color_identity": [
+        "G"
+      ],
+      "colors": [
+        "G"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "2.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Ramp"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "u038",
+      "name": "Birds of Paradise",
+      "type_line": "Creature — Bird",
+      "mana_cost": "{G}",
+      "cmc": 1,
+      "color_identity": [
+        "G"
+      ],
+      "colors": [
+        "G"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "2.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Ramp"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "u039",
+      "name": "Llanowar Elves",
+      "type_line": "Creature — Elf Druid",
+      "mana_cost": "{G}",
+      "cmc": 1,
+      "color_identity": [
+        "G"
+      ],
+      "colors": [
+        "G"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "2.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Ramp"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "u040",
+      "name": "Swords to Plowshares",
+      "type_line": "Instant",
+      "mana_cost": "{W}",
+      "cmc": 1,
+      "color_identity": [
+        "W"
+      ],
+      "colors": [
+        "W"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "2.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Removal"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "u041",
+      "name": "Path to Exile",
+      "type_line": "Instant",
+      "mana_cost": "{W}",
+      "cmc": 1,
+      "color_identity": [
+        "W"
+      ],
+      "colors": [
+        "W"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "2.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Removal"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "u042",
+      "name": "Wrath of God",
+      "type_line": "Sorcery",
+      "mana_cost": "{2}{W}{W}",
+      "cmc": 4,
+      "color_identity": [
+        "W"
+      ],
+      "colors": [
+        "W"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "2.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Board Wipe"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "u043",
+      "name": "Counterspell",
+      "type_line": "Instant",
+      "mana_cost": "{U}{U}",
+      "cmc": 2,
+      "color_identity": [
+        "U"
+      ],
+      "colors": [
+        "U"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "2.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Removal"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "u044",
+      "name": "Brainstorm",
+      "type_line": "Instant",
+      "mana_cost": "{U}",
+      "cmc": 1,
+      "color_identity": [
+        "U"
+      ],
+      "colors": [
+        "U"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "2.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Card Draw"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "u045",
+      "name": "Toxic Deluge",
+      "type_line": "Sorcery",
+      "mana_cost": "{2}{B}",
+      "cmc": 3,
+      "color_identity": [
+        "B"
+      ],
+      "colors": [
+        "B"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "2.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Board Wipe"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "u046",
+      "name": "Damnation",
+      "type_line": "Sorcery",
+      "mana_cost": "{2}{B}{B}",
+      "cmc": 4,
+      "color_identity": [
+        "B"
+      ],
+      "colors": [
+        "B"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "2.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Board Wipe"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "u047",
+      "name": "Lightning Bolt",
+      "type_line": "Instant",
+      "mana_cost": "{R}",
+      "cmc": 1,
+      "color_identity": [
+        "R"
+      ],
+      "colors": [
+        "R"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "2.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Removal"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "u048",
+      "name": "Crux of Fate",
+      "type_line": "Sorcery",
+      "mana_cost": "{3}{B}{B}",
+      "cmc": 5,
+      "color_identity": [
+        "B"
+      ],
+      "colors": [
+        "B"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "2.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Board Wipe"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "u049",
+      "name": "Beast Within",
+      "type_line": "Instant",
+      "mana_cost": "{2}{G}",
+      "cmc": 3,
+      "color_identity": [
+        "G"
+      ],
+      "colors": [
+        "G"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "2.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Removal"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "u050",
+      "name": "Generous Gift",
+      "type_line": "Instant",
+      "mana_cost": "{2}{W}",
+      "cmc": 3,
+      "color_identity": [
+        "W"
+      ],
+      "colors": [
+        "W"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "2.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Removal"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "u051",
+      "name": "Anguished Unmaking",
+      "type_line": "Instant",
+      "mana_cost": "{1}{W}{B}",
+      "cmc": 3,
+      "color_identity": [
+        "W",
+        "B"
+      ],
+      "colors": [
+        "W",
+        "B"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "2.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Removal"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "u052",
+      "name": "Skyshroud Claim",
+      "type_line": "Sorcery",
+      "mana_cost": "{3}{G}",
+      "cmc": 4,
+      "color_identity": [
+        "G"
+      ],
+      "colors": [
+        "G"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "2.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Ramp"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "u053",
+      "name": "Dragon Tempest",
+      "type_line": "Enchantment",
+      "mana_cost": "{2}{R}",
+      "cmc": 3,
+      "color_identity": [
+        "R"
+      ],
+      "colors": [
+        "R"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "2.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Tribal"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "u054",
+      "name": "Crucible of Fire",
+      "type_line": "Enchantment",
+      "mana_cost": "{2}{R}",
+      "cmc": 3,
+      "color_identity": [
+        "R"
+      ],
+      "colors": [
+        "R"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "2.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Tribal"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "u055",
+      "name": "Door of Destinies",
+      "type_line": "Artifact",
+      "mana_cost": "{4}",
+      "cmc": 4,
+      "color_identity": [],
+      "colors": [],
+      "set": "tst",
+      "prices": {
+        "eur": "2.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Tribal"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "u056",
+      "name": "Vanquisher's Banner",
+      "type_line": "Artifact",
+      "mana_cost": "{5}",
+      "cmc": 5,
+      "color_identity": [],
+      "colors": [],
+      "set": "tst",
+      "prices": {
+        "eur": "2.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Tribal",
+      "Card Draw"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "u057",
+      "name": "Rhystic Study",
+      "type_line": "Enchantment",
+      "mana_cost": "{2}{U}",
+      "cmc": 3,
+      "color_identity": [
+        "U"
+      ],
+      "colors": [
+        "U"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "2.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Card Draw"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "u058",
+      "name": "Smothering Tithe",
+      "type_line": "Enchantment",
+      "mana_cost": "{3}{W}",
+      "cmc": 4,
+      "color_identity": [
+        "W"
+      ],
+      "colors": [
+        "W"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "2.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Ramp"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "u059",
+      "name": "Sylvan Library",
+      "type_line": "Enchantment",
+      "mana_cost": "{1}{G}",
+      "cmc": 2,
+      "color_identity": [
+        "G"
+      ],
+      "colors": [
+        "G"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "2.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Card Draw"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "u060",
+      "name": "Lurking Predators",
+      "type_line": "Enchantment",
+      "mana_cost": "{4}{G}{G}",
+      "cmc": 6,
+      "color_identity": [
+        "G"
+      ],
+      "colors": [
+        "G"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "2.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "u061",
+      "name": "Dragon Mage",
+      "type_line": "Creature — Dragon Wizard",
+      "mana_cost": "{5}{R}{R}",
+      "cmc": 7,
+      "color_identity": [
+        "R"
+      ],
+      "colors": [
+        "R"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "2.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Card Draw"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "u062",
+      "name": "Garruk's Uprising",
+      "type_line": "Enchantment",
+      "mana_cost": "{2}{G}",
+      "cmc": 3,
+      "color_identity": [
+        "G"
+      ],
+      "colors": [
+        "G"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "2.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Card Draw"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "u063",
+      "name": "Elemental Bond",
+      "type_line": "Enchantment",
+      "mana_cost": "{1}{G}",
+      "cmc": 2,
+      "color_identity": [
+        "G"
+      ],
+      "colors": [
+        "G"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "2.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Card Draw"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "ul01",
+      "name": "Plains",
+      "type_line": "Basic Land — Plains",
+      "mana_cost": "",
+      "cmc": 0,
+      "color_identity": [
+        "W"
+      ],
+      "colors": [],
+      "set": "lea",
+      "prices": {
+        "eur": "0.10"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "ul02",
+      "name": "Island",
+      "type_line": "Basic Land — Island",
+      "mana_cost": "",
+      "cmc": 0,
+      "color_identity": [
+        "U"
+      ],
+      "colors": [],
+      "set": "lea",
+      "prices": {
+        "eur": "0.10"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "ul03",
+      "name": "Swamp",
+      "type_line": "Basic Land — Swamp",
+      "mana_cost": "",
+      "cmc": 0,
+      "color_identity": [
+        "B"
+      ],
+      "colors": [],
+      "set": "lea",
+      "prices": {
+        "eur": "0.10"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "ul04",
+      "name": "Mountain",
+      "type_line": "Basic Land — Mountain",
+      "mana_cost": "",
+      "cmc": 0,
+      "color_identity": [
+        "R"
+      ],
+      "colors": [],
+      "set": "lea",
+      "prices": {
+        "eur": "0.10"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "ul05",
+      "name": "Forest",
+      "type_line": "Basic Land — Forest",
+      "mana_cost": "",
+      "cmc": 0,
+      "color_identity": [
+        "G"
+      ],
+      "colors": [],
+      "set": "lea",
+      "prices": {
+        "eur": "0.10"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "ul06",
+      "name": "Sacred Foundry",
+      "type_line": "Land",
+      "mana_cost": "",
+      "cmc": 0,
+      "color_identity": [
+        "W",
+        "R"
+      ],
+      "colors": [],
+      "set": "lea",
+      "prices": {
+        "eur": "0.10"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "ul07",
+      "name": "Hallowed Fountain",
+      "type_line": "Land",
+      "mana_cost": "",
+      "cmc": 0,
+      "color_identity": [
+        "W",
+        "U"
+      ],
+      "colors": [],
+      "set": "lea",
+      "prices": {
+        "eur": "0.10"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "ul08",
+      "name": "Watery Grave",
+      "type_line": "Land",
+      "mana_cost": "",
+      "cmc": 0,
+      "color_identity": [
+        "U",
+        "B"
+      ],
+      "colors": [],
+      "set": "lea",
+      "prices": {
+        "eur": "0.10"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "ul09",
+      "name": "Overgrown Tomb",
+      "type_line": "Land",
+      "mana_cost": "",
+      "cmc": 0,
+      "color_identity": [
+        "B",
+        "G"
+      ],
+      "colors": [],
+      "set": "lea",
+      "prices": {
+        "eur": "0.10"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "ul10",
+      "name": "Stomping Ground",
+      "type_line": "Land",
+      "mana_cost": "",
+      "cmc": 0,
+      "color_identity": [
+        "R",
+        "G"
+      ],
+      "colors": [],
+      "set": "lea",
+      "prices": {
+        "eur": "0.10"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "ul11",
+      "name": "Steam Vents",
+      "type_line": "Land",
+      "mana_cost": "",
+      "cmc": 0,
+      "color_identity": [
+        "U",
+        "R"
+      ],
+      "colors": [],
+      "set": "lea",
+      "prices": {
+        "eur": "0.10"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "ul12",
+      "name": "Godless Shrine",
+      "type_line": "Land",
+      "mana_cost": "",
+      "cmc": 0,
+      "color_identity": [
+        "W",
+        "B"
+      ],
+      "colors": [],
+      "set": "lea",
+      "prices": {
+        "eur": "0.10"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "ul13",
+      "name": "Breeding Pool",
+      "type_line": "Land",
+      "mana_cost": "",
+      "cmc": 0,
+      "color_identity": [
+        "U",
+        "G"
+      ],
+      "colors": [],
+      "set": "lea",
+      "prices": {
+        "eur": "0.10"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "ul14",
+      "name": "Blood Crypt",
+      "type_line": "Land",
+      "mana_cost": "",
+      "cmc": 0,
+      "color_identity": [
+        "B",
+        "R"
+      ],
+      "colors": [],
+      "set": "lea",
+      "prices": {
+        "eur": "0.10"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "ul15",
+      "name": "Temple Garden",
+      "type_line": "Land",
+      "mana_cost": "",
+      "cmc": 0,
+      "color_identity": [
+        "W",
+        "G"
+      ],
+      "colors": [],
+      "set": "lea",
+      "prices": {
+        "eur": "0.10"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "ul16",
+      "name": "Misty Rainforest",
+      "type_line": "Land",
+      "mana_cost": "",
+      "cmc": 0,
+      "color_identity": [],
+      "colors": [],
+      "set": "lea",
+      "prices": {
+        "eur": "0.10"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "ul17",
+      "name": "Verdant Catacombs",
+      "type_line": "Land",
+      "mana_cost": "",
+      "cmc": 0,
+      "color_identity": [],
+      "colors": [],
+      "set": "lea",
+      "prices": {
+        "eur": "0.10"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "ul18",
+      "name": "Marsh Flats",
+      "type_line": "Land",
+      "mana_cost": "",
+      "cmc": 0,
+      "color_identity": [],
+      "colors": [],
+      "set": "lea",
+      "prices": {
+        "eur": "0.10"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "ul19",
+      "name": "Scalding Tarn",
+      "type_line": "Land",
+      "mana_cost": "",
+      "cmc": 0,
+      "color_identity": [],
+      "colors": [],
+      "set": "lea",
+      "prices": {
+        "eur": "0.10"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "ul20",
+      "name": "Wooded Foothills",
+      "type_line": "Land",
+      "mana_cost": "",
+      "cmc": 0,
+      "color_identity": [],
+      "colors": [],
+      "set": "lea",
+      "prices": {
+        "eur": "0.10"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "ul21",
+      "name": "Command Tower",
+      "type_line": "Land",
+      "mana_cost": "",
+      "cmc": 0,
+      "color_identity": [],
+      "colors": [],
+      "set": "lea",
+      "prices": {
+        "eur": "0.10"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "ul22",
+      "name": "City of Brass",
+      "type_line": "Land",
+      "mana_cost": "",
+      "cmc": 0,
+      "color_identity": [],
+      "colors": [],
+      "set": "lea",
+      "prices": {
+        "eur": "0.10"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "ul23",
+      "name": "Mana Confluence",
+      "type_line": "Land",
+      "mana_cost": "",
+      "cmc": 0,
+      "color_identity": [],
+      "colors": [],
+      "set": "lea",
+      "prices": {
+        "eur": "0.10"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "ul24",
+      "name": "Reflecting Pool",
+      "type_line": "Land",
+      "mana_cost": "",
+      "cmc": 0,
+      "color_identity": [],
+      "colors": [],
+      "set": "lea",
+      "prices": {
+        "eur": "0.10"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "ul25",
+      "name": "Path of Ancestry",
+      "type_line": "Land",
+      "mana_cost": "",
+      "cmc": 0,
+      "color_identity": [],
+      "colors": [],
+      "set": "lea",
+      "prices": {
+        "eur": "0.10"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "ul26",
+      "name": "Cavern of Souls",
+      "type_line": "Land",
+      "mana_cost": "",
+      "cmc": 0,
+      "color_identity": [],
+      "colors": [],
+      "set": "lea",
+      "prices": {
+        "eur": "0.10"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "ul27",
+      "name": "Reliquary Tower",
+      "type_line": "Land",
+      "mana_cost": "",
+      "cmc": 0,
+      "color_identity": [],
+      "colors": [],
+      "set": "lea",
+      "prices": {
+        "eur": "0.10"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "ul28",
+      "name": "Exotic Orchard",
+      "type_line": "Land",
+      "mana_cost": "",
+      "cmc": 0,
+      "color_identity": [],
+      "colors": [],
+      "set": "lea",
+      "prices": {
+        "eur": "0.10"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "ul29",
+      "name": "Forbidden Orchard",
+      "type_line": "Land",
+      "mana_cost": "",
+      "cmc": 0,
+      "color_identity": [],
+      "colors": [],
+      "set": "lea",
+      "prices": {
+        "eur": "0.10"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "ul30",
+      "name": "Vivid Meadow",
+      "type_line": "Land",
+      "mana_cost": "",
+      "cmc": 0,
+      "color_identity": [
+        "W"
+      ],
+      "colors": [],
+      "set": "lea",
+      "prices": {
+        "eur": "0.10"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "ul31",
+      "name": "Vivid Creek",
+      "type_line": "Land",
+      "mana_cost": "",
+      "cmc": 0,
+      "color_identity": [
+        "U"
+      ],
+      "colors": [],
+      "set": "lea",
+      "prices": {
+        "eur": "0.10"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "ul32",
+      "name": "Vivid Marsh",
+      "type_line": "Land",
+      "mana_cost": "",
+      "cmc": 0,
+      "color_identity": [
+        "B"
+      ],
+      "colors": [],
+      "set": "lea",
+      "prices": {
+        "eur": "0.10"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "ul33",
+      "name": "Vivid Crag",
+      "type_line": "Land",
+      "mana_cost": "",
+      "cmc": 0,
+      "color_identity": [
+        "R"
+      ],
+      "colors": [],
+      "set": "lea",
+      "prices": {
+        "eur": "0.10"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "ul34",
+      "name": "Vivid Grove",
+      "type_line": "Land",
+      "mana_cost": "",
+      "cmc": 0,
+      "color_identity": [
+        "G"
+      ],
+      "colors": [],
+      "set": "lea",
+      "prices": {
+        "eur": "0.10"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "ul35",
+      "name": "Strip Mine",
+      "type_line": "Land",
+      "mana_cost": "",
+      "cmc": 0,
+      "color_identity": [],
+      "colors": [],
+      "set": "lea",
+      "prices": {
+        "eur": "0.10"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "ul36",
+      "name": "Wasteland",
+      "type_line": "Land",
+      "mana_cost": "",
+      "cmc": 0,
+      "color_identity": [],
+      "colors": [],
+      "set": "lea",
+      "prices": {
+        "eur": "0.10"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  }
+]

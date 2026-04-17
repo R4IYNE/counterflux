@@ -1,0 +1,2210 @@
+[
+  {
+    "card": {
+      "id": "3fe6dccd-19ac-4415-a48a-446b9b34ed13",
+      "name": "Niv-Mizzet, Parun",
+      "type_line": "Legendary Creature — Dragon Wizard",
+      "mana_cost": "{U}{U}{U}{R}{R}{R}",
+      "cmc": 6,
+      "color_identity": [
+        "U",
+        "R"
+      ],
+      "colors": [
+        "U",
+        "R"
+      ],
+      "set": "grn",
+      "prices": {
+        "eur": "12.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "n001",
+      "name": "Counterspell",
+      "type_line": "Instant",
+      "mana_cost": "{U}{U}",
+      "cmc": 2,
+      "color_identity": [
+        "U"
+      ],
+      "colors": [
+        "U"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "1.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Removal"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "n002",
+      "name": "Negate",
+      "type_line": "Instant",
+      "mana_cost": "{1}{U}",
+      "cmc": 2,
+      "color_identity": [
+        "U"
+      ],
+      "colors": [
+        "U"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "1.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Removal"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "n003",
+      "name": "Mana Drain",
+      "type_line": "Instant",
+      "mana_cost": "{U}{U}",
+      "cmc": 2,
+      "color_identity": [
+        "U"
+      ],
+      "colors": [
+        "U"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "1.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Removal"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "n004",
+      "name": "Force of Negation",
+      "type_line": "Instant",
+      "mana_cost": "{1}{U}{U}",
+      "cmc": 3,
+      "color_identity": [
+        "U"
+      ],
+      "colors": [
+        "U"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "1.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Removal"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "n005",
+      "name": "Swan Song",
+      "type_line": "Instant",
+      "mana_cost": "{U}",
+      "cmc": 1,
+      "color_identity": [
+        "U"
+      ],
+      "colors": [
+        "U"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "1.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Removal"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "n006",
+      "name": "Arcane Denial",
+      "type_line": "Instant",
+      "mana_cost": "{1}{U}",
+      "cmc": 2,
+      "color_identity": [
+        "U"
+      ],
+      "colors": [
+        "U"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "1.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Removal"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "n007",
+      "name": "Brainstorm",
+      "type_line": "Instant",
+      "mana_cost": "{U}",
+      "cmc": 1,
+      "color_identity": [
+        "U"
+      ],
+      "colors": [
+        "U"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "1.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Card Draw"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "n008",
+      "name": "Ponder",
+      "type_line": "Sorcery",
+      "mana_cost": "{U}",
+      "cmc": 1,
+      "color_identity": [
+        "U"
+      ],
+      "colors": [
+        "U"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "1.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Card Draw"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "n009",
+      "name": "Preordain",
+      "type_line": "Sorcery",
+      "mana_cost": "{U}",
+      "cmc": 1,
+      "color_identity": [
+        "U"
+      ],
+      "colors": [
+        "U"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "1.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Card Draw"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "n010",
+      "name": "Opt",
+      "type_line": "Instant",
+      "mana_cost": "{U}",
+      "cmc": 1,
+      "color_identity": [
+        "U"
+      ],
+      "colors": [
+        "U"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "1.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Card Draw"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "n011",
+      "name": "Lightning Bolt",
+      "type_line": "Instant",
+      "mana_cost": "{R}",
+      "cmc": 1,
+      "color_identity": [
+        "R"
+      ],
+      "colors": [
+        "R"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "1.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Removal"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "n012",
+      "name": "Pyroblast",
+      "type_line": "Instant",
+      "mana_cost": "{R}",
+      "cmc": 1,
+      "color_identity": [
+        "R"
+      ],
+      "colors": [
+        "R"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "1.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Removal"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "n013",
+      "name": "Red Elemental Blast",
+      "type_line": "Instant",
+      "mana_cost": "{R}",
+      "cmc": 1,
+      "color_identity": [
+        "R"
+      ],
+      "colors": [
+        "R"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "1.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Removal"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "n014",
+      "name": "Lightning Strike",
+      "type_line": "Instant",
+      "mana_cost": "{1}{R}",
+      "cmc": 2,
+      "color_identity": [
+        "R"
+      ],
+      "colors": [
+        "R"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "1.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Removal"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "n015",
+      "name": "Searing Blaze",
+      "type_line": "Instant",
+      "mana_cost": "{R}{R}",
+      "cmc": 2,
+      "color_identity": [
+        "R"
+      ],
+      "colors": [
+        "R"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "1.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Removal"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "n016",
+      "name": "Chain Lightning",
+      "type_line": "Sorcery",
+      "mana_cost": "{R}",
+      "cmc": 1,
+      "color_identity": [
+        "R"
+      ],
+      "colors": [
+        "R"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "1.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Removal"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "n017",
+      "name": "Lava Spike",
+      "type_line": "Sorcery",
+      "mana_cost": "{R}",
+      "cmc": 1,
+      "color_identity": [
+        "R"
+      ],
+      "colors": [
+        "R"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "1.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Removal"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "n018",
+      "name": "Blasphemous Act",
+      "type_line": "Sorcery",
+      "mana_cost": "{8}{R}",
+      "cmc": 9,
+      "color_identity": [
+        "R"
+      ],
+      "colors": [
+        "R"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "1.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Board Wipe"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "n019",
+      "name": "Cyclonic Rift",
+      "type_line": "Instant",
+      "mana_cost": "{1}{U}",
+      "cmc": 2,
+      "color_identity": [
+        "U"
+      ],
+      "colors": [
+        "U"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "1.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Board Wipe"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "n020",
+      "name": "Pongify",
+      "type_line": "Instant",
+      "mana_cost": "{U}",
+      "cmc": 1,
+      "color_identity": [
+        "U"
+      ],
+      "colors": [
+        "U"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "1.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Removal"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "n021",
+      "name": "Rapid Hybridization",
+      "type_line": "Instant",
+      "mana_cost": "{U}",
+      "cmc": 1,
+      "color_identity": [
+        "U"
+      ],
+      "colors": [
+        "U"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "1.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Removal"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "n022",
+      "name": "Reality Shift",
+      "type_line": "Instant",
+      "mana_cost": "{1}{U}",
+      "cmc": 2,
+      "color_identity": [
+        "U"
+      ],
+      "colors": [
+        "U"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "1.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Removal"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "n023",
+      "name": "Mystic Confluence",
+      "type_line": "Instant",
+      "mana_cost": "{3}{U}{U}",
+      "cmc": 5,
+      "color_identity": [
+        "U"
+      ],
+      "colors": [
+        "U"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "1.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Card Draw"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "n024",
+      "name": "Frantic Search",
+      "type_line": "Instant",
+      "mana_cost": "{2}{U}",
+      "cmc": 3,
+      "color_identity": [
+        "U"
+      ],
+      "colors": [
+        "U"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "1.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Card Draw"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "n025",
+      "name": "Fact or Fiction",
+      "type_line": "Instant",
+      "mana_cost": "{3}{U}",
+      "cmc": 4,
+      "color_identity": [
+        "U"
+      ],
+      "colors": [
+        "U"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "1.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Card Draw"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "n026",
+      "name": "Dig Through Time",
+      "type_line": "Instant",
+      "mana_cost": "{6}{U}{U}",
+      "cmc": 8,
+      "color_identity": [
+        "U"
+      ],
+      "colors": [
+        "U"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "1.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Card Draw"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "n027",
+      "name": "Treasure Cruise",
+      "type_line": "Sorcery",
+      "mana_cost": "{7}{U}",
+      "cmc": 8,
+      "color_identity": [
+        "U"
+      ],
+      "colors": [
+        "U"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "1.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Card Draw"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "n028",
+      "name": "Wheel of Fortune",
+      "type_line": "Sorcery",
+      "mana_cost": "{2}{R}",
+      "cmc": 3,
+      "color_identity": [
+        "R"
+      ],
+      "colors": [
+        "R"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "1.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Card Draw"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "n029",
+      "name": "Time Spiral",
+      "type_line": "Sorcery",
+      "mana_cost": "{4}{U}{U}",
+      "cmc": 6,
+      "color_identity": [
+        "U"
+      ],
+      "colors": [
+        "U"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "1.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Card Draw"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "n030",
+      "name": "Windfall",
+      "type_line": "Sorcery",
+      "mana_cost": "{2}{U}",
+      "cmc": 3,
+      "color_identity": [
+        "U"
+      ],
+      "colors": [
+        "U"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "1.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Card Draw"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "n031",
+      "name": "Reforge the Soul",
+      "type_line": "Sorcery",
+      "mana_cost": "{2}{R}{R}",
+      "cmc": 4,
+      "color_identity": [
+        "R"
+      ],
+      "colors": [
+        "R"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "1.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Card Draw"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "n032",
+      "name": "Wheel of Misfortune",
+      "type_line": "Sorcery",
+      "mana_cost": "{3}{R}",
+      "cmc": 4,
+      "color_identity": [
+        "R"
+      ],
+      "colors": [
+        "R"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "1.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Card Draw"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "n033",
+      "name": "Faithless Looting",
+      "type_line": "Sorcery",
+      "mana_cost": "{R}",
+      "cmc": 1,
+      "color_identity": [
+        "R"
+      ],
+      "colors": [
+        "R"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "1.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Card Draw"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "n034",
+      "name": "Chart a Course",
+      "type_line": "Sorcery",
+      "mana_cost": "{1}{U}",
+      "cmc": 2,
+      "color_identity": [
+        "U"
+      ],
+      "colors": [
+        "U"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "1.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Card Draw"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "n035",
+      "name": "Crackle with Power",
+      "type_line": "Sorcery",
+      "mana_cost": "{X}{X}{X}{R}{R}",
+      "cmc": 5,
+      "color_identity": [
+        "R"
+      ],
+      "colors": [
+        "R"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "1.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Removal"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "n036",
+      "name": "Expansion // Explosion",
+      "type_line": "Instant",
+      "mana_cost": "{U}{R}",
+      "cmc": 2,
+      "color_identity": [
+        "U",
+        "R"
+      ],
+      "colors": [
+        "U",
+        "R"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "1.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "n037",
+      "name": "Electrolyze",
+      "type_line": "Instant",
+      "mana_cost": "{1}{U}{R}",
+      "cmc": 3,
+      "color_identity": [
+        "U",
+        "R"
+      ],
+      "colors": [
+        "U",
+        "R"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "1.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Removal",
+      "Card Draw"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "n038",
+      "name": "Izzet Charm",
+      "type_line": "Instant",
+      "mana_cost": "{U}{R}",
+      "cmc": 2,
+      "color_identity": [
+        "U",
+        "R"
+      ],
+      "colors": [
+        "U",
+        "R"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "1.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "n039",
+      "name": "Steam Augury",
+      "type_line": "Instant",
+      "mana_cost": "{2}{U}{R}",
+      "cmc": 4,
+      "color_identity": [
+        "U",
+        "R"
+      ],
+      "colors": [
+        "U",
+        "R"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "1.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Card Draw"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "n040",
+      "name": "Snapcaster Mage",
+      "type_line": "Creature — Human Wizard",
+      "mana_cost": "{1}{U}",
+      "cmc": 2,
+      "color_identity": [
+        "U"
+      ],
+      "colors": [
+        "U"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "1.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "n041",
+      "name": "Goblin Electromancer",
+      "type_line": "Creature — Goblin Wizard",
+      "mana_cost": "{U}{R}",
+      "cmc": 2,
+      "color_identity": [
+        "U",
+        "R"
+      ],
+      "colors": [
+        "U",
+        "R"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "1.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Ramp"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "n042",
+      "name": "Dualcaster Mage",
+      "type_line": "Creature — Human Wizard",
+      "mana_cost": "{1}{R}{R}",
+      "cmc": 3,
+      "color_identity": [
+        "R"
+      ],
+      "colors": [
+        "R"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "1.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "n043",
+      "name": "Young Pyromancer",
+      "type_line": "Creature — Human Shaman",
+      "mana_cost": "{1}{R}",
+      "cmc": 2,
+      "color_identity": [
+        "R"
+      ],
+      "colors": [
+        "R"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "1.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "n044",
+      "name": "Talrand, Sky Summoner",
+      "type_line": "Legendary Creature — Merfolk Wizard",
+      "mana_cost": "{2}{U}{U}",
+      "cmc": 4,
+      "color_identity": [
+        "U"
+      ],
+      "colors": [
+        "U"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "1.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "n045",
+      "name": "Murmuring Mystic",
+      "type_line": "Creature — Human Wizard",
+      "mana_cost": "{3}{U}",
+      "cmc": 4,
+      "color_identity": [
+        "U"
+      ],
+      "colors": [
+        "U"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "1.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "n046",
+      "name": "Mizzix of the Izmagnus",
+      "type_line": "Legendary Creature — Goblin Wizard",
+      "mana_cost": "{2}{U}{R}",
+      "cmc": 4,
+      "color_identity": [
+        "U",
+        "R"
+      ],
+      "colors": [
+        "U",
+        "R"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "1.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Ramp"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "n047",
+      "name": "Birgi, God of Storytelling",
+      "type_line": "Legendary Creature — God",
+      "mana_cost": "{2}{R}",
+      "cmc": 3,
+      "color_identity": [
+        "R"
+      ],
+      "colors": [
+        "R"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "1.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Ramp"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "n048",
+      "name": "Sol Ring",
+      "type_line": "Artifact",
+      "mana_cost": "{1}",
+      "cmc": 1,
+      "color_identity": [],
+      "colors": [],
+      "set": "tst",
+      "prices": {
+        "eur": "1.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Ramp"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "n049",
+      "name": "Arcane Signet",
+      "type_line": "Artifact",
+      "mana_cost": "{2}",
+      "cmc": 2,
+      "color_identity": [],
+      "colors": [],
+      "set": "tst",
+      "prices": {
+        "eur": "1.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Ramp"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "n050",
+      "name": "Izzet Signet",
+      "type_line": "Artifact",
+      "mana_cost": "{2}",
+      "cmc": 2,
+      "color_identity": [],
+      "colors": [],
+      "set": "tst",
+      "prices": {
+        "eur": "1.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Ramp"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "n051",
+      "name": "Talisman of Creativity",
+      "type_line": "Artifact",
+      "mana_cost": "{2}",
+      "cmc": 2,
+      "color_identity": [],
+      "colors": [],
+      "set": "tst",
+      "prices": {
+        "eur": "1.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Ramp"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "n052",
+      "name": "Mind Stone",
+      "type_line": "Artifact",
+      "mana_cost": "{2}",
+      "cmc": 2,
+      "color_identity": [],
+      "colors": [],
+      "set": "tst",
+      "prices": {
+        "eur": "1.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Ramp",
+      "Card Draw"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "n053",
+      "name": "Thought Vessel",
+      "type_line": "Artifact",
+      "mana_cost": "{2}",
+      "cmc": 2,
+      "color_identity": [],
+      "colors": [],
+      "set": "tst",
+      "prices": {
+        "eur": "1.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Ramp"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "n054",
+      "name": "Wayfarer's Bauble",
+      "type_line": "Artifact",
+      "mana_cost": "{1}",
+      "cmc": 1,
+      "color_identity": [],
+      "colors": [],
+      "set": "tst",
+      "prices": {
+        "eur": "1.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Ramp"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "n055",
+      "name": "Mana Vault",
+      "type_line": "Artifact",
+      "mana_cost": "{1}",
+      "cmc": 1,
+      "color_identity": [],
+      "colors": [],
+      "set": "tst",
+      "prices": {
+        "eur": "1.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Ramp"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "n056",
+      "name": "Sensei's Divining Top",
+      "type_line": "Artifact",
+      "mana_cost": "{1}",
+      "cmc": 1,
+      "color_identity": [],
+      "colors": [],
+      "set": "tst",
+      "prices": {
+        "eur": "1.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Card Draw"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "n057",
+      "name": "Lightning Greaves",
+      "type_line": "Artifact — Equipment",
+      "mana_cost": "{2}",
+      "cmc": 2,
+      "color_identity": [],
+      "colors": [],
+      "set": "tst",
+      "prices": {
+        "eur": "1.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "n058",
+      "name": "Mind's Eye",
+      "type_line": "Artifact",
+      "mana_cost": "{5}",
+      "cmc": 5,
+      "color_identity": [],
+      "colors": [],
+      "set": "tst",
+      "prices": {
+        "eur": "1.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Card Draw"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "n059",
+      "name": "Mystic Remora",
+      "type_line": "Enchantment",
+      "mana_cost": "{U}",
+      "cmc": 1,
+      "color_identity": [
+        "U"
+      ],
+      "colors": [
+        "U"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "1.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Card Draw"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "n060",
+      "name": "Rhystic Study",
+      "type_line": "Enchantment",
+      "mana_cost": "{2}{U}",
+      "cmc": 3,
+      "color_identity": [
+        "U"
+      ],
+      "colors": [
+        "U"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "1.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Card Draw"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "n061",
+      "name": "Curiosity",
+      "type_line": "Enchantment — Aura",
+      "mana_cost": "{U}",
+      "cmc": 1,
+      "color_identity": [
+        "U"
+      ],
+      "colors": [
+        "U"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "1.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [
+      "Card Draw"
+    ],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "n062",
+      "name": "Niv-Mizzet, the Firemind's Tutelage",
+      "type_line": "Enchantment",
+      "mana_cost": "{2}{U}",
+      "cmc": 3,
+      "color_identity": [
+        "U"
+      ],
+      "colors": [
+        "U"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "1.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "n063",
+      "name": "Thousand-Year Storm",
+      "type_line": "Enchantment",
+      "mana_cost": "{4}{U}{R}",
+      "cmc": 6,
+      "color_identity": [
+        "U",
+        "R"
+      ],
+      "colors": [
+        "U",
+        "R"
+      ],
+      "set": "tst",
+      "prices": {
+        "eur": "1.00"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "nl01",
+      "name": "Island",
+      "type_line": "Basic Land — Island",
+      "mana_cost": "",
+      "cmc": 0,
+      "color_identity": [
+        "U"
+      ],
+      "colors": [],
+      "set": "lea",
+      "prices": {
+        "eur": "0.10"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "nl02",
+      "name": "Island",
+      "type_line": "Basic Land — Island",
+      "mana_cost": "",
+      "cmc": 0,
+      "color_identity": [
+        "U"
+      ],
+      "colors": [],
+      "set": "lea",
+      "prices": {
+        "eur": "0.10"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "nl03",
+      "name": "Island",
+      "type_line": "Basic Land — Island",
+      "mana_cost": "",
+      "cmc": 0,
+      "color_identity": [
+        "U"
+      ],
+      "colors": [],
+      "set": "lea",
+      "prices": {
+        "eur": "0.10"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "nl04",
+      "name": "Island",
+      "type_line": "Basic Land — Island",
+      "mana_cost": "",
+      "cmc": 0,
+      "color_identity": [
+        "U"
+      ],
+      "colors": [],
+      "set": "lea",
+      "prices": {
+        "eur": "0.10"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "nl05",
+      "name": "Island",
+      "type_line": "Basic Land — Island",
+      "mana_cost": "",
+      "cmc": 0,
+      "color_identity": [
+        "U"
+      ],
+      "colors": [],
+      "set": "lea",
+      "prices": {
+        "eur": "0.10"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "nl06",
+      "name": "Island",
+      "type_line": "Basic Land — Island",
+      "mana_cost": "",
+      "cmc": 0,
+      "color_identity": [
+        "U"
+      ],
+      "colors": [],
+      "set": "lea",
+      "prices": {
+        "eur": "0.10"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "nl07",
+      "name": "Island",
+      "type_line": "Basic Land — Island",
+      "mana_cost": "",
+      "cmc": 0,
+      "color_identity": [
+        "U"
+      ],
+      "colors": [],
+      "set": "lea",
+      "prices": {
+        "eur": "0.10"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "nl08",
+      "name": "Island",
+      "type_line": "Basic Land — Island",
+      "mana_cost": "",
+      "cmc": 0,
+      "color_identity": [
+        "U"
+      ],
+      "colors": [],
+      "set": "lea",
+      "prices": {
+        "eur": "0.10"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "nl09",
+      "name": "Island",
+      "type_line": "Basic Land — Island",
+      "mana_cost": "",
+      "cmc": 0,
+      "color_identity": [
+        "U"
+      ],
+      "colors": [],
+      "set": "lea",
+      "prices": {
+        "eur": "0.10"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "nl10",
+      "name": "Island",
+      "type_line": "Basic Land — Island",
+      "mana_cost": "",
+      "cmc": 0,
+      "color_identity": [
+        "U"
+      ],
+      "colors": [],
+      "set": "lea",
+      "prices": {
+        "eur": "0.10"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "nl11",
+      "name": "Island",
+      "type_line": "Basic Land — Island",
+      "mana_cost": "",
+      "cmc": 0,
+      "color_identity": [
+        "U"
+      ],
+      "colors": [],
+      "set": "lea",
+      "prices": {
+        "eur": "0.10"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "nl12",
+      "name": "Island",
+      "type_line": "Basic Land — Island",
+      "mana_cost": "",
+      "cmc": 0,
+      "color_identity": [
+        "U"
+      ],
+      "colors": [],
+      "set": "lea",
+      "prices": {
+        "eur": "0.10"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "nl13",
+      "name": "Mountain",
+      "type_line": "Basic Land — Mountain",
+      "mana_cost": "",
+      "cmc": 0,
+      "color_identity": [
+        "R"
+      ],
+      "colors": [],
+      "set": "lea",
+      "prices": {
+        "eur": "0.10"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "nl14",
+      "name": "Mountain",
+      "type_line": "Basic Land — Mountain",
+      "mana_cost": "",
+      "cmc": 0,
+      "color_identity": [
+        "R"
+      ],
+      "colors": [],
+      "set": "lea",
+      "prices": {
+        "eur": "0.10"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "nl15",
+      "name": "Mountain",
+      "type_line": "Basic Land — Mountain",
+      "mana_cost": "",
+      "cmc": 0,
+      "color_identity": [
+        "R"
+      ],
+      "colors": [],
+      "set": "lea",
+      "prices": {
+        "eur": "0.10"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "nl16",
+      "name": "Mountain",
+      "type_line": "Basic Land — Mountain",
+      "mana_cost": "",
+      "cmc": 0,
+      "color_identity": [
+        "R"
+      ],
+      "colors": [],
+      "set": "lea",
+      "prices": {
+        "eur": "0.10"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "nl17",
+      "name": "Mountain",
+      "type_line": "Basic Land — Mountain",
+      "mana_cost": "",
+      "cmc": 0,
+      "color_identity": [
+        "R"
+      ],
+      "colors": [],
+      "set": "lea",
+      "prices": {
+        "eur": "0.10"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "nl18",
+      "name": "Mountain",
+      "type_line": "Basic Land — Mountain",
+      "mana_cost": "",
+      "cmc": 0,
+      "color_identity": [
+        "R"
+      ],
+      "colors": [],
+      "set": "lea",
+      "prices": {
+        "eur": "0.10"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "nl19",
+      "name": "Mountain",
+      "type_line": "Basic Land — Mountain",
+      "mana_cost": "",
+      "cmc": 0,
+      "color_identity": [
+        "R"
+      ],
+      "colors": [],
+      "set": "lea",
+      "prices": {
+        "eur": "0.10"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "nl20",
+      "name": "Mountain",
+      "type_line": "Basic Land — Mountain",
+      "mana_cost": "",
+      "cmc": 0,
+      "color_identity": [
+        "R"
+      ],
+      "colors": [],
+      "set": "lea",
+      "prices": {
+        "eur": "0.10"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "nl21",
+      "name": "Mountain",
+      "type_line": "Basic Land — Mountain",
+      "mana_cost": "",
+      "cmc": 0,
+      "color_identity": [
+        "R"
+      ],
+      "colors": [],
+      "set": "lea",
+      "prices": {
+        "eur": "0.10"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "nl22",
+      "name": "Mountain",
+      "type_line": "Basic Land — Mountain",
+      "mana_cost": "",
+      "cmc": 0,
+      "color_identity": [
+        "R"
+      ],
+      "colors": [],
+      "set": "lea",
+      "prices": {
+        "eur": "0.10"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "nl23",
+      "name": "Mountain",
+      "type_line": "Basic Land — Mountain",
+      "mana_cost": "",
+      "cmc": 0,
+      "color_identity": [
+        "R"
+      ],
+      "colors": [],
+      "set": "lea",
+      "prices": {
+        "eur": "0.10"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "nl24",
+      "name": "Mountain",
+      "type_line": "Basic Land — Mountain",
+      "mana_cost": "",
+      "cmc": 0,
+      "color_identity": [
+        "R"
+      ],
+      "colors": [],
+      "set": "lea",
+      "prices": {
+        "eur": "0.10"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "nl25",
+      "name": "Steam Vents",
+      "type_line": "Land",
+      "mana_cost": "",
+      "cmc": 0,
+      "color_identity": [
+        "U",
+        "R"
+      ],
+      "colors": [],
+      "set": "lea",
+      "prices": {
+        "eur": "0.10"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "nl26",
+      "name": "Scalding Tarn",
+      "type_line": "Land",
+      "mana_cost": "",
+      "cmc": 0,
+      "color_identity": [
+        "U",
+        "R"
+      ],
+      "colors": [],
+      "set": "lea",
+      "prices": {
+        "eur": "0.10"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "nl27",
+      "name": "Volcanic Island",
+      "type_line": "Land",
+      "mana_cost": "",
+      "cmc": 0,
+      "color_identity": [
+        "U",
+        "R"
+      ],
+      "colors": [],
+      "set": "lea",
+      "prices": {
+        "eur": "0.10"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "nl28",
+      "name": "Spirebluff Canal",
+      "type_line": "Land",
+      "mana_cost": "",
+      "cmc": 0,
+      "color_identity": [
+        "U",
+        "R"
+      ],
+      "colors": [],
+      "set": "lea",
+      "prices": {
+        "eur": "0.10"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "nl29",
+      "name": "Sulfur Falls",
+      "type_line": "Land",
+      "mana_cost": "",
+      "cmc": 0,
+      "color_identity": [
+        "U",
+        "R"
+      ],
+      "colors": [],
+      "set": "lea",
+      "prices": {
+        "eur": "0.10"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "nl30",
+      "name": "Shivan Reef",
+      "type_line": "Land",
+      "mana_cost": "",
+      "cmc": 0,
+      "color_identity": [
+        "U",
+        "R"
+      ],
+      "colors": [],
+      "set": "lea",
+      "prices": {
+        "eur": "0.10"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "nl31",
+      "name": "Izzet Boilerworks",
+      "type_line": "Land",
+      "mana_cost": "",
+      "cmc": 0,
+      "color_identity": [
+        "U",
+        "R"
+      ],
+      "colors": [],
+      "set": "lea",
+      "prices": {
+        "eur": "0.10"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "nl32",
+      "name": "Cascade Bluffs",
+      "type_line": "Land",
+      "mana_cost": "",
+      "cmc": 0,
+      "color_identity": [
+        "U",
+        "R"
+      ],
+      "colors": [],
+      "set": "lea",
+      "prices": {
+        "eur": "0.10"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "nl33",
+      "name": "Command Tower",
+      "type_line": "Land",
+      "mana_cost": "",
+      "cmc": 0,
+      "color_identity": [],
+      "colors": [],
+      "set": "lea",
+      "prices": {
+        "eur": "0.10"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "nl34",
+      "name": "Reliquary Tower",
+      "type_line": "Land",
+      "mana_cost": "",
+      "cmc": 0,
+      "color_identity": [],
+      "colors": [],
+      "set": "lea",
+      "prices": {
+        "eur": "0.10"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "nl35",
+      "name": "Strip Mine",
+      "type_line": "Land",
+      "mana_cost": "",
+      "cmc": 0,
+      "color_identity": [],
+      "colors": [],
+      "set": "lea",
+      "prices": {
+        "eur": "0.10"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  },
+  {
+    "card": {
+      "id": "nl36",
+      "name": "Wasteland",
+      "type_line": "Land",
+      "mana_cost": "",
+      "cmc": 0,
+      "color_identity": [],
+      "colors": [],
+      "set": "lea",
+      "prices": {
+        "eur": "0.10"
+      }
+    },
+    "quantity": 1,
+    "tags": [],
+    "owned": true
+  }
+]
