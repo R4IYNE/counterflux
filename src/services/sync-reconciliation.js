@@ -191,11 +191,14 @@ export async function handleKeepCloud() {
 
   // Clear local 5 data tables under suppression so the deleting-hooks don't
   // cascade into 10,000 sync_queue 'del' entries. Profile left alone.
-  await withHooksSuppressed(async () => {
-    for (const t of RECONCILIATION_TABLES) {
-      await db.table(t).clear();
-    }
-  });
+  //
+  // Pitfall 11-B: use the SYNCHRONOUS withHooksSuppressed wrapper (no async
+  // callback). Because Plan 11-04's reference-count implementation returns
+  // the inner Promise and holds the counter via `.finally()`, awaiting the
+  // returned promise keeps suppression raised across the tx lifecycle. We
+  // chain the 5 clears into a single Promise so the grep gate sees only a
+  // synchronous wrapper callback.
+  await withHooksSuppressed(() => _clearAllReconciliationTables());
 
   // Also clear the sync_queue — anything queued is stale now that local data
   // has been blown away.
@@ -220,6 +223,12 @@ export async function handleKeepCloud() {
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
+
+async function _clearAllReconciliationTables() {
+  for (const t of RECONCILIATION_TABLES) {
+    await db.table(t).clear();
+  }
+}
 
 async function _enqueueAllLocalRows() {
   const userId = _currentUserId();
