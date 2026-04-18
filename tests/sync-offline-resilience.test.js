@@ -269,9 +269,13 @@ describe('SYNC-06 — reconnect flush (navigator online event triggers flushQueu
     expect(flushCalled).toBe(true);
     expect(storeRegistry.sync.status).toBe('syncing');
 
-    // Let the scheduleFlush(0) timeout fire + flushQueue drain the queue
-    await new Promise((resolve) => setTimeout(resolve, 10));
-    // All 2 entries should have been upserted
+    // Let the scheduleFlush(0) timeout fire + flushQueue drain the queue.
+    // Poll up to ~500ms because under heavy full-suite concurrency the
+    // 0-delay setTimeout can slip past a single 10ms await.
+    for (let i = 0; i < 50 && upsertCalls.length === 0; i++) {
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    }
+    // All queue entries should have been upserted
     expect(upsertCalls.length).toBeGreaterThan(0);
   });
 
@@ -355,8 +359,11 @@ describe('SYNC-06 — boot drain (initSyncEngine drains surviving queue)', () =>
 
     await initSyncEngine();
 
-    // scheduleFlush(0) fires inside initSyncEngine — give it a tick to run
-    await new Promise((resolve) => setTimeout(resolve, 20));
+    // scheduleFlush(0) fires inside initSyncEngine — poll up to ~500ms.
+    // Under full-suite concurrency a single 20ms await is fragile.
+    for (let i = 0; i < 50 && upsertCalls.length === 0; i++) {
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    }
 
     // Both surviving entries should have been upserted
     expect(upsertCalls.length).toBeGreaterThan(0);
