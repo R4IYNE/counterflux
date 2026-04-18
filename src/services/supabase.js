@@ -40,7 +40,11 @@ export function getSupabase() {
       flowType: 'pkce',
       persistSession: true,
       autoRefreshToken: true,
-      detectSessionInUrl: true,
+      // D-39 fix: we call exchangeCodeForSession explicitly in auth-callback-overlay.
+      // Setting this to true causes a race where auto-exchange consumes the PKCE
+      // verifier from localStorage before our handler fires, leading to
+      // "PKCE code verifier not found in storage" on our explicit exchange call.
+      detectSessionInUrl: false,
     },
   });
 

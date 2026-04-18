@@ -116,7 +116,7 @@ function renderError({ heading, body }) {
       }
       // Info toast: recovery path.
       const AlpineObj = window.Alpine;
-      AlpineObj?.store?.('toast')?.info?.('Send a fresh magic link to sign in.');
+      AlpineObj?.store?.('toast')?.info?.('Try signing in again.');
     });
   }
 }
@@ -171,16 +171,24 @@ export async function handleAuthCallback(href) {
   const { data, error } = result || {};
 
   if (error || !data?.session) {
+    // D-39: log the actual error so PKCE / verifier / origin issues are diagnosable.
+    // The user-facing copy stays friendly; developers watching DevTools see the cause.
+    console.warn('[Counterflux] auth-callback exchangeCodeForSession failed:', {
+      href,
+      error,
+      hasData: !!data,
+      hasSession: !!(data && data.session),
+    });
     const msg = String((error?.message || '')).toLowerCase();
     if (/expired|used|otp/.test(msg)) {
       renderError({
         heading: 'SIGN-IN LINK EXPIRED',
-        body: 'This link is older than 60 minutes or has already been used. Try sending a fresh magic link.',
+        body: 'This sign-in attempt is older than 60 minutes or was already used. Go back and sign in again.',
       });
     } else {
       renderError({
         heading: "COULDN'T FINISH SIGN-IN",
-        body: 'Something went wrong routing your session back. Try again or use a magic link.',
+        body: 'Something went wrong routing your session back. Go back and try again.',
       });
     }
     return;
