@@ -32,6 +32,7 @@
 //     and stamps last_synced_at on every synced entry
 
 import Alpine from 'alpinejs';
+import { openSyncErrorsModal } from '../components/sync-errors-modal.js';
 
 let _onlineListenerInstalled = false;
 
@@ -39,17 +40,12 @@ let _onlineListenerInstalled = false;
 // Sync-errors-modal bridge
 //
 // The chip's error-state @click handler calls window.openSyncErrorsModal().
-// Plan 11-03 (sync-errors modal) will overwrite this global with the real
-// implementation. Until then a warning makes the hook observable to devs.
+// Plan 11-02 shipped a console.warn stub here; Plan 11-03 replaces it with
+// the real modal imported above. Assignment is unconditional — any prior
+// stub is overwritten.
 // ---------------------------------------------------------------------------
-function openSyncErrorsModalStub() {
-  console.warn('[sync] sync-errors modal requested but Plan 11-03 has not yet shipped the real modal');
-}
-
 if (typeof window !== 'undefined') {
-  if (!window.openSyncErrorsModal) {
-    window.openSyncErrorsModal = openSyncErrorsModalStub;
-  }
+  window.openSyncErrorsModal = openSyncErrorsModal;
 }
 
 // ---------------------------------------------------------------------------
