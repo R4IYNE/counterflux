@@ -76,6 +76,8 @@ beforeEach(async () => {
   channelState.subscribeCalls = 0;
   channelState.unsubscribeCalls = 0;
   channelState.lastOnOpts = null;
+  supabaseStub.channel.mockClear();
+  supabaseStub.schema.mockClear();
 
   await Dexie.delete('counterflux');
   vi.resetModules();
