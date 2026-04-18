@@ -132,7 +132,7 @@ Plans:
 **Plans**: 6 plans
 
 Plans:
-- [ ] 11-01-PLAN.md — Dexie v10 soft-delete + Supabase migrations (deleted_at + realtime publication + tombstone cleanup) + preflight runbook (SYNC-01)
+- [x] 11-01-PLAN.md — Dexie v10 soft-delete + Supabase migrations (deleted_at + realtime publication + tombstone cleanup) + preflight runbook (SYNC-01)
 - [x] 11-02-PLAN.md — Alpine sync store + 4-state topbar chip refactor + connectivity.js deletion (SYNC-07)
 - [ ] 11-03-PLAN.md — Reconciliation modal (lockdown) + sync-errors modal + sync-pull-splash (SYNC-04 UI shell)
 - [ ] 11-04-PLAN.md — Outbox hooks + push engine + suppression + cross-user safety (SYNC-02, SYNC-03 push, SYNC-06 cross-user)
@@ -176,7 +176,7 @@ Plans:
 | 8.1. Treasure Cruise Polish & Precon Coverage | v1.1 | 3/3 | Complete | 2026-04-16 |
 | 9. Deck Accuracy + Vandalblast Pod Experience | v1.1 | 6/6 | Complete | 2026-04-17 |
 | 10. Supabase Auth Foundation | v1.1 | 4/4 | Complete    | 2026-04-18 |
-| 11. Cloud Sync Engine | v1.1 | 1/6 | In Progress|  |
+| 11. Cloud Sync Engine | v1.1 | 2/6 | In Progress|  |
 | 12. Notification Bell + Preordain Spoiler Refresh | v1.1 | 0/? | Not started | — |
 | 13. Performance Optimisation (conditional) | v1.1 | 0/? | Not started | — |
 

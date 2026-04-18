@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Second Sunrise
-status: executing
-stopped_at: Completed 11-02-PLAN.md — sync store + topbar chip refactor
-last_updated: "2026-04-18T18:30:59.757Z"
-last_activity: 2026-04-18 -- Phase 11 execution started
+status: completed
+stopped_at: Completed 11-01-PLAN.md — Dexie v10 + Supabase schema delta applied to huxley (Wave 1 of Phase 11 complete)
+last_updated: "2026-04-18T18:55:18.155Z"
+last_activity: 2026-04-18
 progress:
   total_phases: 8
   completed_phases: 5
   total_plans: 25
-  completed_plans: 20
-  percent: 0
+  completed_plans: 21
+  percent: 84
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-14)
 ## Current Position
 
 Phase: 11 (cloud-sync-engine) — EXECUTING
-Plan: 1 of 6
-Status: Executing Phase 11
-Last activity: 2026-04-18 -- Phase 11 execution started
+Plan: 3 of 6
+Status: Ready to execute (Wave 1 of Phase 11 complete — plans 11-01 + 11-02 shipped in parallel)
+Last activity: 2026-04-18
 
-Progress: [          ] 0%
+Progress: [████████░░] 84%
 
 ## Milestone Progress
 
@@ -78,6 +78,7 @@ Progress: [          ] 0%
 | Phase 10 P03 | 8m 30s | 4 tasks (6 commits w/ TDD RED/GREEN pairs) tasks | 7 files files |
 | Phase 10 P04 | 10m 12s | 3 tasks | 8 files |
 | Phase 11 P02 | 7m 16s | 3 tasks | 6 files |
+| Phase 11 P01 | ~6m executor + human apply | 5 tasks (4 auto + 1 human-action) tasks | 8 files files |
 
 ## Accumulated Context
 
@@ -164,6 +165,7 @@ Full decision log in PROJECT.md Key Decisions table.
 - [Phase 11]: Plan 11-02: VALID_TRANSITIONS object enforces single-write-path state machine on Alpine.store('sync') — offline→synced direct jump is illegal; reconnect must route offline→syncing to give Plan 11-04's flushQueue room to run
 - [Phase 11]: Plan 11-02: chip template uses x-if per state (not :class juggling) — UI-SPEC mandates <button> in error state for keyboard reachability + <div role=status> otherwise; single-element + class-swap cannot express that. Cost: slightly more template volume, benefit: each branch independently grep-able for tests
 - [Phase 11]: Plan 11-02: deleted tests/connectivity-status.test.js alongside src/utils/connectivity.js (Rule 3 blocking deviation) — the test audited BOTH the deleted utility AND the replaced v1.0 chip template; leaving it in would fail npm test at import time. New tests/sync-status-chip.test.js replaces the coverage 1:1 + adds per-state assertions
+- [Phase 11]: Plan 11-01: Phase 11 schema delta applied to live huxley — Dexie v10 soft-delete (deleted_at column on 5 synced tables, profile excluded per D-15) + 3 Supabase migrations (counterflux.deleted_at + partial indexes + supabase_realtime publication for all 6 tables + pg_cron nightly tombstone sweep at 03:00 UTC with 30-day retention per D-16). pg_cron path used; 2 cron jobs verified in cron.job. Closes Pitfall 11-C so Plan 11-05's Realtime subscription will fire events on counterflux.*
 
 ### Roadmap Evolution
 
@@ -182,6 +184,6 @@ None — roadmap complete, next step is `/gsd:plan-phase 7`.
 
 ## Session Continuity
 
-Last session: 2026-04-18T18:30:50.793Z
-Stopped at: Completed 11-02-PLAN.md — sync store + topbar chip refactor
+Last session: 2026-04-18T18:55:18.152Z
+Stopped at: Completed 11-01-PLAN.md — Dexie v10 + Supabase schema delta applied to huxley (Wave 1 of Phase 11 complete)
 Resume file: None
