@@ -413,6 +413,49 @@ db.version(9).stores({
 // No .upgrade() callback — additive-only migration (D-24).
 
 // ============================================================
+// Schema v10 — Phase 11 Plan 1 (additive soft-delete column per D-15).
+//
+// Adds `deleted_at` as an indexed column on the 5 SYNCED DATA tables
+// (collection, decks, deck_cards, games, watchlist). Profile is EXCLUDED
+// per D-15 — profiles never get deleted; sign-out preserves, sign-in updates
+// in place. The sync engine's soft-delete filter uses `.where('deleted_at')
+// .equals(null)` so having an index keeps that cheap once row counts grow.
+//
+// Additive-only migration (no .upgrade() callback): existing rows get
+// `deleted_at = undefined` which Dexie treats as "not present". The client
+// soft-delete filter treats `deleted_at IS NULL OR deleted_at IS undefined`
+// identically — see src/services/sync-engine.js (Plan 11-04).
+//
+// Paired with three Supabase migrations in this same plan (20260419_*.sql):
+//   - counterflux_soft_delete.sql — ALTER TABLE ADD COLUMN deleted_at
+//   - counterflux_realtime_publication.sql — ALTER PUBLICATION supabase_realtime
+//   - counterflux_tombstone_cleanup.sql — pg_cron 30-day hard-delete job (D-16)
+//
+// Phases 11-04 and 11-05 consume this column directly.
+// ============================================================
+db.version(10).stores({
+  // ALL v9 tables re-declared verbatim (PITFALLS §1 — chain must be intact).
+  collection: 'id, scryfall_id, category, foil, user_id, updated_at, synced_at, deleted_at, [scryfall_id+foil], [scryfall_id+category]',
+  decks: 'id, name, format, user_id, updated_at, synced_at, deleted_at',
+  deck_cards: 'id, deck_id, scryfall_id, user_id, updated_at, synced_at, deleted_at, [deck_id+scryfall_id]',
+  games: 'id, deck_id, user_id, started_at, ended_at, updated_at, synced_at, deleted_at',
+  watchlist: 'id, &scryfall_id, user_id, updated_at, synced_at, deleted_at',
+  cards: 'id, name, oracle_id, set, collector_number, cmc, color_identity, type_line, [set+collector_number]',
+  meta: 'key',
+  price_history: '++id, scryfall_id, date, updated_at, [scryfall_id+date]',
+  edhrec_cache: 'commander',
+  combo_cache: 'deck_id',
+  card_salt_cache: 'sanitized',
+  // profile EXCLUDED from deleted_at per D-15
+  profile: 'id, user_id, updated_at',
+  sync_queue: '++id, table_name, user_id, created_at',
+  sync_conflicts: '++id, table_name, detected_at',
+  precons_cache: 'code, set_type, released_at, updated_at'
+});
+// No .upgrade() callback — additive-only. Existing rows get deleted_at = undefined;
+// reads filter WHERE deleted_at IS null/undefined (sync-engine soft-delete layer).
+
+// ============================================================
 // UUID auto-assign hooks (v8 tables).
 //
 // v1.0 code inserts rows via db.collection.add({ scryfall_id: ... }) without

@@ -162,6 +162,29 @@ db.version(9).stores({
   precons_cache: 'code, set_type, released_at, updated_at'
 });
 
+// Phase 11 Plan 1 — mirror of main-thread v10 (deleted_at additive per D-15).
+// Worker only touches `cards` + `meta`, but every connection to the same IDB
+// must declare the full schema chain so Dexie's schema-version compare passes
+// when the main thread bumps to v10. No .upgrade() callback — v10 is additive.
+// Profile EXCLUDED from deleted_at per D-15.
+db.version(10).stores({
+  collection: 'id, scryfall_id, category, foil, user_id, updated_at, synced_at, deleted_at, [scryfall_id+foil], [scryfall_id+category]',
+  decks: 'id, name, format, user_id, updated_at, synced_at, deleted_at',
+  deck_cards: 'id, deck_id, scryfall_id, user_id, updated_at, synced_at, deleted_at, [deck_id+scryfall_id]',
+  games: 'id, deck_id, user_id, started_at, ended_at, updated_at, synced_at, deleted_at',
+  watchlist: 'id, &scryfall_id, user_id, updated_at, synced_at, deleted_at',
+  cards: 'id, name, oracle_id, set, collector_number, cmc, color_identity, type_line, [set+collector_number]',
+  meta: 'key',
+  price_history: '++id, scryfall_id, date, updated_at, [scryfall_id+date]',
+  edhrec_cache: 'commander',
+  combo_cache: 'deck_id',
+  card_salt_cache: 'sanitized',
+  profile: 'id, user_id, updated_at',
+  sync_queue: '++id, table_name, user_id, created_at',
+  sync_conflicts: '++id, table_name, detected_at',
+  precons_cache: 'code, set_type, released_at, updated_at'
+});
+
 const SCRYFALL_BULK_API = 'https://api.scryfall.com/bulk-data/default-cards';
 const USER_AGENT = 'Counterflux/1.0 (MTG collection manager)';
 
