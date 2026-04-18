@@ -121,7 +121,9 @@ body {
 
 /* POLISH-08 (D-26): LIVE chip pulsing dot. Applied only when
    connectivity color === 'success' so warning/offline states do
-   not pulse (reduces visual noise per D-26). */
+   not pulse (reduces visual noise per D-26).
+   Phase 11 Plan 2 — reused verbatim for the sync-status chip `synced`
+   state's left-of-glyph dot (UI-SPEC §Component Anatomy 1). */
 @keyframes cf-pulse {
   0%, 100% { opacity: 1; transform: scale(1); }
   50%      { opacity: 0.5; transform: scale(1.3); }
@@ -132,6 +134,23 @@ body {
   border-radius: 50%;
   background: var(--color-success, #2ECC71);
   animation: cf-pulse 1.5s ease-in-out infinite;
+}
+
+/* Phase 11 Plan 2 — sync-status chip utilities (SYNC-07, D-08).
+   Error-state halo is always-on (not hover-only) per UI-SPEC — the chip is
+   the single persistent channel for sync failures.
+   Spinner drives the syncing state's progress_activity glyph rotation.
+   Honoured by the prefers-reduced-motion block below. */
+.cf-chip-error-halo {
+  box-shadow: 0 0 8px var(--color-glow-red);
+}
+@keyframes cf-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+.cf-chip-spinner {
+  animation: cf-spin 1s linear infinite;
+  display: inline-block;
 }
 
 /* Phase 8 Plan 2 — Treasure Cruise LHS panel transitions (D-28, UI-SPEC
@@ -178,6 +197,12 @@ body {
     transition-duration: 0.01ms !important;
   }
   .cf-auth-spin {
+    animation: none !important;
+  }
+
+  /* Phase 11 Plan 2 — sync-status chip spinner (SYNC-07). Stop rotation
+     under reduced-motion; chip still conveys syncing via label + glow. */
+  .cf-chip-spinner {
     animation: none !important;
   }
 }

@@ -285,46 +285,59 @@
 
       <!-- Right section -->
       <div class="flex items-center gap-md">
-        <!-- Connectivity Status Chip (D-14, D-15, PERF-05) -->
-        <div
-          x-data="{
-            state: 'live',
-            label: 'LIVE',
-            color: 'success',
-            update() {
-              const isOnline = navigator.onLine;
-              const updatedAt = $store.bulkdata?.updatedAt || null;
-              if (!isOnline) { this.state = 'offline'; this.label = 'OFFLINE'; this.color = 'secondary'; return; }
-              if (updatedAt && (Date.now() - new Date(updatedAt).getTime()) > 86400000) {
-                const hours = Math.floor((Date.now() - new Date(updatedAt).getTime()) / 3600000);
-                this.state = 'stale'; this.label = 'STALE ' + hours + 'H'; this.color = 'warning'; return;
-              }
-              this.state = 'live'; this.label = 'LIVE'; this.color = 'success';
-            }
-          }"
-          x-init="update(); window.addEventListener('online', () => { update(); $dispatch('cf:reconnect'); }); window.addEventListener('offline', () => update()); setInterval(() => update(), 60000);"
-          class="flex items-center gap-xs px-sm py-xs"
-          :title="'Last updated: ' + ($store.bulkdata?.updatedAt ? new Date($store.bulkdata.updatedAt).toLocaleString() : 'Unknown')"
-        >
-          <!-- POLISH-08 / D-26: pulse only on live (success). Warning/offline keep static dot. -->
-          <span
-            class="rounded-full"
-            :class="{
-              'cf-live-dot': color === 'success',
-              'w-2 h-2 bg-warning': color === 'warning',
-              'w-2 h-2 bg-secondary': color === 'secondary'
-            }"
-          ></span>
-          <span
-            class="font-mono text-[11px] font-bold uppercase tracking-[0.15em]"
-            :class="{
-              'text-success': color === 'success',
-              'text-warning': color === 'warning',
-              'text-secondary': color === 'secondary'
-            }"
-            x-text="label"
-          ></span>
-        </div>
+        <!-- Phase 11 Plan 2 — Sync-Status Chip (SYNC-07, D-08)
+             Replaces the v1.0 LIVE/OFFLINE/STALE connectivity chip. Binds to
+             Alpine.store('sync').status; 4 branches (synced/syncing/offline/error).
+             Non-error states render <div role="status" aria-live="polite">;
+             error state renders <button> so keyboard users can trigger
+             openSyncErrorsModal. UI-SPEC §Component Anatomy 1. -->
+        <template x-if="$store.sync && $store.sync.status !== 'error'">
+          <div
+            role="status"
+            aria-live="polite"
+            class="flex items-center gap-xs px-sm py-xs"
+            :title="$store.sync.getTooltip()"
+            :aria-label="'Sync status: ' + $store.sync.status + '. ' + $store.sync.getTooltip()"
+          >
+            <!-- Synced: success-green pulse-dot + blue check + text-primary label -->
+            <template x-if="$store.sync.status === 'synced'">
+              <span class="flex items-center gap-xs">
+                <span class="cf-live-dot"></span>
+                <span class="material-symbols-outlined text-primary" style="font-size: 12px;">check</span>
+                <span class="font-mono text-[11px] font-bold uppercase tracking-[0.15em] text-text-primary">SYNCED</span>
+              </span>
+            </template>
+            <!-- Syncing: rotating spinner + blue glow halo + muted label -->
+            <template x-if="$store.sync.status === 'syncing'">
+              <span class="flex items-center gap-xs" style="box-shadow: 0 0 8px var(--color-glow-blue);">
+                <span class="material-symbols-outlined text-primary cf-chip-spinner" style="font-size: 12px;">progress_activity</span>
+                <span class="font-mono text-[11px] font-bold uppercase tracking-[0.15em] text-text-muted">SYNCING…</span>
+              </span>
+            </template>
+            <!-- Offline: static warning dot + cloud_off glyph, warning tint on both -->
+            <template x-if="$store.sync.status === 'offline'">
+              <span class="flex items-center gap-xs">
+                <span class="w-2 h-2 bg-warning"></span>
+                <span class="material-symbols-outlined text-warning" style="font-size: 12px;">cloud_off</span>
+                <span class="font-mono text-[11px] font-bold uppercase tracking-[0.15em] text-warning">OFFLINE</span>
+              </span>
+            </template>
+          </div>
+        </template>
+        <!-- Error: renders as <button> (keyboard tab-able) with click → sync-errors modal (Plan 11-03) -->
+        <template x-if="$store.sync && $store.sync.status === 'error'">
+          <button
+            type="button"
+            class="cf-chip-error-halo flex items-center gap-xs px-sm py-xs cursor-pointer"
+            :title="$store.sync.getTooltip()"
+            :aria-label="'Sync status: error. ' + $store.sync.getTooltip()"
+            @click="window.openSyncErrorsModal && window.openSyncErrorsModal()"
+          >
+            <span class="w-2 h-2 bg-secondary"></span>
+            <span class="material-symbols-outlined text-secondary" style="font-size: 12px;">error</span>
+            <span class="font-mono text-[11px] font-bold uppercase tracking-[0.15em] text-secondary">SYNC ERROR</span>
+          </button>
+        </template>
 
         <button class="text-text-muted hover:text-text-primary transition-colors relative" aria-label="Notifications">
           <span class="material-symbols-outlined text-2xl">notifications</span>
