@@ -610,6 +610,14 @@
     </template>
   </div>
 
+  <!-- Phase 11 Plan 3 — named mount roots for vanilla-DOM sync modals + splash.
+       Each modal component uses document.getElementById(<root-id>) with a
+       document.body fallback for tests. Mount roots are additive and never
+       reordered by downstream plans. -->
+  <div id="cf-reconciliation-root"></div>
+  <div id="cf-sync-errors-root"></div>
+  <div id="cf-sync-pull-splash-root"></div>
+
   <script type="module" src="/src/main.js"></script>
 </body>
 </html>
