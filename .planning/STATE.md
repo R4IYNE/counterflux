@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Second Sunrise
 status: executing
-stopped_at: Completed 11-01-PLAN.md — Dexie v10 + Supabase schema delta applied to huxley (Wave 1 of Phase 11 complete)
-last_updated: "2026-04-18T19:34:18.419Z"
+stopped_at: Completed 11-04-PLAN.md — sync-engine push + hooks + classifyError + cross-user gate (Wave 2 of Phase 11)
+last_updated: "2026-04-18T20:12:29.560Z"
 last_activity: 2026-04-18
 progress:
   total_phases: 8
   completed_phases: 5
   total_plans: 25
-  completed_plans: 22
+  completed_plans: 23
   percent: 84
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-14)
 ## Current Position
 
 Phase: 11 (cloud-sync-engine) — EXECUTING
-Plan: 4 of 6
+Plan: 5 of 6
 Status: Ready to execute
 Last activity: 2026-04-18
 
@@ -79,6 +79,7 @@ Progress: [████████░░] 84%
 | Phase 10 P04 | 10m 12s | 3 tasks | 8 files |
 | Phase 11 P02 | 7m 16s | 3 tasks | 6 files |
 | Phase 11 P01 | ~6m executor + human apply | 5 tasks (4 auto + 1 human-action) tasks | 8 files files |
+| Phase 11 P04 | 43 min | 3 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -169,6 +170,9 @@ Full decision log in PROJECT.md Key Decisions table.
 - [Phase 11]: Reconciliation modal stays mounted on onChoice failure — resets buttons + surfaces toast + waits for retry; mirrors settings-modal profile-save error recovery.
 - [Phase 11]: Splash progress subscription uses 200ms setInterval polling rather than Alpine.effect — effect throws if splash mounts pre-Alpine.start; polling safely no-ops until store is available.
 - [Phase 11]: window.openSyncErrorsModal assignment unconditional in src/stores/sync.js — Plan 11-02's !window.x guard would block the real-modal swap; removed the guard, real import always wins.
+- [Phase 11]: [Phase 11]: Plan 11-04: _suppressHooks reference-count (not boolean) — Dexie .update() reads before firing updating hook, async boundary leaks a plain bool; counter + Promise.finally() holds across awaits while keeping Pitfall 11-B grep gate (non-async function decl)
+- [Phase 11]: [Phase 11]: Plan 11-04: Enqueue dual-path (tx.table inline + tx.on('complete') fallback) — avoids refactoring 11+ caller sites to scope sync_queue in multi-table tx; fallback fires enqueue after tx commits so outbox invariant holds (queue row persists only when data is durable)
+- [Phase 11]: [Phase 11]: Plan 11-04: Transient error 3-attempt budget — attempts === 3 promotes to dead-letter even if classified transient; prevents infinite retry on persistent-transient conditions (quota exhaustion masquerading as 429)
 
 ### Roadmap Evolution
 
@@ -187,6 +191,6 @@ None — roadmap complete, next step is `/gsd:plan-phase 7`.
 
 ## Session Continuity
 
-Last session: 2026-04-18T18:55:18.152Z
-Stopped at: Completed 11-01-PLAN.md — Dexie v10 + Supabase schema delta applied to huxley (Wave 1 of Phase 11 complete)
+Last session: 2026-04-18T20:12:29.557Z
+Stopped at: Completed 11-04-PLAN.md — sync-engine push + hooks + classifyError + cross-user gate (Wave 2 of Phase 11)
 Resume file: None
