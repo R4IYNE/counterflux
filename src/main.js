@@ -18,6 +18,7 @@ import { initProfileStore } from './stores/profile.js';
 import { initAuthStore } from './stores/auth.js';
 import { openSettingsModal } from './components/settings-modal.js';
 import { openAuthModal } from './components/auth-modal.js';
+import { openAuthWall, closeAuthWall } from './components/auth-wall.js';
 import { maybeShowFirstSignInPrompt } from './components/first-sign-in-prompt.js';
 import { splashScreen } from './components/splash-screen.js';
 import { sidebarComponent } from './components/sidebar.js';
@@ -93,6 +94,28 @@ async function bootApp() {
   // handler (if this is a magic-link return) runs first with a fresh anonymous state.
   // init() is async but fire-and-forget; it transitions status → authed when getSession resolves.
   Alpine.store('auth').init();
+
+  // Phase 10.3 (D-40) — auth-wall boot gate. Counterflux is an auth-gated
+  // product; anonymous users don't have a use case. When status is anything
+  // other than 'authed' (or we're mid-OAuth-callback), render the non-dismissible
+  // auth-wall. closes automatically when status flips to 'authed' or 'pending'.
+  const syncAuthWall = () => {
+    const status = Alpine.store('auth').status;
+    const hash = (typeof window !== 'undefined' && window.location && window.location.hash) || '';
+    const onCallback = hash.startsWith('#/auth-callback');
+    if (onCallback || status === 'authed' || status === 'pending') {
+      closeAuthWall();
+    } else {
+      openAuthWall();
+    }
+  };
+  Alpine.effect(() => {
+    Alpine.store('auth').status;   // reactive subscription
+    syncAuthWall();
+  });
+  if (typeof window !== 'undefined') {
+    window.addEventListener('hashchange', syncAuthWall);
+  }
 
   // Phase 10 Plan 4 — profile store re-hydrates whenever auth.status flips,
   // and after hydrate resolves we poll the first-sign-in migration prompt.

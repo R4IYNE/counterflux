@@ -16,16 +16,16 @@ updated: 2026-04-17T16:51:00Z
 expected: Network panel shows NO supabase chunk loaded on initial page render; only the main index chunk and vendor chunks load. The supabase-*.js chunk (187KB) must NOT appear until the user clicks SIGN IN.
 result: passed (2026-04-18) — DevTools Network filter "supabase" returns 0/86 requests on cold boot; 33MB total transferred, 0KB from Supabase. Lazy-load verified at live runtime.
 
-### 2. Email + password sign-in (D-39 pivot — magic-link removed)
-expected: User enters email + password in auth-modal, clicks SIGN IN (or presses Enter). Modal closes on success, success toast fires, sidebar flips to authed widget with name+avatar. Session persists on F5 reload. Wrong password shows inline error "Invalid email or password." and re-enables the form.
+### 2. Email + password sign-in (D-39 + D-40: auth-wall)
+expected: On boot with no prior session, the full-screen auth-wall covers the app. User enters email + password, clicks SIGN IN (or presses Enter). Wall dismisses on success, success toast fires, dashboard renders with avatar in sidebar. Session persists on F5 reload — returning user lands directly on dashboard, wall never appears. Wrong password shows inline "Invalid email or password." and re-enables the form.
 result: [pending]
 
 ### 3. Google OAuth sign-in — profile name and avatar populate
-expected: Clicking SIGN IN WITH GOOGLE opens Google consent screen, returns to /#/auth-callback, profile name (full_name from user_metadata) + avatar (avatar_url from user_metadata) appear in sidebar authed widget. Settings modal shows USE GOOGLE AVATAR button.
+expected: Clicking SIGN IN WITH GOOGLE on the auth-wall opens Google consent screen (app name reads "James's Personal Apps" per shared Google Cloud project), returns to /#/auth-callback, profile name (full_name from user_metadata) + avatar (avatar_url from user_metadata) appear in sidebar authed widget. Settings modal shows USE GOOGLE AVATAR button.
 result: [pending]
 
 ### 4. Sign-out preserves local Dexie data (AUTH-05 live confirmation)
-expected: User clicks SIGN OUT in settings modal, sees toast "Signed out. Your data stays on this device.", sidebar flips to SIGN IN, and all collection/decks/games are still present in Treasure Cruise / Thousand-Year Storm / Vandalblast.
+expected: User clicks SIGN OUT in settings modal, sees toast "Signed out. Your data stays on this device.", auth-wall re-appears covering the app (D-40), and on next sign-in all collection/decks/games/watchlist are still present in Treasure Cruise / Thousand-Year Storm / Vandalblast.
 result: [pending]
 
 ### 5. RLS isolation — D-37 hard gate (live Supabase)

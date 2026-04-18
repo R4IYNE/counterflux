@@ -11,6 +11,12 @@ created: 2026-04-17
 
 # Phase 10 — UI Design Contract
 
+> **REVISION (D-40, 2026-04-18) — auth-wall boot gate added (permanent).**
+>
+> Counterflux is an auth-gated product. On boot, if `auth.status !== 'authed'` and the route is not `/auth-callback`, a full-screen non-dismissible `auth-wall` covers the app. Visual: Syne 48px `COUNTERFLUX` brand heading, 11px mono `THE AETHERIC ARCHIVE` tagline, reuses auth-modal card layout (420px max-width, `#14161C` bg, `#2A2D3A` border, 32px padding), includes Google + OR + EMAIL + PASSWORD + SIGN IN (same as D-39 auth-modal). Mila tagline below card: `Mila only lets members through the gate.` No X close, no Escape, no backdrop dismiss. Background: solid `#0B0C10` (full viewport). Sign-in success flips `auth.status → 'authed'` which closes the wall via `Alpine.effect`.
+>
+> The auth-modal component and sidebar Sign In CTA remain in the codebase as dead code for now (cleanup deferred to a future phase).
+>
 > **REVISION (D-39, 2026-04-18) — magic-link removed; email+password replaces it.**
 >
 > The shared huxley Supabase project sends magic-link emails branded as "huxley" across all apps, which is confusing. For Counterflux, email+password auth sidesteps the email-branding problem and is acceptable for a 2-user personal app with known users.

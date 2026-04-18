@@ -132,6 +132,15 @@ Ship the Supabase identity layer that unblocks Phase 11 sync. Scope is narrowly 
   - Enter key on either field submits.
   - UI-SPEC section §2 magic-link flow is obsolete; see revised auth-modal section.
 
+### Auth gate (added post-ship)
+- **D-40 (2026-04-18, post-ship — permanent):** Counterflux is an auth-gated product. Anonymous users do NOT have a usage path. Replaces Phase 10's original "anonymous-users-pay-zero-cost, sign-in-is-optional" design (which came from the original public-launch framing).
+  - Reason 1: private app for James + Sharon only in v1.1 — anonymous mode has no user
+  - Reason 2: permanent future stance — even on commercial expansion (v2.0+), new users must sign in. No unauthenticated read path is planned.
+  - Implementation: new `src/components/auth-wall.js` — full-screen, non-dismissible sign-in (Counterflux brand heading + card + Mila tagline). Mounted/unmounted via `Alpine.effect` in `src/main.js` that subscribes to `auth.status` + `hashchange`. Wall opens when status is `anonymous` AND route is not `/auth-callback`. Wall closes when status is `pending` or `authed` (or on callback route).
+  - AUTH-01 lazy-load preserved: wall is pure HTML/CSS on first render; `@supabase/supabase-js` only loads when user clicks `SIGN IN` or `SIGN IN WITH GOOGLE` (same lazy path as auth-modal).
+  - Dead code left in place (post-ship cleanup deferred): `src/components/auth-modal.js` (sidebar CTA entry — unreachable with wall active), signed-out branch of `src/components/settings-modal.js` (unreachable), `src/components/sidebar.js` anonymous branch (unreachable). A later refactor phase can prune these; they don't affect runtime behavior.
+  - UX note: on sign-out, wall re-appears automatically because the Alpine.effect detects `auth.status → 'anonymous'`. Sign-out toast `"Signed out. Your data stays on this device."` is still fired, then wall covers the screen.
+
 ### Delivery sequencing
 - **D-36:** Phase 10 ships as multiple plans (TBD count — planner decides). Logical groupings:
   1. Supabase project + schema provisioning + RLS policies + RLS isolation test (SQL + pre-flight doc)
