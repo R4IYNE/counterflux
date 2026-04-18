@@ -40,11 +40,13 @@ export function getSupabase() {
       flowType: 'pkce',
       persistSession: true,
       autoRefreshToken: true,
-      // D-39 fix: we call exchangeCodeForSession explicitly in auth-callback-overlay.
-      // Setting this to true causes a race where auto-exchange consumes the PKCE
-      // verifier from localStorage before our handler fires, leading to
-      // "PKCE code verifier not found in storage" on our explicit exchange call.
-      detectSessionInUrl: false,
+      // D-40 fix: PKCE + OAuth require detectSessionInUrl:true so supabase-js
+      // performs the token exchange internally (it has access to the PKCE
+      // verifier + flow state). Manual exchangeCodeForSession is for
+      // server-side callbacks only (see Supabase docs: guides/auth/server-side/pkce-flow).
+      // Our auth-callback-overlay polls supabase.auth.getSession() after mount
+      // to observe the auto-exchange result — no race, no double-exchange.
+      detectSessionInUrl: true,
     },
   });
 

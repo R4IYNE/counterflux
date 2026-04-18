@@ -110,11 +110,9 @@ function renderError({ heading, body }) {
       if (window.__counterflux_router) {
         window.__counterflux_router.navigate(route.replace(/^#/, ''));
       }
-      // Re-open the auth modal so the user can retry immediately.
-      if (typeof window.__openAuthModal === 'function') {
-        window.__openAuthModal();
-      }
-      // Info toast: recovery path.
+      // D-40: auth-wall auto-opens via Alpine.effect when auth.status is
+      // anonymous and the route is not /auth-callback. No need to open
+      // auth-modal manually — the wall will appear the moment we navigate away.
       const AlpineObj = window.Alpine;
       AlpineObj?.store?.('toast')?.info?.('Try signing in again.');
     });
@@ -140,13 +138,22 @@ function displayName(user) {
 
 /**
  * Router entry point. `href` is typically `window.location.href` containing
- * the `?code=<pkce>` query parameter that Supabase appends after the
- * magic-link / Google OAuth round trip.
+ * the `?code=<pkce>` query parameter that Supabase appends after the Google
+ * OAuth round trip.
  *
- * @param {string} href — window.location.href at callback time
+ * D-40 implementation: supabase-js auto-exchanges the code internally because
+ * the client is configured with `detectSessionInUrl: true` + `flowType: 'pkce'`
+ * (see src/services/supabase.js). We don't call exchangeCodeForSession here —
+ * manual exchange races with the auto-exchange and fails with either
+ * "PKCE code verifier not found" OR "invalid flow state" depending on ordering.
+ *
+ * Our job here is to OBSERVE the auto-exchange result. We poll supabase.auth.
+ * getSession() until a session appears (success) or we time out (error).
+ *
+ * @param {string} _href — window.location.href at callback time (reserved for future use)
  * @returns {Promise<void>}
  */
-export async function handleAuthCallback(href) {
+export async function handleAuthCallback(_href) {
   mountOverlay();
 
   let mod;
@@ -156,57 +163,72 @@ export async function handleAuthCallback(href) {
     console.error('[Counterflux] callback: failed to load supabase service', err);
     renderError({
       heading: "COULDN'T FINISH SIGN-IN",
-      body: 'Something went wrong routing your session back. Try again or use a magic link.',
+      body: 'Something went wrong routing your session back. Go back and try again.',
     });
     return;
   }
 
   const supabase = mod.getSupabase();
-  let result;
-  try {
-    result = await supabase.auth.exchangeCodeForSession(href);
-  } catch (err) {
-    result = { data: null, error: err };
-  }
-  const { data, error } = result || {};
 
-  if (error || !data?.session) {
-    // D-39: log the actual error so PKCE / verifier / origin issues are diagnosable.
-    // The user-facing copy stays friendly; developers watching DevTools see the cause.
-    console.warn('[Counterflux] auth-callback exchangeCodeForSession failed:', {
-      href,
-      error,
-      hasData: !!data,
-      hasSession: !!(data && data.session),
-    });
-    const msg = String((error?.message || '')).toLowerCase();
-    if (/expired|used|otp/.test(msg)) {
-      renderError({
-        heading: 'SIGN-IN LINK EXPIRED',
-        body: 'This sign-in attempt is older than 60 minutes or was already used. Go back and sign in again.',
-      });
-    } else {
-      renderError({
-        heading: "COULDN'T FINISH SIGN-IN",
-        body: 'Something went wrong routing your session back. Go back and try again.',
-      });
+  // Poll getSession() up to 10 seconds. The first call may return null if the
+  // auto-exchange (kicked off by detectSessionInUrl:true during createClient)
+  // hasn't completed yet. Subsequent calls will pick it up once it lands.
+  const DEADLINE_MS = 10_000;
+  const POLL_MS = 100;
+  const start = Date.now();
+  let lastError = null;
+
+  while (Date.now() - start < DEADLINE_MS) {
+    let result;
+    try {
+      result = await supabase.auth.getSession();
+    } catch (err) {
+      lastError = err;
+      await new Promise(r => setTimeout(r, POLL_MS));
+      continue;
     }
-    return;
+    const { data, error } = result || {};
+    if (error) {
+      lastError = error;
+      await new Promise(r => setTimeout(r, POLL_MS));
+      continue;
+    }
+    if (data?.session) {
+      // Auto-exchange succeeded — session is in storage.
+      // Sync the Alpine auth store so reactive consumers (auth-wall,
+      // profile hydrator) pick it up immediately rather than waiting for
+      // onAuthStateChange to fire.
+      const AlpineObj = window.Alpine;
+      const authStore = AlpineObj?.store?.('auth');
+      if (authStore) {
+        authStore.session = data.session;
+        authStore.user = data.session.user;
+        authStore.status = 'authed';
+      }
+      renderSuccess();
+      AlpineObj?.store?.('toast')?.success?.(`Welcome, ${displayName(data.session.user)}.`);
+
+      await new Promise(resolve => setTimeout(resolve, 200));
+
+      const capturedHash = consumeCapturedRoute() || '#/';
+      const route = capturedHash.replace(/^#/, '') || '/';
+      unmountOverlay();
+      if (window.__counterflux_router) {
+        window.__counterflux_router.navigate(route);
+      }
+      return;
+    }
+    await new Promise(r => setTimeout(r, POLL_MS));
   }
 
-  // Success — 200ms flash, then navigate.
-  renderSuccess();
-  const AlpineObj = window.Alpine;
-  AlpineObj?.store?.('toast')?.success?.(`Welcome, ${displayName(data.session.user)}.`);
-
-  await new Promise((resolve) => setTimeout(resolve, 200));
-
-  const capturedHash = consumeCapturedRoute() || '#/';
-  const route = capturedHash.replace(/^#/, '') || '/';
-  unmountOverlay();
-  if (window.__counterflux_router) {
-    window.__counterflux_router.navigate(route);
-  }
+  // Timeout — auto-exchange didn't produce a session within the deadline.
+  console.warn('[Counterflux] auth-callback timed out waiting for session after 10s.', {
+    lastError,
+  });
+  renderError({
+    heading: "COULDN'T FINISH SIGN-IN",
+    body: 'Something went wrong routing your session back. Go back and try again.',
+  });
 }
 
 // ---------------------------------------------------------------------------
