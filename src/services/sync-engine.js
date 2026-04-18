@@ -553,17 +553,58 @@ function _scheduleRetry() {
 // Alpine.effect bound to auth.status transitions.
 // ---------------------------------------------------------------------------
 
+let _pullInterval = null;
+let _focusListener = null;
+
 export async function initSyncEngine() {
   if (_initialized) return;
   _initialized = true;
 
-  // Install hooks (idempotent)
+  // 1. Install hooks (idempotent) — outbox enqueue fires for every local write.
   installSyncHooks();
 
-  // SYNC-06 reload recovery — drain any surviving queue entries
-  scheduleFlush(0);
+  // 2. Plan 11-05 — first-sign-in reconciliation (4-state classify + branch).
+  // Fire-and-forget so initSyncEngine doesn't block the calling Alpine.effect
+  // tick; any errors log to console but do not crash the app (user can retry).
+  // We intentionally await in the common case so the Realtime/polling starts
+  // AFTER reconcile resolves (avoids Pitfall 11-I echo storms during initial
+  // pull).
+  try {
+    const { reconcile } = await import('./sync-reconciliation.js');
+    await reconcile();
+  } catch (err) {
+    console.error('[sync] reconcile failed at init', err);
+    // fall through — push side still works; user can retry via app UX
+  }
 
-  // Plan 11-05 extends: reconciliation check + Realtime subscription + incremental polling
+  // 3. Plan 11-05 — subscribe to the single schema-wide Realtime channel.
+  try {
+    const { subscribeRealtime } = await import('./sync-realtime.js');
+    await subscribeRealtime();
+  } catch (err) {
+    console.warn('[sync] realtime subscribe failed', err);
+  }
+
+  // 4. Plan 11-05 — 60s incremental-pull backstop + on-focus pull.
+  try {
+    const { incrementalPull } = await import('./sync-pull.js');
+    _pullInterval = setInterval(() => {
+      incrementalPull().catch((err) => console.warn('[sync] incrementalPull failed', err));
+    }, 60_000);
+    _focusListener = () => {
+      incrementalPull().catch((err) => console.warn('[sync] incrementalPull (focus) failed', err));
+    };
+    if (typeof window !== 'undefined') {
+      window.addEventListener('focus', _focusListener);
+    }
+  } catch (err) {
+    console.warn('[sync] incremental-pull bootstrap failed', err);
+  }
+
+  // 5. SYNC-06 reload recovery — drain any surviving queue entries from a
+  // prior session that didn't get flushed before tab close. Schedule last so
+  // the flush runs after reconcile() / realtime subscribe complete.
+  scheduleFlush(0);
 }
 
 export async function teardownSyncEngine() {
@@ -572,7 +613,26 @@ export async function teardownSyncEngine() {
     clearTimeout(_flushTimer);
     _flushTimer = null;
   }
-  // Plan 11-05 extends: unsubscribe Realtime channel
+
+  // Plan 11-05 — unsubscribe Realtime channel.
+  try {
+    const { unsubscribeRealtime } = await import('./sync-realtime.js');
+    unsubscribeRealtime();
+  } catch (err) {
+    console.warn('[sync] realtime unsubscribe failed', err);
+  }
+
+  // Plan 11-05 — stop incremental polling.
+  if (_pullInterval !== null) {
+    clearInterval(_pullInterval);
+    _pullInterval = null;
+  }
+  if (_focusListener !== null) {
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('focus', _focusListener);
+    }
+    _focusListener = null;
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -587,4 +647,9 @@ export function __resetSyncEngineForTests() {
     clearTimeout(_flushTimer);
     _flushTimer = null;
   }
+  if (_pullInterval !== null) {
+    clearInterval(_pullInterval);
+    _pullInterval = null;
+  }
+  _focusListener = null;
 }
