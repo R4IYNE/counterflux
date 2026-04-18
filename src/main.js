@@ -137,6 +137,27 @@ async function bootApp() {
     void status;
   });
 
+  // Phase 11 Plan 4 — sync engine lifecycle bound to auth.status.
+  // On authed → initSyncEngine installs Dexie hooks + drains surviving queue;
+  // on anonymous → teardownSyncEngine cancels debounce timer. Both are
+  // dynamically imported so pre-auth boot never touches sync-engine.js
+  // (keeping AUTH-01 lazy-load discipline + matching the auth store's own
+  // discipline for supabase-js).
+  Alpine.effect(() => {
+    const status = Alpine.store('auth').status;   // reactive dep
+    if (status === 'authed') {
+      (async () => {
+        const { initSyncEngine } = await import('./services/sync-engine.js');
+        await initSyncEngine();
+      })();
+    } else if (status === 'anonymous') {
+      (async () => {
+        const { teardownSyncEngine } = await import('./services/sync-engine.js');
+        await teardownSyncEngine();
+      })();
+    }
+  });
+
   // Fetch EUR→GBP exchange rate (once per session, cached 24h)
   getEurToGbpRate().then(rate => {
     console.log(`[Counterflux] EUR→GBP rate: ${rate}`);

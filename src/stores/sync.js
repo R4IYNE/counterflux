@@ -33,8 +33,12 @@
 
 import Alpine from 'alpinejs';
 import { openSyncErrorsModal } from '../components/sync-errors-modal.js';
+// Phase 11 Plan 4 — engine delegation for flush/retry/discard.
+import { flushQueue, scheduleFlush } from '../services/sync-engine.js';
+import { db } from '../db/schema.js';
 
 let _onlineListenerInstalled = false;
+let _pendingCountInterval = null;
 
 // ---------------------------------------------------------------------------
 // Sync-errors-modal bridge
@@ -94,6 +98,25 @@ export function initSyncStore() {
       window.addEventListener('offline', () => {
         this._transition('offline');
       });
+
+      // Plan 11-04 — reactive `pending_count` via lightweight 2s poll.
+      // Only runs while authed; clears to 0 when signed out. Poll is cheap
+      // (a single .count() on an indexed column); guarded with try/catch so a
+      // mid-migration Dexie state never throws.
+      if (_pendingCountInterval === null) {
+        _pendingCountInterval = setInterval(async () => {
+          try {
+            const auth = Alpine.store('auth');
+            if (auth?.status !== 'authed' || !auth.user?.id) {
+              if (this.pending_count !== 0) this.pending_count = 0;
+              return;
+            }
+            this.pending_count = await db.sync_queue.where('user_id').equals(auth.user.id).count();
+          } catch {
+            // Dexie closed / mid-migration — leave pending_count as-is
+          }
+        }, 2000);
+      }
     },
 
     /**
@@ -112,30 +135,49 @@ export function initSyncStore() {
     },
 
     /**
-     * STUB — Plan 11-04 wires src/services/sync-engine.js flushQueue().
-     * Present so chip / settings / tests can bind without waiting for the engine.
+     * Trigger an immediate push of queued writes to Supabase.
+     * Delegates to src/services/sync-engine.js `scheduleFlush(0)` — the engine
+     * handles FK order, dedup, retries, and dead-lettering.
      */
     async flush() {
-      console.info('[sync] flush() stub — Plan 11-04 pending');
+      scheduleFlush(0);
     },
 
     /**
-     * STUB — Plan 11-04 wires the retry path on src/services/sync-engine.js.
-     * Transitions to 'syncing' so the chip reflects the in-progress retry attempt.
+     * Re-queue a dead-lettered entry from sync_conflicts back into sync_queue.
+     * The row is tagged with the current auth user_id (PITFALLS §7 — never
+     * flush another user's entry). Subsequent flushQueue() attempts to push.
      */
-    async retry(queueEntryId) {
-      console.info('[sync] retry() stub —', queueEntryId);
-      if (this.status === 'error') {
-        this._transition('syncing');
+    async retry(conflictId) {
+      const conflict = await db.sync_conflicts.get(conflictId);
+      if (!conflict) return;
+      const userId = Alpine.store('auth')?.user?.id ?? null;
+      await db.sync_queue.add({
+        table_name: conflict.table_name,
+        op: conflict.op,
+        row_id: conflict.row_id,
+        user_id: userId,
+        payload: conflict.payload,
+        attempts: 0,
+        last_error: null,
+        created_at: Date.now()
+      });
+      await db.sync_conflicts.delete(conflictId);
+      if (this.status === 'error') this._transition('syncing');
+      scheduleFlush(0);
+    },
+
+    /**
+     * Hard-delete a dead-lettered entry from sync_conflicts without retrying.
+     * If no more conflicts remain and chip is in 'error', clear the error state.
+     */
+    async discard(conflictId) {
+      await db.sync_conflicts.delete(conflictId);
+      const remaining = await db.sync_conflicts.count();
+      if (remaining === 0 && this.status === 'error') {
+        this._transition('synced');
+        this.last_error = null;
       }
-    },
-
-    /**
-     * STUB — Plan 11-04 wires the discard path (hard-delete from sync_queue).
-     * Does not transition; caller decides (e.g. if last row, modal closes + transitions).
-     */
-    async discard(queueEntryId) {
-      console.info('[sync] discard() stub —', queueEntryId);
     },
 
     /**
@@ -177,4 +219,8 @@ export function initSyncStore() {
  */
 export function __resetSyncStoreForTests() {
   _onlineListenerInstalled = false;
+  if (_pendingCountInterval !== null) {
+    clearInterval(_pendingCountInterval);
+    _pendingCountInterval = null;
+  }
 }

@@ -25,6 +25,31 @@ vi.mock('alpinejs', () => ({
   },
 }));
 
+// --- Hoisted sync-engine + db mocks (Plan 11-04 — retry/flush delegate) ----
+const scheduleFlushMock = vi.fn();
+const flushQueueMock = vi.fn(async () => {});
+vi.mock('../src/services/sync-engine.js', () => ({
+  flushQueue: flushQueueMock,
+  scheduleFlush: scheduleFlushMock,
+}));
+
+// In-memory `db.sync_conflicts` + `db.sync_queue` stand-ins
+const conflictStore = new Map();
+const queueAdds = [];
+vi.mock('../src/db/schema.js', () => ({
+  db: {
+    sync_conflicts: {
+      get: vi.fn(async (id) => conflictStore.get(id) || undefined),
+      delete: vi.fn(async (id) => { conflictStore.delete(id); }),
+      count: vi.fn(async () => conflictStore.size),
+    },
+    sync_queue: {
+      add: vi.fn(async (entry) => { queueAdds.push(entry); return queueAdds.length; }),
+      where: () => ({ equals: () => ({ count: async () => 0 }) }),
+    },
+  },
+}));
+
 // --- Test environment shims ------------------------------------------------
 function ensureWindow() {
   if (typeof globalThis.window === 'undefined') globalThis.window = globalThis;
@@ -63,9 +88,14 @@ beforeEach(async () => {
   clearListeners();
   for (const k of Object.keys(storeRegistry)) delete storeRegistry[k];
   // Seed auth as authed so online→syncing transitions are allowed
-  storeRegistry.auth = { status: 'authed' };
+  storeRegistry.auth = { status: 'authed', user: { id: 'user-test-uuid' } };
   // Default: online
   vi.stubGlobal('navigator', { onLine: true });
+
+  conflictStore.clear();
+  queueAdds.length = 0;
+  scheduleFlushMock.mockClear();
+  flushQueueMock.mockClear();
 
   vi.resetModules();
   vi.doMock('alpinejs', () => ({
@@ -73,6 +103,23 @@ beforeEach(async () => {
       store: (name, value) => {
         if (value !== undefined) storeRegistry[name] = value;
         return storeRegistry[name];
+      },
+    },
+  }));
+  vi.doMock('../src/services/sync-engine.js', () => ({
+    flushQueue: flushQueueMock,
+    scheduleFlush: scheduleFlushMock,
+  }));
+  vi.doMock('../src/db/schema.js', () => ({
+    db: {
+      sync_conflicts: {
+        get: vi.fn(async (id) => conflictStore.get(id) || undefined),
+        delete: vi.fn(async (id) => { conflictStore.delete(id); }),
+        count: vi.fn(async () => conflictStore.size),
+      },
+      sync_queue: {
+        add: vi.fn(async (entry) => { queueAdds.push(entry); return queueAdds.length; }),
+        where: () => ({ equals: () => ({ count: async () => 0 }) }),
       },
     },
   }));
@@ -134,12 +181,27 @@ describe('sync store state machine (SYNC-07)', () => {
     expect(storeRegistry.sync.pending_count).toBe(5);
   });
 
-  test('retry() from error transitions to syncing (stub impl)', async () => {
+  test('retry() from error re-enqueues the conflict and transitions to syncing', async () => {
     initSyncStore();
     await Promise.resolve();
+    // Seed a dead-lettered conflict (Plan 11-04 engine wiring — retry
+    // re-enqueues into sync_queue, deletes the sync_conflicts row, and
+    // schedules a flush). Status must flip from error → syncing.
+    conflictStore.set(42, {
+      id: 42, table_name: 'decks', op: 'put', row_id: 'd-abc',
+      payload: { id: 'd-abc', name: 'Retry me' },
+      error_code: '403', error_message: 'RLS rejected', detected_at: Date.now()
+    });
     storeRegistry.sync.status = 'error';
-    await storeRegistry.sync.retry('fake-queue-id');
+    await storeRegistry.sync.retry(42);
     expect(storeRegistry.sync.status).toBe('syncing');
+    // Re-enqueued with current user_id
+    expect(queueAdds.length).toBe(1);
+    expect(queueAdds[0].user_id).toBe('user-test-uuid');
+    expect(queueAdds[0].row_id).toBe('d-abc');
+    // Conflict cleared + flush scheduled
+    expect(conflictStore.has(42)).toBe(false);
+    expect(scheduleFlushMock).toHaveBeenCalled();
   });
 
   test('invalid transition is rejected (offline → synced direct jump blocked)', async () => {
