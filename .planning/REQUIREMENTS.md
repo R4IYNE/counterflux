@@ -85,7 +85,7 @@
 - [x] **SYNC-01**: Supabase Postgres schema mirrors the synced Dexie tables (collection, decks, deck_cards, games, watchlist, profile) with `user_id`, `updated_at`, and per-row primary keys
 - [ ] **SYNC-02**: Dexie `table.hook()` taps enqueue create/update/delete ops for synced tables into the `sync_queue` outbox; non-synced tables (`cards`, `meta`, `*_cache`) are excluded
 - [ ] **SYNC-03**: Sync engine flushes the outbox to Supabase via batched RPC; origin tagging prevents the server's echo from re-triggering the hook
-- [ ] **SYNC-04**: First-sign-in reconciliation detects all 4 states (local/remote × empty/populated); populated-populated case prompts the user to merge, keep local, or keep remote — never silently destroys data
+- [x] **SYNC-04**: First-sign-in reconciliation detects all 4 states (local/remote × empty/populated); populated-populated case prompts the user to merge, keep local, or keep remote — never silently destroys data
 - [ ] **SYNC-05**: Conflict resolution uses last-write-wins at field level via `updated_at` timestamps; `deck_cards` treats each row as atomic; conflicts beyond LWW surface in the `sync_conflicts` table for user review
 - [ ] **SYNC-06**: Offline queue survives reload and flushes automatically on reconnect; queue entries are tagged with `user_id` so sign-in switching never cross-contaminates users
 - [x] **SYNC-07**: Topbar sync-status indicator shows 4 states: synced, syncing, offline, error — replaces the existing connectivity chip

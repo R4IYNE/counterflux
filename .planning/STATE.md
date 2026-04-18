@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Second Sunrise
-status: completed
+status: executing
 stopped_at: Completed 11-01-PLAN.md — Dexie v10 + Supabase schema delta applied to huxley (Wave 1 of Phase 11 complete)
-last_updated: "2026-04-18T18:55:18.155Z"
+last_updated: "2026-04-18T19:34:18.419Z"
 last_activity: 2026-04-18
 progress:
   total_phases: 8
   completed_phases: 5
   total_plans: 25
-  completed_plans: 21
+  completed_plans: 22
   percent: 84
 ---
 
@@ -26,8 +26,8 @@ See: .planning/PROJECT.md (updated 2026-04-14)
 ## Current Position
 
 Phase: 11 (cloud-sync-engine) — EXECUTING
-Plan: 3 of 6
-Status: Ready to execute (Wave 1 of Phase 11 complete — plans 11-01 + 11-02 shipped in parallel)
+Plan: 4 of 6
+Status: Ready to execute
 Last activity: 2026-04-18
 
 Progress: [████████░░] 84%
@@ -166,6 +166,9 @@ Full decision log in PROJECT.md Key Decisions table.
 - [Phase 11]: Plan 11-02: chip template uses x-if per state (not :class juggling) — UI-SPEC mandates <button> in error state for keyboard reachability + <div role=status> otherwise; single-element + class-swap cannot express that. Cost: slightly more template volume, benefit: each branch independently grep-able for tests
 - [Phase 11]: Plan 11-02: deleted tests/connectivity-status.test.js alongside src/utils/connectivity.js (Rule 3 blocking deviation) — the test audited BOTH the deleted utility AND the replaced v1.0 chip template; leaving it in would fail npm test at import time. New tests/sync-status-chip.test.js replaces the coverage 1:1 + adds per-state assertions
 - [Phase 11]: Plan 11-01: Phase 11 schema delta applied to live huxley — Dexie v10 soft-delete (deleted_at column on 5 synced tables, profile excluded per D-15) + 3 Supabase migrations (counterflux.deleted_at + partial indexes + supabase_realtime publication for all 6 tables + pg_cron nightly tombstone sweep at 03:00 UTC with 30-day retention per D-16). pg_cron path used; 2 cron jobs verified in cron.job. Closes Pitfall 11-C so Plan 11-05's Realtime subscription will fire events on counterflux.*
+- [Phase 11]: Reconciliation modal stays mounted on onChoice failure — resets buttons + surfaces toast + waits for retry; mirrors settings-modal profile-save error recovery.
+- [Phase 11]: Splash progress subscription uses 200ms setInterval polling rather than Alpine.effect — effect throws if splash mounts pre-Alpine.start; polling safely no-ops until store is available.
+- [Phase 11]: window.openSyncErrorsModal assignment unconditional in src/stores/sync.js — Plan 11-02's !window.x guard would block the real-modal swap; removed the guard, real import always wins.
 
 ### Roadmap Evolution
 
