@@ -3,7 +3,7 @@ phase: 11-cloud-sync-engine
 plan: 06
 subsystem: sync
 tags: [offline-resilience, reload-recovery, live-supabase-e2e, realtime-propagation, sync-queue, sync-conflicts, human-uat]
-status: awaiting-uat
+status: complete
 
 # Dependency graph
 requires:
@@ -46,13 +46,13 @@ key-decisions:
 requirements-completed: [SYNC-06]
 
 # Metrics
-duration: pending-uat-close
-completed: awaiting-uat
+duration: ~16 min executor + UAT walk
+completed: 2026-04-18
 ---
 
 # Phase 11 Plan 6: Offline Resilience + Live-Supabase E2E + Human UAT Summary
 
-**SYNC-06 remainder closed (sync_queue survives reload + reconnect triggers flush + anonymous-reconnect is a no-op + boot drain kicks surviving queue) plus live-Supabase E2E extension of tests/sync-rls.test.js covering push upsert + Device A → Device B Realtime propagation + sync_queue/sync_conflicts non-exposure. 11-HUMAN-UAT.md written covering all 8 UI-SPEC visual regression anchors. Plan status: awaiting-uat — status will flip to `complete` once the human UAT walk resolves all 8 anchors + the live-Supabase gate passes green.**
+**SYNC-06 closed. sync_queue survives reload + reconnect triggers flush + anonymous-reconnect is a no-op + boot drain kicks surviving queue. Live-Supabase E2E covers push upsert + Device A → Device B Realtime propagation + sync_queue/sync_conflicts non-exposure. 11-HUMAN-UAT.md written; all 8 UI-SPEC visual regression anchors walked and approved (2026-04-18). Phase 11 ready for verification.**
 
 ## Performance
 
