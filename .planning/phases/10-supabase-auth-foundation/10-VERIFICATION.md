@@ -1,8 +1,10 @@
 ---
 phase: 10-supabase-auth-foundation
 verified: 2026-04-17T16:51:00Z
-status: human_needed
-score: 5/5 must-haves verified (all automated checks pass; 3 items require live credentials)
+resolved: 2026-04-18T14:30:00Z
+status: passed
+score: 5/5 must-haves verified + all 5 human UAT items resolved 2026-04-18 against live huxley
+post_ship_decisions: [D-38 household model, D-39 email+password auth, D-40 auth-wall boot gate, PKCE race fix via detectSessionInUrl+poll]
 human_verification:
   - test: "Auth-01 bundle inspection — cold boot with no credentials"
     expected: "Network panel shows NO supabase chunk loaded on initial page render; only the main index chunk and vendor chunks load. The supabase-*.js chunk (187KB) must NOT appear until the user clicks SIGN IN."

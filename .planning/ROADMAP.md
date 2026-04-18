@@ -167,7 +167,7 @@ Plans:
 | 8. Treasure Cruise Rapid Entry | v1.1 | 3/3 | Complete | 2026-04-16 |
 | 8.1. Treasure Cruise Polish & Precon Coverage | v1.1 | 3/3 | Complete | 2026-04-16 |
 | 9. Deck Accuracy + Vandalblast Pod Experience | v1.1 | 6/6 | Complete | 2026-04-17 |
-| 10. Supabase Auth Foundation | v1.1 | 4/4 | Complete   | 2026-04-17 |
+| 10. Supabase Auth Foundation | v1.1 | 4/4 | Complete    | 2026-04-18 |
 | 11. Cloud Sync Engine | v1.1 | 0/? | Not started | — |
 | 12. Notification Bell + Preordain Spoiler Refresh | v1.1 | 0/? | Not started | — |
 | 13. Performance Optimisation (conditional) | v1.1 | 0/? | Not started | — |
