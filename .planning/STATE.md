@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Second Sunrise
 status: executing
-stopped_at: Completed 11-04-PLAN.md — sync-engine push + hooks + classifyError + cross-user gate (Wave 2 of Phase 11)
-last_updated: "2026-04-18T20:12:29.560Z"
+stopped_at: Completed 11-05-PLAN.md (reconciliation + bulk-pull + realtime + LWW)
+last_updated: "2026-04-18T22:27:29.496Z"
 last_activity: 2026-04-18
 progress:
   total_phases: 8
   completed_phases: 5
   total_plans: 25
-  completed_plans: 23
+  completed_plans: 24
   percent: 84
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-14)
 ## Current Position
 
 Phase: 11 (cloud-sync-engine) — EXECUTING
-Plan: 5 of 6
+Plan: 6 of 6
 Status: Ready to execute
 Last activity: 2026-04-18
 
@@ -80,6 +80,7 @@ Progress: [████████░░] 84%
 | Phase 11 P02 | 7m 16s | 3 tasks | 6 files |
 | Phase 11 P01 | ~6m executor + human apply | 5 tasks (4 auto + 1 human-action) tasks | 8 files files |
 | Phase 11 P04 | 43 min | 3 tasks | 7 files |
+| Phase 11 P05 | 1h 57m | 4 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -173,6 +174,10 @@ Full decision log in PROJECT.md Key Decisions table.
 - [Phase 11]: [Phase 11]: Plan 11-04: _suppressHooks reference-count (not boolean) — Dexie .update() reads before firing updating hook, async boundary leaks a plain bool; counter + Promise.finally() holds across awaits while keeping Pitfall 11-B grep gate (non-async function decl)
 - [Phase 11]: [Phase 11]: Plan 11-04: Enqueue dual-path (tx.table inline + tx.on('complete') fallback) — avoids refactoring 11+ caller sites to scope sync_queue in multi-table tx; fallback fires enqueue after tx commits so outbox invariant holds (queue row persists only when data is durable)
 - [Phase 11]: [Phase 11]: Plan 11-04: Transient error 3-attempt budget — attempts === 3 promotes to dead-letter even if classified transient; prevents infinite retry on persistent-transient conditions (quota exhaustion masquerading as 429)
+- [Phase 11]: Row-level LWW with tie-to-cloud (D-02) implemented; REQUIREMENTS 'field-level' text superseded per RESEARCH footnote
+- [Phase 11]: Single schema-wide Realtime channel (Option B) — stays 24× under Supabase free-tier 200-concurrent quota
+- [Phase 11]: Pitfall 11-E closed via sync_pull_in_progress meta flag; reconcile() checks flag FIRST before classifyState
+- [Phase 11]: deck_cards atomic merge special case — divergent UUIDs sharing composite → loser logged to sync_conflicts
 
 ### Roadmap Evolution
 
@@ -191,6 +196,6 @@ None — roadmap complete, next step is `/gsd:plan-phase 7`.
 
 ## Session Continuity
 
-Last session: 2026-04-18T20:12:29.557Z
-Stopped at: Completed 11-04-PLAN.md — sync-engine push + hooks + classifyError + cross-user gate (Wave 2 of Phase 11)
+Last session: 2026-04-18T22:27:29.493Z
+Stopped at: Completed 11-05-PLAN.md (reconciliation + bulk-pull + realtime + LWW)
 Resume file: None
