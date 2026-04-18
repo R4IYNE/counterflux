@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Second Sunrise
-status: verifying
-stopped_at: Phase 11 context gathered
-last_updated: "2026-04-18T16:20:40.078Z"
-last_activity: 2026-04-18
+status: executing
+stopped_at: Completed 11-02-PLAN.md — sync store + topbar chip refactor
+last_updated: "2026-04-18T18:30:59.757Z"
+last_activity: 2026-04-18 -- Phase 11 execution started
 progress:
   total_phases: 8
   completed_phases: 5
-  total_plans: 19
-  completed_plans: 19
+  total_plans: 25
+  completed_plans: 20
   percent: 0
 ---
 
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-14)
 
 **Core value:** The deck builder knows what you own, and the collection knows what's in your decks — one interconnected data layer
-**Current focus:** Phase 10 — supabase-auth-foundation
+**Current focus:** Phase 11 — cloud-sync-engine
 
 ## Current Position
 
-Phase: 11
-Plan: Not started
-Status: Phase complete — ready for verification
-Last activity: 2026-04-18
+Phase: 11 (cloud-sync-engine) — EXECUTING
+Plan: 1 of 6
+Status: Executing Phase 11
+Last activity: 2026-04-18 -- Phase 11 execution started
 
 Progress: [          ] 0%
 
@@ -77,6 +77,7 @@ Progress: [          ] 0%
 | Phase 10 P02 | 7m 27s | 3 tasks (4 commits w/ TDD RED/GREEN pair) tasks | 9 files files |
 | Phase 10 P03 | 8m 30s | 4 tasks (6 commits w/ TDD RED/GREEN pairs) tasks | 7 files files |
 | Phase 10 P04 | 10m 12s | 3 tasks | 8 files |
+| Phase 11 P02 | 7m 16s | 3 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -160,6 +161,9 @@ Full decision log in PROJECT.md Key Decisions table.
 - [Phase 10]: Plan 10-04: D-22 sign-out preservation enforced by static grep gate in tests/settings-modal-auth.test.js Test 8 — reads settings-modal.js source and regex-asserts no db.(collection|decks|deck_cards|games|watchlist|profile) matches; cheaper + more durable than Dexie mock
 - [Phase 10]: Plan 10-04: first-sign-in-prompt uses capture-phase Escape blocker (addEventListener third-arg true) to intercept before any downstream document-level Escape handler; preventDefault + stopPropagation on keydown, preventDefault on backdrop — D-16 lockdown
 - [Phase 10]: Plan 10-04: Alpine.effect in main.js uses async IIFE to sequence profile.hydrate() then maybeShowFirstSignInPrompt() — prompt guards depend on _source/_loaded flags set by hydrate, so sequential await is mandatory; IIFE keeps effect body synchronous while awaiting internally
+- [Phase 11]: Plan 11-02: VALID_TRANSITIONS object enforces single-write-path state machine on Alpine.store('sync') — offline→synced direct jump is illegal; reconnect must route offline→syncing to give Plan 11-04's flushQueue room to run
+- [Phase 11]: Plan 11-02: chip template uses x-if per state (not :class juggling) — UI-SPEC mandates <button> in error state for keyboard reachability + <div role=status> otherwise; single-element + class-swap cannot express that. Cost: slightly more template volume, benefit: each branch independently grep-able for tests
+- [Phase 11]: Plan 11-02: deleted tests/connectivity-status.test.js alongside src/utils/connectivity.js (Rule 3 blocking deviation) — the test audited BOTH the deleted utility AND the replaced v1.0 chip template; leaving it in would fail npm test at import time. New tests/sync-status-chip.test.js replaces the coverage 1:1 + adds per-state assertions
 
 ### Roadmap Evolution
 
@@ -178,6 +182,6 @@ None — roadmap complete, next step is `/gsd:plan-phase 7`.
 
 ## Session Continuity
 
-Last session: 2026-04-18T16:20:40.076Z
-Stopped at: Phase 11 context gathered
-Resume file: .planning/phases/11-cloud-sync-engine/11-CONTEXT.md
+Last session: 2026-04-18T18:30:50.793Z
+Stopped at: Completed 11-02-PLAN.md — sync store + topbar chip refactor
+Resume file: None

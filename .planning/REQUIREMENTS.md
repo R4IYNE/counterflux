@@ -88,7 +88,7 @@
 - [ ] **SYNC-04**: First-sign-in reconciliation detects all 4 states (local/remote × empty/populated); populated-populated case prompts the user to merge, keep local, or keep remote — never silently destroys data
 - [ ] **SYNC-05**: Conflict resolution uses last-write-wins at field level via `updated_at` timestamps; `deck_cards` treats each row as atomic; conflicts beyond LWW surface in the `sync_conflicts` table for user review
 - [ ] **SYNC-06**: Offline queue survives reload and flushes automatically on reconnect; queue entries are tagged with `user_id` so sign-in switching never cross-contaminates users
-- [ ] **SYNC-07**: Topbar sync-status indicator shows 4 states: synced, syncing, offline, error — replaces the existing connectivity chip
+- [x] **SYNC-07**: Topbar sync-status indicator shows 4 states: synced, syncing, offline, error — replaces the existing connectivity chip
 - [ ] **SYNC-08**: Notification bell surfaces sync errors (dedup'd) alongside existing watchlist price alerts; bell badge count unifies across sources
 
 ## Future Requirements
