@@ -16,6 +16,7 @@ import { initBulkDataStore, startBulkDataPipeline } from './stores/bulkdata.js';
 import { initUndoStore } from './stores/undo.js';
 import { initProfileStore } from './stores/profile.js';
 import { initAuthStore } from './stores/auth.js';
+import { initSyncStore } from './stores/sync.js';
 import { openSettingsModal } from './components/settings-modal.js';
 import { openAuthModal } from './components/auth-modal.js';
 import { openAuthWall, closeAuthWall } from './components/auth-wall.js';
@@ -55,6 +56,7 @@ async function bootApp() {
   initAppStore();
   initProfileStore();
   initAuthStore();            // Phase 10 Plan 2 — slots AFTER profile so Plan 4's Alpine.effect has both stores available at init time
+  initSyncStore();            // Phase 11 Plan 2 — sync-status store + 4-state machine; chip and modals bind here
   initUndoStore();
   initSearchStore();
   initCollectionStore();
