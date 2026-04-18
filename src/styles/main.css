@@ -153,6 +153,16 @@ body {
   display: inline-block;
 }
 
+/* Phase 11 Plan 3 — Reconciliation / sync-errors / sync-pull splash keyframes.
+   Reconciliation modal enter: 240ms opacity + scale lift — consequential
+   decision deserves presence, matches Phase 10 first-sign-in prompt lift.
+   Mila image on the splash uses the existing `cf-pulse` animation — no new
+   keyframe needed. */
+@keyframes cf-reconciliation-fade-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
 /* Phase 8 Plan 2 — Treasure Cruise LHS panel transitions (D-28, UI-SPEC
    Interaction & Motion). The panel slides 360px left/right; the grid
    reflows via margin/width transitions. */
@@ -204,6 +214,20 @@ body {
      under reduced-motion; chip still conveys syncing via label + glow. */
   .cf-chip-spinner {
     animation: none !important;
+  }
+
+  /* Phase 11 Plan 3 — reconciliation modal, sync-errors modal, sync-pull
+     splash surfaces honour reduced-motion. All animation + transition
+     durations collapse to 0.01ms so the visuals still render, just
+     without motion. Covers the named mount roots and every descendant. */
+  #cf-reconciliation-root,
+  #cf-reconciliation-root *,
+  #cf-sync-errors-root,
+  #cf-sync-errors-root *,
+  #cf-sync-pull-splash-root,
+  #cf-sync-pull-splash-root * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
   }
 }
 
