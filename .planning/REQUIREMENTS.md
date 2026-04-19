@@ -54,7 +54,7 @@
 
 ### Preordain (Market Intel)
 
-- [ ] **MARKET-01**: Set filter dropdown renders each option with its Keyrune set icon alongside the name and card count
+- [x] **MARKET-01**: Set filter dropdown renders each option with its Keyrune set icon alongside the name and card count
 - [x] **MARKET-02**: Spoiler browser redesigned as a content-rich visual view — larger tiles, day/section headers, NEW badges (48h window), hover card preview
 - [x] **MARKET-03**: Spoiler card tiles surface a quick-add watch button that calls `addToWatchlist()` without opening the context menu
 

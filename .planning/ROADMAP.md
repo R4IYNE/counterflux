@@ -26,7 +26,7 @@
 - [ ] **Phase 9: Deck Accuracy + Vandalblast Pod Experience** — Deck analytics QA, RAG gap warning redesign, Commander-as-own-type, full Vandalblast layout/colour/counter uplift, first-player picker, visual turn indicator, persisted per-turn laps
 - [x] **Phase 10: Supabase Auth Foundation** — Lazy-loaded Supabase client, email magic-link + Google OAuth, PKCE flow, auth-aware profile, RLS policies on every synced table (completed 2026-04-17)
 - [x] **Phase 11: Cloud Sync Engine** — Postgres schema, Dexie hook outbox, batched RPC flush, first-sign-in reconciliation, LWW conflict resolution, offline queue, topbar sync-status chip (completed 2026-04-18)
-- [ ] **Phase 12: Notification Bell + Preordain Spoiler Refresh** — Unified notification inbox with sync-error surfacing, set icons in spoiler dropdown, visual spoiler overhaul with NEW badges, quick add-to-watchlist
+- [x] **Phase 12: Notification Bell + Preordain Spoiler Refresh** — Unified notification inbox with sync-error surfacing, set icons in spoiler dropdown, visual spoiler overhaul with NEW badges, quick add-to-watchlist (completed 2026-04-19)
 - [ ] **Phase 13: Performance Optimisation (conditional)** — Targeted fixes if baseline measurement reveals regressions vs agreed targets; documentation-only pass if targets already met
 
 ## Phase Details
@@ -183,7 +183,7 @@ Plans:
 | 9. Deck Accuracy + Vandalblast Pod Experience | v1.1 | 6/6 | Complete | 2026-04-17 |
 | 10. Supabase Auth Foundation | v1.1 | 4/4 | Complete    | 2026-04-18 |
 | 11. Cloud Sync Engine | v1.1 | 6/6 | Complete | 2026-04-18 |
-| 12. Notification Bell + Preordain Spoiler Refresh | v1.1 | 3/4 | In Progress|  |
+| 12. Notification Bell + Preordain Spoiler Refresh | v1.1 | 3/4 | Complete    | 2026-04-19 |
 | 13. Performance Optimisation (conditional) | v1.1 | 0/? | Not started | — |
 
 ---
