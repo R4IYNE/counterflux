@@ -190,7 +190,8 @@ body {
   .cf-panel-reopen,
   .card-quick-actions-checkbox,
   .cf-player-active,
-  .cf-first-player-spinner {
+  .cf-first-player-spinner,
+  .cf-bell-popover {
     transition: none !important;
     transition-duration: 0.01ms !important;
   }
@@ -430,4 +431,18 @@ body {
   z-index: 100;
   pointer-events: none;
   transition: opacity 200ms ease-out;
+}
+
+/* ============================================================
+ * Phase 12 — Plan 03 — notification bell popover surface (SYNC-08)
+ * ============================================================ */
+
+/* SYNC-08 — notification bell popover surface.
+ * Anchored below-right of the bell button via inline absolute positioning.
+ * Transition/box-shadow live here so the template stays a class-only consumer;
+ * the prefers-reduced-motion selector list above (line ~187) already gates the
+ * transition-duration to 0.01ms for reduced-motion users. */
+.cf-bell-popover {
+  transition: opacity 150ms ease-out, transform 150ms ease-out;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
 }

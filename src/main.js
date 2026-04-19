@@ -23,6 +23,7 @@ import { openAuthWall, closeAuthWall } from './components/auth-wall.js';
 import { maybeShowFirstSignInPrompt } from './components/first-sign-in-prompt.js';
 import { splashScreen } from './components/splash-screen.js';
 import { sidebarComponent } from './components/sidebar.js';
+import { renderNotificationBellPopover } from './components/notification-bell-popover.js';
 import { toggleShortcutModal, isShortcutModalOpen, closeShortcutModal } from './components/shortcut-modal.js';
 import { initRouter } from './router.js';
 import { renderManaCost } from './utils/mana.js';
@@ -85,6 +86,14 @@ async function bootApp() {
   // Register Alpine components
   Alpine.data('splashScreen', splashScreen);
   Alpine.data('sidebarComponent', sidebarComponent);
+
+  // Phase 12 SYNC-08 — inject the notification bell popover template into its
+  // topbar mount point BEFORE Alpine.start() so Alpine binds every directive
+  // inside the injected HTML in its initial walk.
+  const bellMount = document.getElementById('cf-notification-bell-mount');
+  if (bellMount) {
+    bellMount.innerHTML = renderNotificationBellPopover();
+  }
 
   // Start Alpine (must be called after stores and components are registered)
   Alpine.start();

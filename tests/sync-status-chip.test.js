@@ -26,9 +26,12 @@ function extractChipRegion() {
   // The chip lives inside "<!-- Right section -->" then the first <div class="flex items-center gap-md">.
   const rightStart = html.indexOf('<!-- Right section -->');
   if (rightStart < 0) throw new Error('Right section sentinel not found');
-  // End at the next <button ... aria-label="Notifications"> which is the first element after the chip.
-  const notifStart = html.indexOf('aria-label="Notifications"', rightStart);
-  if (notifStart < 0) throw new Error('Notifications anchor not found');
+  // End at the notification bell mount point (Phase 12 Plan 03 replaced the
+  // inline bell button with a mount div so Alpine binds the popover template
+  // in a single walk). Before Plan 12-03 this sentinel was the inline bell's
+  // aria-label="Notifications" attribute.
+  const notifStart = html.indexOf('id="cf-notification-bell-mount"', rightStart);
+  if (notifStart < 0) throw new Error('Notification bell mount anchor not found');
   return html.slice(rightStart, notifStart);
 }
 
