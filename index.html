@@ -339,15 +339,11 @@
           </button>
         </template>
 
-        <button class="text-text-muted hover:text-text-primary transition-colors relative" aria-label="Notifications">
-          <span class="material-symbols-outlined text-2xl">notifications</span>
-          <span
-            x-show="$store.market && $store.market.alertBadgeCount > 0"
-            x-text="$store.market?.alertBadgeCount"
-            class="absolute -top-1 -right-1 badge-alert flex items-center justify-center font-mono text-text-primary"
-            style="font-size: 9px; font-weight: 700; min-width: 16px; height: 16px; border-radius: 50%; padding: 0 2px;"
-          ></span>
-        </button>
+        <!-- Phase 12 SYNC-08 — notification bell popover mount point.
+             src/main.js injects renderNotificationBellPopover() into this div
+             after Alpine starts so the popover template is parsed once and
+             Alpine binds every directive inside it in one pass. -->
+        <div id="cf-notification-bell-mount"></div>
       </div>
     </header>
 

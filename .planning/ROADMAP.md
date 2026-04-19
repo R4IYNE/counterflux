@@ -154,7 +154,7 @@ Plans:
 Plans:
 - [x] 12-01-PLAN.md — Market store extensions: unifiedBadgeCount + groupedSpoilerCards getters + syncErrorCount polling (SYNC-08 store layer + MARKET-02 data source)
 - [x] 12-02-PLAN.md — Custom Keyrune dropdown component (renderSpoilerSetFilter) — isolated module for MARKET-01
-- [ ] 12-03-PLAN.md — Notification bell popover + unified badge wiring + handleNotifications cleanup (SYNC-08 UI)
+- [x] 12-03-PLAN.md — Notification bell popover + unified badge wiring + handleNotifications cleanup (SYNC-08 UI)
 - [x] 12-04-PLAN.md — Spoiler gallery rewrite: sectioned grid + hover preview + bookmark button + set-filter swap (MARKET-01/02/03)
 **UI hint**: yes
 

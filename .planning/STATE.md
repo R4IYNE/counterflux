@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Second Sunrise
 status: executing
-stopped_at: Completed 12-04-PLAN.md (Plan 12-03 remaining — notification-bell-popover)
-last_updated: "2026-04-19T08:44:23.933Z"
+stopped_at: Completed all Phase 12 plans (12-01 through 12-04)
+last_updated: "2026-04-19T08:45:00.000Z"
 last_activity: 2026-04-19
 progress:
   total_phases: 8
   completed_phases: 6
   total_plans: 29
-  completed_plans: 28
-  percent: 84
+  completed_plans: 29
+  percent: 100
 ---
 
 # Project State
@@ -82,6 +82,7 @@ Progress: [████████░░] 84%
 | Phase 11 P04 | 43 min | 3 tasks | 7 files |
 | Phase 11 P05 | 1h 57m | 4 tasks | 8 files |
 | Phase 12 P01 | 4m | 2 tasks | 2 files |
+| Phase 12 P03 | 4min | 2 tasks | 7 files |
 | Phase 12 P04 | 4m 20s | 2 tasks | 3 files |
 
 ## Accumulated Context
@@ -183,6 +184,8 @@ Full decision log in PROJECT.md Key Decisions table.
 - [Phase 12]: [Phase 12]: Plan 12-01: syncErrorCount + unifiedBadgeCount live on market store (not sync) — CONTEXT D-02 defines unifiedBadgeCount = syncErrorCount + alertBadgeCount, so keeping both summands on one store is cleaner than cross-store arithmetic in bell template
 - [Phase 12]: [Phase 12]: Plan 12-01: __tickSyncErrorPoll test helper exported from market.js mirrors _pollSyncErrors interval body verbatim — keeps _pollSyncErrors signature unchanged while enabling deterministic single-tick unit tests (spy on moduleDb.sync_conflicts, not top-level db, because vi.resetModules creates a fresh schema.js instance)
 - [Phase 12]: [Phase 12]: Plan 12-01: market-store.test.js switched to @vitest-environment jsdom to match the Phase 09 deck-analytics-panel precedent; existing watchlist tests are environment-agnostic and pass unchanged
+- [Phase 12]: [Phase 12]: Plan 12-03: Bell popover injected via mount-point innerHTML BEFORE Alpine.start() — single-pass directive binding with no Alpine.initTree() defensive call
+- [Phase 12]: [Phase 12]: Plan 12-03: Rule 1 auto-fix: sync-status-chip.test.js sentinel re-pointed from textual aria-label to structural id=cf-notification-bell-mount
 - [Phase 12]: [Phase 12]: Plan 12-04: Static-grep gate on banned strings ('toast', '2xl:grid-cols-6') applies source-wide via readFileSync — comment prose must avoid the literal strings too; rephrased spoiler-gallery.js doc comments to 'notification surface' + 'responsive 5/6-col scale' to satisfy Tests 4 + 11
 - [Phase 12]: [Phase 12]: Plan 12-04: isWatching as per-tile Alpine getter reading $store.market.watchlist.some() — market.js re-ASSIGNS watchlist on every add/remove (Pitfall 1), Alpine's reactivity tracks the reference and re-runs .some() for free; no parallel Set bookkeeping, no manual invalidation
 - [Phase 12]: [Phase 12]: Plan 12-04: .cf-spoiler-bookmark is a structural clone of .card-quick-actions-checkbox (Phase 08.1 Plan 3) with 3 delta points — left:8px (top-LEFT per D-09), .is-watching modifier for persistent visibility, 18px glyph font-size vs 16px (bookmark glyph density); CSS reduced-motion selectors appended to the merged @media block — no duplicate block
@@ -204,6 +207,6 @@ None — roadmap complete, next step is `/gsd:plan-phase 7`.
 
 ## Session Continuity
 
-Last session: 2026-04-19T08:44:23.930Z
-Stopped at: Completed 12-04-PLAN.md (Plan 12-03 remaining — notification-bell-popover)
+Last session: 2026-04-19T08:45:00.000Z
+Stopped at: Completed all Phase 12 plans (12-01 through 12-04)
 Resume file: None
