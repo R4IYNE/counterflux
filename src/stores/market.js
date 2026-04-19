@@ -20,8 +20,38 @@ export function initMarketStore() {
     sets: [],
     pendingAlerts: [],
     alertBadgeCount: 0,
+    // Phase 12 Plan 01 (SYNC-08) — polled from db.sync_conflicts every 2s
+    // by _pollSyncErrors. Feeds unifiedBadgeCount (bell badge source).
+    syncErrorCount: 0,
     activeTab: 'spoilers',
     loading: false,
+
+    // Phase 12 Plan 01 (SYNC-08, D-02) — bell badge source of truth.
+    // Sums sync errors + price alerts so the topbar bell surfaces a single
+    // unified count. Downstream Plan 03 (bell popover) consumes this getter.
+    get unifiedBadgeCount() {
+      return (this.syncErrorCount || 0) + (this.alertBadgeCount || 0);
+    },
+
+    // Phase 12 Plan 01 (MARKET-02, D-07) — spoiler gallery data source.
+    // Groups spoilerCards by released_at descending; null/undefined dates
+    // bucket into 'unknown' and sort last. Downstream Plan 04 (spoiler
+    // gallery) renders <section> per group with a date header.
+    get groupedSpoilerCards() {
+      const groups = new Map();
+      for (const card of this.spoilerCards) {
+        const date = card && card.released_at ? card.released_at : 'unknown';
+        if (!groups.has(date)) groups.set(date, []);
+        groups.get(date).push(card);
+      }
+      return [...groups.entries()]
+        .sort(([a], [b]) => {
+          if (a === 'unknown') return 1;
+          if (b === 'unknown') return -1;
+          return b.localeCompare(a);
+        })
+        .map(([date, cards]) => ({ date, cards }));
+    },
 
     async init() {
       this.loading = true;
@@ -31,10 +61,44 @@ export function initMarketStore() {
         await snapshotWatchlistPrices();
         await this.checkAlerts();
         await this.loadMovers();
+        // Phase 12 Plan 01 (SYNC-08) — kick off 2s sync-conflicts poll.
+        // Returns synchronously once the interval is scheduled; safe to
+        // call here without await.
+        this._pollSyncErrors();
       } catch (err) {
         console.error('[Market] Init error:', err);
       } finally {
         this.loading = false;
+      }
+    },
+
+    // Phase 12 Plan 01 (SYNC-08) — 2s polling interval that mirrors the
+    // Phase 11 Plan 4 pattern in src/stores/sync.js:106-119.
+    //
+    // Auth-gated: when auth.status !== 'authed', resets syncErrorCount to 0
+    // immediately (Pitfall 5 — prevents cross-user contamination without
+    // waiting for the next tick). Dexie errors are swallowed so a
+    // mid-migration state never throws into the interval loop.
+    _pollSyncErrors() {
+      if (this._syncErrorInterval) return;
+      this._syncErrorInterval = setInterval(async () => {
+        try {
+          const auth = window.Alpine?.store?.('auth');
+          if (!auth || auth.status !== 'authed') {
+            if (this.syncErrorCount !== 0) this.syncErrorCount = 0;
+            return;
+          }
+          this.syncErrorCount = await db.sync_conflicts.count();
+        } catch {
+          // Dexie mid-migration / closed — leave syncErrorCount as-is
+        }
+      }, 2000);
+    },
+
+    _stopSyncErrorPoll() {
+      if (this._syncErrorInterval) {
+        clearInterval(this._syncErrorInterval);
+        this._syncErrorInterval = null;
       }
     },
 
@@ -178,4 +242,24 @@ export function initMarketStore() {
       this.activeTab = tab;
     },
   });
+}
+
+// Phase 12 Plan 01 (SYNC-08) — test-only helper.
+// Runs a single poll cycle synchronously so Vitest can assert syncErrorCount
+// transitions without waiting for the 2s setInterval. Mirrors the inner
+// callback of `_pollSyncErrors` verbatim — when the interval body changes,
+// update both together.
+export async function __tickSyncErrorPoll() {
+  const store = window.Alpine?.store?.('market');
+  if (!store) return;
+  try {
+    const auth = window.Alpine?.store?.('auth');
+    if (!auth || auth.status !== 'authed') {
+      if (store.syncErrorCount !== 0) store.syncErrorCount = 0;
+      return;
+    }
+    store.syncErrorCount = await db.sync_conflicts.count();
+  } catch {
+    // swallow — matches _pollSyncErrors interval-body behaviour
+  }
 }

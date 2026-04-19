@@ -188,6 +188,10 @@ describe('phase 12 additions', () => {
   let __tickSyncErrorPoll;
   let marketStoreDefinition;
   let previousAlpine;
+  // The market module re-imports schema.js on vi.resetModules(); capture the
+  // fresh db instance here so tests can spy on the SAME sync_conflicts table
+  // the poll callback reads.
+  let moduleDb;
 
   beforeEach(async () => {
     vi.resetModules();
@@ -218,6 +222,10 @@ describe('phase 12 additions', () => {
     const mod = await import('../src/stores/market.js');
     initMarketStore = mod.initMarketStore;
     __tickSyncErrorPoll = mod.__tickSyncErrorPoll;
+    // Grab the SAME db instance the module uses so vi.spyOn below patches
+    // the reference `__tickSyncErrorPoll` actually calls.
+    const schemaMod = await import('../src/db/schema.js');
+    moduleDb = schemaMod.db;
 
     // Register the store shape without running init() (init() triggers
     // Dexie + network work the tests don't need for these unit cases).
@@ -310,8 +318,8 @@ describe('phase 12 additions', () => {
     const store = marketStoreDefinition;
     // Mock auth store to return authed.
     window.Alpine.store('auth', { status: 'authed', user: { id: 'u1' } });
-    // Stub sync_conflicts.count().
-    const countSpy = vi.spyOn(db.sync_conflicts, 'count').mockResolvedValue(4);
+    // Stub sync_conflicts.count() on the SAME db reference the module uses.
+    const countSpy = vi.spyOn(moduleDb.sync_conflicts, 'count').mockResolvedValue(4);
 
     await __tickSyncErrorPoll();
 
@@ -336,7 +344,7 @@ describe('phase 12 additions', () => {
     const store = marketStoreDefinition;
     store.syncErrorCount = 7;
     window.Alpine.store('auth', { status: 'authed', user: { id: 'u1' } });
-    const countSpy = vi.spyOn(db.sync_conflicts, 'count').mockRejectedValue(new Error('DB closed'));
+    const countSpy = vi.spyOn(moduleDb.sync_conflicts, 'count').mockRejectedValue(new Error('DB closed'));
 
     await expect(__tickSyncErrorPoll()).resolves.not.toThrow();
     // Previous value retained because the error path leaves state as-is.
