@@ -153,9 +153,9 @@ Plans:
 
 Plans:
 - [x] 12-01-PLAN.md — Market store extensions: unifiedBadgeCount + groupedSpoilerCards getters + syncErrorCount polling (SYNC-08 store layer + MARKET-02 data source)
-- [ ] 12-02-PLAN.md — Custom Keyrune dropdown component (renderSpoilerSetFilter) — isolated module for MARKET-01
+- [x] 12-02-PLAN.md — Custom Keyrune dropdown component (renderSpoilerSetFilter) — isolated module for MARKET-01
 - [ ] 12-03-PLAN.md — Notification bell popover + unified badge wiring + handleNotifications cleanup (SYNC-08 UI)
-- [ ] 12-04-PLAN.md — Spoiler gallery rewrite: sectioned grid + hover preview + bookmark button + set-filter swap (MARKET-01/02/03)
+- [x] 12-04-PLAN.md — Spoiler gallery rewrite: sectioned grid + hover preview + bookmark button + set-filter swap (MARKET-01/02/03)
 **UI hint**: yes
 
 ### Phase 13: Performance Optimisation (conditional)
@@ -183,7 +183,7 @@ Plans:
 | 9. Deck Accuracy + Vandalblast Pod Experience | v1.1 | 6/6 | Complete | 2026-04-17 |
 | 10. Supabase Auth Foundation | v1.1 | 4/4 | Complete    | 2026-04-18 |
 | 11. Cloud Sync Engine | v1.1 | 6/6 | Complete | 2026-04-18 |
-| 12. Notification Bell + Preordain Spoiler Refresh | v1.1 | 1/4 | In Progress|  |
+| 12. Notification Bell + Preordain Spoiler Refresh | v1.1 | 3/4 | In Progress|  |
 | 13. Performance Optimisation (conditional) | v1.1 | 0/? | Not started | — |
 
 ---
