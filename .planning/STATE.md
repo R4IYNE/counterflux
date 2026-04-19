@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Second Sunrise
 status: executing
-stopped_at: Completed 12-01-PLAN.md
-last_updated: "2026-04-19T08:35:30.534Z"
+stopped_at: Completed 12-03 notification bell popover plan
+last_updated: "2026-04-19T08:44:45.673Z"
 last_activity: 2026-04-19
 progress:
   total_phases: 8
   completed_phases: 6
-  total_plans: 29
-  completed_plans: 26
+  total_plans: 24
+  completed_plans: 28
   percent: 84
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-14)
 ## Current Position
 
 Phase: 12 (notification-bell-preordain-spoiler-refresh) — EXECUTING
-Plan: 2 of 4
+Plan: 3 of 4
 Status: Ready to execute
 Last activity: 2026-04-19
 
@@ -82,6 +82,7 @@ Progress: [████████░░] 84%
 | Phase 11 P04 | 43 min | 3 tasks | 7 files |
 | Phase 11 P05 | 1h 57m | 4 tasks | 8 files |
 | Phase 12 P01 | 4m | 2 tasks | 2 files |
+| Phase 12 P03 | 4min | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -182,6 +183,8 @@ Full decision log in PROJECT.md Key Decisions table.
 - [Phase 12]: [Phase 12]: Plan 12-01: syncErrorCount + unifiedBadgeCount live on market store (not sync) — CONTEXT D-02 defines unifiedBadgeCount = syncErrorCount + alertBadgeCount, so keeping both summands on one store is cleaner than cross-store arithmetic in bell template
 - [Phase 12]: [Phase 12]: Plan 12-01: __tickSyncErrorPoll test helper exported from market.js mirrors _pollSyncErrors interval body verbatim — keeps _pollSyncErrors signature unchanged while enabling deterministic single-tick unit tests (spy on moduleDb.sync_conflicts, not top-level db, because vi.resetModules creates a fresh schema.js instance)
 - [Phase 12]: [Phase 12]: Plan 12-01: market-store.test.js switched to @vitest-environment jsdom to match the Phase 09 deck-analytics-panel precedent; existing watchlist tests are environment-agnostic and pass unchanged
+- [Phase 12]: Bell popover injected via mount-point innerHTML BEFORE Alpine.start() — single-pass directive binding with no Alpine.initTree() defensive call
+- [Phase 12]: Rule 1 auto-fix: sync-status-chip.test.js sentinel re-pointed from textual aria-label to structural id=cf-notification-bell-mount
 
 ### Roadmap Evolution
 
@@ -200,6 +203,6 @@ None — roadmap complete, next step is `/gsd:plan-phase 7`.
 
 ## Session Continuity
 
-Last session: 2026-04-19T08:35:19.140Z
-Stopped at: Completed 12-01-PLAN.md
+Last session: 2026-04-19T08:44:35.632Z
+Stopped at: Completed 12-03 notification bell popover plan
 Resume file: None
