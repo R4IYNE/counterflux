@@ -55,7 +55,7 @@
 ### Preordain (Market Intel)
 
 - [ ] **MARKET-01**: Set filter dropdown renders each option with its Keyrune set icon alongside the name and card count
-- [ ] **MARKET-02**: Spoiler browser redesigned as a content-rich visual view — larger tiles, day/section headers, NEW badges (48h window), hover card preview
+- [x] **MARKET-02**: Spoiler browser redesigned as a content-rich visual view — larger tiles, day/section headers, NEW badges (48h window), hover card preview
 - [ ] **MARKET-03**: Spoiler card tiles surface a quick-add watch button that calls `addToWatchlist()` without opening the context menu
 
 ### Vandalblast (Game Tracker)
@@ -89,7 +89,7 @@
 - [x] **SYNC-05**: Conflict resolution uses last-write-wins at field level via `updated_at` timestamps; `deck_cards` treats each row as atomic; conflicts beyond LWW surface in the `sync_conflicts` table for user review
 - [x] **SYNC-06**: Offline queue survives reload and flushes automatically on reconnect; queue entries are tagged with `user_id` so sign-in switching never cross-contaminates users
 - [x] **SYNC-07**: Topbar sync-status indicator shows 4 states: synced, syncing, offline, error — replaces the existing connectivity chip
-- [ ] **SYNC-08**: Notification bell surfaces sync errors (dedup'd) alongside existing watchlist price alerts; bell badge count unifies across sources
+- [x] **SYNC-08**: Notification bell surfaces sync errors (dedup'd) alongside existing watchlist price alerts; bell badge count unifies across sources
 
 ## Future Requirements
 

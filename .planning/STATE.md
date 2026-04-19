@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Second Sunrise
-status: verifying
-stopped_at: Phase 12 context gathered
-last_updated: "2026-04-19T00:50:58.243Z"
-last_activity: 2026-04-18
+status: executing
+stopped_at: Completed 12-01-PLAN.md
+last_updated: "2026-04-19T08:35:30.534Z"
+last_activity: 2026-04-19
 progress:
   total_phases: 8
   completed_phases: 6
-  total_plans: 25
-  completed_plans: 25
+  total_plans: 29
+  completed_plans: 26
   percent: 84
 ---
 
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-14)
 
 **Core value:** The deck builder knows what you own, and the collection knows what's in your decks — one interconnected data layer
-**Current focus:** Phase 11 — cloud-sync-engine
+**Current focus:** Phase 12 — notification-bell-preordain-spoiler-refresh
 
 ## Current Position
 
-Phase: 11 (cloud-sync-engine) — ALL PLANS COMPLETE, PENDING VERIFICATION
-Plan: 6 of 6 ✅
-Status: Ready for /gsd:verify-phase
-Last activity: 2026-04-18
+Phase: 12 (notification-bell-preordain-spoiler-refresh) — EXECUTING
+Plan: 2 of 4
+Status: Ready to execute
+Last activity: 2026-04-19
 
 Progress: [████████░░] 84%
 
@@ -81,6 +81,7 @@ Progress: [████████░░] 84%
 | Phase 11 P01 | ~6m executor + human apply | 5 tasks (4 auto + 1 human-action) tasks | 8 files files |
 | Phase 11 P04 | 43 min | 3 tasks | 7 files |
 | Phase 11 P05 | 1h 57m | 4 tasks | 8 files |
+| Phase 12 P01 | 4m | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -178,6 +179,9 @@ Full decision log in PROJECT.md Key Decisions table.
 - [Phase 11]: Single schema-wide Realtime channel (Option B) — stays 24× under Supabase free-tier 200-concurrent quota
 - [Phase 11]: Pitfall 11-E closed via sync_pull_in_progress meta flag; reconcile() checks flag FIRST before classifyState
 - [Phase 11]: deck_cards atomic merge special case — divergent UUIDs sharing composite → loser logged to sync_conflicts
+- [Phase 12]: [Phase 12]: Plan 12-01: syncErrorCount + unifiedBadgeCount live on market store (not sync) — CONTEXT D-02 defines unifiedBadgeCount = syncErrorCount + alertBadgeCount, so keeping both summands on one store is cleaner than cross-store arithmetic in bell template
+- [Phase 12]: [Phase 12]: Plan 12-01: __tickSyncErrorPoll test helper exported from market.js mirrors _pollSyncErrors interval body verbatim — keeps _pollSyncErrors signature unchanged while enabling deterministic single-tick unit tests (spy on moduleDb.sync_conflicts, not top-level db, because vi.resetModules creates a fresh schema.js instance)
+- [Phase 12]: [Phase 12]: Plan 12-01: market-store.test.js switched to @vitest-environment jsdom to match the Phase 09 deck-analytics-panel precedent; existing watchlist tests are environment-agnostic and pass unchanged
 
 ### Roadmap Evolution
 
@@ -196,6 +200,6 @@ None — roadmap complete, next step is `/gsd:plan-phase 7`.
 
 ## Session Continuity
 
-Last session: 2026-04-19T00:50:58.240Z
-Stopped at: Phase 12 context gathered
-Resume file: .planning/phases/12-notification-bell-preordain-spoiler-refresh/12-CONTEXT.md
+Last session: 2026-04-19T08:35:19.140Z
+Stopped at: Completed 12-01-PLAN.md
+Resume file: None
