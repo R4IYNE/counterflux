@@ -183,14 +183,20 @@ body {
        transition; data binding wired by Plan 3)
      - .cf-first-player-spinner (Phase 09 Plan 2 — spinner overlay; spinner
        JS implementation lives in Plan 3 but the selector is declared here
-       per Phase 8.1 cross-plan coordination pattern). */
+       per Phase 8.1 cross-plan coordination pattern).
+     - .cf-spoiler-bookmark (Phase 12 Plan 4 MARKET-03 — hover-revealed
+       watchlist bookmark on spoiler tiles).
+     - .cf-hover-preview (Phase 12 Plan 4 MARKET-02 — full-size hover card
+       preview overlay on spoiler tiles). */
 @media (prefers-reduced-motion: reduce) {
   .tc-panel-column,
   .tc-grid-column,
   .cf-panel-reopen,
   .card-quick-actions-checkbox,
   .cf-player-active,
-  .cf-first-player-spinner {
+  .cf-first-player-spinner,
+  .cf-spoiler-bookmark,
+  .cf-hover-preview {
     transition: none !important;
     transition-duration: 0.01ms !important;
   }
@@ -339,6 +345,59 @@ body {
 .card-quick-actions-checkbox .material-symbols-outlined {
   font-size: 16px;
   line-height: 1;
+}
+
+/* Phase 12 Plan 4 — MARKET-03 hover-revealed watchlist bookmark on spoiler
+   tiles. Mirrors .card-quick-actions-checkbox (Phase 08.1 Plan 3) structurally
+   but sits top-LEFT (not right) and adds an .is-watching modifier that keeps
+   the glyph visible without hover — per D-10, the glyph swap
+   (bookmark_add <-> bookmark filled) IS the visual feedback, no toast fires.
+   Reduced-motion is merged into the existing @media block above (line ~187)
+   — do NOT ship a duplicate block. */
+.cf-spoiler-bookmark {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  width: 28px;
+  height: 28px;
+  background: var(--color-primary);
+  color: var(--color-text-primary);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  z-index: 5;
+  transition: opacity 150ms ease-out, box-shadow 150ms ease-out;
+}
+.card-tile-hover:hover .cf-spoiler-bookmark,
+.card-tile-hover:focus-within .cf-spoiler-bookmark,
+.cf-spoiler-bookmark:focus,
+.cf-spoiler-bookmark:focus-visible {
+  opacity: 1;
+}
+.cf-spoiler-bookmark.is-watching {
+  opacity: 1;
+}
+.cf-spoiler-bookmark:hover {
+  box-shadow: 0 0 8px var(--color-glow-blue);
+}
+.cf-spoiler-bookmark:focus-visible {
+  outline: 2px solid var(--color-text-primary);
+  outline-offset: 2px;
+}
+.cf-spoiler-bookmark .material-symbols-outlined {
+  font-size: 18px;
+  line-height: 1;
+}
+
+/* Phase 12 Plan 4 — MARKET-02 hover card preview overlay on spoiler tiles.
+   The overlay positioning (left-full / right-full flip) is driven by Alpine
+   flipLeft state on the tile; this class only governs the opacity transition
+   so reduced-motion users collapse it to 0.01ms via the @media block above. */
+.cf-hover-preview {
+  transition: opacity 150ms ease-out;
 }
 
 /* ============================================================
