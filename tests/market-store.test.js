@@ -1,3 +1,11 @@
+/**
+ * @vitest-environment jsdom
+ *
+ * Phase 12 Plan 01 extensions exercise window.Alpine-based store lookups
+ * (src/stores/market.js `_pollSyncErrors` reads `window.Alpine?.store('auth')`),
+ * so the whole file runs in jsdom to provide `window`. The original watchlist
+ * tests are environment-agnostic and pass unchanged under jsdom.
+ */
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { db } from '../src/db/schema.js';
 
@@ -154,5 +162,186 @@ describe('watchlist', () => {
     const entry = await db.watchlist.where('scryfall_id').equals('bolt-001').first();
     const todayStr = new Date().toISOString().slice(0, 10);
     expect(entry.last_alerted_at.slice(0, 10)).toBe(todayStr);
+  });
+});
+
+// ============================================================================
+// Phase 12 Plan 01 — market store additions (SYNC-08, MARKET-02)
+//
+// Extends the market store with three reactive primitives that Phase 12's
+// downstream plans depend on:
+//   - unifiedBadgeCount: getter = syncErrorCount + alertBadgeCount
+//   - groupedSpoilerCards: getter = cards grouped by released_at (desc)
+//   - syncErrorCount + _pollSyncErrors/_stopSyncErrorPoll: 2s polling that
+//     mirrors src/stores/sync.js:106-119 (Phase 11 Plan 4 precedent).
+//
+// Test pattern follows the Phase 09 convention:
+//   - vi.mock('alpinejs') replaces Alpine module so initMarketStore works in node
+//   - window.Alpine is stubbed in beforeEach so components that read Alpine
+//     directly (rather than via import) resolve; restored in afterEach.
+//   - db.sync_conflicts is spied with vi.spyOn for count-based assertions.
+//   - __tickSyncErrorPoll is imported from market.js — runs one poll cycle
+//     without waiting for the 2s setInterval.
+// ============================================================================
+describe('phase 12 additions', () => {
+  let initMarketStore;
+  let __tickSyncErrorPoll;
+  let marketStoreDefinition;
+  let previousAlpine;
+
+  beforeEach(async () => {
+    vi.resetModules();
+
+    // Capture the store definition as initMarketStore() registers it.
+    marketStoreDefinition = null;
+
+    // Stub Alpine module — we only need Alpine.store(name, def) to capture
+    // the store shape so tests can operate on it directly.
+    vi.doMock('alpinejs', () => ({
+      default: {
+        store: (name, def) => {
+          if (def !== undefined) {
+            // Register path: capture the shape.
+            if (name === 'market') marketStoreDefinition = def;
+            return def;
+          }
+          // Read path: return whatever is currently registered on window.Alpine.
+          if (typeof window !== 'undefined' && window.Alpine?.store) {
+            return window.Alpine.store(name);
+          }
+          return undefined;
+        },
+      },
+    }));
+
+    // Re-import the market store module against the mocked Alpine.
+    const mod = await import('../src/stores/market.js');
+    initMarketStore = mod.initMarketStore;
+    __tickSyncErrorPoll = mod.__tickSyncErrorPoll;
+
+    // Register the store shape without running init() (init() triggers
+    // Dexie + network work the tests don't need for these unit cases).
+    initMarketStore();
+
+    // Stand up a window.Alpine stub so downstream reads via
+    // window.Alpine.store('market' | 'auth') resolve.
+    previousAlpine = (typeof window !== 'undefined') ? window.Alpine : undefined;
+    const storeRegistry = { market: marketStoreDefinition };
+    if (typeof window !== 'undefined') {
+      window.Alpine = {
+        store: (name, value) => {
+          if (value !== undefined) {
+            storeRegistry[name] = value;
+            return value;
+          }
+          return storeRegistry[name];
+        },
+      };
+    }
+  });
+
+  afterEach(() => {
+    // Stop any polling interval before the next test resets modules.
+    try {
+      marketStoreDefinition?._stopSyncErrorPoll?.();
+    } catch { /* best-effort cleanup */ }
+
+    if (typeof window !== 'undefined') {
+      if (previousAlpine === undefined) {
+        delete window.Alpine;
+      } else {
+        window.Alpine = previousAlpine;
+      }
+    }
+    vi.doUnmock('alpinejs');
+  });
+
+  it('unifiedBadgeCount returns syncErrorCount + alertBadgeCount', () => {
+    const store = marketStoreDefinition;
+    store.syncErrorCount = 3;
+    store.alertBadgeCount = 2;
+    expect(store.unifiedBadgeCount).toBe(5);
+  });
+
+  it('unifiedBadgeCount returns 0 when both sources are 0', () => {
+    const store = marketStoreDefinition;
+    store.syncErrorCount = 0;
+    store.alertBadgeCount = 0;
+    expect(store.unifiedBadgeCount).toBe(0);
+  });
+
+  it('groupedSpoilerCards returns [] when spoilerCards is empty', () => {
+    const store = marketStoreDefinition;
+    store.spoilerCards = [];
+    expect(store.groupedSpoilerCards).toEqual([]);
+  });
+
+  it('groupedSpoilerCards groups cards by released_at descending', () => {
+    const store = marketStoreDefinition;
+    store.spoilerCards = [
+      { id: 'a', released_at: '2026-04-15' },
+      { id: 'b', released_at: '2026-04-18' },
+      { id: 'c', released_at: '2026-04-18' },
+    ];
+    const result = store.groupedSpoilerCards;
+    expect(result).toHaveLength(2);
+    expect(result[0].date).toBe('2026-04-18');
+    expect(result[0].cards).toHaveLength(2);
+    expect(result[1].date).toBe('2026-04-15');
+    expect(result[1].cards).toHaveLength(1);
+  });
+
+  it('groupedSpoilerCards buckets null/undefined released_at as unknown at the bottom', () => {
+    const store = marketStoreDefinition;
+    store.spoilerCards = [
+      { id: 'a', released_at: '2026-04-18' },
+      { id: 'b', released_at: null },
+      { id: 'c' }, // undefined released_at
+    ];
+    const result = store.groupedSpoilerCards;
+    expect(result).toHaveLength(2);
+    expect(result[0].date).toBe('2026-04-18');
+    expect(result[0].cards).toHaveLength(1);
+    expect(result[1].date).toBe('unknown');
+    expect(result[1].cards).toHaveLength(2);
+  });
+
+  it('_pollSyncErrors reads sync_conflicts count and sets syncErrorCount when authed', async () => {
+    const store = marketStoreDefinition;
+    // Mock auth store to return authed.
+    window.Alpine.store('auth', { status: 'authed', user: { id: 'u1' } });
+    // Stub sync_conflicts.count().
+    const countSpy = vi.spyOn(db.sync_conflicts, 'count').mockResolvedValue(4);
+
+    await __tickSyncErrorPoll();
+
+    expect(countSpy).toHaveBeenCalled();
+    expect(store.syncErrorCount).toBe(4);
+
+    countSpy.mockRestore();
+    store._stopSyncErrorPoll();
+  });
+
+  it('_pollSyncErrors resets syncErrorCount to 0 when not authed', async () => {
+    const store = marketStoreDefinition;
+    store.syncErrorCount = 5;
+    window.Alpine.store('auth', { status: 'anonymous' });
+
+    await __tickSyncErrorPoll();
+
+    expect(store.syncErrorCount).toBe(0);
+  });
+
+  it('_pollSyncErrors swallows Dexie errors without throwing', async () => {
+    const store = marketStoreDefinition;
+    store.syncErrorCount = 7;
+    window.Alpine.store('auth', { status: 'authed', user: { id: 'u1' } });
+    const countSpy = vi.spyOn(db.sync_conflicts, 'count').mockRejectedValue(new Error('DB closed'));
+
+    await expect(__tickSyncErrorPoll()).resolves.not.toThrow();
+    // Previous value retained because the error path leaves state as-is.
+    expect(store.syncErrorCount).toBe(7);
+
+    countSpy.mockRestore();
   });
 });
