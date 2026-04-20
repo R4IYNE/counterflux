@@ -108,14 +108,32 @@
 .salt-fill { height: 100%; transition: width 300ms ease-out; }
 .gap-warning { color: #F39C12; display: inline-flex; align-items: center; gap: 4px; }
 .gap-critical { color: #E23838; display: inline-flex; align-items: center; gap: 4px; }
+/* Phase 13 Plan 2 (D-08) — shimmer skeleton, transform-based for compositor
+ * eligibility. Research §Pattern 4 + §Example 4: background-position
+ * animations trigger paint on the main thread; transform: translateX() rides
+ * the compositor. Implementation: the container owns the dark surface; a
+ * ::before pseudo renders the gradient band and slides across via transform.
+ * overflow: hidden clips the pseudo so the band appears to enter/exit the
+ * container seamlessly. will-change: transform hints the compositor to
+ * promote the pseudo to its own layer. Consumer:
+ * src/components/spoiler-gallery.js skeleton tiles. */
 .shimmer {
-  background: linear-gradient(90deg, #14161C 25%, #1C1F28 50%, #14161C 75%);
-  background-size: 200% 100%;
+  position: relative;
+  overflow: hidden;
+  background: #14161C;
+}
+.shimmer::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 0%, #1C1F28 50%, transparent 100%);
+  transform: translateX(-100%);
   animation: shimmer 1.5s infinite;
+  will-change: transform;
 }
 @keyframes shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
 }
 
 /* Phase 5 / POLISH-02 D-33: Preordain tabs — active underline uses Izzet red. */
