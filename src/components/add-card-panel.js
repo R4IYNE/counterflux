@@ -176,8 +176,21 @@ export function renderAddCardPanel() {
         >MASS ENTRY</button>
       </div>
 
+      <!-- Phase 13 Plan 3 — D-05: bulk-data loading placeholder (Treasure Cruise add-card).
+           Rendered BELOW the header + ABOVE the search input while the archive
+           is still downloading/parsing. Once \$store.bulkdata.status === 'ready'
+           this collapses and the regular empty state takes over. -->
+      <template x-if="\$store.bulkdata && \$store.bulkdata.status !== 'ready'">
+        <div class="cf-add-card-placeholder" style="display: flex; align-items: center; gap: 8px; padding: 12px; background: var(--color-surface-hover); border: 1px solid var(--color-border-ghost); color: var(--color-text-muted);">
+          <span class="material-symbols-outlined" style="font-size: 16px;">hourglass_empty</span>
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase;">
+            Bulk data loading &mdash; autocomplete available when archive is indexed
+          </span>
+        </div>
+      </template>
+
       <!-- Empty state (idle — no query, no selected card) -->
-      <template x-if="!searchQuery && !selectedCard">
+      <template x-if="(!\$store.bulkdata || \$store.bulkdata.status === 'ready') && !searchQuery && !selectedCard">
         <div style="display: flex; flex-direction: column; gap: 4px; padding: 8px 0;">
           <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; color: var(--color-text-muted); text-transform: uppercase;">
             READY TO ARCHIVE

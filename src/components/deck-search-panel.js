@@ -178,6 +178,25 @@ export function renderDeckSearchPanel(container) {
   `;
   container.appendChild(noResults);
 
+  // Phase 13 Plan 3 — D-05: Bulk data loading placeholder (Thousand-Year Storm
+  // card-search). Rendered when browseCards() / searchCards() returns an
+  // empty array flagged with `bulkDataNotReady: true`. Mirrors the add-card
+  // panel's placeholder visual density.
+  const bulkLoadingPlaceholder = document.createElement('div');
+  bulkLoadingPlaceholder.id = 'deck-search-bulk-loading';
+  bulkLoadingPlaceholder.style.cssText = `
+    display: none; align-items: center; gap: 8px; padding: 12px;
+    background: #1C1F28; border: 1px solid #2A2D3A; color: #7A8498;
+    margin-top: 8px;
+  `;
+  bulkLoadingPlaceholder.innerHTML = `
+    <span class="material-symbols-outlined" style="font-size: 16px;">hourglass_empty</span>
+    <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase;">
+      Bulk data loading &mdash; card search available when archive is indexed
+    </span>
+  `;
+  container.appendChild(bulkLoadingPlaceholder);
+
   async function executeSearch() {
     const query = searchInput.value.trim();
     const deckColorIdentity = deckStore?.activeDeck?.color_identity || [];
@@ -251,13 +270,21 @@ export function renderDeckSearchPanel(container) {
       });
     }
 
+    // Phase 13 Plan 3 — D-05: propagate bulkDataNotReady flag so renderResults
+    // can swap the normal "no results" copy for the bulk-data skeleton.
+    const bulkDataNotReady = !!raw?.bulkDataNotReady;
     results = raw.slice(0, 20);
+    results.bulkDataNotReady = bulkDataNotReady;
     renderResults();
   }
 
   function renderResults() {
     resultsEl.innerHTML = '';
-    noResults.style.display = results.length === 0 ? 'block' : 'none';
+    const bulkDataNotReady = !!results.bulkDataNotReady;
+    // Phase 13 Plan 3 — D-05: show the bulk-data skeleton instead of the
+    // normal "no results" copy when the archive isn't indexed yet.
+    bulkLoadingPlaceholder.style.display = bulkDataNotReady ? 'flex' : 'none';
+    noResults.style.display = (!bulkDataNotReady && results.length === 0) ? 'block' : 'none';
 
     const ownedSet = getOwnedSet();
 

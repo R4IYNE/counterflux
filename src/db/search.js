@@ -11,7 +11,41 @@ function isPaperLegal(card) {
   return card.games.includes('paper');
 }
 
+/**
+ * Phase 13 Plan 3 — D-05: inspect $store.bulkdata.status and return an
+ * early annotated-empty result when the archive hasn't finished indexing.
+ * This lets Treasure Cruise (add-card-panel.js) and Thousand-Year Storm
+ * (deck-search-panel.js) distinguish "no matches" from "bulk data still
+ * downloading" and render the appropriate skeleton placeholder.
+ *
+ * @returns {{ results: Array, bulkDataNotReady: true, message: string } | null}
+ */
+function bulkDataGate() {
+  const alpine = (typeof window !== 'undefined' && window.Alpine) || null;
+  const store = alpine?.store ? alpine.store('bulkdata') : null;
+  if (store && store.status !== 'ready') {
+    return {
+      results: [],
+      bulkDataNotReady: true,
+      message: 'Bulk data loading…',
+    };
+  }
+  return null;
+}
+
 export async function searchCards(query, limit = 12) {
+  // D-05 guard — shape the empty result so consumers can render a placeholder.
+  // Historical contract: on non-match, searchCards returns []. We preserve
+  // that by returning [] when the gate fires; the flag lives on the array
+  // itself so consumers can opt-in.
+  const gated = bulkDataGate();
+  if (gated) {
+    const empty = [];
+    empty.bulkDataNotReady = true;
+    empty.message = gated.message;
+    return empty;
+  }
+
   if (!query || query.length < 2) return [];
 
   const normalised = query.toLowerCase();
@@ -76,6 +110,17 @@ export async function searchCards(query, limit = 12) {
  * @returns {Promise<Object[]>}
  */
 export async function browseCards(colorIdentity = [], filters = {}, limit = 20) {
+  // D-05 guard — mirror searchCards() so deck-search-panel.js's browse-mode
+  // initial load also surfaces the placeholder while bulk data is still
+  // indexing.
+  const gated = bulkDataGate();
+  if (gated) {
+    const empty = [];
+    empty.bulkDataNotReady = true;
+    empty.message = gated.message;
+    return empty;
+  }
+
   const seen = new Set();
   const results = [];
   const batchSize = 200;
