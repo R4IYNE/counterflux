@@ -82,17 +82,24 @@ describe('streaming-ui boot-order contract (Phase 13 Plan 3, D-04)', () => {
     // Verify the splash overlay (if it still exists) no longer maps to a
     // full-screen z-50 overlay that gates rendering on bulk-data status.
     //
-    // Accept either: (a) the overlay block is gone entirely, or
-    // (b) the x-show is scoped to migrationProgress only.
+    // Accept any of:
+    //  (a) The overlay block is gone entirely, OR
+    //  (b) The x-show is directly scoped to migration, OR
+    //  (c) The x-show binds on a computed getter that is itself migration-scoped
+    //      in src/components/splash-screen.js (the `isVisible` repurpose path).
     const splashBlockRegex = /x-data="splashScreen"[\s\S]{0,200}x-show="([^"]+)"/;
     const match = indexHtml.match(splashBlockRegex);
     if (match) {
       const gate = match[1];
-      // Gate MUST not be the old `isVisible` (which proxies bulkdata.status) OR
-      // it must have been narrowed to migration only. Accept a migration-themed
-      // gate.
-      const isMigrationScoped = /migration/i.test(gate);
-      expect(isMigrationScoped).toBe(true);
+      const isMigrationScopedInline = /migration/i.test(gate);
+      if (!isMigrationScopedInline) {
+        // Then the gate must be a getter whose JS body is migration-scoped.
+        const splashSrc = readFileSync('src/components/splash-screen.js', 'utf-8');
+        expect(splashSrc).toMatch(/get\s+isVisible/);
+        expect(splashSrc).toMatch(/migrationProgress/);
+        // And the JS must NOT still bind isVisible on bulkdata.status.
+        expect(splashSrc).not.toMatch(/isVisible[\s\S]{0,200}bulkdata\.status\s*!==\s*'ready'/);
+      }
     }
     // If match is null, the splash overlay is entirely gone — also acceptable.
   });

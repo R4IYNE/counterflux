@@ -24,7 +24,12 @@
   @keydown.window="if ($event.key === '?' && !['INPUT','TEXTAREA','SELECT'].includes($event.target.tagName)) { window.__toggleShortcutModal && window.__toggleShortcutModal(); }"
 >
 
-  <!-- Splash Screen: blocks all interaction until bulk data is ready -->
+  <!-- Phase 13 Plan 3 (D-04) — Splash overlay REPURPOSED for migration-only.
+       The splash no longer gates boot on bulk-data status. Bulk-data progress
+       moved to the topbar pill (D-06). This overlay only renders during the
+       v5→v8 schema migration window (isVisible getter returns true only when
+       migrationProgress > 0 && migrationProgress < 100). Post-migration, the
+       main shell renders immediately and bulk data streams in the background. -->
   <div
     x-data="splashScreen"
     x-show="isVisible"
@@ -43,47 +48,19 @@
         class="w-32 h-32 object-contain animate-pulse">
       <h2 class="syne-header text-[20px] font-bold leading-[1.2] tracking-[0.01em] text-center"
           style="color: var(--color-text-primary, #EAECEE);">
-        Initializing Aetheric Archive...
+        Upgrading Aetheric Archive...
       </h2>
+      <!-- Migration progress bar (D-17a) — the only progress signal the splash now carries. -->
       <div class="w-full h-1 ghost-border" style="background-color: var(--color-border-ghost, #2A2D3A);">
-        <div class="h-full transition-all duration-300" style="background-color: var(--color-primary, #0D52BD);"
-          :style="{ width: $store.bulkdata.progress + '%' }"></div>
+        <div class="h-full transition-all duration-300" style="background-color: var(--color-warning, #F39C12);"
+          :style="{ width: (migrationProgress || 0) + '%' }"></div>
       </div>
-      <div class="w-full text-center">
-        <p x-show="$store.bulkdata.status === 'downloading'"
-          class="mono-data text-[11px] font-normal uppercase tracking-[0.15em]"
-          style="color: var(--color-text-muted, #7A8498);">
-          DOWNLOADING BULK DATA: <span x-text="$store.bulkdata.downloadedMB"></span>MB / <span x-text="$store.bulkdata.totalMB"></span>MB
-        </p>
-        <p x-show="$store.bulkdata.status === 'parsing'"
-          class="mono-data text-[11px] font-normal uppercase tracking-[0.15em]"
-          style="color: var(--color-text-muted, #7A8498);">
-          PARSING CARD DATABASE: <span x-text="$store.bulkdata.parsed.toLocaleString()"></span> CARDS
-        </p>
-        <p x-show="$store.bulkdata.status === 'checking' || $store.bulkdata.status === 'idle'"
-          class="mono-data text-[11px] font-normal uppercase tracking-[0.15em]"
-          style="color: var(--color-text-muted, #7A8498);">
-          CHECKING FOR UPDATES...
-        </p>
-        <p x-show="$store.bulkdata.status === 'ready'"
-          class="mono-data text-[11px] font-bold uppercase tracking-[0.15em]"
-          style="color: var(--color-success, #2ECC71);">
-          ARCHIVE READY. <span x-text="$store.bulkdata.totalCards.toLocaleString()"></span> CARDS INDEXED.
-        </p>
-        <template x-if="$store.bulkdata.status === 'error'">
-          <div class="flex flex-col items-center gap-4">
-            <p class="mono-data text-[11px] font-normal uppercase tracking-[0.15em]"
-               style="color: var(--color-secondary, #E23838);" x-text="$store.bulkdata.error"></p>
-            <button @click="$store.bulkdata.retry()"
-              class="mono-data text-[11px] font-bold uppercase tracking-[0.15em] px-6 py-2 cursor-pointer"
-              style="background-color: var(--color-secondary, #E23838); color: var(--color-text-primary, #EAECEE);">
-              RETRY DOWNLOAD
-            </button>
-          </div>
-        </template>
-      </div>
-      <div x-show="$store.bulkdata.status !== 'error'"
-        class="text-center leading-[1.5] max-w-[400px]"
+      <div x-show="migrationProgress !== null"
+        class="mono-data text-[11px] uppercase tracking-[0.15em] text-center"
+        style="font-family: 'JetBrains Mono', monospace; color: var(--color-warning, #F39C12);"
+        x-text="'Migrating your archive \u2014 ' + (migrationProgress || 0) + '%'"></div>
+      <!-- Flavour rotation retained — provides warmth during the migration window. -->
+      <div class="text-center leading-[1.5] max-w-[400px]"
         style="color: var(--color-text-muted, #7A8498); font-family: 'Space Grotesk', sans-serif;">
         <p class="text-[14px]">
           <span aria-hidden="true" style="color: var(--color-text-dim, #4A5064);">&ldquo;</span><span
@@ -98,16 +75,13 @@
           x-text="'\u2014 ' + flavourText.attribution"
         ></p>
       </div>
-      <!-- D-17a: schema migration progress hook (populated by Plan 3 via $store.bulkdata.migrationProgress) -->
-      <div x-show="migrationProgress !== null"
-        class="mono-data text-[11px] uppercase tracking-[0.15em] text-center"
-        style="font-family: 'JetBrains Mono', monospace; color: var(--color-warning, #F39C12);"
-        x-text="'Migrating your archive \u2014 ' + migrationProgress + '%'"></div>
     </div>
   </div>
 
-  <!-- App shell (visible when data ready or bulkdata store not yet registered) -->
-  <div x-show="$store.bulkdata?.isReady !== false" x-cloak>
+  <!-- App shell — Phase 13 Plan 3 (D-04): renders immediately after Alpine
+       boot. NO LONGER gated on bulk-data status. The topbar pill (D-06)
+       shows download progress in the background. -->
+  <div x-cloak>
 
     <!-- Sidebar -->
     <aside

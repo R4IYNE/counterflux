@@ -1,10 +1,13 @@
 /**
- * Splash screen component for first-load bulk data download.
- * Full-screen blocking overlay with progress bar, download stats,
- * rotating flavour text, and Mila image with CSS pulse animation.
+ * Splash screen component — REPURPOSED in Phase 13 Plan 3 (D-04).
  *
- * Renders when $store.bulkdata.status !== 'ready'.
- * Fades out after 1s delay on completion.
+ * Previously: full-screen blocking overlay while $store.bulkdata.status !== 'ready'.
+ * Now: renders ONLY during the v5→v8 schema migration (migrationProgress > 0
+ *      && migrationProgress < 100). Bulk-data download progress is surfaced
+ *      via the topbar pill (see src/components/topbar-bulkdata-pill.js, D-06).
+ *
+ * The FLAVOUR_TEXTS rotation is preserved for the migration window and as
+ * a v1.2 Mila-system easter-egg candidate (see 13-CONTEXT.md §Deferred).
  */
 
 /**
@@ -48,18 +51,19 @@ export function splashScreen() {
     _interval: null,
 
     init() {
-      // Rotate flavour text every 8 seconds
+      // Rotate flavour text every 8 seconds (kept — visible during migration)
       this._interval = setInterval(() => {
         this.flavourIndex = (this.flavourIndex + 1) % FLAVOUR_TEXTS.length;
       }, 8000);
 
-      // Watch for ready state and trigger fade out
+      // D-04 repurpose: watch migrationProgress instead of bulkdata.status.
+      // Fade out when migration completes (progress === 100).
       if (typeof this.$watch === 'function') {
-        this.$watch('$store.bulkdata.status', (status) => {
-          if (status === 'ready') {
+        this.$watch('$store.bulkdata.migrationProgress', (progress) => {
+          if (progress !== null && progress >= 100) {
             setTimeout(() => {
               this.fadingOut = true;
-            }, 1000);
+            }, 500);
           }
         });
       }
@@ -89,8 +93,22 @@ export function splashScreen() {
       }
     },
 
+    /**
+     * D-04 repurpose (Phase 13 Plan 3): splash overlay now renders ONLY
+     * while the v5→v8 migration is in flight. Bulk-data progress moved
+     * to the topbar pill (D-06) so the app shell can render immediately
+     * after Alpine.start().
+     *
+     * The `fadingOut` flag is retained so an in-progress migration can
+     * still fade the overlay out gracefully when migrationProgress hits
+     * 100. Historical `$store.bulkdata.status !== 'ready'` coupling has
+     * been removed.
+     */
     get isVisible() {
-      return this.$store.bulkdata.status !== 'ready' || !this.fadingOut;
+      const progress = this.migrationProgress;
+      if (progress === null) return false;
+      if (this.fadingOut) return false;
+      return progress > 0 && progress < 100;
     },
 
     get statusLabel() {
