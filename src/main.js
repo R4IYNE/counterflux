@@ -29,6 +29,7 @@ import { initRouter } from './router.js';
 import { renderManaCost } from './utils/mana.js';
 import { getEurToGbpRate, eurToGbp, eurToGbpValue } from './services/currency.js';
 import { runMigration } from './services/migration.js';
+import { bindBfcacheHandlers } from './services/bfcache.js';
 import { db } from './db/schema.js';
 
 // Phase 7 Plan 3: gate all store init + Alpine on successful v5→v7 migration.
@@ -97,6 +98,7 @@ async function bootApp() {
 
   // Start Alpine (must be called after stores and components are registered)
   Alpine.start();
+  bindBfcacheHandlers();   // Phase 13 Plan 2 — D-09 bfcache eligibility (pure event-listener registration)
 
   // Initialize router after Alpine is ready
   initRouter();
