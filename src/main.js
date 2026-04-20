@@ -23,6 +23,7 @@ import { openAuthWall, closeAuthWall } from './components/auth-wall.js';
 import { maybeShowFirstSignInPrompt } from './components/first-sign-in-prompt.js';
 import { splashScreen } from './components/splash-screen.js';
 import { sidebarComponent } from './components/sidebar.js';
+import { topbarBulkdataPill } from './components/topbar-bulkdata-pill.js';
 import { renderNotificationBellPopover } from './components/notification-bell-popover.js';
 import { toggleShortcutModal, isShortcutModalOpen, closeShortcutModal } from './components/shortcut-modal.js';
 import { initRouter } from './router.js';
@@ -87,6 +88,7 @@ async function bootApp() {
   // Register Alpine components
   Alpine.data('splashScreen', splashScreen);
   Alpine.data('sidebarComponent', sidebarComponent);
+  Alpine.data('topbarBulkdataPill', topbarBulkdataPill);   // Phase 13 Plan 3 — D-06 topbar pill
 
   // Phase 12 SYNC-08 — inject the notification bell popover template into its
   // topbar mount point BEFORE Alpine.start() so Alpine binds every directive

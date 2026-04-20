@@ -339,6 +339,57 @@
           </button>
         </template>
 
+        <!-- Phase 13 Plan 3 — D-06 topbar bulk-data progress pill.
+             Renders adjacent to the sync-status chip + notification bell while
+             $store.bulkdata.status !== 'ready'. Auto-dismisses on 'ready'.
+             Visual grammar inherited from sync-status chip — no new tokens. -->
+        <div x-data="topbarBulkdataPill()" class="cf-topbar-bulkdata-pill-container">
+          <template x-if="$store.bulkdata && $store.bulkdata.status !== 'ready' && $store.bulkdata.status !== 'error'">
+            <div
+              role="status"
+              aria-live="polite"
+              class="flex items-center gap-xs px-sm py-xs"
+              :aria-label="'Archive download status: ' + $store.bulkdata.status + ' ' + progressLabel"
+            >
+              <template x-if="$store.bulkdata.status === 'downloading'">
+                <span class="flex items-center gap-xs">
+                  <span class="material-symbols-outlined text-primary cf-chip-spinner" style="font-size: 12px;">progress_activity</span>
+                  <span class="font-mono text-[11px] font-bold uppercase tracking-[0.15em] text-text-primary">
+                    ARCHIVE &mdash; <span x-text="$store.bulkdata.progress"></span>%
+                  </span>
+                </span>
+              </template>
+              <template x-if="$store.bulkdata.status === 'parsing'">
+                <span class="flex items-center gap-xs">
+                  <span class="cf-live-dot"></span>
+                  <span class="material-symbols-outlined text-primary" style="font-size: 12px;">database</span>
+                  <span class="font-mono text-[11px] font-bold uppercase tracking-[0.15em] text-text-primary">
+                    INDEXING &mdash; <span x-text="$store.bulkdata.parsed.toLocaleString()"></span>
+                  </span>
+                </span>
+              </template>
+              <template x-if="$store.bulkdata.status === 'checking' || $store.bulkdata.status === 'idle'">
+                <span class="flex items-center gap-xs">
+                  <span class="material-symbols-outlined text-text-muted" style="font-size: 12px;">cloud_sync</span>
+                  <span class="font-mono text-[11px] font-bold uppercase tracking-[0.15em] text-text-muted">CHECKING ARCHIVE&hellip;</span>
+                </span>
+              </template>
+            </div>
+          </template>
+          <template x-if="$store.bulkdata && $store.bulkdata.status === 'error'">
+            <button
+              type="button"
+              class="cf-chip-error-halo flex items-center gap-xs px-sm py-xs cursor-pointer"
+              :title="$store.bulkdata.error || 'Archive download failed'"
+              @click="retry()"
+            >
+              <span class="w-2 h-2 bg-secondary"></span>
+              <span class="material-symbols-outlined text-secondary" style="font-size: 12px;">error</span>
+              <span class="font-mono text-[11px] font-bold uppercase tracking-[0.15em] text-secondary">ARCHIVE ERROR</span>
+            </button>
+          </template>
+        </div>
+
         <!-- Phase 12 SYNC-08 — notification bell popover mount point.
              src/main.js injects renderNotificationBellPopover() into this div
              after Alpine starts so the popover template is parsed once and
