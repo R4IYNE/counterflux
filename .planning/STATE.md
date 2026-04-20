@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Second Sunrise
 status: executing
-stopped_at: Phase 13 plans verified (6 plans, 4 waves)
-last_updated: "2026-04-20T20:02:50.906Z"
-last_activity: 2026-04-19
+stopped_at: Phase 13 Plan 1 complete — Branch B verdict (LCP 6.1s > 2.5s target). Plans 2+3 activate, 4 skipped, 5 gated, 6 closes.
+last_updated: "2026-04-20T22:02:50.386Z"
+last_activity: 2026-04-20 -- Phase 13 execution started
 progress:
   total_phases: 8
   completed_phases: 7
   total_plans: 35
-  completed_plans: 29
+  completed_plans: 30
   percent: 84
 ---
 
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-14)
 
 **Core value:** The deck builder knows what you own, and the collection knows what's in your decks — one interconnected data layer
-**Current focus:** Phase 12 — notification-bell-preordain-spoiler-refresh
+**Current focus:** Phase 13 — Performance Optimisation (conditional)
 
 ## Current Position
 
-Phase: 13
-Plan: Not started
-Status: Ready to execute
-Last activity: 2026-04-19
+Phase: 13 (Performance Optimisation (conditional)) — EXECUTING
+Plan: 1 of 6
+Status: Executing Phase 13
+Last activity: 2026-04-20 -- Phase 13 execution started
 
 Progress: [████████░░] 84%
 
@@ -207,6 +207,6 @@ None — roadmap complete, next step is `/gsd:plan-phase 7`.
 
 ## Session Continuity
 
-Last session: 2026-04-20T20:02:50.904Z
-Stopped at: Phase 13 plans verified (6 plans, 4 waves)
-Resume file: .planning/phases/13-performance-optimisation-conditional/13-01-PLAN.md
+Last session: 2026-04-20T22:02:50.384Z
+Stopped at: Phase 13 Plan 1 complete — Branch B verdict (LCP 6.1s > 2.5s target). Plans 2+3 activate, 4 skipped, 5 gated, 6 closes.
+Resume file: .planning/phases/13-performance-optimisation-conditional/13-01-SUMMARY.md
