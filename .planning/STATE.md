@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Second Sunrise
 status: executing
-stopped_at: Phase 13 Plan 1 complete — Branch B verdict (LCP 6.1s > 2.5s target). Plans 2+3 activate, 4 skipped, 5 gated, 6 closes.
-last_updated: "2026-04-20T22:02:50.386Z"
-last_activity: 2026-04-20 -- Phase 13 execution started
+stopped_at: Plan 13-02 complete (Wave 2) — bfcache + shimmer freebies shipped; both session states bfcache-eligible. Plan 13-03 running parallel; Plan 13-05 gated on post-Plan-3 re-measurement.
+last_updated: "2026-04-20T23:49:40.858Z"
+last_activity: 2026-04-20
 progress:
   total_phases: 8
   completed_phases: 7
   total_plans: 35
-  completed_plans: 30
+  completed_plans: 31
   percent: 84
 ---
 
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-14)
 
 **Core value:** The deck builder knows what you own, and the collection knows what's in your decks — one interconnected data layer
-**Current focus:** Phase 13 — Performance Optimisation (conditional)
+**Current focus:** Phase 13 — performance-optimisation-conditional
 
 ## Current Position
 
-Phase: 13 (Performance Optimisation (conditional)) — EXECUTING
-Plan: 1 of 6
-Status: Executing Phase 13
-Last activity: 2026-04-20 -- Phase 13 execution started
+Phase: 13 (performance-optimisation-conditional) — EXECUTING
+Plan: 2 of 6
+Status: Ready to execute
+Last activity: 2026-04-20
 
 Progress: [████████░░] 84%
 
@@ -84,6 +84,7 @@ Progress: [████████░░] 84%
 | Phase 12 P01 | 4m | 2 tasks | 2 files |
 | Phase 12 P03 | 4min | 2 tasks | 7 files |
 | Phase 12 P04 | 4m 20s | 2 tasks | 3 files |
+| Phase 13 P02 | ~30m (Wave 2 with checkpoint) | 4 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -189,6 +190,8 @@ Full decision log in PROJECT.md Key Decisions table.
 - [Phase 12]: [Phase 12]: Plan 12-04: Static-grep gate on banned strings ('toast', '2xl:grid-cols-6') applies source-wide via readFileSync — comment prose must avoid the literal strings too; rephrased spoiler-gallery.js doc comments to 'notification surface' + 'responsive 5/6-col scale' to satisfy Tests 4 + 11
 - [Phase 12]: [Phase 12]: Plan 12-04: isWatching as per-tile Alpine getter reading $store.market.watchlist.some() — market.js re-ASSIGNS watchlist on every add/remove (Pitfall 1), Alpine's reactivity tracks the reference and re-runs .some() for free; no parallel Set bookkeeping, no manual invalidation
 - [Phase 12]: [Phase 12]: Plan 12-04: .cf-spoiler-bookmark is a structural clone of .card-quick-actions-checkbox (Phase 08.1 Plan 3) with 3 delta points — left:8px (top-LEFT per D-09), .is-watching modifier for persistent visibility, 18px glyph font-size vs 16px (bookmark glyph density); CSS reduced-motion selectors appended to the merged @media block — no duplicate block
+- [Phase 13]: Plan 13-02: D-09 cheap-path fix shipped only (Dexie close/reopen). Empirical DevTools verify showed authed bfcache works WITHOUT sync-engine teardown — supabase-js v2 Realtime releases cleanly on pagehide; Open Question 3 resolved strictly-better than Research predicted.
+- [Phase 13]: Plan 13-02: D-08 targeted the shimmer keyframe (background-position → transform translateX with will-change hint) — NOT the splash progress bar which Plan 3 D-04 deletes. Regression locked via static grep over @keyframes bodies (tests/animation-composability.test.js).
 
 ### Roadmap Evolution
 
@@ -207,6 +210,6 @@ None — roadmap complete, next step is `/gsd:plan-phase 7`.
 
 ## Session Continuity
 
-Last session: 2026-04-20T22:02:50.384Z
-Stopped at: Phase 13 Plan 1 complete — Branch B verdict (LCP 6.1s > 2.5s target). Plans 2+3 activate, 4 skipped, 5 gated, 6 closes.
-Resume file: .planning/phases/13-performance-optimisation-conditional/13-01-SUMMARY.md
+Last session: 2026-04-20T23:49:40.856Z
+Stopped at: Plan 13-02 complete (Wave 2) — bfcache + shimmer freebies shipped; both session states bfcache-eligible. Plan 13-03 running parallel; Plan 13-05 gated on post-Plan-3 re-measurement.
+Resume file: None

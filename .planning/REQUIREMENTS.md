@@ -27,7 +27,7 @@
 - [x] **PERF-01**: Web Vitals instrumentation (`web-vitals` 5.2.x) records LCP, FID, CLS, TTI, FCP on every page load; metrics visible in console in dev mode
 - [x] **PERF-02**: Lighthouse CI (`@lhci/cli`) added as dev dependency with a `npm run perf` script that produces a desktop-preset report against `vite preview`
 - [x] **PERF-03**: Baseline performance report committed to `.planning/` capturing current v1.0 numbers; target TTI/LCP set based on measured baseline
-- [ ] **PERF-04**: Any regressions identified in baseline measurement are addressed (candidates: splash → bulk data deferral, store init, bundle splitting) to hit the agreed target
+- [x] **PERF-04**: Any regressions identified in baseline measurement are addressed (candidates: splash → bulk data deferral, store init, bundle splitting) to hit the agreed target
 
 ### Schema Migration (infrastructure for new features)
 
