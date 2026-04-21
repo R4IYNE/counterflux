@@ -65,7 +65,14 @@ export function mount(container) {
               style="color: #7A8498;">MASTER REPOSITORY SUMMARY</span>
       </div>
 
-      <!-- Empty state (shown when no entries) -->
+      <!-- Empty state (shown when no entries).
+           Task 5c (Phase 13 Plan 3): body copy + CTA buttons gate on
+           $store.bulkdata.status. While the archive is still downloading,
+           ADD CARD / MASS ENTRY / IMPORT CSV internally fail because their
+           name-lookups route through db.cards; swap to honest loading copy
+           + disable the buttons so the UI is consistent with what actually
+           works. When bulkdata.status === 'ready' the original actionable
+           copy returns. -->
       <template x-if="$store.collection.entries.length === 0 && !$store.collection.loading">
         <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; gap: 24px; text-align: center;">
           <img
@@ -74,19 +81,34 @@ export function mount(container) {
             style="width: 96px; height: 96px; object-fit: cover; filter: grayscale(1) opacity(0.5);"
           >
           <h2 class="syne-header" style="font-size: 20px; font-weight: 700; line-height: 1.2; letter-spacing: 0.01em; color: #EAECEE; margin: 0;">No Treasures Catalogued</h2>
-          <p style="font-family: 'Space Grotesk', sans-serif; font-size: 14px; line-height: 1.5; color: #7A8498; max-width: 28rem; width: 100%; margin: 0;">
-            Mila here! Your collection is empty. Add cards one at a time, paste a batch into the Mass Entry Terminal, or import a CSV from Deckbox, Moxfield, or Archidekt.
-          </p>
+
+          <!-- Ready-branch body: original actionable copy -->
+          <template x-if="!$store.bulkdata || $store.bulkdata.status === 'ready'">
+            <p style="font-family: 'Space Grotesk', sans-serif; font-size: 14px; line-height: 1.5; color: #7A8498; max-width: 28rem; width: 100%; margin: 0;">
+              Mila here! Your collection is empty. Add cards one at a time, paste a batch into the Mass Entry Terminal, or import a CSV from Deckbox, Moxfield, or Archidekt.
+            </p>
+          </template>
+
+          <!-- Loading-branch body: honest 'archive still loading' copy -->
+          <template x-if="$store.bulkdata && $store.bulkdata.status !== 'ready'">
+            <p style="font-family: 'Space Grotesk', sans-serif; font-size: 14px; line-height: 1.5; color: #7A8498; max-width: 28rem; width: 100%; margin: 0;">
+              Mila here! The archive is still loading. Card entry tools (Mass Entry, CSV import) will unlock when the archive finishes indexing.
+            </p>
+          </template>
+
           <div style="display: flex; align-items: center; gap: 8px;">
             <button
               @click="$store.collection.panelOpen = true"
-              style="font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; cursor: pointer; padding: 8px 16px; background: #0D52BD; color: #EAECEE; border: none;">ADD CARD</button>
+              :disabled="$store.bulkdata && $store.bulkdata.status !== 'ready'"
+              :style="$store.bulkdata && $store.bulkdata.status !== 'ready' ? 'opacity: 0.5; cursor: not-allowed; font-family: \'JetBrains Mono\', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; padding: 8px 16px; background: #0D52BD; color: #EAECEE; border: none;' : 'font-family: \'JetBrains Mono\', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; cursor: pointer; padding: 8px 16px; background: #0D52BD; color: #EAECEE; border: none;'">ADD CARD</button>
             <button
               @click="$store.collection.massEntryOpen = true"
-              style="font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; cursor: pointer; padding: 8px 16px; background: #1C1F28; color: #EAECEE; border: 1px solid #2A2D3A;">MASS ENTRY</button>
+              :disabled="$store.bulkdata && $store.bulkdata.status !== 'ready'"
+              :style="$store.bulkdata && $store.bulkdata.status !== 'ready' ? 'opacity: 0.5; cursor: not-allowed; font-family: \'JetBrains Mono\', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; padding: 8px 16px; background: #1C1F28; color: #EAECEE; border: 1px solid #2A2D3A;' : 'font-family: \'JetBrains Mono\', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; cursor: pointer; padding: 8px 16px; background: #1C1F28; color: #EAECEE; border: 1px solid #2A2D3A;'">MASS ENTRY</button>
             <button
               @click="$store.collection.importOpen = true"
-              style="font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; cursor: pointer; padding: 8px 16px; background: #1C1F28; color: #EAECEE; border: 1px solid #2A2D3A;">IMPORT CSV</button>
+              :disabled="$store.bulkdata && $store.bulkdata.status !== 'ready'"
+              :style="$store.bulkdata && $store.bulkdata.status !== 'ready' ? 'opacity: 0.5; cursor: not-allowed; font-family: \'JetBrains Mono\', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; padding: 8px 16px; background: #1C1F28; color: #EAECEE; border: 1px solid #2A2D3A;' : 'font-family: \'JetBrains Mono\', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; cursor: pointer; padding: 8px 16px; background: #1C1F28; color: #EAECEE; border: 1px solid #2A2D3A;'">IMPORT CSV</button>
           </div>
         </div>
       </template>

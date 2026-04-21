@@ -71,23 +71,48 @@ export function mount(container) {
 }
 
 // ─── Full Welcome State ──────────────────────────────────────────
+// Task 5c (Phase 13 Plan 3): the welcome banner body branches on bulk-data
+// readiness. When the archive is still downloading, the "command centre is
+// ready" copy is dishonest — Quick Add is disabled, deck tiles are gradient
+// placeholders, and TC/TYS card-search both show D-05 skeletons. The
+// alternate copy tells the user what's actually happening. An Alpine.effect
+// subscription swaps the banner copy back once bulkdata flips to 'ready'.
 function _renderFullWelcome(container) {
   const welcome = document.createElement('div');
   welcome.className = 'bg-surface border border-border-ghost p-lg mb-md';
-  welcome.innerHTML = `
-    <div class="flex items-center gap-md">
-      <img src="/assets/assetsmila-izzet.png" alt="Mila" class="w-12 h-12 object-cover">
-      <div>
-        <h2 class="font-header text-text-primary" style="font-size: 20px; font-weight: 700; line-height: 1.2; letter-spacing: 0.01em;">
-          Welcome to Counterflux
-        </h2>
-        <p class="font-body text-text-muted mt-xs" style="font-size: 14px; line-height: 1.5;">
-          Mila here! Your command centre is ready. Start by adding cards to your collection or building your first deck. Each panel will light up as your Archive grows.
-        </p>
+
+  const readyCopy = 'Mila here! Your command centre is ready. Start by adding cards to your collection or building your first deck. Each panel will light up as your Archive grows.';
+  const loadingCopy = 'Mila here! The archive is still loading. Your collection, decks, and market intel will come online as soon as the archive finishes indexing.';
+
+  function render() {
+    const copy = _isBulkDataReady() ? readyCopy : loadingCopy;
+    welcome.innerHTML = `
+      <div class="flex items-center gap-md">
+        <img src="/assets/assetsmila-izzet.png" alt="Mila" class="w-12 h-12 object-cover">
+        <div>
+          <h2 class="font-header text-text-primary" style="font-size: 20px; font-weight: 700; line-height: 1.2; letter-spacing: 0.01em;">
+            Welcome to Counterflux
+          </h2>
+          <p class="font-body text-text-muted mt-xs" style="font-size: 14px; line-height: 1.5;">
+            ${copy}
+          </p>
+        </div>
       </div>
-    </div>
-  `;
+    `;
+  }
+  render();
   container.appendChild(welcome);
+
+  // Reactive swap — when bulkdata flips to 'ready' the banner updates in place.
+  try {
+    Alpine.effect(() => {
+      const _ = Alpine.store('bulkdata')?.status;
+      render();
+    });
+  } catch {
+    // Alpine may be unavailable in early-boot / test paths; render() already
+    // ran once with the safe default, so the UI stays sensible.
+  }
 }
 
 // ─── Panel 1: Portfolio Summary (full width) ─────────────────────
