@@ -10,7 +10,34 @@ import { db } from '../db/schema.js';
 /**
  * Epic Experiment -- Dashboard (command centre).
  * 7-panel layout: portfolio, deck grid, activity, Mila insight, alerts, releases.
+ *
+ * Phase 13 Plan 3 Task 5b (D-04 honest-empty-state patch): every interactive
+ * control and CTA on this screen reflects `$store.bulkdata.status`. When the
+ * archive is still downloading, Quick Add is disabled with `ARCHIVE LOADING`
+ * copy, the two empty-state panels swap their CTAs for honest "tools unlock
+ * when archive is ready" messaging, and commander art thumbnails skip the
+ * `db.cards.get()` lookup entirely (so undefined `image_uris` never renders
+ * as a broken <img>). The gate lives in `_isBulkDataReady()` so every branch
+ * reads from a single source of truth; Alpine.effect subscriptions ensure the
+ * dashboard re-renders when status flips to 'ready'.
  */
+
+/**
+ * Read Alpine.store('bulkdata').status with a safe 'ready' default. Used by
+ * every gated branch below so that unit tests (no Alpine) and pre-boot walks
+ * degrade to the normal UX instead of locking into the "loading" state.
+ * @returns {boolean}
+ */
+function _isBulkDataReady() {
+  try {
+    const store = Alpine?.store?.('bulkdata');
+    const status = store?.status ?? 'ready';
+    return status === 'ready';
+  } catch {
+    return true;
+  }
+}
+
 export function mount(container) {
   const cleanups = [];
 
@@ -131,14 +158,28 @@ function renderPortfolioSummary(grid, cleanups) {
   // Empty state overlay
   const emptyOverlay = document.createElement('div');
   emptyOverlay.className = 'mt-sm hidden';
+  const emptyCopyReady = 'No Cards Yet &mdash; Add your first card using Quick Add above, or import a collection in Treasure Cruise.';
+  const emptyCopyLoading = 'No Cards Yet &mdash; Archive is downloading. Card tools unlock when the archive finishes indexing.';
   emptyOverlay.innerHTML = `
     <p class="font-body text-text-muted" style="font-size: 14px; line-height: 1.5;">
-      No Cards Yet &mdash; Add your first card using Quick Add above, or import a collection in Treasure Cruise.
+      ${emptyCopyReady}
     </p>
   `;
   panel.appendChild(emptyOverlay);
 
   grid.appendChild(panel);
+
+  // Task 5b: honest empty-state copy — swap the "Quick Add above" pointer for
+  // an archive-loading message whenever bulkdata isn't ready, since Quick Add
+  // is disabled in that state.
+  function updateEmptyOverlayCopy() {
+    const copy = _isBulkDataReady() ? emptyCopyReady : emptyCopyLoading;
+    emptyOverlay.innerHTML = `
+      <p class="font-body text-text-muted" style="font-size: 14px; line-height: 1.5;">
+        ${copy}
+      </p>
+    `;
+  }
 
   // Reactive updates
   function updatePortfolio() {
@@ -147,6 +188,7 @@ function renderPortfolioSummary(grid, cleanups) {
     const entries = collection.entries;
 
     if (entries.length === 0) {
+      updateEmptyOverlayCopy();
       emptyOverlay.classList.remove('hidden');
       valueEl.textContent = '--';
       uniqueEl.textContent = 'UNIQUE 0';
@@ -166,8 +208,10 @@ function renderPortfolioSummary(grid, cleanups) {
   }
 
   const stopEffect = Alpine.effect(() => {
-    // Touch reactive properties
+    // Touch reactive properties — collection entries drive the main values,
+    // bulkdata.status drives the empty-state copy (Task 5b gating).
     const _ = Alpine.store('collection').entries.length;
+    const __ = Alpine.store('bulkdata')?.status;
     updatePortfolio();
   });
   cleanups.push(() => { if (typeof stopEffect === 'function') stopEffect(); });
@@ -281,11 +325,59 @@ function _buildQuickAdd(parent, cleanups) {
   foilBtn.textContent = 'FOIL';
   let foilActive = false;
   foilBtn.addEventListener('click', () => {
+    if (foilBtn.disabled) return;
     foilActive = !foilActive;
     foilBtn.style.background = foilActive ? 'rgba(13, 82, 189, 0.2)' : '';
     foilBtn.style.color = foilActive ? '#0D52BD' : '';
   });
   inputRow.appendChild(foilBtn);
+
+  // Task 5b: Archive-loading helper copy — rendered below the input row
+  // when bulk data is still downloading. Mirrors the D-05 skeleton tone
+  // used in add-card-panel.js + deck-search-panel.js.
+  const archiveHint = document.createElement('div');
+  archiveHint.className = 'font-mono hidden';
+  archiveHint.style.cssText = 'font-size: 11px; font-weight: 400; text-transform: uppercase; letter-spacing: 0.15em; color: #8A8F98;';
+  archiveHint.textContent = 'ARCHIVE LOADING — QUICK ADD UNLOCKS AT 100%';
+  parent.appendChild(archiveHint);
+
+  // Task 5b: gate Quick Add on bulk-data readiness. When not ready, the
+  // input, condition dropdown, and foil toggle are disabled + dimmed, and
+  // the placeholder swaps to the archive-loading copy. When the download
+  // finishes, the Alpine.effect subscription below flips everything back
+  // to the normal UX — no page reload required.
+  function updateQuickAddGate() {
+    const ready = _isBulkDataReady();
+    input.disabled = !ready;
+    condition.disabled = !ready;
+    foilBtn.disabled = !ready;
+    if (ready) {
+      input.placeholder = '4X LIGHTNING BOLT [2XM]';
+      input.style.opacity = '';
+      input.style.cursor = '';
+      condition.style.opacity = '';
+      condition.style.cursor = '';
+      foilBtn.style.opacity = '';
+      foilBtn.style.cursor = '';
+      archiveHint.classList.add('hidden');
+    } else {
+      input.placeholder = 'ARCHIVE LOADING — QUICK ADD UNLOCKS AT 100%';
+      input.style.opacity = '0.5';
+      input.style.cursor = 'not-allowed';
+      condition.style.opacity = '0.5';
+      condition.style.cursor = 'not-allowed';
+      foilBtn.style.opacity = '0.5';
+      foilBtn.style.cursor = 'not-allowed';
+      archiveHint.classList.remove('hidden');
+    }
+  }
+  updateQuickAddGate();
+  const stopGateEffect = Alpine.effect(() => {
+    // Touch the reactive property so Alpine re-runs this when status changes.
+    const _ = Alpine.store('bulkdata')?.status;
+    updateQuickAddGate();
+  });
+  cleanups.push(() => { if (typeof stopGateEffect === 'function') stopGateEffect(); });
 
   // Autocomplete dropdown
   const dropdown = document.createElement('div');
@@ -437,12 +529,22 @@ function renderDeckLaunchGrid(grid, cleanups) {
   async function updateDeckGrid() {
     const deckStore = Alpine.store('deck');
     const allDecks = deckStore.decks;
+    // Task 5b: read bulkdata status ONCE per update — drives both the empty
+    // state copy and the commander-art thumbnail branch below.
+    const bulkReady = _isBulkDataReady();
 
     if (allDecks.length === 0) {
       content.innerHTML = '';
+      // No Decks Yet — swap body copy when bulk data not ready, since the
+      // "Head to Thousand-Year Storm" CTA sends users to a screen that will
+      // then show its own D-05 "Bulk data loading" placeholder (dead-end
+      // loop per user smoke test).
+      const noDecksBody = bulkReady
+        ? 'Head to Thousand-Year Storm and initialize your first ritual.'
+        : 'Archive is downloading. Deck tools unlock when the archive is ready.';
       renderEmptyState(content, {
         heading: 'No Decks Yet',
-        body: 'Head to Thousand-Year Storm and initialize your first ritual.',
+        body: noDecksBody,
       });
       return;
     }
@@ -474,7 +576,13 @@ function renderDeckLaunchGrid(grid, cleanups) {
       artContainer.className = 'w-full overflow-hidden mb-xs';
       artContainer.style.height = '80px';
 
-      if (deck.commander_id) {
+      // Task 5b: when bulkdata is still downloading, db.cards.get() returns
+      // undefined → artUrl is undefined → <img src="undefined"> renders as
+      // a broken image box (user smoke test). Skip the lookup entirely and
+      // fall through to the surface-hover gradient placeholder. The effect
+      // subscription at the bottom of this function re-runs updateDeckGrid
+      // once bulkdata flips to 'ready', so real art appears after download.
+      if (deck.commander_id && bulkReady) {
         try {
           const card = await db.cards.get(deck.commander_id);
           const artUrl = card?.image_uris?.art_crop || card?.card_faces?.[0]?.image_uris?.art_crop;
@@ -494,6 +602,9 @@ function renderDeckLaunchGrid(grid, cleanups) {
           artContainer.style.background = 'linear-gradient(135deg, #14161C, #1C1F28)';
         }
       } else {
+        // No commander_id OR bulkdata still loading — show the gradient
+        // placeholder. Keeps the tile shape + spacing identical so there's
+        // no layout shift when art lands.
         artContainer.style.background = 'linear-gradient(135deg, #14161C, #1C1F28)';
       }
       tile.appendChild(artContainer);
@@ -545,7 +656,12 @@ function renderDeckLaunchGrid(grid, cleanups) {
   updateDeckGrid();
 
   const stopEffect = Alpine.effect(() => {
+    // Task 5b: also touch bulkdata.status so the grid re-renders when the
+    // archive finishes downloading (swaps skeleton placeholders for real
+    // commander art + swaps the "No Decks Yet" body copy back to the
+    // actionable CTA).
     const _ = Alpine.store('deck').decks.length;
+    const __ = Alpine.store('bulkdata')?.status;
     updateDeckGrid();
   });
   cleanups.push(() => { if (typeof stopEffect === 'function') stopEffect(); });
