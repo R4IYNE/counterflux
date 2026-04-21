@@ -104,4 +104,60 @@ describe('Epic Experiment bulk-data gating (Phase 13 Plan 3, Task 5b)', () => {
       /Alpine\.effect\([\s\S]{0,400}bulkdata[\s\S]{0,400}status/;
     expect(epicSrc).toMatch(effectTouchesBulkdata);
   });
+
+  // Task 5c additions — Welcome banner hollow-CTA regression (round 2 smoke).
+
+  it("Test 8 (Task 5c): Welcome banner body selects copy based on bulk-data readiness", () => {
+    // The Welcome banner in _renderFullWelcome currently hard-codes:
+    //   'Mila here! Your command centre is ready. Start by adding cards to
+    //   your collection or building your first deck...'
+    // This is dishonest during the 5-minute bulk-data download — the
+    // "command centre" is NOT ready (Quick Add disabled, decks show
+    // gradient placeholders, TC + TYS card-search show skeletons).
+    //
+    // Contract: _renderFullWelcome must read _isBulkDataReady() (the shared
+    // helper from Task 5b) and pick welcome copy based on the return value.
+    // Sentinel: the function body contains a _isBulkDataReady() call, which
+    // proves the gate is wired — not just adjacent file-level mentions.
+    const welcomeFnStart = epicSrc.indexOf('function _renderFullWelcome');
+    expect(welcomeFnStart).toBeGreaterThan(-1);
+    // Slice just the function body — from its opening up to the next
+    // top-level function declaration — to avoid the 2000-char window
+    // bleeding into unrelated portfolio / deck-grid code.
+    const welcomeFnBody = epicSrc.slice(
+      welcomeFnStart,
+      epicSrc.indexOf('\nfunction ', welcomeFnStart + 1)
+    );
+    // Gate sentinel: helper call OR direct bulkdata store read INSIDE the
+    // function body.
+    const hasGate =
+      /_isBulkDataReady\s*\(/.test(welcomeFnBody) ||
+      /Alpine\.store\(\s*['"]bulkdata['"]/.test(welcomeFnBody);
+    expect(hasGate).toBe(true);
+  });
+
+  it("Test 9 (Task 5c): Welcome banner ships honest loading copy for the not-ready branch", () => {
+    // The loading-state copy must be findable in source. Sentinel: a
+    // string referencing the archive still loading / indexing appears
+    // inside _renderFullWelcome's body.
+    const welcomeFnStart = epicSrc.indexOf('function _renderFullWelcome');
+    const welcomeFnBody = epicSrc.slice(
+      welcomeFnStart,
+      epicSrc.indexOf('\nfunction ', welcomeFnStart + 1)
+    );
+    expect(welcomeFnBody).toMatch(
+      /archive[\s\S]{0,100}(?:still loading|indexing|downloading|not ready|finishes)/i
+    );
+  });
+
+  it("Test 10 (Task 5c): Welcome banner preserves original 'command centre' copy for the ready branch", () => {
+    // Positive-path copy remains reachable — the gate is a swap, not a
+    // one-way mutation.
+    const welcomeFnStart = epicSrc.indexOf('function _renderFullWelcome');
+    const welcomeFnBody = epicSrc.slice(
+      welcomeFnStart,
+      epicSrc.indexOf('\nfunction ', welcomeFnStart + 1)
+    );
+    expect(welcomeFnBody).toMatch(/command centre/i);
+  });
 });
