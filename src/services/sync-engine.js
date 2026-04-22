@@ -405,9 +405,20 @@ export async function flushQueue() {
       }
     }
 
-    // Batch upsert
+    // Batch upsert — stamp user_id from the authed session (Phase 14 Issue A fix).
+    // `currentUserId` is declared at line ~362 (const currentUserId = _currentUserId();).
+    // The dedicated stamp is mandatory: src/stores/collection.js:446 hard-codes
+    // user_id: null on new rows, and src/stores/deck.js + src/stores/game.js
+    // never set user_id at all — so payloads reach this seam with null/undefined.
+    // Supabase's counterflux.* tables declare user_id NOT NULL with no DEFAULT
+    // auth.uid(), so omitting the stamp returns SQLSTATE 23502 which classifyError
+    // treats as permanent → dead-letter → bell spam.
+    //
+    // The spread-then-stamp ordering is deliberate: `...e.payload` spreads first,
+    // then `user_id: currentUserId` OVERWRITES any stale/null value. PITFALLS §7
+    // cross-user safety — the client is the authority on user_id at push time.
     if (latestByRow.size > 0) {
-      const rows = Array.from(latestByRow.values()).map(e => e.payload);
+      const rows = Array.from(latestByRow.values()).map(e => ({ ...e.payload, user_id: currentUserId }));
       const { error } = await supabase.schema('counterflux').from(tableName).upsert(rows);
 
       if (error) {
