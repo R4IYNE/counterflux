@@ -81,13 +81,31 @@
 
 ## Before / After Bundle Sizes
 
-| Chunk | Pre-Split Raw KB | Pre-Split Gzip KB | Post-Split Raw KB | Post-Split Gzip KB | Delta |
-|-------|------------------|-------------------|-------------------|---------------------|-------|
-| index-*.css (main CSS) | 140.7 | 25.9 | TBD Task 4 | TBD Task 4 | — |
-| index-*.js (main JS) | 126.5 | 34.4 | TBD Task 4 | TBD Task 4 | — |
-| vendor-*.js | 149.1 | 49.1 | TBD Task 4 | TBD Task 4 | — |
-| mana-font chunk | (inside main CSS) | — | TBD Task 4 | TBD Task 4 | — |
-| keyrune chunk | (inside main CSS) | — | TBD Task 4 | TBD Task 4 | — |
+| Chunk | Pre-Split Raw KB | Pre-Split Gzip KB | Post-Split Raw KB | Post-Split Gzip KB | Delta (Raw) |
+|-------|------------------|-------------------|-------------------|---------------------|-------------|
+| index-*.css (main CSS) | 140.7 | 25.9 | 70.49 | 12.63 | **−70.2 KB (−49.9%)** |
+| index-*.js (main JS) | 126.5 | 34.4 | 129.89 | 35.46 | +3.4 KB (+2.7%) |
+| vendor-*.js | 149.1 | 49.1 | 152.63 | 50.77 | +3.5 KB (+2.3%) |
+| **mana-font-*.css** (NEW chunk) | — (inside main) | — | **45.31** | **9.01** | — |
+| **keyrune-*.css** (NEW chunk) | — (inside main) | — | **27.73** | **5.05** | — |
+| **material-symbols-*.css** (NEW chunk) | — (inside main) | — | **0.55** | **0.31** | — |
+
+**Critical-path payload (main JS + main CSS) went from 267 KB raw / 60.3 KB gz → 200.4 KB raw / 48.1 KB gz** (−66.6 KB raw / −12.2 KB gz, or −25%/−20%).
+
+The mana-font + keyrune CSS are now loadable in parallel with the main CSS (browser sees three `<link rel=stylesheet>` tags, not one), which should improve CSS parse latency on fast connections.
+
+## Split decisions taken (Task 4)
+
+1. **Syne preload in index.html** — net-new LCP lever. Preload sits BEFORE `/src/main.js` script tag so Vite emits it into the `<head>` before the app bootstraps. Browser fetches the woff2 in parallel with the CSS parse rather than after.
+2. **mana-font chunk** — 99 KB raw (pre-gzip) moved out of main CSS into a dedicated `mana-font-*.css` chunk. Scripts that render mana symbols (Thousand-Year Storm, Treasure Cruise, card-flyout) still work because the `<link>` tag is emitted by Vite into index.html and parsed before those screens mount.
+3. **keyrune chunk** — set-icon CSS (used on Preordain + printings picker). Same pattern as mana-font.
+4. **material-symbols chunk** — tiny @font-face declaration (0.55 KB) but still separated for cache granularity. The actual woff2 file (3.9 MB) is its own asset regardless of chunking.
+5. **Screen-level splits NOT added** — routes already lazy-loaded via Navigo before this plan. No work needed.
+6. **Chart.js / Supabase** — already their own chunks from prior phases (Phase 9 / Phase 10 AUTH-01). No further split needed; both fit comfortably within the 100 KB gz vendor budget.
+
+## Self-imposed Rule 1 auto-fix during Task 4
+
+The Task 2 `vite:preloadError` handler comment originally contained the literal string `Alpine.start()`. `tests/streaming-ui.test.js` Tests 2 and 5 use `indexOf('Alpine.start()')` to anchor boot-order assertions, and the comment string was found first (at offset 3245) while the real `Alpine.start()` call site is at offset ~5193. Result: both Tests 2 and 5 failed. Rule 1 fix: rephrased the comment to "Registered early (before Alpine boot)" — no functional change, contract restored. Documented in the commit message; both streaming-ui tests now GREEN along with the 4 Plan-5 test files.
 
 ## Before / After Perf Metrics
 
