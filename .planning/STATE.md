@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Second Sunrise
 status: executing
-stopped_at: Plan 13-02 complete (Wave 2) — bfcache + shimmer freebies shipped; both session states bfcache-eligible. Plan 13-03 running parallel; Plan 13-05 gated on post-Plan-3 re-measurement.
-last_updated: "2026-04-20T23:49:40.858Z"
-last_activity: 2026-04-20
+stopped_at: Plan 13-03 complete (Wave 2) — streaming UI + two inline regression rounds + mila asset-path fix; Plan 13-04 skipped per REMEASURE (CLS already under target); next up Plan 13-05 bundle split or post-Plan-3 re-measurement
+last_updated: "2026-04-22T08:05:43.342Z"
+last_activity: 2026-04-22
 progress:
   total_phases: 8
   completed_phases: 7
   total_plans: 35
-  completed_plans: 31
+  completed_plans: 32
   percent: 84
 ---
 
@@ -26,9 +26,9 @@ See: .planning/PROJECT.md (updated 2026-04-14)
 ## Current Position
 
 Phase: 13 (performance-optimisation-conditional) — EXECUTING
-Plan: 2 of 6
+Plan: 3 of 6
 Status: Ready to execute
-Last activity: 2026-04-20
+Last activity: 2026-04-22
 
 Progress: [████████░░] 84%
 
@@ -85,6 +85,7 @@ Progress: [████████░░] 84%
 | Phase 12 P03 | 4min | 2 tasks | 7 files |
 | Phase 12 P04 | 4m 20s | 2 tasks | 3 files |
 | Phase 13 P02 | ~30m (Wave 2 with checkpoint) | 4 tasks | 4 files |
+| Phase 13 P03 | ~2 hours | 7 tasks | 16 files |
 
 ## Accumulated Context
 
@@ -192,6 +193,13 @@ Full decision log in PROJECT.md Key Decisions table.
 - [Phase 12]: [Phase 12]: Plan 12-04: .cf-spoiler-bookmark is a structural clone of .card-quick-actions-checkbox (Phase 08.1 Plan 3) with 3 delta points — left:8px (top-LEFT per D-09), .is-watching modifier for persistent visibility, 18px glyph font-size vs 16px (bookmark glyph density); CSS reduced-motion selectors appended to the merged @media block — no duplicate block
 - [Phase 13]: Plan 13-02: D-09 cheap-path fix shipped only (Dexie close/reopen). Empirical DevTools verify showed authed bfcache works WITHOUT sync-engine teardown — supabase-js v2 Realtime releases cleanly on pagehide; Open Question 3 resolved strictly-better than Research predicted.
 - [Phase 13]: Plan 13-02: D-08 targeted the shimmer keyframe (background-position → transform translateX with will-change hint) — NOT the splash progress bar which Plan 3 D-04 deletes. Regression locked via static grep over @keyframes bodies (tests/animation-composability.test.js).
+- [Phase 13]: Plan 13-03: D-04 streaming UI — splash REPURPOSED (not deleted), x-show narrowed from status!=='ready' to migrationProgress>0 && <100; Phase 7 migration UX preserved, bulk-data boot gate removed
+- [Phase 13]: Plan 13-03: D-06 topbar bulk-data pill inherits sync-chip visual vocabulary verbatim — zero new design tokens, auto-dismisses on status==='ready'; pill cycles through CHECKING ARCHIVE / ARCHIVE N% / INDEXING N / ARCHIVE ERROR
+- [Phase 13]: Plan 13-03: db.cards 18-consumer audit — all Pattern A (structurally safe via v1.0 truthy-check culture); zero surgical guards added; only Treasure Cruise add-card + Thousand-Year Storm search needed D-05 explicit placeholders
+- [Phase 13]: Plan 13-03: _isBulkDataReady() helper + Alpine.effect subscription pattern for honest empty-state gating — Epic Experiment Welcome banner, Quick Add, empty-states, commander tiles + Treasure Cruise Mila CTAs flip to normal UX on status==='ready' transition; caught via Task 5 human-verify checkpoint (Tasks 5b + 5c inline regression rounds)
+- [Phase 13]: Plan 13-03: Mila PNG asset-path bug — pre-existing Vite content-hashing bug on HTML attribute string references (8 img src= sites + favicon). Rule 3 Blocking fix: moved static PNGs to public/assets/ for unhashed serve. Exposed — not caused — by Plan 3 splash removal
+- [Phase 13]: Plan 13-03: Preordain 'Upcoming Releases' shows 33-year-old sets (Alpha/Beta/Unlimited/Arabian Nights on 2026-04-21) — OUT OF SCOPE, filed to 13-FINDINGS.md; deferred to Plan 6 audit sweep or dedicated bug-fix plan
+- [Phase 13]: Plan 13-03: checkpoint:human-verify design validated — two rounds of smoke-test regression patches (Task 5b + 5c) caught hollow-CTA and asset-path issues invisible to automated tests; both resolved inline via RED/GREEN patches, no replanning
 
 ### Roadmap Evolution
 
@@ -210,6 +218,6 @@ None — roadmap complete, next step is `/gsd:plan-phase 7`.
 
 ## Session Continuity
 
-Last session: 2026-04-20T23:49:40.856Z
-Stopped at: Plan 13-02 complete (Wave 2) — bfcache + shimmer freebies shipped; both session states bfcache-eligible. Plan 13-03 running parallel; Plan 13-05 gated on post-Plan-3 re-measurement.
+Last session: 2026-04-22T08:04:07.963Z
+Stopped at: Plan 13-03 complete (Wave 2) — streaming UI + two inline regression rounds + mila asset-path fix; Plan 13-04 skipped per REMEASURE (CLS already under target); next up Plan 13-05 bundle split or post-Plan-3 re-measurement
 Resume file: None
