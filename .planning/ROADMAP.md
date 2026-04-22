@@ -167,6 +167,17 @@ Plans:
   2. If optimisations were applied (splash → bulk data deferral, store init sequencing, bundle splitting), before/after web-vitals samples are captured in `.planning/` showing the delta
   3. If no regressions were found, the Phase 7 baseline report is signed off with a "v1.1 meets perf budget" record and no code changes ship from this phase
 
+### Phase 14: v1.1 Audit Gap Closure
+**Goal**: Close the gaps identified by `/gsd:audit-milestone` on 2026-04-22 so v1.1 can ship cleanly. One critical wiring gap (latent sync-push bug), one documentation gap (Phase 7 retrospective VERIFICATION), one minor UX gap (spoiler-gallery honesty)
+**Depends on**: Phase 13 (audit was run after Phase 13 completion; gaps are a mix of pre-existing Phase 7/11/12 issues exposed by the cross-phase integration check)
+**Requirements**: SYNC-03 (confirm push works), AUTH-06 (confirm user_id enforcement end-to-end), SCHEMA-01..03 (retrospective verification doc), MARKET-01 (spoiler honesty), PERF-04 (honesty pattern completeness)
+**Gap Closure**: Closes gaps Issue A (critical) + Issue C (docs) + Issue D (UX) from `v1.1-MILESTONE-AUDIT.md`. Issue B (no sign-up UI) deferred to v1.2 scoping pending design-decision confirmation.
+**Success Criteria** (what must be TRUE):
+  1. Task 1 (Issue A — sync push user_id): `src/services/sync-engine.js:411` stamps `payload.user_id = currentUserId` before upsert; unit test asserts non-null user_id on payload; live UAT against huxley Supabase (sign in → add card → confirm row lands in `counterflux.collection` with correct user_id, chip stays `synced`, no entry in `sync_conflicts`); Phase 11 HUMAN-UAT → resolved
+  2. Task 2 (Issue C — Phase 7 retrospective VERIFICATION): `.planning/phases/07-polish-pass-perf-baseline-schema-migration/07-VERIFICATION.md` exists documenting the implicit verification path for POLISH-01..11 / PERF-01..03 / SCHEMA-01..03 (pointing at `tests/migration-v5-to-v7.test.js` + Phase 11 sync tests that require v6+v7+v8 schema + Phase 8+ UI consumption of POLISH styles); three `[ ]` → `[x]` checkbox flips for SCHEMA-01..03 in REQUIREMENTS.md
+  3. Task 3 (Issue D — spoiler-gallery honesty): `src/components/spoiler-gallery.js` applies the Phase 13 `_isBulkDataReady()` gate; empty-state copy swaps between "Archive is downloading..." (loading) and "No cards revealed yet for this set." (ready); regression test mirrors `tests/epic-experiment-bulkdata-gating.test.js`
+  4. Re-running `/gsd:audit-milestone` returns `status: passed` (or drops Issue A/C/D from the critical list) — the re-audit is the close gate
+
 ## Progress
 
 | Phase | Milestone | Plans | Status | Completed |
@@ -185,6 +196,7 @@ Plans:
 | 11. Cloud Sync Engine | v1.1 | 6/6 | Complete | 2026-04-18 |
 | 12. Notification Bell + Preordain Spoiler Refresh | v1.1 | 3/4 | Complete    | 2026-04-19 |
 | 13. Performance Optimisation (conditional) | v1.1 | 6/6 | Complete    | 2026-04-22 |
+| 14. v1.1 Audit Gap Closure | v1.1 | 0/1 | Not started | — |
 
 ---
-*v1.1 Second Sunrise roadmap drafted 2026-04-14 — 7 phases (7-13) continuing from v1.0*
+*v1.1 Second Sunrise roadmap drafted 2026-04-14 — 7 phases (7-13) continuing from v1.0. Phase 14 added 2026-04-22 via `/gsd:plan-milestone-gaps` to close audit findings.*
