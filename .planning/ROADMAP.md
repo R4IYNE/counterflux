@@ -27,7 +27,7 @@
 - [x] **Phase 10: Supabase Auth Foundation** — Lazy-loaded Supabase client, email magic-link + Google OAuth, PKCE flow, auth-aware profile, RLS policies on every synced table (completed 2026-04-17)
 - [x] **Phase 11: Cloud Sync Engine** — Postgres schema, Dexie hook outbox, batched RPC flush, first-sign-in reconciliation, LWW conflict resolution, offline queue, topbar sync-status chip (completed 2026-04-18)
 - [x] **Phase 12: Notification Bell + Preordain Spoiler Refresh** — Unified notification inbox with sync-error surfacing, set icons in spoiler dropdown, visual spoiler overhaul with NEW badges, quick add-to-watchlist (completed 2026-04-19)
-- [ ] **Phase 13: Performance Optimisation (conditional)** — Targeted fixes if baseline measurement reveals regressions vs agreed targets; documentation-only pass if targets already met
+- [x] **Phase 13: Performance Optimisation (conditional)** — Targeted fixes if baseline measurement reveals regressions vs agreed targets; documentation-only pass if targets already met (completed 2026-04-22)
 
 ## Phase Details
 
@@ -184,7 +184,7 @@ Plans:
 | 10. Supabase Auth Foundation | v1.1 | 4/4 | Complete    | 2026-04-18 |
 | 11. Cloud Sync Engine | v1.1 | 6/6 | Complete | 2026-04-18 |
 | 12. Notification Bell + Preordain Spoiler Refresh | v1.1 | 3/4 | Complete    | 2026-04-19 |
-| 13. Performance Optimisation (conditional) | v1.1 | 5/6 | In Progress|  |
+| 13. Performance Optimisation (conditional) | v1.1 | 6/6 | Complete   | 2026-04-22 |
 
 ---
 *v1.1 Second Sunrise roadmap drafted 2026-04-14 — 7 phases (7-13) continuing from v1.0*
