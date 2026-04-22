@@ -47,25 +47,60 @@ export function openAuthWall() {
 
   const AlpineObj = (typeof window !== 'undefined' && window.Alpine) || null;
 
-  wallEl = document.createElement('div');
-  wallEl.id = 'cf-auth-wall';
-  wallEl.setAttribute('role', 'dialog');
-  wallEl.setAttribute('aria-modal', 'true');
-  wallEl.setAttribute('aria-labelledby', 'cf-auth-wall-heading');
-  wallEl.style.cssText = [
-    'position:fixed', 'inset:0', 'z-index:90',
-    'background:#0B0C10',
-    'display:flex', 'flex-direction:column',
-    'align-items:center', 'justify-content:center',
-    'padding:32px',
-    'font-family:"Space Grotesk", system-ui, sans-serif',
-  ].join(';');
+  // Phase 13 Plan 5 Task 6 — structural LCP fix.
+  // index.html now ships a paint-critical #cf-auth-wall + <h1 class="cf-auth-wall-title">
+  // directly in <body> so the h1 (LCP element) paints on HTML parse instead of
+  // waiting ~6 s for the full JS boot chain. We detect the pre-existing DOM
+  // here and DECORATE it (add tagline + sign-in card) rather than constructing
+  // a fresh wall. Fallback path (createElement) preserved for pre-Task-6
+  // test setups and any caller that mounts without the static markup — e.g.
+  // tests/auth-wall.test.js wipes document.body between cases.
+  const existing = typeof document !== 'undefined' ? document.getElementById('cf-auth-wall') : null;
+  if (existing) {
+    wallEl = existing;
+    // Ensure ARIA wiring + role match the dynamic path (static markup already
+    // ships the attributes, but re-apply idempotently so a consumer can strip
+    // them in tests and still land in a valid state).
+    wallEl.setAttribute('role', 'dialog');
+    wallEl.setAttribute('aria-modal', 'true');
+    wallEl.setAttribute('aria-labelledby', 'cf-auth-wall-heading');
 
-  // Brand header (Syne, uppercase, primary accent) — anchors the wall visually
-  const brand = document.createElement('h1');
-  brand.style.cssText = "font-family:'Syne',sans-serif;font-size:48px;font-weight:700;color:#EAECEE;letter-spacing:0.01em;text-transform:uppercase;margin:0 0 8px 0;text-align:center;";
-  brand.textContent = 'COUNTERFLUX';
-  wallEl.appendChild(brand);
+    // The critical CSS in <head> already sizes/positions/backgrounds the wall
+    // and fonts the .cf-auth-wall-title h1. No inline style.cssText needed —
+    // applying it would be redundant (and could override the critical CSS in
+    // ways that cause a one-frame flash before the style recalculates).
+
+    // The paint-critical h1 already exists; if for some reason it was stripped
+    // (test setup wipes it), reinstate it so downstream text-assertions hold.
+    if (!wallEl.querySelector('.cf-auth-wall-title')) {
+      const brand = document.createElement('h1');
+      brand.className = 'cf-auth-wall-title';
+      brand.textContent = 'COUNTERFLUX';
+      wallEl.appendChild(brand);
+    }
+  } else {
+    // Legacy fallback — construct from scratch (matches the pre-Task-6 path).
+    wallEl = document.createElement('div');
+    wallEl.id = 'cf-auth-wall';
+    wallEl.setAttribute('role', 'dialog');
+    wallEl.setAttribute('aria-modal', 'true');
+    wallEl.setAttribute('aria-labelledby', 'cf-auth-wall-heading');
+    wallEl.style.cssText = [
+      'position:fixed', 'inset:0', 'z-index:90',
+      'background:#0B0C10',
+      'display:flex', 'flex-direction:column',
+      'align-items:center', 'justify-content:center',
+      'padding:32px',
+      'font-family:"Space Grotesk", system-ui, sans-serif',
+    ].join(';');
+
+    // Brand header (Syne, uppercase, primary accent) — anchors the wall visually
+    const brand = document.createElement('h1');
+    brand.className = 'cf-auth-wall-title';
+    brand.style.cssText = "font-family:'Syne',sans-serif;font-size:48px;font-weight:700;color:#EAECEE;letter-spacing:0.01em;text-transform:uppercase;margin:0 0 8px 0;text-align:center;";
+    brand.textContent = 'COUNTERFLUX';
+    wallEl.appendChild(brand);
+  }
 
   const tagline = document.createElement('p');
   tagline.style.cssText = "font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:400;letter-spacing:0.15em;color:#7A8498;text-transform:uppercase;margin:0 0 32px 0;text-align:center;";
@@ -140,7 +175,13 @@ export function openAuthWall() {
   mila.textContent = 'Mila only lets members through the gate.';
   wallEl.appendChild(mila);
 
-  document.body.appendChild(wallEl);
+  // Only attach if not already in the DOM. When the static markup from
+  // index.html (Plan 5 Task 6) provided the wall, it's already a child of
+  // document.body and re-appending would be a no-op reflow. When the legacy
+  // fallback path created it fresh, we need to mount it.
+  if (!wallEl.isConnected) {
+    document.body.appendChild(wallEl);
+  }
 
   // Autofocus email input
   const emailInput = card.querySelector('#cf-auth-wall-email');

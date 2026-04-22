@@ -17,6 +17,44 @@
   <link rel="icon" type="image/png" sizes="192x192" href="/assets/niv-mila.png">
   <link rel="apple-touch-icon" href="/assets/niv-mila.png">
   <style>[x-cloak] { display: none !important; }</style>
+  <!-- Phase 13 Plan 5 Task 6 — structural LCP fix.
+       The auth-wall <h1> ("COUNTERFLUX") is the LCP element. Plan 5 Tasks 1-5
+       (font preload + manualChunks split + font-display:swap) left LCP at
+       6.13 s because the h1 was constructed in JS via document.createElement
+       (see 13-BUNDLE-DELTA.md §"Why the LCP didn't move"). The browser couldn't
+       paint it until the full boot chain ran (~6 s). This critical CSS block
+       + the matching static #cf-auth-wall markup below body-open move the h1
+       into the initial HTML so it paints on HTML parse, well before Alpine
+       boots. auth-wall.js (openAuthWall) decorates this pre-existing DOM with
+       the sign-in UI rather than creating a fresh wall.
+
+       Styling MUST match src/components/auth-wall.js's brand h1 inline styles
+       verbatim (48px/700 Syne, #EAECEE, letter-spacing 0.01em, uppercase) or
+       the first paint flashes one version and layout-shifts when JS runs. -->
+  <style>
+    #cf-auth-wall {
+      position: fixed;
+      inset: 0;
+      z-index: 90;
+      background: #0B0C10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 32px;
+      font-family: 'Space Grotesk', system-ui, sans-serif;
+    }
+    #cf-auth-wall .cf-auth-wall-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 48px;
+      font-weight: 700;
+      color: #EAECEE;
+      letter-spacing: 0.01em;
+      text-transform: uppercase;
+      margin: 0 0 8px 0;
+      text-align: center;
+    }
+  </style>
 </head>
 <body x-data
   @keydown.escape.window="
@@ -29,6 +67,22 @@
   @keydown.ctrl.z.window="if (!['INPUT','TEXTAREA','SELECT'].includes($event.target.tagName)) { $event.preventDefault(); $store.undo && $store.undo.undoLast && $store.undo.undoLast(); }"
   @keydown.window="if ($event.key === '?' && !['INPUT','TEXTAREA','SELECT'].includes($event.target.tagName)) { window.__toggleShortcutModal && window.__toggleShortcutModal(); }"
 >
+
+  <!-- Phase 13 Plan 5 Task 6 — paint-critical auth-wall h1 (LCP element).
+       This static markup exists so the browser paints the COUNTERFLUX h1
+       on HTML parse instead of waiting ~6 s for the full JS boot chain
+       (migration → stores → Alpine → router → auth.init → Alpine.effect →
+       openAuthWall). The critical CSS in <head> positions it as a full-
+       viewport overlay matching the dynamic wall's geometry exactly, so
+       auth-wall.js's decoration lands on top without layout shift.
+
+       src/components/auth-wall.js detects this pre-existing #cf-auth-wall
+       on mount and REUSES the existing h1 — it does NOT append a duplicate.
+       closeAuthWall() removes the whole wall (static + decoration) so post-
+       auth the dashboard takes over cleanly. -->
+  <div id="cf-auth-wall" role="dialog" aria-modal="true" aria-labelledby="cf-auth-wall-heading">
+    <h1 class="cf-auth-wall-title">COUNTERFLUX</h1>
+  </div>
 
   <!-- Phase 13 Plan 3 (D-04) — Splash overlay REPURPOSED for migration-only.
        The splash no longer gates boot on bulk-data status. Bulk-data progress
