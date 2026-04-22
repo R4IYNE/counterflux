@@ -238,8 +238,27 @@ export function renderSpoilerGallery() {
         </div>
       </template>
 
-      <!-- No cards for set -->
-      <template x-if="!$store.market.loading && $store.market.spoilerCards.length === 0 && $store.market.activeSet">
+      <!-- Empty state — gated on bulk-data readiness (Phase 14 Issue D / PERF-04 completeness).
+           Mirrors the Phase 13 _isBulkDataReady() honesty pattern from epic-experiment.js + treasure-cruise.js.
+           The legacy "No cards revealed yet" message was dishonest during bulk-data download — user
+           thought the set had no spoilers when really the local IndexedDB cache wasn't populated yet.
+
+           Branch 1: bulkdata not ready + active set → "Archive is downloading…" (honest loading copy)
+           Branch 2: bulkdata ready + 0 cards for active set → "No cards revealed yet for this set." (existing copy, honest when the archive really has no cards for this set)
+           Branch 3 (further below, untouched): no active set → "Select a set above…"
+      -->
+
+      <!-- Branch 1 — Bulk-data downloading (honest loading state) -->
+      <template x-if="$store.bulkdata?.status !== 'ready' && !$store.market.loading && $store.market.activeSet">
+        <div class="flex flex-col items-center justify-center py-[64px] gap-[16px] text-center">
+          <span style="font-family: 'Space Grotesk', sans-serif; font-size: 14px; color: #7A8498;">
+            Archive is downloading&hellip; spoiler cards appear once the archive finishes indexing.
+          </span>
+        </div>
+      </template>
+
+      <!-- Branch 2 — Archive ready, no cards yet for this set (honest empty state) -->
+      <template x-if="$store.bulkdata?.status === 'ready' && !$store.market.loading && $store.market.spoilerCards.length === 0 && $store.market.activeSet">
         <div class="flex flex-col items-center justify-center py-[64px] gap-[16px] text-center">
           <span style="font-family: 'Space Grotesk', sans-serif; font-size: 14px; color: #7A8498;">
             No cards revealed yet for this set.
