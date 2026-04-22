@@ -31,9 +31,9 @@
 
 ### Schema Migration (infrastructure for new features)
 
-- [ ] **SCHEMA-01**: Dexie IndexedDB schema version 5 → 6 migration function backfills new fields (`updated_at`, `synced_at`, `turn_laps`) and adds new tables (`sync_queue`, `sync_conflicts`)
-- [ ] **SCHEMA-02**: Migration tested against fixture data representing v1.0 user states (empty collection, 500-card collection, 10 decks, active games) with zero data loss
-- [ ] **SCHEMA-03**: Pre-migration localStorage backup step captures a one-shot snapshot of critical Dexie tables before the upgrade runs
+- [x] **SCHEMA-01**: Dexie IndexedDB schema version 5 → 6 migration function backfills new fields (`updated_at`, `synced_at`, `turn_laps`) and adds new tables (`sync_queue`, `sync_conflicts`) — *verified retroactively 2026-04-22 via Phase 14 — see 07-VERIFICATION.md*
+- [x] **SCHEMA-02**: Migration tested against fixture data representing v1.0 user states (empty collection, 500-card collection, 10 decks, active games) with zero data loss — *verified retroactively 2026-04-22 via Phase 14 — see 07-VERIFICATION.md*
+- [x] **SCHEMA-03**: Pre-migration localStorage backup step captures a one-shot snapshot of critical Dexie tables before the upgrade runs — *verified retroactively 2026-04-22 via Phase 14 — see 07-VERIFICATION.md*
 
 ### Treasure Cruise (Collection Manager)
 
@@ -192,3 +192,4 @@ Mapped by roadmapper 2026-04-14. All 56 REQ-IDs assigned to exactly one phase; 1
 
 ---
 *Last updated: 2026-04-14 — v1.1 Second Sunrise requirements defined; traceability populated by roadmapper*
+*Updated 2026-04-22: SCHEMA-01..03 checkboxes flipped via Phase 14 Plan 02 (audit Issue C closure)*
