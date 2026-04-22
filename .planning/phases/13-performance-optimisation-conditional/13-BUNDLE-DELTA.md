@@ -114,7 +114,59 @@ The Task 2 `vite:preloadError` handler comment originally contained the literal 
 | Baseline (Phase 7, Lighthouse 13.0.2) | 3.7s | 1.0s | 1.00 | 54 | Median of 3, DevTools GUI |
 | Plan 1 post-streaming pre-work (Lighthouse 12.6.1) | 6.1s | 0.4s | 0.023 | 76 | Single-run headless |
 | Post-Plan-3 (Lighthouse 12.6.1) | 6.08s | 0.4s | 0.0594 | 76 | Single-run headless |
-| **Post-Plan-5** (Task 5 human-verify) | TBD | TBD | TBD | TBD | Single-run headless |
+| **Post-Plan-5** (2026-04-22) | **6.13s** | **0.4s** | **0.0588** | **76** | Single-run headless |
+
+**LCP delta Plan-5 vs Plan-3:** +0.05s (within noise / essentially unchanged).
+**Report:** `.planning/phases/13-performance-optimisation-conditional/post-plan5-lh/run1.json`
+
+## Post-Plan-5 LCP phase breakdown
+
+| Phase | Timing | % of LCP |
+|-------|--------|----------|
+| TTFB | 121.97ms | 2% |
+| Load Delay | 0ms | 0% |
+| Load Time | 0ms | 0% |
+| **Render Delay** | **6,003.94ms** | **98%** |
+
+The Render Delay is **identical to post-Plan-3** (6,003ms vs 5,962ms, within measurement noise). Bundle splits and Syne preload neither helped nor hurt.
+
+## Why the LCP didn't move — honest analysis
+
+The Plan 5 `must_haves.truths[0]` predicates LCP < 2.5s. The measurement says LCP = 6.13s. That condition is **not satisfied**.
+
+Root-cause analysis based on the LCP element + phase breakdown:
+
+1. **LCP element:** `body > div#cf-auth-wall > h1` ("COUNTERFLUX")
+2. **#cf-auth-wall is CREATED IN JAVASCRIPT** via `document.createElement('div')` in `src/components/auth-wall.js` line 50. It is NOT in the initial HTML.
+3. **Therefore the browser cannot paint the LCP element until the entire JS boot chain completes:**
+   - Main JS + CSS download + parse
+   - `runMigration()` (IndexedDB open + potential v6+v7+v8 upgrade)
+   - 10+ `initXStore()` calls
+   - `Alpine.start()` walks the whole DOM, binding directives
+   - `initRouter()`
+   - `Alpine.store('auth').init()` — for returning users, this dynamic-imports `supabase-js` (187 KB gz chunk) and calls `getSession()`
+   - Alpine.effect dispatches `syncAuthWall()` which calls `openAuthWall()` which creates the `<h1>`
+4. **Font preload is fast** — browser downloads Syne woff2 in parallel with CSS parse, as designed. But the `<h1>` doesn't EXIST in the DOM until step 3.7. The font being pre-cached doesn't help if the element isn't rendered yet.
+5. **Bundle splitting helps deploy size and cache granularity** but does not eliminate the dominant JS-boot serial chain.
+
+**This is a structural LCP, not a font-blocking or bundle-size LCP.** The interventions Plan 5 shipped (font-display:swap retention, Syne preload, manualChunks, Pitfall 15 recovery) all matter for other reasons — the font preload will help when any Syne-using content IS rendered in initial HTML, the bundle splits halved the main CSS and improve deploy-time cache hits, and Pitfall 15 recovery prevents post-deploy blank-screen — but none of them attack the serialised-boot-to-auth-wall-h1-paint chain that the LCP algorithm is measuring.
+
+## Residual gap analysis
+
+The structural fix for this LCP is to render a static COUNTERFLUX `<h1>` directly in `index.html` (inside the existing splash overlay or as a separate "brand lockup" element), so the browser paints it immediately after CSS parse without waiting for any JS. The Plan 3 splash-screen already has this h1 in the markup (line 43-46 of index.html) but its visibility is gated on `migrationProgress > 0 && migrationProgress < 100` — for fresh visitors past the v5→v8 migration, the splash doesn't render, and Lighthouse sees the auth-wall's post-JS-mount h1 as the first significant paint.
+
+**Two paths for Plan 6 / follow-up work:**
+
+- **Option A (cheap, structural):** Add a static "COUNTERFLUX" brand h1 directly in `index.html` body (above the `#main-content` div, inside a minimal wrapper). It paints after CSS parse, well before the auth wall JS-mounts. Auth wall then replaces/overlays it. Expected LCP: sub-1s. Downside: visual flicker if the static h1 doesn't exactly match auth-wall styling — mitigatable by matching typography and letting the auth-wall overlay it opaquely.
+- **Option B (deferred, accept):** Acknowledge the residual in PERF-SIGNOFF.md. All other Web Vitals pass (FCP 0.4s < 1.0s; CLS 0.0588 < 0.1; INP not lab-measurable; TBT 0ms). LCP is structurally tied to the auth-wall render chain, which is by-design for an auth-gated product. v1.1 ships with this known gap; v1.2 can take Option A.
+
+## Non-LCP deliverables shipped by Plan 5 (all material value)
+
+- **Bundle splitting:** Main CSS 140.7 KB → 70.49 KB raw (−50%). Mana-font / keyrune / material-symbols now in dedicated chunks. Deploy size reduction across all users; cache granularity means cross-release CSS churn updates only the changed chunks. Regression-prevention: `scripts/assert-bundle-budget.js` + `npm run build:check` locks per-chunk budgets.
+- **Pitfall 15 cache-bust recovery:** `vite:preloadError` handler (main.js) + `Cache-Control: no-cache` on `/index.html` + `/` (vercel.json). Prevents post-deploy ChunkLoadError blank-screen. Shipped before any chunk split landed, as mandated.
+- **Syne preload:** Still a net gain even though it didn't move the LCP number. Any Syne-using element in initial HTML (the migration splash h1, any future brand lockup added by Plan 6 Option A) now renders in the correct font on first paint instead of swapping later.
+- **font-display: swap contract locked:** Regression test ensures a future refactor can't drop the swap hint and regress the fallback-first-paint behaviour.
+
 
 ## References
 
