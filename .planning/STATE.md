@@ -4,13 +4,13 @@ milestone: v1.1
 milestone_name: Second Sunrise
 status: executing
 stopped_at: Plan 13-03 complete (Wave 2) — streaming UI + two inline regression rounds + mila asset-path fix; Plan 13-04 skipped per REMEASURE (CLS already under target); next up Plan 13-05 bundle split or post-Plan-3 re-measurement
-last_updated: "2026-04-22T08:05:43.342Z"
+last_updated: "2026-04-22T09:09:59.950Z"
 last_activity: 2026-04-22
 progress:
   total_phases: 8
   completed_phases: 7
   total_plans: 35
-  completed_plans: 32
+  completed_plans: 33
   percent: 84
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-14)
 ## Current Position
 
 Phase: 13 (performance-optimisation-conditional) — EXECUTING
-Plan: 3 of 6
+Plan: 4 of 6
 Status: Ready to execute
 Last activity: 2026-04-22
 
