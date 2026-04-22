@@ -1,0 +1,54 @@
+name: Perf Soft Gate (Phase 13 Plan 6)
+
+# D-11 soft-gate: runs @lhci/cli against the preview build on every PR,
+# surfaces warn-level Web Vitals regressions via GITHUB_STEP_SUMMARY, but
+# never blocks the merge. Paired with lighthouserc.cjs `assert` block
+# (warn-level only — error-level on Web Vitals would contradict D-11).
+
+on:
+  pull_request:
+    branches: [main, master]
+    paths:
+      - 'src/**'
+      - 'index.html'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'vite.config.js'
+      - 'lighthouserc.cjs'
+      - '.github/workflows/perf-soft-gate.yml'
+      - 'scripts/lhci-warn-summary.cjs'
+
+jobs:
+  lighthouse:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build production bundle
+        run: npm run build
+
+      - name: Start preview server
+        run: |
+          npx --yes http-server dist -p 4173 -s &
+          npx --yes wait-on http://localhost:4173
+
+      - name: Run @lhci/cli (soft-gate)
+        # continue-on-error: true ensures a warn-level assertion failure
+        # never fails the PR check. The summary step below still runs.
+        continue-on-error: true
+        run: npx --yes @lhci/cli@0.15.1 autorun --config=lighthouserc.cjs
+
+      - name: Post warn summary
+        # if: always() ensures warnings surface even if `lhci autorun`
+        # exited with an error (e.g. server crash, timeout).
+        if: always()
+        run: node scripts/lhci-warn-summary.cjs
