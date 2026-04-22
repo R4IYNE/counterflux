@@ -184,7 +184,7 @@ Plans:
 | 10. Supabase Auth Foundation | v1.1 | 4/4 | Complete    | 2026-04-18 |
 | 11. Cloud Sync Engine | v1.1 | 6/6 | Complete | 2026-04-18 |
 | 12. Notification Bell + Preordain Spoiler Refresh | v1.1 | 3/4 | Complete    | 2026-04-19 |
-| 13. Performance Optimisation (conditional) | v1.1 | 4/6 | In Progress|  |
+| 13. Performance Optimisation (conditional) | v1.1 | 5/6 | In Progress|  |
 
 ---
 *v1.1 Second Sunrise roadmap drafted 2026-04-14 — 7 phases (7-13) continuing from v1.0*
