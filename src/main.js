@@ -53,8 +53,9 @@ async function bootApp() {
   // chunks and fail with ChunkLoadError. Catch via the native vite:preloadError
   // event, suppress the default uncaught error, and soft-reload to fetch a
   // fresh index.html (which Vercel serves with Cache-Control: no-cache, see
-  // vercel.json). Registered BEFORE Alpine.start() so it catches errors during
-  // any dynamic import() inside the auth-wall / sync-engine / screen loaders.
+  // vercel.json). Registered early (before Alpine boot) so it catches errors
+  // during any dynamic import() inside the auth-wall / sync-engine / screen
+  // loaders.
   if (typeof window !== 'undefined') {
     window.addEventListener('vite:preloadError', (event) => {
       event.preventDefault();

@@ -4,6 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Counterflux -- The Aetheric Archive</title>
+  <!-- Phase 13 Plan 5 — Syne preload is the primary LCP lever.
+       The auth-wall <h1> (LCP element) uses Syne 48px/700 — preloading the
+       woff2 here means it fetches in parallel with the main CSS parse instead
+       of serially after the browser encounters the @font-face declaration,
+       collapsing the 5,962 ms Render Delay measured in 13-REMEASURE-POST-PLAN3.md. -->
+  <link rel="preload" href="/src/styles/fonts/Syne-Variable.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/src/styles/fonts/SpaceGrotesk-Variable.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/src/styles/fonts/JetBrainsMono-Variable.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="icon" type="image/png" href="/assets/niv-mila.png">
