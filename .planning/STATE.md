@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Second Sunrise
-status: executing
-stopped_at: Plan 14-02 complete — retrospective 07-VERIFICATION.md written + SCHEMA-01..03 checkboxes flipped in REQUIREMENTS.md (audit Issue C closed)
-last_updated: "2026-04-22T21:43:02.354Z"
-last_activity: 2026-04-22 -- Phase 14 execution started
+status: milestone_ready_to_ship
+stopped_at: Phase 14 complete — all 6 plans landed (14-01 sync user_id fix, 14-02 Phase 7 retro VERIFICATION, 14-03 spoiler-gallery gate, 14-05 Supabase column parity, 14-06 auth-wall stale-static fix); 14-04 close gate executed inline; v1.1 audit re-verified as `passed`
+last_updated: "2026-04-26T18:30:00.000Z"
+last_activity: 2026-04-26 -- v1.1 milestone closed; ready to ship
 progress:
-  total_phases: 8
-  completed_phases: 8
-  total_plans: 35
-  completed_plans: 35
-  percent: 84
+  total_phases: 9
+  completed_phases: 9
+  total_plans: 41
+  completed_plans: 41
+  percent: 100
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-14)
 
 **Core value:** The deck builder knows what you own, and the collection knows what's in your decks — one interconnected data layer
-**Current focus:** Phase 14 — v1-1-audit-gap-closure
+**Current focus:** v1.1 Second Sunrise — ready to ship; Phase 14 closed
 
 ## Current Position
 
-Phase: 14 (v1-1-audit-gap-closure) — EXECUTING
-Plan: 1 of 4
-Status: Executing Phase 14
-Last activity: 2026-04-22 -- Phase 14 execution started
+Phase: 14 (v1-1-audit-gap-closure) — COMPLETE
+Plan: 6 of 6 (14-04 close gate executed inline; 14-01/02/03/05/06 all green)
+Status: v1.1 milestone ready to ship — re-audit returned `passed`
+Last activity: 2026-04-26 -- v1.1 milestone closed; awaiting `/gsd:complete-milestone v1.1`
 
-Progress: [████████░░] 84%
+Progress: [██████████] 100%
 
 ## Milestone Progress
 
