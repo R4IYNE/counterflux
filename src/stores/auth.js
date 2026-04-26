@@ -165,6 +165,18 @@ export function initAuthStore() {
         this.session = null;
         this.user = null;
         this.status = 'anonymous';
+
+        // Phase 14.07b — clear sync_reconciled_at so the next sign-in
+        // (potentially a different account) re-runs reconciliation. The
+        // local Dexie still holds the prior session's data; the user gets
+        // the modal again and can pick KEEP_CLOUD to start fresh.
+        try {
+          const { db } = await import('../db/schema.js');
+          await db.meta.delete('sync_reconciled_at');
+        } catch (clearErr) {
+          console.warn('[auth] failed to clear sync_reconciled_at on sign-out', clearErr);
+        }
+
         return { error };
       } catch (err) {
         return { error: err };

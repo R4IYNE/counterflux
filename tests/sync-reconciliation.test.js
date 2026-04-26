@@ -376,3 +376,44 @@ describe('Pitfall 11-E: sync_pull_in_progress resume', () => {
     expect(splashState.opened).toBeGreaterThan(0);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Phase 14.07b — sync_reconciled_at one-shot guard
+// ---------------------------------------------------------------------------
+describe('Phase 14.07b: sync_reconciled_at one-shot reconciliation', () => {
+  test('reconcile is one-shot — second call with sync_reconciled_at does NOT re-prompt', async () => {
+    // First reconcile — populated-populated → modal fires
+    ['collection', 'decks', 'deck_cards', 'games', 'watchlist'].forEach((t) => seedCloudCount(t, 3));
+    await db.collection.add({ id: 'c1', scryfall_id: 'x', user_id: 'u', updated_at: Date.now() });
+
+    // Stub modal to immediately resolve as MERGE_EVERYTHING
+    openReconciliationModal.mockImplementation(async ({ onChoice }) => {
+      // bulkPull also needs cloud count + data seeds — keep them empty for speed
+      ['decks', 'collection', 'deck_cards', 'games', 'watchlist', 'profile'].forEach((t) => {
+        seedCloudCount(t, 0);
+        seedCloudData(t, []);
+      });
+      await onChoice('MERGE_EVERYTHING');
+    });
+
+    await reconcile();
+    expect(openReconciliationModal).toHaveBeenCalledTimes(1);
+    const meta = await db.meta.get('sync_reconciled_at');
+    expect(meta).toBeTruthy();
+    expect(typeof meta.value).toBe('number');
+
+    // Second reconcile — should NOT re-prompt despite same populated-populated state
+    openReconciliationModal.mockClear();
+    await reconcile();
+    expect(openReconciliationModal).not.toHaveBeenCalled();
+  });
+
+  test('empty-empty path also stamps sync_reconciled_at (no modal needed but flag set)', async () => {
+    ['collection', 'decks', 'deck_cards', 'games', 'watchlist'].forEach((t) => seedCloudCount(t, 0));
+    await reconcile();
+
+    const meta = await db.meta.get('sync_reconciled_at');
+    expect(meta).toBeTruthy();
+    expect(typeof meta.value).toBe('number');
+  });
+});

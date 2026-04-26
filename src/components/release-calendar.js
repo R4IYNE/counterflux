@@ -21,8 +21,12 @@ export function renderReleaseCalendar() {
         return new Date(dateStr).getTime() <= Date.now();
       },
       get sortedSets() {
+        // Phase 14.07b — newest-first throughout the release calendar.
+        // Upcoming list reads top-down as furthest-future → soonest; released
+        // list reads top-down as most-recent → oldest. Matches the dropdown
+        // ordering and matches the v1.2-merged direction.
         return [...$store.market.sets].sort((a, b) =>
-          new Date(a.released_at).getTime() - new Date(b.released_at).getTime()
+          new Date(b.released_at).getTime() - new Date(a.released_at).getTime()
         );
       },
       get releasedSets() {
