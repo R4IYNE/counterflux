@@ -193,9 +193,20 @@ export function openAuthWall() {
 }
 
 export function closeAuthWall() {
-  if (!wallEl) return;
-  wallEl.remove();
-  wallEl = null;
+  if (wallEl) {
+    wallEl.remove();
+    wallEl = null;
+    return;
+  }
+  // Phase 14.06 — fast-path bug fix.
+  // index.html ships a paint-critical static <div id="cf-auth-wall"> for LCP
+  // (Phase 13 Plan 5 Task 6). If auth rehydrates to 'authed' BEFORE Alpine.effect
+  // first invokes openAuthWall(), wallEl stays null and the static element is
+  // never decorated nor removed — leaving it covering the app shell with the
+  // bare COUNTERFLUX h1 visible and no other interaction possible.
+  // Belt-and-braces: also strip the static element when wallEl is null.
+  const stale = typeof document !== 'undefined' ? document.getElementById('cf-auth-wall') : null;
+  if (stale) stale.remove();
 }
 
 export function isAuthWallOpen() {

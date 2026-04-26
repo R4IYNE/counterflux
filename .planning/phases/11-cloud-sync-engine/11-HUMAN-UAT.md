@@ -1,9 +1,9 @@
 ---
-status: pending
+status: partial
 phase: 11-cloud-sync-engine
 source: [11-UI-SPEC.md, 11-CONTEXT.md, 11-VALIDATION.md]
 started: 2026-04-18T22:41:00Z
-updated: 2026-04-18T22:55:00Z
+updated: 2026-04-26T00:00:00Z
 ---
 
 # Phase 11 Human UAT — Cloud Sync Engine
@@ -215,16 +215,16 @@ npx vitest run tests/sync-rls.test.js
 - Device A → Device B propagation via Realtime postgres_changes (~5s budget) (SYNC-03)
 - sync_queue + sync_conflicts NOT exposed in Supabase PostgREST schema (SYNC-06 safety net)
 
-result: [pending]
+result: passed (verified manually 2026-04-26 via Phase 14 — Issue A user_id stamp at sync-engine.js:421 + Phase 14.05 Supabase column-parity migration; live UAT against huxley confirmed sync chip cycles SYNCING → SYNCED with row landing correctly in counterflux.collection)
 
 ---
 
 ## Summary
 
 total: 8
-passed: 0
+passed: 1
 issues: 0
-pending: 8
+pending: 7
 skipped: 0
 blocked: 0
 

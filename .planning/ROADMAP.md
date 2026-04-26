@@ -204,7 +204,7 @@ Plans:
 | 11. Cloud Sync Engine | v1.1 | 6/6 | Complete | 2026-04-18 |
 | 12. Notification Bell + Preordain Spoiler Refresh | v1.1 | 3/4 | Complete    | 2026-04-19 |
 | 13. Performance Optimisation (conditional) | v1.1 | 6/6 | Complete    | 2026-04-22 |
-| 14. v1.1 Audit Gap Closure | v1.1 | 3/5 | In Progress|  |
+| 14. v1.1 Audit Gap Closure | v1.1 | 5/6 | In Progress|  |
 
 ---
 *v1.1 Second Sunrise roadmap drafted 2026-04-14 — 7 phases (7-13) continuing from v1.0. Phase 14 added 2026-04-22 via `/gsd:plan-milestone-gaps` to close audit findings.*

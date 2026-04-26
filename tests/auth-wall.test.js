@@ -241,4 +241,24 @@ describe('auth-wall — closeAuthWall', () => {
   test('closeAuthWall is a no-op when wall not open', () => {
     expect(() => closeAuthWall()).not.toThrow();
   });
+
+  // Phase 14.06 — regression test for the stale static element bug.
+  // Repro: index.html ships <div id="cf-auth-wall"> for paint-critical LCP.
+  // If auth rehydrates to 'authed' BEFORE openAuthWall() ever runs, the
+  // module-local wallEl stays null and closeAuthWall() used to early-return
+  // without removing the static element — leaving the bare COUNTERFLUX h1
+  // covering the entire viewport with no way to dismiss.
+  test('closeAuthWall removes the static #cf-auth-wall from index.html when wallEl is null', () => {
+    // Seed the static paint-critical element as index.html ships it,
+    // WITHOUT calling openAuthWall first (mirrors the fast-rehydrate race).
+    const stale = document.createElement('div');
+    stale.id = 'cf-auth-wall';
+    stale.innerHTML = '<h1 class="cf-auth-wall-title">COUNTERFLUX</h1>';
+    document.body.appendChild(stale);
+    expect(document.getElementById('cf-auth-wall')).toBeTruthy();
+
+    // closeAuthWall() with wallEl null should still strip the static node.
+    closeAuthWall();
+    expect(document.getElementById('cf-auth-wall')).toBeNull();
+  });
 });
