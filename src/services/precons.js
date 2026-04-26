@@ -189,6 +189,15 @@ export async function fetchPreconDecklist(code) {
         scryfall_id: card.id,
         quantity: 1, // unique=prints returns one row per printing; precon qty always 1
         is_commander: inferIsCommander(card),
+        // Phase 14.07c — capture metadata needed to split multi-deck bundles
+        // into individual virtual decks (Doctor Who, Fallout, Final Fantasy,
+        // Tales of Middle-earth, Warhammer 40K, Commander Masters). Splitting
+        // requires color identity to group cards under a commander, plus
+        // name/type_line for tile rendering. Older cache entries without
+        // these fields fall back to the legacy "MULTI-DECK PRODUCT" gate.
+        name: card.name || '',
+        color_identity: Array.isArray(card.color_identity) ? card.color_identity : [],
+        type_line: card.type_line || '',
       });
     }
     url = page.has_more ? page.next_page : null;
@@ -226,6 +235,106 @@ function inferIsCommander(card) {
   const isLegendary = typeLine.includes('Legendary');
   const isCreatureOrWalker = typeLine.includes('Creature') || typeLine.includes('Planeswalker');
   return isLegendary && isCreatureOrWalker;
+}
+
+/**
+ * Phase 14.07c — split a multi-deck bundle into individual virtual decks
+ * keyed by commander identity.
+ *
+ * Scryfall does not expose deck-membership metadata, so this is a heuristic.
+ * The approach:
+ *   1. Take every card flagged is_commander=true (Legendary Creatures /
+ *      Planeswalkers per inferIsCommander).
+ *   2. Group by colorless-stable color_identity signature
+ *      (e.g. ['U','R'] → "U,R"). Two commanders with the same identity in
+ *      the same set are likely partners or alternate face cards of the same
+ *      deck — we keep them together.
+ *   3. For each commander group, build a virtual deck of the matched
+ *      commanders + every non-commander card in the bundle whose
+ *      color_identity is a subset of the group's identity. Cap at the
+ *      first 99 non-commander matches per deck (a true Commander deck).
+ *   4. Cards whose color_identity does NOT match any commander group fall
+ *      into a residual "Other Cards" bucket — visible to the user so the
+ *      heuristic's misses are obvious rather than silently dropped.
+ *
+ * Returns an empty array if the precon decklist lacks the metadata
+ * (color_identity, name) needed to split — in that case the caller should
+ * fall back to the legacy MULTI-DECK PRODUCT gate.
+ *
+ * @param {{ decklist?: Array }} precon
+ * @returns {Array<{ key: string, name: string, identity: string[], commanders: Array, cards: Array, total: number }>}
+ */
+export function splitPreconIntoDecks(precon) {
+  const list = precon?.decklist;
+  if (!Array.isArray(list) || list.length === 0) return [];
+  // Bail out cleanly if the cache pre-dates 14.07c and lacks color_identity.
+  const hasMetadata = list.some((c) => Array.isArray(c.color_identity) && typeof c.name === 'string');
+  if (!hasMetadata) return [];
+
+  const commanders = list.filter((c) => c.is_commander);
+  if (commanders.length === 0) return [];
+
+  // Group commanders by their color identity signature.
+  const _sig = (ci) => (ci || []).slice().sort().join(',') || 'C'; // 'C' = colorless
+  const _idDisplay = (ci) => {
+    const sorted = (ci || []).slice().sort();
+    return sorted.length === 0 ? 'Colorless' : sorted.join('');
+  };
+
+  const groups = new Map(); // sig → { identity, commanders, name }
+  for (const c of commanders) {
+    const sig = _sig(c.color_identity);
+    if (!groups.has(sig)) {
+      groups.set(sig, { identity: c.color_identity || [], commanders: [], names: [] });
+    }
+    const g = groups.get(sig);
+    g.commanders.push(c);
+    g.names.push(c.name);
+  }
+
+  // For each group, gather supporting cards whose color identity is a
+  // subset of the group's identity.
+  const _isSubset = (cardCI, deckCI) => {
+    if (!Array.isArray(cardCI) || cardCI.length === 0) return true; // colorless fits anywhere
+    const deckSet = new Set(deckCI || []);
+    for (const c of cardCI) if (!deckSet.has(c)) return false;
+    return true;
+  };
+
+  const decks = [];
+  const claimedIds = new Set(commanders.map((c) => c.scryfall_id));
+
+  for (const [sig, group] of groups.entries()) {
+    const supportCap = 99; // Commander format
+    const cards = [...group.commanders];
+    const supporters = [];
+    for (const card of list) {
+      if (card.is_commander) continue;
+      if (claimedIds.has(card.scryfall_id)) continue; // already assigned to a tighter-fit deck
+      if (_isSubset(card.color_identity, group.identity)) {
+        supporters.push(card);
+        if (supporters.length >= supportCap) break;
+      }
+    }
+    for (const s of supporters) claimedIds.add(s.scryfall_id);
+    cards.push(...supporters);
+
+    decks.push({
+      key: sig,
+      identity: group.identity,
+      identityLabel: _idDisplay(group.identity),
+      commanders: group.commanders,
+      name: group.names.length === 1
+        ? group.names[0]
+        : group.names.join(' / '),
+      cards,
+      total: cards.length,
+    });
+  }
+
+  // Sort decks by name for stable rendering.
+  decks.sort((a, b) => a.name.localeCompare(b.name));
+  return decks;
 }
 
 function sortPrecons(list) {

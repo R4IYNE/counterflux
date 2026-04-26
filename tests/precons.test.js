@@ -271,3 +271,90 @@ describe('FOLLOWUP-4B: isMultiDeckBundle helper (Phase 08.1)', () => {
     expect(isMultiDeckBundle({ decklist: null })).toBe(false);
   });
 });
+
+// Phase 14.07c — split bundles into virtual decks by commander color identity
+describe('Phase 14.07c: splitPreconIntoDecks helper', () => {
+  function _commander(name, ci, id = name.toLowerCase().replace(/[^a-z]+/g, '-')) {
+    return { scryfall_id: id, quantity: 1, is_commander: true, name, color_identity: ci, type_line: 'Legendary Creature' };
+  }
+  function _support(name, ci, id = name.toLowerCase().replace(/[^a-z]+/g, '-')) {
+    return { scryfall_id: id, quantity: 1, is_commander: false, name, color_identity: ci, type_line: 'Creature' };
+  }
+
+  it('returns [] when decklist has no color_identity metadata (legacy cache)', async () => {
+    const { splitPreconIntoDecks } = await import('../src/services/precons.js');
+    const legacyDecklist = [
+      { scryfall_id: 'a', quantity: 1, is_commander: true },
+      { scryfall_id: 'b', quantity: 1, is_commander: false },
+    ];
+    expect(splitPreconIntoDecks({ decklist: legacyDecklist })).toEqual([]);
+  });
+
+  it('returns [] when there are no commanders in the bundle', async () => {
+    const { splitPreconIntoDecks } = await import('../src/services/precons.js');
+    expect(splitPreconIntoDecks({
+      decklist: [_support('Mountain', ['R']), _support('Forest', ['G'])],
+    })).toEqual([]);
+  });
+
+  it('groups commanders by color_identity signature and assigns supporters by subset match', async () => {
+    const { splitPreconIntoDecks } = await import('../src/services/precons.js');
+    const decklist = [
+      _commander('Krenko Mob Boss', ['R']),
+      _commander('Atraxa', ['W', 'U', 'B', 'G']),
+      _support('Lightning Bolt', ['R']),
+      _support('Mountain', []),
+      _support('Sol Ring', []),
+      _support('Cultivate', ['G']),
+      _support('Counterspell', ['U']),
+    ];
+    const decks = splitPreconIntoDecks({ decklist });
+    expect(decks).toHaveLength(2);
+
+    const krenko = decks.find(d => d.name.includes('Krenko'));
+    const atraxa = decks.find(d => d.name.includes('Atraxa'));
+    expect(krenko).toBeTruthy();
+    expect(atraxa).toBeTruthy();
+
+    // Krenko (mono-red) deck contains its commander + lightning bolt; only
+    // colors-or-colorless allowed.
+    expect(krenko.cards.some(c => c.scryfall_id === 'krenko-mob-boss')).toBe(true);
+    expect(krenko.cards.some(c => c.scryfall_id === 'lightning-bolt')).toBe(true);
+    expect(krenko.cards.every(c => (c.color_identity || []).every(x => x === 'R'))).toBe(true);
+
+    // Atraxa (4-color) deck contains its commander + green + blue cards.
+    expect(atraxa.cards.some(c => c.scryfall_id === 'atraxa')).toBe(true);
+    expect(atraxa.cards.some(c => c.scryfall_id === 'cultivate')).toBe(true);
+    expect(atraxa.cards.some(c => c.scryfall_id === 'counterspell')).toBe(true);
+
+    // Identity label rendering
+    expect(krenko.identityLabel).toBe('R');
+    expect(atraxa.identityLabel).toBe('BGUW');
+  });
+
+  it('groups partner commanders sharing identity into one deck', async () => {
+    const { splitPreconIntoDecks } = await import('../src/services/precons.js');
+    const decklist = [
+      _commander('Will Kenrith', ['U', 'W']),
+      _commander('Rowan Kenrith', ['U', 'W']),
+      _support('Brainstorm', ['U']),
+    ];
+    const decks = splitPreconIntoDecks({ decklist });
+    expect(decks).toHaveLength(1);
+    expect(decks[0].commanders).toHaveLength(2);
+    expect(decks[0].name).toContain('Will');
+    expect(decks[0].name).toContain('Rowan');
+  });
+
+  it('caps each virtual deck at 100 cards (1 commander + 99 supporters)', async () => {
+    const { splitPreconIntoDecks } = await import('../src/services/precons.js');
+    const supporters = [];
+    for (let i = 0; i < 150; i++) supporters.push(_support('Card ' + i, ['R'], 'sup-' + i));
+    const decklist = [_commander('Krenko', ['R']), ...supporters];
+
+    const decks = splitPreconIntoDecks({ decklist });
+    expect(decks).toHaveLength(1);
+    expect(decks[0].cards.length).toBeLessThanOrEqual(100);
+    expect(decks[0].cards.filter(c => !c.is_commander).length).toBeLessThanOrEqual(99);
+  });
+});

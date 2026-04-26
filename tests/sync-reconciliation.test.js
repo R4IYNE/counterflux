@@ -378,17 +378,23 @@ describe('Pitfall 11-E: sync_pull_in_progress resume', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Phase 14.07b — sync_reconciled_at one-shot guard
+// Phase 14.07b/c — sync_reconciled_at:<userId> one-shot guard, per-user
 // ---------------------------------------------------------------------------
-describe('Phase 14.07b: sync_reconciled_at one-shot reconciliation', () => {
-  test('reconcile is one-shot — second call with sync_reconciled_at does NOT re-prompt', async () => {
+describe('Phase 14.07c: per-user sync_reconciled_at one-shot reconciliation', () => {
+  // The Alpine.store('auth') stub the test harness sets up has user.id === 'user-test-uuid'
+  // (per beforeEach storeRegistry.auth = { status: 'authed', user: { id: 'user-test-uuid' } }).
+  // Helper reads it dynamically so it stays correct if the harness id changes.
+  function _reconciledKey() {
+    const uid = window.Alpine?.store?.('auth')?.user?.id;
+    return uid ? `sync_reconciled_at:${uid}` : null;
+  }
+
+  test('reconcile is one-shot per user — second call does NOT re-prompt', async () => {
     // First reconcile — populated-populated → modal fires
     ['collection', 'decks', 'deck_cards', 'games', 'watchlist'].forEach((t) => seedCloudCount(t, 3));
     await db.collection.add({ id: 'c1', scryfall_id: 'x', user_id: 'u', updated_at: Date.now() });
 
-    // Stub modal to immediately resolve as MERGE_EVERYTHING
     openReconciliationModal.mockImplementation(async ({ onChoice }) => {
-      // bulkPull also needs cloud count + data seeds — keep them empty for speed
       ['decks', 'collection', 'deck_cards', 'games', 'watchlist', 'profile'].forEach((t) => {
         seedCloudCount(t, 0);
         seedCloudData(t, []);
@@ -398,22 +404,49 @@ describe('Phase 14.07b: sync_reconciled_at one-shot reconciliation', () => {
 
     await reconcile();
     expect(openReconciliationModal).toHaveBeenCalledTimes(1);
-    const meta = await db.meta.get('sync_reconciled_at');
+    const key = _reconciledKey();
+    expect(key).toBeTruthy(); // userId must be present for the test to be meaningful
+    const meta = await db.meta.get(key);
     expect(meta).toBeTruthy();
     expect(typeof meta.value).toBe('number');
 
-    // Second reconcile — should NOT re-prompt despite same populated-populated state
+    // Second reconcile (same user) — should NOT re-prompt despite same populated-populated state
     openReconciliationModal.mockClear();
     await reconcile();
     expect(openReconciliationModal).not.toHaveBeenCalled();
   });
 
-  test('empty-empty path also stamps sync_reconciled_at (no modal needed but flag set)', async () => {
+  test('empty-empty path also stamps sync_reconciled_at:<userId>', async () => {
     ['collection', 'decks', 'deck_cards', 'games', 'watchlist'].forEach((t) => seedCloudCount(t, 0));
     await reconcile();
 
-    const meta = await db.meta.get('sync_reconciled_at');
+    const meta = await db.meta.get(_reconciledKey());
     expect(meta).toBeTruthy();
     expect(typeof meta.value).toBe('number');
+  });
+
+  test('different user gets a fresh prompt even if a prior user reconciled on the device', async () => {
+    // Pre-seed reconciled flag for a DIFFERENT user
+    await db.meta.put({ key: 'sync_reconciled_at:other-user-zzz', value: Date.now() - 60000 });
+    // Current user ('user-test-uuid') has not reconciled yet.
+
+    ['collection', 'decks', 'deck_cards', 'games', 'watchlist'].forEach((t) => seedCloudCount(t, 3));
+    await db.collection.add({ id: 'c2', scryfall_id: 'y', user_id: 'u', updated_at: Date.now() });
+
+    openReconciliationModal.mockImplementation(async ({ onChoice }) => {
+      ['decks', 'collection', 'deck_cards', 'games', 'watchlist', 'profile'].forEach((t) => {
+        seedCloudCount(t, 0);
+        seedCloudData(t, []);
+      });
+      await onChoice('MERGE_EVERYTHING');
+    });
+
+    await reconcile();
+    expect(openReconciliationModal).toHaveBeenCalledTimes(1);
+    // Both users now have flags
+    const otherFlag = await db.meta.get('sync_reconciled_at:other-user-zzz');
+    const currentFlag = await db.meta.get(_reconciledKey());
+    expect(otherFlag).toBeTruthy();
+    expect(currentFlag).toBeTruthy();
   });
 });

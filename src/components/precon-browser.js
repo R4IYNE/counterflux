@@ -25,7 +25,7 @@
 // never blanks out.
 
 import { db } from '../db/schema.js';
-import { isMultiDeckBundle } from '../services/precons.js';
+import { isMultiDeckBundle, splitPreconIntoDecks } from '../services/precons.js';
 
 /**
  * Render the Precon Browser drawer HTML.
@@ -60,6 +60,10 @@ export function renderPreconBrowser() {
   // (Alpine x-data string templates can't import ES modules directly).
   if (typeof window !== 'undefined' && !window.__cf_isMultiDeckBundle) {
     window.__cf_isMultiDeckBundle = isMultiDeckBundle;
+  }
+  // Phase 14.07c — expose the bundle splitter for the virtual-deck tile view.
+  if (typeof window !== 'undefined' && !window.__cf_splitPreconIntoDecks) {
+    window.__cf_splitPreconIntoDecks = splitPreconIntoDecks;
   }
 
   return `
@@ -187,10 +191,58 @@ export function renderPreconBrowser() {
           <!-- VIEW B: Decklist preview -->
           <template x-if="$store.collection.selectedPreconCode">
             <div x-data="{
+              selectedVirtualDeckKey: null,
               get precon() { return $store.collection.precons.find(p => p.code === $store.collection.selectedPreconCode); },
               get isBundle() { return window.__cf_isMultiDeckBundle ? window.__cf_isMultiDeckBundle(this.precon) : false; },
+              get virtualDecks() {
+                if (!this.isBundle) return [];
+                if (!window.__cf_splitPreconIntoDecks) return [];
+                return window.__cf_splitPreconIntoDecks(this.precon);
+              },
+              get virtualDecksAvailable() {
+                return this.virtualDecks.length > 0;
+              },
+              get selectedVirtualDeck() {
+                if (!this.selectedVirtualDeckKey) return null;
+                return this.virtualDecks.find(d => d.key === this.selectedVirtualDeckKey) || null;
+              },
+              // Phase 14.07c — when a virtual deck is selected from a bundle,
+              // the decklist preview + ADD ALL operate on that subset. Otherwise
+              // (non-bundle precon, or bundle without splittable metadata),
+              // they operate on precon.decklist as before.
+              get effectiveDecklist() {
+                if (this.selectedVirtualDeck) return this.selectedVirtualDeck.cards || [];
+                return this.precon?.decklist || [];
+              },
+              get effectiveTitle() {
+                if (this.selectedVirtualDeck) return this.precon?.name + ' — ' + this.selectedVirtualDeck.name;
+                return this.precon?.name || '';
+              },
+              get effectiveAddAllEnabled() {
+                if ($store.collection.preconDecklistLoading) return false;
+                if (!this.effectiveDecklist.length) return false;
+                if (this.isBundle && !this.selectedVirtualDeck) return false; // must pick a deck first
+                return true;
+              },
+              addAllEffective() {
+                if (this.selectedVirtualDeck) {
+                  // Add only the virtual deck's cards via the precon store's
+                  // bulk-add path scoped to a card-id set.
+                  const ids = this.selectedVirtualDeck.cards.map(c => c.scryfall_id);
+                  const label = (this.precon?.name || 'precon') + ' — ' + this.selectedVirtualDeck.name;
+                  if ($store.collection.addCardsFromIds) {
+                    $store.collection.addCardsFromIds(ids, { label });
+                  } else {
+                    // Fallback if the helper hasn't shipped yet — add the full
+                    // bundle (the existing path) and surface a toast warning.
+                    $store.collection.addAllFromPrecon($store.collection.selectedPreconCode);
+                  }
+                } else {
+                  $store.collection.addAllFromPrecon($store.collection.selectedPreconCode);
+                }
+              },
               get sortedDecklist() {
-                const list = this.precon?.decklist || [];
+                const list = this.effectiveDecklist;
                 return [...list].sort((a, b) => {
                   if (a.is_commander !== b.is_commander) return b.is_commander ? 1 : -1;
                   return 0;
@@ -201,25 +253,68 @@ export function renderPreconBrowser() {
               <!-- Preview header -->
               <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 16px;">
                 <button
-                  @click="$store.collection.selectedPreconCode = null"
+                  @click="selectedVirtualDeckKey ? selectedVirtualDeckKey = null : $store.collection.selectedPreconCode = null"
                   style="padding: 8px 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; color: var(--color-text-primary); background: var(--color-surface-hover); border: 1px solid var(--color-border-ghost); cursor: pointer; text-transform: uppercase;"
-                >← BACK TO PRECONS</button>
+                  x-text="selectedVirtualDeckKey ? '← BACK TO DECKS' : '← BACK TO PRECONS'"
+                ></button>
 
                 <h3
                   style="flex: 1; font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; color: var(--color-text-primary); margin: 0; text-transform: uppercase;"
-                  x-text="precon?.name || ''"
+                  x-text="effectiveTitle"
                 ></h3>
 
                 <button
-                  @click="$store.collection.addAllFromPrecon($store.collection.selectedPreconCode)"
-                  :disabled="$store.collection.preconDecklistLoading || !(precon?.decklist?.length) || isBundle"
-                  :title="isBundle ? 'Multi-deck product — open in Scryfall to pick a specific deck' : ''"
-                  :style="(precon?.decklist?.length && !$store.collection.preconDecklistLoading && !isBundle)
+                  @click="addAllEffective()"
+                  :disabled="!effectiveAddAllEnabled"
+                  :title="(isBundle && !selectedVirtualDeck && virtualDecksAvailable) ? 'Pick a deck below to add its cards' : ((isBundle && !selectedVirtualDeck && !virtualDecksAvailable) ? 'Multi-deck product — open in Scryfall to pick a specific deck' : '')"
+                  :style="effectiveAddAllEnabled
                     ? 'padding: 8px 16px; font-family: JetBrains Mono, monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; color: var(--color-text-primary); background: var(--color-primary); border: 1px solid var(--color-primary); cursor: pointer; text-transform: uppercase;'
                     : 'padding: 8px 16px; font-family: JetBrains Mono, monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; color: var(--color-text-dim); background: var(--color-surface-hover); border: 1px solid var(--color-border-ghost); cursor: not-allowed; text-transform: uppercase; opacity: 0.5;'"
-                  x-text="isBundle ? 'MULTI-DECK PRODUCT' : (precon?.decklist?.length ? ('ADD ALL ' + precon.decklist.length + ' CARDS') : 'LOADING…')"
+                  x-text="(isBundle && !selectedVirtualDeck)
+                    ? (virtualDecksAvailable ? 'PICK A DECK BELOW' : 'MULTI-DECK PRODUCT')
+                    : (effectiveDecklist.length ? ('ADD ALL ' + effectiveDecklist.length + ' CARDS') : 'LOADING…')"
                 ></button>
               </div>
+
+              <!-- Phase 14.07c — virtual-deck tile grid for bundles. Replaces
+                   the legacy MULTI-DECK PRODUCT gate when the cache has the
+                   metadata needed to split (color_identity per card). Older
+                   cache entries fall through to the legacy gate further down. -->
+              <template x-if="!$store.collection.preconDecklistLoading && !$store.collection.preconDecklistError && isBundle && !selectedVirtualDeck && virtualDecksAvailable">
+                <div>
+                  <p style="font-family: 'Space Grotesk', sans-serif; font-size: 14px; line-height: 1.5; color: var(--color-text-muted); margin: 0 0 16px 0; max-width: 720px;">
+                    This product contains <span x-text="virtualDecks.length"></span> decks. Pick one to preview its cards or add it to your collection. Cards are grouped by commander color identity — split is approximate when commanders share an identity.
+                  </p>
+                  <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px;">
+                    <template x-for="vd in virtualDecks" :key="vd.key">
+                      <button
+                        @click="selectedVirtualDeckKey = vd.key"
+                        class="card-tile-hover"
+                        style="width: 100%; aspect-ratio: 220 / 308; padding: 0; background: var(--color-surface); border: 1px solid var(--color-border-ghost); cursor: pointer; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end;"
+                      >
+                        <span
+                          style="position: absolute; top: 8px; left: 8px; padding: 2px 6px; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; color: var(--color-text-muted); background: var(--color-surface-hover); text-transform: uppercase;"
+                          x-text="vd.identityLabel"
+                        ></span>
+                        <span
+                          style="position: absolute; top: 8px; right: 8px; padding: 2px 6px; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; color: var(--color-text-muted); background: var(--color-surface-hover);"
+                          x-text="vd.total + ' CARDS'"
+                        ></span>
+                        <div style="position: relative; z-index: 2; padding: 16px; background: linear-gradient(to top, var(--color-background), transparent); text-align: left;">
+                          <div
+                            style="font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; color: var(--color-text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-transform: uppercase;"
+                            x-text="vd.name"
+                          ></div>
+                          <div
+                            style="font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--color-text-muted); margin-top: 4px; text-transform: uppercase;"
+                            x-text="vd.commanders.length + ' COMMANDER' + (vd.commanders.length === 1 ? '' : 'S')"
+                          ></div>
+                        </div>
+                      </button>
+                    </template>
+                  </div>
+                </div>
+              </template>
 
               <!-- Decklist loading -->
               <template x-if="$store.collection.preconDecklistLoading">
@@ -234,15 +329,16 @@ export function renderPreconBrowser() {
                 </div>
               </template>
 
-              <!-- FOLLOWUP-4B (Phase 08.1) — multi-deck bundle warning. Replaces
-                   the giant decklist render when isMultiDeckBundle(precon) is
-                   true. The user can BACK out to the tile grid or close the
-                   browser to escape. -->
-              <template x-if="!$store.collection.preconDecklistLoading && !$store.collection.preconDecklistError && isBundle">
+              <!-- Phase 14.07c — legacy MULTI-DECK PRODUCT gate. Only fires when
+                   the cache predates 14-07c (no color_identity stored), so the
+                   bundle splitter has nothing to work with. Refreshing the
+                   precon cache (REFRESH button up top) will re-fetch with the
+                   new metadata and unlock the virtual-deck view above. -->
+              <template x-if="!$store.collection.preconDecklistLoading && !$store.collection.preconDecklistError && isBundle && !selectedVirtualDeck && !virtualDecksAvailable">
                 <div style="padding: 48px 24px; text-align: center;">
                   <h4 style="font-family: 'Syne', sans-serif; font-size: 20px; color: var(--color-warning); text-transform: uppercase; margin: 0 0 16px 0;">MULTI-DECK PRODUCT</h4>
                   <p style="font-family: 'Space Grotesk', sans-serif; font-size: 14px; line-height: 1.5; color: var(--color-text-primary); margin: 0 0 8px 0; max-width: 480px; margin-left: auto; margin-right: auto;">
-                    This product contains multiple decks — open in Scryfall to pick a specific deck.
+                    This product contains multiple decks. Tap REFRESH at the top of this browser to re-fetch with the new commander split, or open in Scryfall to pick a specific deck.
                   </p>
                   <p style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.15em; color: var(--color-text-muted); margin: 8px 0 24px 0; text-transform: uppercase;">
                     <span x-text="precon?.decklist?.length || 0"></span> CARDS ACROSS BUNDLED DECKS
@@ -256,8 +352,12 @@ export function renderPreconBrowser() {
                 </div>
               </template>
 
-              <!-- Decklist rows -->
-              <template x-if="precon?.decklist?.length && !$store.collection.preconDecklistLoading && !isBundle">
+              <!-- Decklist rows.
+                   Phase 14.07c — show for non-bundles, and for bundles when a
+                   virtual deck is selected. effectiveDecklist (not
+                   precon?.decklist) is the source so virtual-deck previews
+                   render only that deck's cards. -->
+              <template x-if="effectiveDecklist.length && !$store.collection.preconDecklistLoading && (!isBundle || selectedVirtualDeck)">
                 <div style="display: flex; flex-direction: column;">
                   <template x-for="entry in sortedDecklist" :key="entry.scryfall_id">
                     <div

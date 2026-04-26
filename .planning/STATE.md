@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Second Sunrise
 status: milestone_ready_to_ship
-stopped_at: Phase 14 complete — 8 plans landed (14-01 sync user_id fix, 14-02 Phase 7 retro VERIFICATION, 14-03 spoiler-gallery gate, 14-04 close gate, 14-05 Supabase column parity, 14-06 auth-wall stale-static fix, 14-07 Preordain dropdown sort + bulk sync-errors actions, 14-07b reconcile one-shot guard + release calendar sort); v1.1 audit re-verified as `passed`
-last_updated: "2026-04-26T19:30:00.000Z"
+stopped_at: Phase 14 complete — 9 plans landed (14-01..14-04 audit closes, 14-05 schema parity, 14-06 auth-wall, 14-07 Preordain dropdown + bulk sync-errors, 14-07b reconcile flag + release calendar, 14-07c per-user reconcile keying + multi-deck bundle splitter); v1.1 audit re-verified as `passed`
+last_updated: "2026-04-26T20:00:00.000Z"
 last_activity: 2026-04-26 -- v1.1 milestone closed; ready to ship
 progress:
   total_phases: 9
   completed_phases: 9
-  total_plans: 43
-  completed_plans: 43
+  total_plans: 44
+  completed_plans: 44
   percent: 100
 ---
 

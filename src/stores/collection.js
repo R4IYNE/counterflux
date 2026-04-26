@@ -503,6 +503,99 @@ export function initCollectionStore() {
     },
 
     /**
+     * Phase 14.07c — add a subset of cards by scryfall_id list.
+     *
+     * Used by precon-browser virtual-deck view: when a user picks one deck out
+     * of a multi-deck bundle (Doctor Who, Final Fantasy, etc.), only that
+     * deck's cards should land in the collection, not the entire bundle.
+     *
+     * Mirrors addAllFromPrecon's transaction shape (atomic merge-on-existing
+     * + undo + activity log + toast) but operates on an arbitrary scryfall_id
+     * array instead of a precon decklist.
+     *
+     * @param {string[]} scryfallIds - flat list of card ids to add
+     * @param {{ label?: string }} [options]
+     */
+    async addCardsFromIds(scryfallIds, { label } = {}) {
+      if (!Array.isArray(scryfallIds) || scryfallIds.length === 0) return;
+
+      const nowIso = new Date().toISOString();
+      const added = [];
+      const updated = [];
+
+      await db.transaction('rw', db.collection, async () => {
+        for (const scryfallId of scryfallIds) {
+          const existing = await db.collection
+            .where('[scryfall_id+foil]')
+            .equals([scryfallId, 0])
+            .and(e => e.category === 'owned')
+            .first();
+
+          if (existing) {
+            updated.push({ id: existing.id, prevQuantity: existing.quantity });
+            await db.collection.update(existing.id, {
+              quantity: existing.quantity + 1,
+              updated_at: nowIso,
+              synced_at: null,
+            });
+          } else {
+            const row = {
+              scryfall_id: scryfallId,
+              quantity: 1,
+              foil: 0,
+              category: 'owned',
+              added_at: nowIso,
+              updated_at: nowIso,
+              synced_at: null,
+              user_id: null,
+            };
+            const newId = await db.collection.add(row);
+            added.push(newId);
+          }
+        }
+      });
+
+      await this.loadEntries();
+
+      const sourceLabel = label || 'selected deck';
+      const total = scryfallIds.length;
+
+      const undoStore = (typeof window !== 'undefined') ? window.Alpine?.store?.('undo') : null;
+      if (undoStore?.push) {
+        const message = `Added ${total} cards from ${sourceLabel}.`;
+        const invert = async () => {
+          await db.transaction('rw', db.collection, async () => {
+            if (added.length) await db.collection.bulkDelete(added);
+            for (const { id, prevQuantity } of updated) {
+              const row = await db.collection.get(id);
+              if (row) {
+                await db.collection.update(id, {
+                  quantity: prevQuantity,
+                  updated_at: new Date().toISOString(),
+                  synced_at: null,
+                });
+              }
+            }
+          });
+          await this.loadEntries();
+        };
+        undoStore.push('collection_add_batch', { added, updated, source: 'cards_from_ids' }, message, async () => {}, invert);
+      }
+
+      try {
+        logActivity('precon_added', `Added ${total} cards from ${sourceLabel}`);
+      } catch { /* decorative */ }
+
+      const toast = (typeof window !== 'undefined') ? window.Alpine?.store?.('toast') : null;
+      if (toast?.success) {
+        toast.success(`Added ${total} cards from ${sourceLabel} to collection.`);
+      }
+
+      this.preconBrowserOpen = false;
+      this.selectedPreconCode = null;
+    },
+
+    /**
      * Phase 8 Plan 3 — close the precon browser without committing.
      */
     closePreconBrowser() {

@@ -67,24 +67,31 @@ export async function classifyState() {
 // reconcile — full orchestrator
 // ---------------------------------------------------------------------------
 
-// Phase 14.07b — meta key marking that this Dexie has reconciled with the
-// cloud at least once. Prevents the populated-populated modal from re-firing
-// on every refresh when the user picked MERGE EVERYTHING (which converges
-// state without making cloud or local "empty" again). Cleared on KEEP_CLOUD's
-// local-wipe path because a fresh local DB is conceptually a new device.
-const RECONCILED_META_KEY = 'sync_reconciled_at';
+// Phase 14.07b/c — per-user meta key marking that this Dexie has reconciled
+// with the cloud at least once for a given user_id. Prevents the
+// populated-populated modal from re-firing on refresh OR on re-sign-in.
+// 14-07b stored a single device-wide key + cleared on signOut, which made
+// the modal fire every login. 14-07c keys by user_id so:
+//   - same account, sign in/out repeatedly → flag persists → no modal
+//   - different account on same device → no flag for that user → modal fires once
+// signOut no longer clears anything; per-user keys segregate naturally.
+const RECONCILED_META_KEY_PREFIX = 'sync_reconciled_at:';
 
-async function _markReconciled() {
+// _currentUserId() is defined further down in this file (single shared helper).
+
+async function _markReconciled(userId) {
+  if (!userId) return;
   try {
-    await db.meta.put({ key: RECONCILED_META_KEY, value: Date.now() });
+    await db.meta.put({ key: RECONCILED_META_KEY_PREFIX + userId, value: Date.now() });
   } catch (err) {
     console.warn('[sync] failed to set sync_reconciled_at meta', err);
   }
 }
 
-async function _isReconciled() {
+async function _isReconciled(userId) {
+  if (!userId) return false;
   try {
-    const row = await db.meta.get(RECONCILED_META_KEY);
+    const row = await db.meta.get(RECONCILED_META_KEY_PREFIX + userId);
     return !!(row && row.value);
   } catch {
     return false;
@@ -98,11 +105,13 @@ export async function reconcile() {
   const { isBulkPullInProgress, clearBulkPullFlag, bulkPull } = await import('./sync-pull.js');
   const { openSyncPullSplash, closeSyncPullSplash, renderSyncPullError } = await import('../components/sync-pull-splash.js');
 
-  // Phase 14.07b — if this device has already reconciled at least once, skip
-  // classifyState and just enqueue any local-only changes for the next push.
-  // Subsequent state convergence is handled by realtime subscriptions + the
-  // periodic incremental-pull cursor; the modal is one-shot per device.
-  if (await _isReconciled()) {
+  const userId = _currentUserId();
+
+  // Phase 14.07c — per-user one-shot guard. If THIS user has already
+  // reconciled on this device, skip classifyState and silently flush any
+  // local-only changes. Subsequent convergence happens via realtime + the
+  // incremental-pull cursor.
+  if (await _isReconciled(userId)) {
     await _enqueueAllLocalRows();
     scheduleFlush(0);
     return;
@@ -132,7 +141,7 @@ export async function reconcile() {
       // No-op; seed the incremental-pull cursor so the first polling tick
       // doesn't fetch every row ever created.
       await db.meta.put({ key: 'sync_last_pulled_at', value: Date.now() });
-      await _markReconciled();
+      await _markReconciled(userId);
       return;
 
     case 'empty-populated': {
@@ -142,7 +151,7 @@ export async function reconcile() {
         await bulkPull();
         await clearBulkPullFlag();
         closeSyncPullSplash();
-        await _markReconciled();
+        await _markReconciled(userId);
       } catch (err) {
         renderSyncPullError({
           pulled: err?.pulled ?? 0,
@@ -157,7 +166,7 @@ export async function reconcile() {
       // Silent push — enqueue every local row, schedule an immediate flush.
       await _enqueueAllLocalRows();
       scheduleFlush(0);
-      await _markReconciled();
+      await _markReconciled(userId);
       return;
 
     case 'populated-populated': {
@@ -173,7 +182,7 @@ export async function reconcile() {
           else if (choice === 'KEEP_CLOUD') result = await handleKeepCloud();
           // Phase 14.07b — stamp reconciled-at AFTER the chosen handler resolves
           // so we don't suppress a retry if it failed mid-way.
-          await _markReconciled();
+          await _markReconciled(userId);
           return result;
         }
       });

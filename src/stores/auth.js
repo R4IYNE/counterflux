@@ -166,16 +166,12 @@ export function initAuthStore() {
         this.user = null;
         this.status = 'anonymous';
 
-        // Phase 14.07b — clear sync_reconciled_at so the next sign-in
-        // (potentially a different account) re-runs reconciliation. The
-        // local Dexie still holds the prior session's data; the user gets
-        // the modal again and can pick KEEP_CLOUD to start fresh.
-        try {
-          const { db } = await import('../db/schema.js');
-          await db.meta.delete('sync_reconciled_at');
-        } catch (clearErr) {
-          console.warn('[auth] failed to clear sync_reconciled_at on sign-out', clearErr);
-        }
+        // Phase 14.07c — sync_reconciled_at meta keys are per-user
+        // (`sync_reconciled_at:<userId>`) so signing out doesn't need to
+        // clear them. Same account → re-sign-in → flag still present →
+        // modal stays quiet. Different account → no flag for that user →
+        // modal fires once. Per-user segregation handles the multi-account
+        // case naturally without nuking the same-account-relogin path.
 
         return { error };
       } catch (err) {
