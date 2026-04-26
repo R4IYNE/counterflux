@@ -69,7 +69,9 @@ All 7 phase REQ-IDs are covered with concrete shipped fixes:
 - `tests/sync-push-userid.test.js` — 4/4 passing
 - `tests/spoiler-gallery-bulkdata-gating.test.js` — 6/6 passing
 - `tests/auth-wall.test.js` — 13/13 passing (12 prior + 1 new regression for 14-06)
-- Phase 14 plan-targeted suite total: **23/23 passing** as of 2026-04-26 18:30 UTC
+- `tests/sets-service.test.js` — 5/5 passing (4 prior + 1 new regression for 14-07 newest-first ordering)
+- `tests/sync-errors-modal.test.js` — 13/13 passing (9 prior + 4 new regressions for 14-07 bulk actions)
+- Phase 14 plan-targeted suite total: **41/41 passing** as of 2026-04-26 19:00 UTC
 
 ## Plan inventory
 
@@ -81,16 +83,20 @@ All 7 phase REQ-IDs are covered with concrete shipped fixes:
 | 14-04 | complete | 2 | Phase close gate (audit re-verification log) |
 | 14-05 | complete | 1 | Phase 11 schema drift (rolled in) |
 | 14-06 | complete | 1 | Phase 13 auth-wall stale-static race (rolled in) |
+| 14-07 | complete | 1 | v1.2 items pulled forward (Preordain newest-first sort, sync-errors bulk RETRY/DISCARD) |
 
-All 6 plans have a corresponding `*-SUMMARY.md` file. Plan PLAN.md files committed in `5b17f27` (14-01..14-04) + `a991feb` (14-05) + `ac9f89c` (14-06).
+All 7 plans have a corresponding `*-SUMMARY.md` file. Plan PLAN.md files committed in `5b17f27` (14-01..14-04) + `a991feb` (14-05) + `ac9f89c` (14-06) + the 14-07 commit on this date.
 
 ## Deferred (tracked, not blocking)
 
 - Issue B — no sign-up UI surface (audit minor) → v1.2 product call (household model intentional per 10-CONTEXT.md:113)
 - Nyquist VALIDATION.md backfill across 8 phases → process debt, v1.2
 - `/gsd:verify-work 13` for live soft-gate fire + Vercel Cache-Control → blocked on first Vercel deploy
-- Bulk RETRY/DISCARD action for sync_conflicts UI → v1.2 polish (per-row UI unusable at 848 entries)
-- Preordain set sort order (newest-first) → v1.2 UX preference, unrelated to sync
+
+## Pulled forward into 14-07
+
+- ~~Bulk RETRY/DISCARD action for sync_conflicts UI~~ → shipped in 14-07
+- ~~Preordain set sort order (newest-first)~~ → shipped in 14-07
 
 ## Milestone status
 

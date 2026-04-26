@@ -267,6 +267,57 @@ export async function openSyncErrorsModal() {
       `;
     }).join('');
 
+    // Phase 14.07 — bulk RETRY ALL / DISCARD ALL row.
+    // Per-row UI is unusable when sync_conflicts has hundreds of entries
+    // (real case during 14-05 UAT: 848 dead-letters from the column-drift era).
+    // Bulk RETRY iterates Alpine.store('sync').retry(id); bulk DISCARD ALL
+    // first prompts a native confirm() because it's irreversible.
+    const bulkBarHtml = n > 1 ? `
+      <div style="
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+        margin: 0 0 12px;
+      ">
+        <button
+          type="button"
+          data-bulk-action="retry-all"
+          style="
+            height: 32px;
+            padding: 0 12px;
+            background: transparent;
+            border: 1px solid var(--color-border-ghost);
+            color: var(--color-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: box-shadow 120ms ease-out, background 120ms ease-out;
+          "
+        >RETRY ALL (${n})</button>
+        <button
+          type="button"
+          data-bulk-action="discard-all"
+          style="
+            height: 32px;
+            padding: 0 12px;
+            background: var(--color-surface-hover);
+            border: 1px solid var(--color-border-ghost);
+            color: var(--color-text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: color 120ms ease-out, box-shadow 120ms ease-out;
+          "
+        >DISCARD ALL</button>
+      </div>
+    ` : '';
+
     card.innerHTML = `
       ${headerHtml}
       <p aria-live="polite" style="
@@ -275,6 +326,7 @@ export async function openSyncErrorsModal() {
         color: var(--color-text-primary);
         margin: 0 0 16px;
       ">${_escape(summaryCopy)}</p>
+      ${bulkBarHtml}
       <ul role="list" style="list-style: none; padding: 0; margin: 0 0 24px;">
         ${rowsHtml}
       </ul>
@@ -319,6 +371,113 @@ export async function openSyncErrorsModal() {
     btn.addEventListener('mouseleave', () => {
       btn.style.color = 'var(--color-text-primary)';
       btn.style.boxShadow = 'none';
+    });
+  });
+
+  // Phase 14.07 — bulk RETRY ALL / DISCARD ALL hover affordances + handlers.
+  card.querySelectorAll('button[data-bulk-action="retry-all"]').forEach((btn) => {
+    btn.addEventListener('mouseenter', () => {
+      btn.style.boxShadow = '0 0 8px var(--color-glow-blue)';
+      btn.style.background = 'var(--color-surface-hover)';
+    });
+    btn.addEventListener('mouseleave', () => {
+      btn.style.boxShadow = 'none';
+      btn.style.background = 'transparent';
+    });
+  });
+  card.querySelectorAll('button[data-bulk-action="discard-all"]').forEach((btn) => {
+    btn.addEventListener('mouseenter', () => {
+      btn.style.color = 'var(--color-secondary)';
+      btn.style.boxShadow = '0 0 8px var(--color-glow-red)';
+    });
+    btn.addEventListener('mouseleave', () => {
+      btn.style.color = 'var(--color-text-primary)';
+      btn.style.boxShadow = 'none';
+    });
+  });
+
+  card.querySelectorAll('button[data-bulk-action]').forEach((bulkBtn) => {
+    bulkBtn.addEventListener('click', async () => {
+      const action = bulkBtn.dataset.bulkAction; // 'retry-all' | 'discard-all'
+      const allRows = Array.from(card.querySelectorAll('li[data-row-id]'));
+      if (allRows.length === 0) return;
+
+      // Irreversible — confirm before discarding all
+      if (action === 'discard-all') {
+        const ok = typeof window !== 'undefined' && typeof window.confirm === 'function'
+          ? window.confirm(`Discard ${allRows.length} sync errors? This cannot be undone.`)
+          : true;
+        if (!ok) return;
+      }
+
+      const store = typeof window !== 'undefined' ? window.Alpine?.store?.('sync') : null;
+      if (!store) {
+        console.warn('[sync-errors-modal] Alpine.store(sync) not available');
+        return;
+      }
+
+      // Disable bulk + per-row buttons; swap label
+      const allBulk = card.querySelectorAll('button[data-bulk-action]');
+      const allRowBtns = card.querySelectorAll('button[data-action]');
+      allBulk.forEach((b) => { b.disabled = true; });
+      allRowBtns.forEach((b) => { b.disabled = true; });
+      const origLabel = bulkBtn.textContent;
+      bulkBtn.textContent = action === 'retry-all'
+        ? `RETRYING ${allRows.length}…`
+        : `DISCARDING ${allRows.length}…`;
+      bulkBtn.style.color = 'var(--color-text-muted)';
+
+      const op = action === 'retry-all' ? 'retry' : 'discard';
+      let succeeded = 0;
+      let failed = 0;
+      // Sequential — Phase 11 sync engine push is FK-safe per PUSH_ORDER and
+      // does its own batching; serialising here keeps queue+conflicts state
+      // observable per-row and avoids overwhelming Supabase with parallel
+      // requests if backlog is large.
+      for (const row of allRows) {
+        const rawId = row.dataset.rowId;
+        const id = /^\d+$/.test(rawId) ? Number(rawId) : rawId;
+        try {
+          if (op === 'retry') await store.retry(id); else await store.discard(id);
+          row.style.transition = 'opacity 120ms ease-out';
+          row.style.opacity = '0';
+          succeeded += 1;
+        } catch (err) {
+          console.error(`[sync-errors-modal] bulk ${op} failed for ${id}:`, err);
+          failed += 1;
+        }
+      }
+
+      // Reap faded rows; auto-close if list empty
+      setTimeout(() => {
+        card.querySelectorAll('li[data-row-id]').forEach((row) => {
+          if (row.style.opacity === '0') row.remove();
+        });
+        const remaining = card.querySelectorAll('li[data-row-id]').length;
+
+        const toast = window.Alpine?.store?.('toast');
+        if (toast) {
+          if (failed === 0) {
+            toast.info?.(action === 'retry-all'
+              ? `Retried ${succeeded} change${succeeded === 1 ? '' : 's'}.`
+              : `Discarded ${succeeded} change${succeeded === 1 ? '' : 's'}.`);
+          } else {
+            (toast.warning || toast.error || toast.info)?.(
+              `${succeeded} ${op === 'retry' ? 'retried' : 'discarded'}, ${failed} still pending.`
+            );
+          }
+        }
+
+        if (remaining === 0) {
+          setTimeout(closeModal, 250);
+        } else {
+          // Some rows still failed — re-enable and reset label so user can act on the remainder
+          allBulk.forEach((b) => { b.disabled = false; });
+          card.querySelectorAll('li[data-row-id] button[data-action]').forEach((b) => { b.disabled = false; });
+          bulkBtn.textContent = origLabel.replace(/\(\d+\)/, `(${remaining})`);
+          bulkBtn.style.color = action === 'retry-all' ? 'var(--color-primary)' : 'var(--color-text-primary)';
+        }
+      }, 200);
     });
   });
 

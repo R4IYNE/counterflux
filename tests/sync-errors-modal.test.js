@@ -186,3 +186,79 @@ describe('sync-errors modal — error classification mapping (D-10)', () => {
     expect(row.textContent).toContain('RLS rejected');
   });
 });
+
+// Phase 14.07 — bulk RETRY ALL / DISCARD ALL row.
+// Per-row UI is unusable when sync_conflicts has hundreds of entries
+// (real case during 14-05 UAT: 848 dead-letters from the column-drift era).
+describe('sync-errors modal — bulk actions (Phase 14.07)', () => {
+  test('Test 10: RETRY ALL invokes store.retry once per row sequentially', async () => {
+    const syncStub = resetAlpine();
+    await db.sync_conflicts.bulkAdd([
+      { table_name: 'decks',      detected_at: Date.now() - 2000, error_code: '403', op: 'update' },
+      { table_name: 'collection', detected_at: Date.now() - 1000, error_code: '422', op: 'create' },
+      { table_name: 'deck_cards', detected_at: Date.now(),         error_code: 'PGRST204', op: 'create' },
+    ]);
+
+    await openSyncErrorsModal();
+    await new Promise(r => setTimeout(r, 10));
+
+    const bulkRetry = document.querySelector('button[data-bulk-action="retry-all"]');
+    expect(bulkRetry).toBeTruthy();
+    expect(bulkRetry.textContent).toMatch(/RETRY ALL \(3\)/);
+    bulkRetry.click();
+    await new Promise(r => setTimeout(r, 50));
+
+    expect(syncStub.retry).toHaveBeenCalledTimes(3);
+  });
+
+  test('Test 11: DISCARD ALL prompts confirm; cancel aborts', async () => {
+    const syncStub = resetAlpine();
+    await db.sync_conflicts.bulkAdd([
+      { table_name: 'decks',      detected_at: Date.now() - 1000, error_code: '403', op: 'update' },
+      { table_name: 'collection', detected_at: Date.now(),         error_code: '422', op: 'create' },
+    ]);
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
+
+    await openSyncErrorsModal();
+    await new Promise(r => setTimeout(r, 10));
+
+    const bulkDiscard = document.querySelector('button[data-bulk-action="discard-all"]');
+    expect(bulkDiscard).toBeTruthy();
+    bulkDiscard.click();
+    await new Promise(r => setTimeout(r, 10));
+
+    expect(confirmSpy).toHaveBeenCalled();
+    expect(syncStub.discard).not.toHaveBeenCalled();
+    confirmSpy.mockRestore();
+  });
+
+  test('Test 12: DISCARD ALL with confirm → invokes store.discard once per row', async () => {
+    const syncStub = resetAlpine();
+    await db.sync_conflicts.bulkAdd([
+      { table_name: 'decks',      detected_at: Date.now() - 1000, error_code: '403', op: 'update' },
+      { table_name: 'collection', detected_at: Date.now(),         error_code: '422', op: 'create' },
+    ]);
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+
+    await openSyncErrorsModal();
+    await new Promise(r => setTimeout(r, 10));
+
+    document.querySelector('button[data-bulk-action="discard-all"]').click();
+    await new Promise(r => setTimeout(r, 50));
+
+    expect(syncStub.discard).toHaveBeenCalledTimes(2);
+    confirmSpy.mockRestore();
+  });
+
+  test('Test 13: bulk bar is hidden when only 1 row (per-row buttons sufficient)', async () => {
+    await db.sync_conflicts.add({
+      table_name: 'decks', detected_at: Date.now(), error_code: '403', op: 'update',
+    });
+
+    await openSyncErrorsModal();
+    await new Promise(r => setTimeout(r, 10));
+
+    expect(document.querySelector('button[data-bulk-action="retry-all"]')).toBeFalsy();
+    expect(document.querySelector('button[data-bulk-action="discard-all"]')).toBeFalsy();
+  });
+});

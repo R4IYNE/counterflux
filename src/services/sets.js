@@ -43,7 +43,14 @@ export async function fetchSets() {
       released_at: s.released_at,
       icon_svg_uri: s.icon_svg_uri,
       card_count: s.card_count,
-    }));
+    }))
+    // Phase 14.07 — newest-first ordering for the Preordain spoiler-set
+    // selector and any other consumer that iterates getCachedSets() unsorted.
+    // Tiebreak by name ASC matches src/services/precons.js:233 precedent.
+    .sort((a, b) => {
+      const dateCmp = (b.released_at || '').localeCompare(a.released_at || '');
+      return dateCmp !== 0 ? dateCmp : (a.name || '').localeCompare(b.name || '');
+    });
 
   // Cache in IndexedDB
   await db.meta.put({

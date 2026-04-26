@@ -28,7 +28,7 @@
 - [x] **Phase 11: Cloud Sync Engine** — Postgres schema, Dexie hook outbox, batched RPC flush, first-sign-in reconciliation, LWW conflict resolution, offline queue, topbar sync-status chip (completed 2026-04-18)
 - [x] **Phase 12: Notification Bell + Preordain Spoiler Refresh** — Unified notification inbox with sync-error surfacing, set icons in spoiler dropdown, visual spoiler overhaul with NEW badges, quick add-to-watchlist (completed 2026-04-19)
 - [x] **Phase 13: Performance Optimisation (conditional)** — Targeted fixes if baseline measurement reveals regressions vs agreed targets; documentation-only pass if targets already met (completed 2026-04-22)
-- [x] **Phase 14: v1.1 Audit Gap Closure** — Closed audit Issues A/C/D + 2 latent bugs surfaced during UAT (Phase 11 schema drift, Phase 13 auth-wall stale-static race); 6 plans landed; live UAT confirmed sync push lands cleanly; v1.1 ready to ship (completed 2026-04-26)
+- [x] **Phase 14: v1.1 Audit Gap Closure** — Closed audit Issues A/C/D + 2 latent bugs surfaced during UAT (Phase 11 schema drift, Phase 13 auth-wall stale-static race) + 2 v1.2 quality items pulled forward (Preordain newest-first sort, sync-errors bulk RETRY/DISCARD); 7 plans landed; live UAT confirmed sync push lands cleanly; v1.1 ready to ship (completed 2026-04-26)
 
 ## Phase Details
 
@@ -205,7 +205,7 @@ Plans:
 | 11. Cloud Sync Engine | v1.1 | 6/6 | Complete | 2026-04-18 |
 | 12. Notification Bell + Preordain Spoiler Refresh | v1.1 | 3/4 | Complete    | 2026-04-19 |
 | 13. Performance Optimisation (conditional) | v1.1 | 6/6 | Complete    | 2026-04-22 |
-| 14. v1.1 Audit Gap Closure | v1.1 | 6/6 | Complete | 2026-04-26 |
+| 14. v1.1 Audit Gap Closure | v1.1 | 7/7 | Complete | 2026-04-26 |
 
 ---
 *v1.1 Second Sunrise roadmap drafted 2026-04-14 — 7 phases (7-13) continuing from v1.0. Phase 14 added 2026-04-22 via `/gsd:plan-milestone-gaps` to close audit findings.*
