@@ -9,3 +9,6 @@ dist/
 # Lighthouse CI
 lighthouse-report/
 .lighthouseci/
+
+# look-yourself UAT credentials (do not commit)
+.claude/uat-credentials.local.md
