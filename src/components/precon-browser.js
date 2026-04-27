@@ -199,7 +199,11 @@ export function renderPreconBrowser() {
               // manifest entry exists for this set code, falling back to the
               // 14-07d full-bundle banner + ADD ALL flow.
               get manifestDecks() {
-                if (!this.isBundle) return [];
+                // Phase 14.07N — drop the isBundle gate so any product with
+                // MTGJSON membership data renders the tile grid, not just
+                // ones with >200 unique Scryfall cards. Smaller multi-deck
+                // bundles (Doctor Who, Tales of Middle-earth, etc.) have
+                // manifest data but may not pass the 200-card threshold.
                 if (!window.__cf_splitPreconIntoDecks) return [];
                 // Phase 14.07j — depend on the reactive flag flipped after
                 // the lazy MTGJSON membership import resolves. Without this
@@ -243,7 +247,7 @@ export function renderPreconBrowser() {
                 }
               },
               addButtonLabel() {
-                if (this.isBundle && this.hasManifest && !this.selectedDeck) return 'PICK A DECK BELOW';
+                if (this.hasManifest && !this.selectedDeck) return 'PICK A DECK BELOW';
                 // Phase 14.07L — when a manifest deck is selected, the count
                 // comes from MTGJSON (deck.total = 100) not the local cache
                 // subset. ADD ALL imports the full WotC list including
@@ -257,7 +261,7 @@ export function renderPreconBrowser() {
               },
               get addButtonEnabled() {
                 if ($store.collection.preconDecklistLoading) return false;
-                if (this.isBundle && this.hasManifest && !this.selectedDeck) return false;
+                if (this.hasManifest && !this.selectedDeck) return false;
                 if (this.selectedDeck) return !!(this.selectedDeck.scryfallIds?.length || this.selectedDeck.cards.length);
                 return !!this.effectiveDecklist.length;
               },
@@ -297,7 +301,7 @@ export function renderPreconBrowser() {
                    Doctor Who, etc.). Drill into a tile to preview/import that
                    single deck; ADD ALL on the bundle product code is gated until
                    a deck is picked so the user can't accidentally dump 486 cards. -->
-              <template x-if="!$store.collection.preconDecklistLoading && !$store.collection.preconDecklistError && isBundle && hasManifest && !selectedDeck">
+              <template x-if="!$store.collection.preconDecklistLoading && !$store.collection.preconDecklistError && hasManifest && !selectedDeck">
                 <div>
                   <p style="font-family: 'Space Grotesk', sans-serif; font-size: 14px; line-height: 1.5; color: var(--color-text-muted); margin: 0 0 16px 0; max-width: 720px;">
                     Pick one of the <span x-text="manifestDecks.length"></span> decks in this product to preview its cards or add it to your collection. To import the whole boxed set instead, return to the precon list and use ADD ALL on a non-bundle product.
@@ -366,7 +370,7 @@ export function renderPreconBrowser() {
                    otherwise the full bundle (or non-bundle precon) renders.
                    Hidden on manifest-backed bundles when no deck is selected
                    (the tile grid takes that slot). -->
-              <template x-if="effectiveDecklist.length && !$store.collection.preconDecklistLoading && !(isBundle && hasManifest && !selectedDeck)">
+              <template x-if="effectiveDecklist.length && !$store.collection.preconDecklistLoading && !(hasManifest && !selectedDeck)">
                 <div style="display: flex; flex-direction: column;">
                   <template x-for="entry in sortedDecklist" :key="entry.scryfall_id">
                     <div
