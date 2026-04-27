@@ -12,3 +12,4 @@ lighthouse-report/
 
 # look-yourself UAT credentials (do not commit)
 .claude/uat-credentials.local.md
+.claude/uat.json
