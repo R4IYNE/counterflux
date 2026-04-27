@@ -17,6 +17,13 @@ concurrency:
 permissions:
   contents: write
 
+# Opt the action runtimes onto Node.js 24 ahead of GitHub's June 2026
+# forced cutover (deprecation warning surfaced in the 2026-04-27 manual run).
+# Both actions/checkout@v4 and actions/setup-node@v4 currently default to
+# Node 20; setting this env var globally flips them without a version bump.
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
 jobs:
   sync:
     runs-on: ubuntu-latest
