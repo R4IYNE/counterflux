@@ -109,10 +109,16 @@ export async function reconcile() {
 
   // Phase 14.07c — per-user one-shot guard. If THIS user has already
   // reconciled on this device, skip classifyState and silently flush any
-  // local-only changes. Subsequent convergence happens via realtime + the
-  // incremental-pull cursor.
+  // pending writes already in sync_queue. Subsequent convergence happens
+  // via realtime + the incremental-pull cursor.
+  //
+  // Phase 14.07g — DO NOT call _enqueueAllLocalRows() here. The original
+  // 14-07b fast-path enqueued every local row on every reconcile call,
+  // creating 1 sync_queue entry per row per page load. Profile alone × N
+  // refreshes produced 11,867 dead-letter sync_conflicts in live UAT.
+  // The hooks already enqueue actual writes; the fast-path should only
+  // drain what's in sync_queue, never re-enqueue from scratch.
   if (await _isReconciled(userId)) {
-    await _enqueueAllLocalRows();
     scheduleFlush(0);
     return;
   }
