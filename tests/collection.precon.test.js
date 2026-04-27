@@ -195,7 +195,12 @@ describe('COLLECT-02: addAllFromPrecon (batch add, single reload, single undo)',
   });
 });
 
-describe('FOLLOWUP-4B: addAllFromPrecon multi-deck bundle guard (Phase 08.1)', () => {
+// Phase 14.07d — addAllFromPrecon now adds the FULL decklist regardless of
+// bundle status. The 4B/4C iterations (block ADD ALL on multi-deck products)
+// were the wrong UX: the user explicitly wants to mark a whole boxed product
+// as owned, including all its bundled decks. The bundle is communicated via
+// an inline warning banner (preserved) but no longer gates the action.
+describe('Phase 14.07d: addAllFromPrecon multi-deck bundle (post-revert behaviour)', () => {
   let collectionStore;
 
   beforeEach(async () => {
@@ -231,10 +236,6 @@ describe('FOLLOWUP-4B: addAllFromPrecon multi-deck bundle guard (Phase 08.1)', (
     initCollectionStore();
     collectionStore = __alpineStores.collection;
 
-    // Seed a 250-card multi-deck precon (above the 200 threshold) — sourced
-    // from the shared mockBundlePages fixture so the seed shape is the
-    // single source of truth (no fixture drift between this test and
-    // future plans that consume the same bundle pattern).
     const bundlePages = mockBundlePages('bundle-test');
     const decklist = bundlePages[0].data.map((card) => ({
       scryfall_id: card.id,
@@ -251,49 +252,52 @@ describe('FOLLOWUP-4B: addAllFromPrecon multi-deck bundle guard (Phase 08.1)', (
       decklist,
       updated_at: Date.now(),
     }];
-    // Open the browser so we can assert it stays open after the early-return
     collectionStore.preconBrowserOpen = true;
     collectionStore.selectedPreconCode = 'bundle-test';
   });
 
   afterEach(() => vi.restoreAllMocks());
 
-  it('Test C1 — addAllFromPrecon writes ZERO rows when decklist exceeds 200', async () => {
+  it('Test D1 — addAllFromPrecon writes ALL bundle rows (no early-return)', async () => {
     const { db } = await import('../src/db/schema.js');
     await collectionStore.addAllFromPrecon('bundle-test');
-    expect(await db.collection.count()).toBe(0);
+    expect(await db.collection.count()).toBe(250);
   });
 
-  it('Test C2 — no toast fires on bundled precon', async () => {
+  it('Test D2 — bundle fires the success toast with the full count', async () => {
     await collectionStore.addAllFromPrecon('bundle-test');
-    expect(__alpineStores.toast._calls).toHaveLength(0);
+    const success = __alpineStores.toast._calls.find(c => c.type === 'success');
+    expect(success).toBeTruthy();
+    expect(success.msg).toBe('Added 250 cards from Multi-Deck Bundle Product to collection.');
   });
 
-  it('Test C3 — no undo entry registered on bundled precon', async () => {
+  it('Test D3 — bundle registers exactly one undo entry', async () => {
     await collectionStore.addAllFromPrecon('bundle-test');
-    expect(__alpineStores.undo._calls).toHaveLength(0);
+    expect(__alpineStores.undo._calls).toHaveLength(1);
+    expect(__alpineStores.undo._calls[0].type).toBe('collection_add_batch');
   });
 
-  it('Test C4 — loadEntries NOT called on bundled precon', async () => {
+  it('Test D4 — loadEntries called exactly once (batched render)', async () => {
     const loadSpy = vi.spyOn(collectionStore, 'loadEntries');
     await collectionStore.addAllFromPrecon('bundle-test');
-    expect(loadSpy).not.toHaveBeenCalled();
+    expect(loadSpy).toHaveBeenCalledTimes(1);
   });
 
-  it('Test C5 — browser stays OPEN on bundled precon (warning is visible)', async () => {
+  it('Test D5 — browser closes after add', async () => {
     await collectionStore.addAllFromPrecon('bundle-test');
-    expect(collectionStore.preconBrowserOpen).toBe(true);
-    expect(collectionStore.selectedPreconCode).toBe('bundle-test');
+    expect(collectionStore.preconBrowserOpen).toBe(false);
+    expect(collectionStore.selectedPreconCode).toBeNull();
   });
 });
 
-describe('FOLLOWUP-4B: precon-browser bundle warning render (Phase 08.1)', () => {
-  it('renderPreconBrowser HTML contains the multi-deck warning copy', async () => {
+describe('Phase 14.07d: precon-browser bundle banner render', () => {
+  it('renderPreconBrowser HTML still surfaces a MULTI-DECK PRODUCT banner', async () => {
     if (typeof globalThis.window === 'undefined') globalThis.window = globalThis;
     const { renderPreconBrowser } = await import('../src/components/precon-browser.js');
     const html = renderPreconBrowser();
-    expect(html).toMatch(/contains multiple decks/);
     expect(html).toMatch(/MULTI-DECK PRODUCT/);
     expect(html).toMatch(/isBundle/);
+    // New banner copy — only fires on bundles, no longer gates ADD ALL.
+    expect(html).toMatch(/bundles multiple decks/);
   });
 });

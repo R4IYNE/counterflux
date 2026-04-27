@@ -72,8 +72,9 @@ All 7 phase REQ-IDs are covered with concrete shipped fixes:
 - `tests/sets-service.test.js` — 5/5 passing (4 prior + 1 new regression for 14-07 newest-first ordering)
 - `tests/sync-errors-modal.test.js` — 13/13 passing (9 prior + 4 new regressions for 14-07 bulk actions)
 - `tests/sync-reconciliation.test.js` — 14/14 passing standalone (11 prior + 3 new regressions for 14-07c per-user one-shot guard)
-- `tests/precons.test.js` — 19/19 passing (14 prior + 5 new regressions for 14-07c bundle splitter)
-- Phase 14 plan-targeted suite total: **74/74 passing** as of 2026-04-26 20:00 UTC
+- `tests/precons.test.js` — 19/19 passing (14 prior + 5 new regressions for 14-07c bundle splitter; helper retained even though UI was reverted in 14-07d)
+- `tests/collection.precon.test.js` — 12/12 passing (FOLLOWUP-4B 5-test guard describe replaced with 5-test 14-07d post-revert describe; banner-render assertion updated)
+- Phase 14 plan-targeted suite total: **86/86 passing** as of 2026-04-27 10:00 UTC
 
 ## Plan inventory
 
@@ -87,9 +88,10 @@ All 7 phase REQ-IDs are covered with concrete shipped fixes:
 | 14-06 | complete | 1 | Phase 13 auth-wall stale-static race (rolled in) |
 | 14-07 | complete | 1 | v1.2 items pulled forward (Preordain dropdown sort, sync-errors bulk RETRY/DISCARD) |
 | 14-07b | complete | 1 | Post-UAT polish (reconcile flag, release calendar newest-first) |
-| 14-07c | complete | 1 | Per-user reconcile keying (fixes 14-07b every-login bug) + multi-deck bundle splitter |
+| 14-07c | complete | 1 | Per-user reconcile keying (fixes 14-07b every-login bug) + multi-deck bundle splitter (later reverted) |
+| 14-07d | complete | 1 | Revert bundle gate: ADD ALL adds full bundle per user intent ("if I own a precon, mark it owned and ALL cards land") |
 
-All 9 plans have a corresponding `*-SUMMARY.md` file. Plan PLAN.md files committed in `5b17f27` (14-01..14-04) + `a991feb` (14-05) + `ac9f89c` (14-06) + 14-07 + 14-07b + 14-07c commits on this date.
+All 10 plans have a corresponding `*-SUMMARY.md` file. Plan PLAN.md files committed in `5b17f27` (14-01..14-04) + `a991feb` (14-05) + `ac9f89c` (14-06) + 14-07 / 14-07b / 14-07c / 14-07d commits on the 26-27.
 
 ## Deferred (tracked, not blocking)
 

@@ -2,7 +2,7 @@ import Alpine from 'alpinejs';
 import { db } from '../db/schema.js';
 import { logActivity } from '../services/activity.js';
 import { queueScryfallRequest } from '../services/scryfall-queue.js';
-import { fetchPrecons, fetchPreconDecklist, invalidatePreconsCache, isMultiDeckBundle } from '../services/precons.js';
+import { fetchPrecons, fetchPreconDecklist, invalidatePreconsCache } from '../services/precons.js';
 
 /**
  * Sort collection entries by the given sort key.
@@ -396,21 +396,13 @@ export function initCollectionStore() {
         throw new Error(`Precon ${code} has no decklist; call selectPrecon first.`);
       }
 
-      // FOLLOWUP-4B (Phase 08.1) — bundle guard. Multi-deck Commander products
-      // (Doctor Who, Fallout, Warhammer 40K, Tales of Middle-earth, Final Fantasy,
-      // Commander Masters once allowlisted) load as 400-1000+ card 'decklists'
-      // because Scryfall has no deck-membership metadata. ADD ALL would dump
-      // every card into the user's collection — wrong. Early-return silently:
-      // - NO Dexie writes
-      // - NO loadEntries() reload
-      // - NO toast (the warning state in precon-browser.js communicates the situation;
-      //   firing a toast on top would be redundant)
-      // - NO undo entry registered
-      // Browser stays OPEN so the user keeps seeing the warning copy and can
-      // navigate back to the tile grid via the BACK button or close manually.
-      if (isMultiDeckBundle(precon)) {
-        return;
-      }
+      // Phase 14.07d — bundle guard removed. The 4B/4C iterations treated
+      // multi-deck Commander products (Doctor Who, Final Fantasy, etc.) as
+      // un-addable. The intended UX is the opposite: if a user owns the
+      // boxed product, ADD ALL adds every card from every bundled deck
+      // into their collection. The accurate count is communicated in the
+      // toast + activity log; per-deck filtering is a v1.2 nice-to-have.
+
 
       const nowIso = new Date().toISOString();
       const added = [];       // IDs of newly-inserted rows (for undo bulkDelete)
