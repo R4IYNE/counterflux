@@ -178,6 +178,29 @@ async function bootApp() {
       (async () => {
         const { initSyncEngine } = await import('./services/sync-engine.js');
         await initSyncEngine();
+        // Phase 14.07h — once the sync engine has reconciled / bulk-pulled,
+        // refresh the in-memory collection/deck/game stores from Dexie so the
+        // dashboard reflects post-sign-in state without requiring the user to
+        // click into Treasure Cruise / Thousand-Year Storm to force a load.
+        // Stores that were initialised pre-auth read an empty Dexie at boot;
+        // after reconcile populates the tables, their .entries / .decks /
+        // .history arrays still hold the empty snapshot until a loader fires.
+        try {
+          const collection = Alpine.store('collection');
+          if (collection && typeof collection.loadEntries === 'function') {
+            await collection.loadEntries();
+          }
+          const deck = Alpine.store('deck');
+          if (deck && typeof deck.loadDecks === 'function') {
+            await deck.loadDecks();
+          }
+          const game = Alpine.store('game');
+          if (game && typeof game.loadHistory === 'function') {
+            await game.loadHistory();
+          }
+        } catch (refreshErr) {
+          console.warn('[Counterflux] post-auth store refresh failed:', refreshErr);
+        }
       })();
     } else if (status === 'anonymous') {
       (async () => {
