@@ -55,17 +55,33 @@
 
 ## Traceability
 
-REQ-IDs map to phases via the roadmapper. The table below is populated by `gsd-roadmapper` once the roadmap is created.
-
 | REQ-ID | Phase |
 |--------|-------|
-| _populated by roadmapper_ | _populated by roadmapper_ |
+| DEPLOY-01 | Phase 15 |
+| DEPLOY-02 | Phase 15 |
+| DEPLOY-03 | Phase 15 |
+| DEPLOY-04 | Phase 15 |
+| DEPLOY-05 | Phase 15 |
+| DEPLOY-06 | Phase 15 |
+| DECIDE-01 | Phase 15 |
+| DECIDE-02 | Phase 15 |
+| PROXY-01 | Phase 16 |
+| PROXY-02 | Phase 16 |
+| PROXY-03 | Phase 16 |
+| PROXY-04 | Phase 16 |
+| PROXY-05 | Phase 16 |
+| UAT-01 | Phase 17 |
+| UAT-02 | Phase 17 |
+| UAT-03 | Phase 17 |
 
 ### Coverage by Phase
 
 | Phase | Name | REQ Count | Categories Covered |
 |-------|------|-----------|--------------------|
-| _populated by roadmapper_ | | | |
+| 15 | Vercel Foundation & Codified Decisions | 8 | DEPLOY (6), DECIDE (2) |
+| 16 | EDHREC CORS Proxy | 5 | PROXY (5) |
+| 17 | Live-Environment UAT Pass | 3 | UAT (3) |
+| **Total** | | **16** | **All 4 categories** |
 
 ---
-*Last updated: 2026-04-27 — v1.2 Deploy the Gatewatch requirements defined; traceability populated by roadmapper*
+*Last updated: 2026-04-27 — v1.2 Deploy the Gatewatch traceability populated by gsd-roadmapper. 16 requirements mapped to 3 phases (15–17), 100% coverage, no orphans.*
