@@ -85,6 +85,10 @@ export function initCollectionStore() {
     precons: [], // sorted newest-first by fetchPrecons() (D-12)
     preconDecklistLoading: false,
     preconDecklistError: null,
+    // Phase 14.07j — reactive flag flipped once the lazy-loaded MTGJSON
+    // deck-membership JSON has resolved. Alpine getters in precon-browser
+    // depend on this to force a re-render after the dynamic import lands.
+    preconMembershipsLoaded: false,
 
     get filtered() {
       let items = this.entries;
@@ -338,6 +342,17 @@ export function initCollectionStore() {
       this.preconsError = null;
       try {
         this.precons = await fetchPrecons({ forceRefresh });
+        // Phase 14.07j — kick the lazy MTGJSON membership load in parallel
+        // so the splitter has data ready by the time the user drills into
+        // a multi-deck bundle. Sets preconMembershipsLoaded reactively
+        // when the dynamic import resolves; Alpine x-data getters in
+        // precon-browser depend on this flag to recompute the deck tiles.
+        if (!this.preconMembershipsLoaded) {
+          import('../services/precons.js').then(async (mod) => {
+            await mod.loadPreconDeckMemberships();
+            this.preconMembershipsLoaded = true;
+          });
+        }
       } catch (err) {
         this.preconsError = err.message || 'Failed to load precons';
         this.precons = [];

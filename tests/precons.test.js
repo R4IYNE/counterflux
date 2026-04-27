@@ -272,101 +272,103 @@ describe('FOLLOWUP-4B: isMultiDeckBundle helper (Phase 08.1)', () => {
   });
 });
 
-// Phase 14.07e — splitPreconIntoDecks now consumes a curated WotC deck-name
-// manifest in src/data/precon-deck-manifests.js. Returns [] for products
-// without a manifest (caller falls back to full-bundle ADD ALL).
-describe('Phase 14.07e: splitPreconIntoDecks (manifest-driven)', () => {
-  function _commander(name, ci, id = name.toLowerCase().replace(/[^a-z]+/g, '-')) {
-    return { scryfall_id: id, quantity: 1, is_commander: true, name, color_identity: ci, type_line: 'Legendary Creature' };
-  }
-  function _support(name, ci, id = name.toLowerCase().replace(/[^a-z]+/g, '-')) {
-    return { scryfall_id: id, quantity: 1, is_commander: false, name, color_identity: ci, type_line: 'Creature' };
-  }
-
-  it('returns [] when decklist has no color_identity metadata (legacy cache)', async () => {
-    const { splitPreconIntoDecks } = await import('../src/services/precons.js');
-    const legacyDecklist = [
-      { scryfall_id: 'a', quantity: 1, is_commander: true },
-      { scryfall_id: 'b', quantity: 1, is_commander: false },
-    ];
-    expect(splitPreconIntoDecks({ code: 'fic', decklist: legacyDecklist })).toEqual([]);
+// Phase 14.07j — splitPreconIntoDecks now consumes the static MTGJSON
+// membership data at src/data/precon-deck-memberships.json. Returns []
+// for products without a membership entry (caller falls back to
+// full-bundle ADD ALL). Tests use vi.doMock to inject synthetic
+// membership data so they don't depend on real WotC product IDs.
+describe('Phase 14.07j: splitPreconIntoDecks (MTGJSON membership-driven)', () => {
+  beforeEach(async () => {
+    vi.resetModules();
+    const mod = await import('../src/services/precons.js');
+    mod.__setPreconDeckMembershipsForTests({
+      memberships: {
+        fic: {
+          'Limit Break (FINAL FANTASY VII)': ['fic-1-cloud', 'fic-1-tifa', 'fic-1-c1', 'fic-1-c2'],
+          'Revival Trance (FINAL FANTASY VI)': ['fic-2-terra', 'fic-2-celes', 'fic-2-c1'],
+        },
+      },
+    });
+  });
+  afterEach(async () => {
+    const mod = await import('../src/services/precons.js');
+    mod.__setPreconDeckMembershipsForTests(null);
   });
 
-  it('returns [] when there is no manifest entry for this set code', async () => {
+  function _card(id, name, isCommander = false, ci = []) {
+    return { scryfall_id: id, quantity: 1, is_commander: isCommander, name, color_identity: ci, type_line: isCommander ? 'Legendary Creature' : 'Creature' };
+  }
+
+  it('returns [] when decklist is empty or missing', async () => {
     const { splitPreconIntoDecks } = await import('../src/services/precons.js');
-    const decklist = [_commander('Some Commander', ['R'])];
+    expect(splitPreconIntoDecks({ code: 'fic', decklist: [] })).toEqual([]);
+    expect(splitPreconIntoDecks({ code: 'fic' })).toEqual([]);
+  });
+
+  it('returns [] when set code has no membership entry', async () => {
+    const { splitPreconIntoDecks } = await import('../src/services/precons.js');
+    const decklist = [_card('x-1', 'Some Card')];
     expect(splitPreconIntoDecks({ code: 'unknown-set', decklist })).toEqual([]);
   });
 
-  it('returns [] when manifest exists but no manifest commanders are in the decklist', async () => {
-    const { splitPreconIntoDecks } = await import('../src/services/precons.js');
-    // 'fic' manifest expects Cloud / Tifa / Aerith / etc. Decklist has none.
-    const decklist = [_commander('Random Commander', ['R'])];
-    expect(splitPreconIntoDecks({ code: 'fic', decklist })).toEqual([]);
-  });
-
-  it('builds named decks from the fin manifest and assigns supporters by subset match', async () => {
+  it('builds decks by exact-id lookup against the membership map', async () => {
     const { splitPreconIntoDecks } = await import('../src/services/precons.js');
     const decklist = [
-      // Limit Break (Cloud + Tifa) — give them a shared mono-W identity for the test
-      _commander('Cloud, Ex-SOLDIER', ['W']),
-      _commander('Tifa, Martial Artist', ['W']),
-      // Revival Trance (Aerith + Sephiroth) — GW
-      _commander('Aerith, Last Ancient', ['G', 'W']),
-      _commander('Sephiroth, Fabled SOLDIER', ['G', 'W']),
-      // Counter Blow (Tidus + Yuna)
-      _commander('Tidus, Yuna’s Guardian', ['U']),
-      _commander('Yuna, Grand Summoner', ['U']),
-      // Scions & Spellcraft (Y'shtola + G'raha) — straight + curly apostrophes to test normalisation
-      _commander("Y'shtola, Night's Blessed", ['B']),
-      _commander('G’raha Tia, Scion Reborn', ['B']),
-      _support('Plains', []),
-      _support('Cultivate', ['G']),
+      _card('fic-1-cloud', 'Cloud, Ex-SOLDIER', true, ['W']),
+      _card('fic-1-tifa', 'Tifa, Martial Artist', false, ['W', 'R']),
+      _card('fic-1-c1', 'Lightning Bolt', false, ['R']),
+      _card('fic-1-c2', 'Plains', false, []),
+      _card('fic-2-terra', 'Terra, Herald of Hope', true, ['W']),
+      _card('fic-2-celes', 'Celes, Rune Knight', false, ['W']),
+      _card('fic-2-c1', 'Cultivate', false, ['G']),
+      _card('unrelated', 'Random Card', false, ['B']),
     ];
-
     const decks = splitPreconIntoDecks({ code: 'fic', decklist });
-    expect(decks).toHaveLength(4);
-    const names = decks.map(d => d.name);
-    expect(names).toEqual(['Limit Break', 'Revival Trance', 'Counter Blow', 'Scions & Spellcraft']);
+    expect(decks).toHaveLength(2);
 
-    const limitBreak = decks.find(d => d.name === 'Limit Break');
-    expect(limitBreak.commanders.map(c => c.name).sort()).toEqual(['Cloud, Ex-SOLDIER', 'Tifa, Martial Artist']);
+    const limitBreak = decks.find(d => d.name.includes('Limit Break'));
+    expect(limitBreak.cards).toHaveLength(4);
+    expect(limitBreak.cards.map(c => c.scryfall_id).sort())
+      .toEqual(['fic-1-c1', 'fic-1-c2', 'fic-1-cloud', 'fic-1-tifa']);
+    expect(limitBreak.commanders.map(c => c.name)).toContain('Cloud, Ex-SOLDIER');
 
-    const revival = decks.find(d => d.name === 'Revival Trance');
-    // GW union → cultivate (G) fits
-    expect(revival.cards.some(c => c.name === 'Cultivate')).toBe(true);
+    const revival = decks.find(d => d.name.includes('Revival Trance'));
+    expect(revival.cards).toHaveLength(3);
+    expect(revival.cards.map(c => c.scryfall_id).sort())
+      .toEqual(['fic-2-c1', 'fic-2-celes', 'fic-2-terra']);
 
-    // Smart-quote tolerance worked
-    const scions = decks.find(d => d.name === 'Scions & Spellcraft');
-    expect(scions.commanders).toHaveLength(2);
+    // Identity union: Limit Break has W (Cloud) + WR (Tifa) + R (Bolt) + colorless (Plains) → RW
+    expect(limitBreak.identityLabel).toBe('RW');
+    expect(revival.identityLabel).toBe('GW');
   });
 
-  it('skips manifest decks whose commanders are not in the cache yet (graceful degradation)', async () => {
+  it('skips decks whose cards are entirely missing from the cache', async () => {
     const { splitPreconIntoDecks } = await import('../src/services/precons.js');
     const decklist = [
-      _commander('Cloud, Ex-SOLDIER', ['W']),
-      _commander('Tifa, Martial Artist', ['W']),
-      // None of the other 3 decks' commanders are in the decklist
-      _support('Plains', []),
+      _card('fic-1-cloud', 'Cloud, Ex-SOLDIER', true, ['W']),
+      _card('fic-1-tifa', 'Tifa, Martial Artist', false, ['W']),
+      _card('fic-1-c1', 'Lightning Bolt', false, ['R']),
+      _card('fic-1-c2', 'Plains', false, []),
+      // None of fic-2's cards are in the decklist
     ];
     const decks = splitPreconIntoDecks({ code: 'fic', decklist });
     expect(decks).toHaveLength(1);
-    expect(decks[0].name).toBe('Limit Break');
+    expect(decks[0].name).toContain('Limit Break');
   });
 
-  it('caps each manifest deck at 100 cards (1 commander + 99 supporters)', async () => {
+  it('only includes cards that exist in BOTH the membership list AND the decklist', async () => {
     const { splitPreconIntoDecks } = await import('../src/services/precons.js');
-    const supporters = [];
-    for (let i = 0; i < 150; i++) supporters.push(_support('Card ' + i, ['W'], 'sup-' + i));
+    // Decklist has only 2 of the 4 IDs the membership lists for Limit Break.
     const decklist = [
-      _commander('Cloud, Ex-SOLDIER', ['W']),
-      _commander('Tifa, Martial Artist', ['W']),
-      ...supporters,
+      _card('fic-1-cloud', 'Cloud, Ex-SOLDIER', true, ['W']),
+      _card('fic-1-c1', 'Lightning Bolt', false, ['R']),
+      _card('fic-2-terra', 'Terra, Herald of Hope', true, ['W']),
+      _card('fic-2-celes', 'Celes, Rune Knight', false, ['W']),
+      _card('fic-2-c1', 'Cultivate', false, ['G']),
     ];
     const decks = splitPreconIntoDecks({ code: 'fic', decklist });
-    expect(decks).toHaveLength(1);
-    // 2 commanders + up to 99 supporters
-    expect(decks[0].cards.filter(c => !c.is_commander).length).toBeLessThanOrEqual(99);
-    expect(decks[0].cards.length).toBeLessThanOrEqual(101);
+    const limitBreak = decks.find(d => d.name.includes('Limit Break'));
+    expect(limitBreak.cards).toHaveLength(2);
+    expect(limitBreak.cards.map(c => c.scryfall_id).sort()).toEqual(['fic-1-c1', 'fic-1-cloud']);
   });
 });

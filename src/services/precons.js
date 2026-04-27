@@ -16,7 +16,34 @@
 
 import { db } from '../db/schema.js';
 import { queueScryfallRequest } from './scryfall-queue.js';
-import { getDeckManifest } from '../data/precon-deck-manifests.js';
+
+// Phase 14.07j — precon-deck-memberships.json is ~800KB of MTGJSON-sourced
+// scryfall_id arrays. Eager-importing it would bloat the main bundle and
+// regress LCP/Phase 7's perf baseline. Dynamic-import on first use instead;
+// the precon-browser is the only consumer and is opened by explicit user
+// action.
+let _membershipsCache = null;
+let _membershipsLoading = null;
+export async function loadPreconDeckMemberships() {
+  if (_membershipsCache) return _membershipsCache;
+  if (_membershipsLoading) return _membershipsLoading;
+  _membershipsLoading = import('../data/precon-deck-memberships.json')
+    .then((mod) => {
+      _membershipsCache = mod.default || mod;
+      return _membershipsCache;
+    })
+    .catch((err) => {
+      console.warn('[precons] failed to load deck memberships:', err);
+      _membershipsCache = { memberships: {} };
+      return _membershipsCache;
+    });
+  return _membershipsLoading;
+}
+// Test-only escape hatch so vi.doMock can inject membership fixtures.
+export function __setPreconDeckMembershipsForTests(value) {
+  _membershipsCache = value;
+  _membershipsLoading = null;
+}
 
 // D-09: Commander + duel_deck only. starter (Welcome Deck 2017, etc.) is
 // intentionally excluded — these are intro products, not user-collectable
@@ -239,27 +266,20 @@ function inferIsCommander(card) {
 }
 
 /**
- * Phase 14.07e — split a multi-deck bundle into the actual WotC decks using
- * a curated deck-name → commander-name manifest in src/data/precon-deck-manifests.js.
+ * Phase 14.07j — split a multi-deck bundle into the actual WotC decks using
+ * the static MTGJSON-sourced membership data in src/data/precon-deck-memberships.json.
  *
- * Scryfall doesn't expose deck-membership metadata, so 14-07c's pure-heuristic
- * splitter produced one "deck" per legendary creature in the set (19 tiny
- * tiles for Final Fantasy Commander instead of the 4 real WotC decks).
- * 14-07e keys the split on a manifest:
+ * Earlier iterations (14-07c..e) tried a color-identity heuristic that
+ * produced wrong card counts (101/87/43/54 for Final Fantasy instead of
+ * 100/100/100/100) because cards that fit multiple decks fell into whichever
+ * iterated first. 14-07j replaces the heuristic with deterministic O(1)
+ * lookup against MTGJSON's WotC-verified deck lists, regenerated at build
+ * time via `npm run sync:precons` (scripts/sync-precon-decks.mjs).
  *
- *   1. Look up `code` in PRECON_DECK_MANIFESTS. If absent → return [] so the
- *      caller falls back to the full-bundle ADD ALL flow shipped in 14-07d.
- *   2. For each manifest entry: find commanders in `precon.decklist` whose
- *      `name` matches one of the entry's `commanderNames` (case-insensitive,
- *      smart-quote-tolerant). Skip entries with no matched commanders.
- *   3. Compute the union color identity across the matched commanders.
- *   4. Assign non-commander cards to the FIRST manifest entry whose union
- *      identity is a superset of the card's color identity. Cap at 99
- *      supporters per deck (Commander format).
+ * Output for each deck is exactly the WotC-published 100-card list.
  *
- * Cards that don't fit any manifest entry's identity are dropped from the
- * per-deck previews but ADD ALL on the bundle still includes them (via the
- * unchanged addAllFromPrecon path). Per-deck adds use addCardsFromIds.
+ * Returns [] when no membership entry exists for the precon's set code so
+ * the caller falls back to the 14-07d full-bundle ADD ALL flow.
  *
  * @param {{ code?: string, decklist?: Array }} precon
  * @returns {Array<{ key: string, name: string, identity: string[], identityLabel: string, commanders: Array, cards: Array, total: number }>}
@@ -267,22 +287,22 @@ function inferIsCommander(card) {
 export function splitPreconIntoDecks(precon) {
   const list = precon?.decklist;
   if (!Array.isArray(list) || list.length === 0) return [];
-  const hasMetadata = list.some((c) => Array.isArray(c.color_identity) && typeof c.name === 'string');
-  if (!hasMetadata) return [];
 
-  // Phase 14.07e — manifest gate. Without a manifest the splitter falls back
-  // to the legacy gate (caller renders the 14-07d full-bundle banner instead).
-  const manifest = getDeckManifest(precon?.code);
-  if (!manifest || manifest.length === 0) return [];
+  // The membership data is lazy-loaded — caller (precon-browser) must call
+  // loadPreconDeckMemberships() before relying on this function. While the
+  // cache is unloaded, return [] so the UI falls back to the full-bundle
+  // banner instead of flashing inconsistent state.
+  if (!_membershipsCache) return [];
 
-  // Smart-quote / curly-apostrophe tolerance (e.g. "Y’shtola" vs "Y'shtola").
-  const _normName = (s) => (s || '').toLowerCase().replace(/[‘’‛′‵]/g, "'");
+  const code = (precon?.code || '').toLowerCase();
+  const bundleMap = (_membershipsCache?.memberships || {})[code];
+  if (!bundleMap || Object.keys(bundleMap).length === 0) return [];
 
-  // Build {normalizedName → card} lookup once.
-  const byName = new Map();
+  // O(1) lookup of the Scryfall dump by id so we can pluck cards out by
+  // exact-id match against the MTGJSON deck lists.
+  const cardLookup = new Map();
   for (const card of list) {
-    if (!card?.name) continue;
-    byName.set(_normName(card.name), card);
+    if (card?.scryfall_id) cardLookup.set(card.scryfall_id, card);
   }
 
   const _idDisplay = (ci) => {
@@ -292,61 +312,31 @@ export function splitPreconIntoDecks(precon) {
 
   const _sig = (ci) => (ci || []).slice().sort().join(',') || 'C';
 
-  const _isSubset = (cardCI, deckCI) => {
-    if (!Array.isArray(cardCI) || cardCI.length === 0) return true;
-    const deckSet = new Set(deckCI || []);
-    for (const c of cardCI) if (!deckSet.has(c)) return false;
-    return true;
-  };
-
-  // Pass 1: resolve manifest entries → commanders + union identity.
   const decks = [];
-  for (const entry of manifest) {
-    const matched = [];
+  for (const [deckName, scryfallIds] of Object.entries(bundleMap)) {
+    const deckCards = [];
+    const commanders = [];
     const identitySet = new Set();
-    for (const cmdName of entry.commanderNames || []) {
-      const card = byName.get(_normName(cmdName));
+    for (const id of scryfallIds) {
+      const card = cardLookup.get(id);
       if (!card) continue;
-      matched.push(card);
+      deckCards.push(card);
+      if (card.is_commander) commanders.push(card);
       for (const ci of (card.color_identity || [])) identitySet.add(ci);
     }
-    if (matched.length === 0) continue; // skip decks whose commanders aren't in the cache yet
+    if (deckCards.length === 0) continue;
     const identity = Array.from(identitySet);
     decks.push({
-      key: entry.name + '::' + _sig(identity),
-      name: entry.name,
+      key: code + '::' + deckName,
+      name: deckName,
       identity,
       identityLabel: _idDisplay(identity),
-      commanders: matched,
-      cards: [...matched],
-      total: matched.length,
+      commanders,
+      cards: deckCards,
+      total: deckCards.length,
     });
   }
 
-  if (decks.length === 0) return [];
-
-  // Pass 2: assign non-commander cards to the first deck whose identity
-  // is a superset of the card's color identity. Cap 99 supporters per deck.
-  const supportCap = 99;
-  const claimedIds = new Set();
-  for (const deck of decks) for (const c of deck.commanders) claimedIds.add(c.scryfall_id);
-
-  for (const card of list) {
-    if (card.is_commander) continue;
-    if (claimedIds.has(card.scryfall_id)) continue;
-    for (const deck of decks) {
-      if (deck.cards.length - deck.commanders.length >= supportCap) continue;
-      if (_isSubset(card.color_identity, deck.identity)) {
-        deck.cards.push(card);
-        claimedIds.add(card.scryfall_id);
-        break;
-      }
-    }
-  }
-
-  for (const deck of decks) deck.total = deck.cards.length;
-
-  // Manifest-defined order is the WotC product ordering; preserve it.
   return decks;
 }
 

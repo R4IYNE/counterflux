@@ -201,6 +201,12 @@ export function renderPreconBrowser() {
               get manifestDecks() {
                 if (!this.isBundle) return [];
                 if (!window.__cf_splitPreconIntoDecks) return [];
+                // Phase 14.07j — depend on the reactive flag flipped after
+                // the lazy MTGJSON membership import resolves. Without this
+                // reactive read, Alpine wouldn't recompute the tile grid
+                // when the JSON arrives — leaving the user staring at the
+                // legacy banner forever even though split data is ready.
+                if (!$store.collection.preconMembershipsLoaded) return [];
                 return window.__cf_splitPreconIntoDecks(this.precon);
               },
               get hasManifest() { return this.manifestDecks.length > 0; },
