@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Second Sunrise
-status: milestone_ready_to_ship
-stopped_at: Phase 14 complete — 12 plans landed (14-01..14-04 audit closes, 14-05 schema parity, 14-06 auth-wall, 14-07 Preordain dropdown + bulk sync-errors, 14-07b reconcile flag + release calendar, 14-07c per-user reconcile keying, 14-07d full-bundle ADD ALL, 14-07e/i manifest stub, 14-07j MTGJSON-sourced precon deck memberships replacing the heuristic); v1.1 audit re-verified as `passed`
-last_updated: "2026-04-27T13:00:00.000Z"
-last_activity: 2026-04-27 -- v1.1 milestone closed; ready to ship
+status: v1.1 milestone ready to ship — re-audit returned `passed`
+stopped_at: Plan 14-02 complete — retrospective 07-VERIFICATION.md written + SCHEMA-01..03 checkboxes flipped in REQUIREMENTS.md (audit Issue C closed)
+last_updated: "2026-04-27T19:59:10.742Z"
+last_activity: 2026-04-27
 progress:
-  total_phases: 9
-  completed_phases: 9
-  total_plans: 47
-  completed_plans: 47
+  total_phases: 8
+  completed_phases: 8
+  total_plans: 35
+  completed_plans: 35
   percent: 100
 ---
 
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-04-14)
 Phase: 14 (v1-1-audit-gap-closure) — COMPLETE
 Plan: 6 of 6 (14-04 close gate executed inline; 14-01/02/03/05/06 all green)
 Status: v1.1 milestone ready to ship — re-audit returned `passed`
-Last activity: 2026-04-26 -- v1.1 milestone closed; awaiting `/gsd:complete-milestone v1.1`
+Last activity: 2026-04-27
 
 Progress: [██████████] 100%
 
