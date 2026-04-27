@@ -351,7 +351,7 @@ describe('Phase 14.07j: splitPreconIntoDecks (MTGJSON membership-driven)', () =>
     expect(revival.identityLabel).toBe('GW');
   });
 
-  it('skips decks whose cards are entirely missing from the cache', async () => {
+  it('Phase 14.07L — keeps tile entries for decks with no local matches; total comes from MTGJSON, cards is empty', async () => {
     const { splitPreconIntoDecks } = await import('../src/services/precons.js');
     const decklist = [
       _card('fic-1-cloud', 'Cloud, Ex-SOLDIER', true, ['W']),
@@ -361,11 +361,17 @@ describe('Phase 14.07j: splitPreconIntoDecks (MTGJSON membership-driven)', () =>
       // None of fic-2's cards are in the decklist
     ];
     const decks = splitPreconIntoDecks({ code: 'fic', decklist });
-    expect(decks).toHaveLength(1);
-    expect(decks[0].name).toContain('Limit Break');
+    // Both decks render so the user sees the full bundle structure;
+    // Revival Trance just has cards: [] for preview. ADD ALL still works
+    // via scryfallIds.
+    expect(decks).toHaveLength(2);
+    const revival = decks.find(d => d.name.includes('Revival Trance'));
+    expect(revival.cards).toHaveLength(0);
+    expect(revival.scryfallIds).toHaveLength(3);
+    expect(revival.total).toBe(3);
   });
 
-  it('only includes cards that exist in BOTH the membership list AND the decklist', async () => {
+  it('only includes cards in `cards` that exist in BOTH the membership list AND the decklist', async () => {
     const { splitPreconIntoDecks } = await import('../src/services/precons.js');
     // Decklist has only 2 of the 4 IDs the membership lists for Limit Break.
     const decklist = [
@@ -377,8 +383,28 @@ describe('Phase 14.07j: splitPreconIntoDecks (MTGJSON membership-driven)', () =>
     ];
     const decks = splitPreconIntoDecks({ code: 'fic', decklist });
     const limitBreak = decks.find(d => d.name.includes('Limit Break'));
+    // `cards` is the locally-renderable subset (2 of 4)
     expect(limitBreak.cards).toHaveLength(2);
     expect(limitBreak.cards.map(c => c.scryfall_id).sort()).toEqual(['fic-1-c1', 'fic-1-cloud']);
+    // Phase 14.07L — `scryfallIds` is the FULL MTGJSON id list (all 4),
+    // and `total` reflects the WotC-published count regardless of local
+    // cache misses. ADD ALL uses scryfallIds, tile shows total.
+    expect(limitBreak.scryfallIds).toEqual(['fic-1-cloud', 'fic-1-tifa', 'fic-1-c1', 'fic-1-c2']);
+    expect(limitBreak.total).toBe(4);
+  });
+
+  it('Phase 14.07L — total + scryfallIds reflect MTGJSON truth even when local cache misses bonus-set cards', async () => {
+    const { splitPreconIntoDecks } = await import('../src/services/precons.js');
+    // Decklist completely missing fic-1-tifa AND fic-1-c2 (no name fallback either).
+    const decklist = [
+      _card('fic-1-cloud', 'Cloud, Ex-SOLDIER', true, ['W']),
+      _card('fic-1-c1', 'Lightning Bolt', false, ['R']),
+    ];
+    const decks = splitPreconIntoDecks({ code: 'fic', decklist });
+    const limitBreak = decks.find(d => d.name.includes('Limit Break'));
+    expect(limitBreak.cards).toHaveLength(2); // local subset
+    expect(limitBreak.scryfallIds).toHaveLength(4); // MTGJSON truth
+    expect(limitBreak.total).toBe(4);
   });
 
   // Phase 14.07k — name fallback. MTGJSON sometimes lists a different

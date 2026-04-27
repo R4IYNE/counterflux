@@ -332,18 +332,24 @@ export function splitPreconIntoDecks(precon) {
 
   const decks = [];
   for (const [deckName, rawEntries] of Object.entries(bundleMap)) {
+    const entries = (rawEntries || []).map(_normEntry);
     const deckCards = [];
     const commanders = [];
+    const scryfallIds = [];
     const identitySet = new Set();
-    for (const entry of (rawEntries || [])) {
-      const { id, name } = _normEntry(entry);
+    for (const { id, name } of entries) {
+      // Phase 14.07L — always include the MTGJSON id in scryfallIds so
+      // ADD ALL imports the complete WotC-published 100-card list, even if
+      // the card lives in a bonus Scryfall set (e.g. "set:fca" promo cards
+      // shipped alongside FIC) that isn't in the local unique=prints cache.
+      if (id) scryfallIds.push(id);
       const card = byId.get(id) || byName.get(_normName(name));
       if (!card) continue;
       deckCards.push(card);
       if (card.is_commander) commanders.push(card);
       for (const ci of (card.color_identity || [])) identitySet.add(ci);
     }
-    if (deckCards.length === 0) continue;
+    if (entries.length === 0) continue;
     const identity = Array.from(identitySet);
     decks.push({
       key: code + '::' + deckName,
@@ -351,8 +357,14 @@ export function splitPreconIntoDecks(precon) {
       identity,
       identityLabel: _idDisplay(identity),
       commanders,
+      // `cards` = locally-renderable subset (used by the decklist preview).
+      // `scryfallIds` = full MTGJSON id list (used by ADD ALL so the count
+      // landing in the collection always equals the WotC-published 100).
+      // `total` = MTGJSON entry count (the truth) — stays at 100 even when
+      // the local cache misses some printings.
       cards: deckCards,
-      total: deckCards.length,
+      scryfallIds,
+      total: entries.length,
     });
   }
 

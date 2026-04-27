@@ -224,7 +224,14 @@ export function renderPreconBrowser() {
               },
               addAllEffective() {
                 if (this.selectedDeck) {
-                  const ids = this.selectedDeck.cards.map(c => c.scryfall_id);
+                  // Phase 14.07L — use the MTGJSON-sourced full ID list, not
+                  // just the locally-renderable subset. Bonus-set cards
+                  // missing from the precon cache still need to land in
+                  // the collection so the user gets the complete 100-card
+                  // WotC deck.
+                  const ids = (this.selectedDeck.scryfallIds && this.selectedDeck.scryfallIds.length)
+                    ? this.selectedDeck.scryfallIds
+                    : this.selectedDeck.cards.map(c => c.scryfall_id);
                   const label = (this.precon?.name || 'precon') + ' — ' + this.selectedDeck.name;
                   if ($store.collection.addCardsFromIds) {
                     $store.collection.addCardsFromIds(ids, { label });
@@ -237,12 +244,21 @@ export function renderPreconBrowser() {
               },
               addButtonLabel() {
                 if (this.isBundle && this.hasManifest && !this.selectedDeck) return 'PICK A DECK BELOW';
+                // Phase 14.07L — when a manifest deck is selected, the count
+                // comes from MTGJSON (deck.total = 100) not the local cache
+                // subset. ADD ALL imports the full WotC list including
+                // bonus-set cards missing from the local Scryfall cache.
+                if (this.selectedDeck) {
+                  const n = this.selectedDeck.total || this.selectedDeck.cards.length;
+                  return 'ADD ALL ' + n + ' CARDS';
+                }
                 if (!this.effectiveDecklist.length) return 'LOADING…';
                 return 'ADD ALL ' + this.effectiveDecklist.length + ' CARDS';
               },
               get addButtonEnabled() {
                 if ($store.collection.preconDecklistLoading) return false;
                 if (this.isBundle && this.hasManifest && !this.selectedDeck) return false;
+                if (this.selectedDeck) return !!(this.selectedDeck.scryfallIds?.length || this.selectedDeck.cards.length);
                 return !!this.effectiveDecklist.length;
               },
               get sortedDecklist() {
