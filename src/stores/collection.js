@@ -598,10 +598,32 @@ export function initCollectionStore() {
     /**
      * Phase 8 Plan 3 — manual REFRESH button (D-11). Clears the Dexie
      * cache and re-fetches from Scryfall.
+     *
+     * Phase 14.07f — additionally drop the currently-selected precon code
+     * + re-select it so the decklist is refetched with the latest metadata
+     * fields (Phase 14.07c added color_identity / name / type_line — older
+     * caches don't have them, blocking the manifest splitter). Without this
+     * step REFRESH appears to do nothing when a precon is already selected:
+     * the user sees the precon header but no tile grid + no decklist
+     * because the selected precon's `.decklist` is now null in the cache
+     * and selectPrecon() isn't re-invoked automatically.
      */
     async refreshPrecons() {
+      const previouslySelected = this.selectedPreconCode;
+      // Drop the selection BEFORE clearing so VIEW B unmounts cleanly.
+      this.selectedPreconCode = null;
       await invalidatePreconsCache();
       await this.loadPrecons({ forceRefresh: true });
+      // Re-fetch the previously-selected decklist so the user lands back
+      // on the same precon view with fresh data (instead of a stuck
+      // empty-state where the selected precon has decklist: null).
+      if (previouslySelected) {
+        try {
+          await this.selectPrecon(previouslySelected);
+        } catch (err) {
+          console.warn('[precons] re-select after refresh failed:', err);
+        }
+      }
     },
   });
 }
