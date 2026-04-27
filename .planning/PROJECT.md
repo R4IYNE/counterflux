@@ -20,9 +20,21 @@ All six modules operational and synced: Dashboard (Epic Experiment), Collection 
 **Sync:** Dexie hook outbox → batched upsert, Realtime subscription for incoming changes, last-write-wins conflict resolution (`updated_at` field-level), 4-state topbar chip (synced/syncing/offline/error), reconciliation modal for first sign-in.
 **Performance:** Final v1.1 Lighthouse — LCP 2.49s, FCP 0.4s, CLS 0.059, Perf 86. All Web Vitals `Good`.
 
-## Next Milestone
+## Current Milestone: v1.2 Deploy the Gatewatch
 
-**v1.2 — TBD.** Run `/gsd:new-milestone` to begin scoping. Backlog items 999.1 (MTGJSON Tokens.json — Required Tokens tab) and 999.2 (MTGJSON AllPrices.json — historical price charts) are candidates for promotion. SEED-001 (catalog/userdata storage split — wa-sqlite + OPFS for catalog) auto-surfaces during new-milestone scoping.
+**Goal:** Make Counterflux production-deployable on Vercel by closing every v1.1 carry-over blocker — pure cleanup, no new user-facing features.
+
+**Target features:**
+- EDHREC CORS proxy → Vercel Function (`/api/edhrec-proxy`) replacing the dev-only Vite proxy. Lazy-loaded, rate-limited, env-aware (dev keeps Vite proxy, prod uses Vercel Function). Anonymous-bundle untouched.
+- Public sign-up UI codified as "household model" (existing-account credentials only) — explicit product decision logged, deferral comment in `phases/10-supabase-auth-foundation/10-CONTEXT.md` cleaned up.
+- Nyquist validation gate disabled (`workflow.nyquist_validation = false`). Tests exist (119 files, ~18K LOC); the receipt artifact does not. v1.3 backlog item planted to revisit.
+- First Vercel deploy + UAT pass — Vercel project linked, preview pipeline running on PRs, Supabase env vars migrated, `@lhci/cli` soft-gate fires on a real PR, `Cache-Control: no-cache` confirmed in production headers, Plan 13 HUMAN-UAT items closed.
+
+**Key context:**
+- Vercel Hobby (free) sufficient for expected EDHREC proxy traffic — well within 1M invocations / 100GB bandwidth.
+- Anonymous-first principle preserved: EDHREC proxy lazy-loads with the existing `intelligence-edhrec.js` service, no new always-loaded weight.
+- Production promotion is one button-press — milestone counts as "done" once preview pipeline + UAT are green; the user pulls the trigger when ready.
+- Backlog parked: 999.1 (MTGJSON Tokens — Required Tokens tab), 999.2 (MTGJSON AllPrices — historical price charts), SEED-001 (catalog/userdata storage split). Re-evaluate at v1.3 with production-traffic data in hand.
 
 ## Requirements
 
@@ -58,7 +70,13 @@ All six modules operational and synced: Dashboard (Epic Experiment), Collection 
 
 ### Active
 
-(Empty — v1.1 shipped. Run `/gsd:new-milestone` to define v1.2 scope.)
+**v1.2 — Deploy the Gatewatch (in flight)**
+- ◯ Production-grade EDHREC CORS proxy — Vercel Function replacing Vite dev proxy
+- ◯ First Vercel deploy + preview pipeline running on PRs
+- ◯ Supabase environment variables migrated to Vercel
+- ◯ Plan 13 live-environment UAT items closed (`@lhci/cli` soft-gate fires on real PR, `Cache-Control: no-cache` confirmed)
+- ◯ Public sign-up product decision codified ("household model" — existing-account credentials only)
+- ◯ Nyquist validation gate disabled with v1.3 revisit flag
 
 ### Out of Scope
 
@@ -69,8 +87,8 @@ All six modules operational and synced: Dashboard (Epic Experiment), Collection 
 - MTG news / RSS feed integration — spoiler-focused overhaul (v1.1) covers reveal cadence
 - All-printings view including MTGO/Arena-only — v1.1 scoped to `games: paper`; review only if user demand emerges
 - Mila loading animation (MILA-03) — accepted as minor tech debt from v1.0
-- Public sign-up UI surface — deferred to v1.2 scoping pending product decision (current model: existing-account credentials only, household/private-collaborator access). Documented in `phases/10-supabase-auth-foundation/10-CONTEXT.md:113`
-- Nyquist `VALIDATION.md` backfill across 8 phases — process debt, not a functional blocker. Re-evaluate at v1.2: backfill or disable via `gsd-tools config-set workflow.nyquist_validation false`
+- Public sign-up UI surface — explicit product decision (v1.2): household model only, existing-account credentials, no public sign-up route. Auth-wall UX stays as-is. Re-open if a future milestone adopts a community/multi-user pivot.
+- Nyquist `VALIDATION.md` backfill across phases 7–14 — disabled for v1.2 (`workflow.nyquist_validation = false`). Tests exist (119 files, ~18K LOC), only the per-phase receipt artifact is missing. v1.3 backlog item planted to revisit.
 - Catalog migration from Dexie to wa-sqlite + OPFS — captured as SEED-001. Trigger: only after Phase 11 sync engine has been live for a meaningful period without regressions
 
 ## Context
@@ -144,4 +162,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-27 — v1.1 Second Sunrise complete. 47 plans across 8 phases (7-14) shipped, tagged `v1.1`, GitHub release published. Cloud sync GA, Supabase auth GA, Web Vitals all `Good`. Codebase grew ~24K → 42K LOC (source + tests), 222 → 541 commits. Next: `/gsd:new-milestone` to scope v1.2. SEED-001 (catalog/userdata storage split) auto-surfaces during scoping.*
+*Last updated: 2026-04-27 — v1.2 Deploy the Gatewatch scoped. Pure production-readiness milestone closing four v1.1 carry-over blockers: EDHREC CORS proxy (Vercel Function), public sign-up product decision (household model — leave as-is), Nyquist gate disabled, first Vercel deploy + UAT pass. No new user-facing features. Backlog (999.1, 999.2, SEED-001) parked for v1.3 with production-traffic data.*

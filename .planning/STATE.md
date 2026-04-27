@@ -1,36 +1,34 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.1
-milestone_name: Second Sunrise
-status: v1.1 shipped 2026-04-27 — tagged, GitHub release published, milestone archived; awaiting /gsd:new-milestone for v1.2 scoping
-stopped_at: v1.1 Second Sunrise complete (8 phases, 47 plans). All artifacts archived to milestones/v1.1-*. Run /gsd:new-milestone to begin v1.2.
-last_updated: "2026-04-27T21:00:00.000Z"
+milestone: v1.2
+milestone_name: Deploy the Gatewatch
+status: v1.2 milestone started — defining requirements
+stopped_at: Milestone scoped via /gsd:new-milestone — production-readiness only, four carry-over blockers
+last_updated: "2026-04-27T22:00:00.000Z"
 last_activity: 2026-04-27
 progress:
-  total_phases: 8
-  completed_phases: 8
-  total_plans: 47
-  completed_plans: 47
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-04-27 after v1.1 milestone)
+See: .planning/PROJECT.md (updated 2026-04-27 with v1.2 Deploy the Gatewatch scope)
 
 **Core value:** The deck builder knows what you own, and the collection knows what's in your decks — one interconnected data layer that eliminates tab-juggling. Multi-device when signed in (v1.1).
-**Current focus:** v1.2 scoping pending — run `/gsd:new-milestone`
+**Current focus:** v1.2 Deploy the Gatewatch — production-readiness milestone, defining requirements
 
 ## Current Position
 
-**Milestone:** v1.1 Second Sunrise — SHIPPED 2026-04-27
-**Tag:** `v1.1` (annotated, pushed to origin)
-**Release:** https://github.com/R4IYNE/counterflux/releases/tag/v1.1
-**No active phase.** Awaiting v1.2 scoping.
-
-Progress: [██████████] 100%
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-04-27 — Milestone v1.2 started
 
 ## Milestone Progress
 
@@ -38,14 +36,16 @@ Progress: [██████████] 100%
 |-----------|--------|--------|
 | v1.0 The Aetheric Archive | 6/6 | ✅ Shipped 2026-04-13 |
 | v1.1 Second Sunrise | 8/8 | ✅ Shipped 2026-04-27 |
+| v1.2 Deploy the Gatewatch | —/— | 🟡 Scoping — defining requirements |
 
 ## Backlog & Seeds
 
-Forward-looking work captured during v1.1 — surfaces during `/gsd:new-milestone` scoping:
+Forward-looking work captured during v1.1 — parked for v1.3 with production-traffic data in hand:
 
 - **999.1** — MTGJSON Tokens.json "Required Tokens" tab in Thousand-Year Storm (lightweight, additive)
 - **999.2** — MTGJSON AllPrices.json historical price charts (scoped to user data: collection + watchlist + recently-viewed)
-- **SEED-001** — Catalog/userdata storage split (wa-sqlite + OPFS for catalog, keep Dexie for user data). Trigger: after Phase 11 sync engine has been live in production without regressions; re-evaluate at v1.2
+- **SEED-001** — Catalog/userdata storage split (wa-sqlite + OPFS for catalog, keep Dexie for user data). Trigger: after Phase 11 sync engine has been live in production without regressions
+- **(v1.2-derived)** Revisit Nyquist VALIDATION.md gate — re-enable for v1.3 if backfilling 7–14 makes sense, otherwise leave disabled permanently
 
 ## Accumulated Context
 
@@ -53,24 +53,31 @@ Forward-looking work captured during v1.1 — surfaces during `/gsd:new-mileston
 
 Full decision log in PROJECT.md Key Decisions table. Per-phase implementation decisions archived in `milestones/v1.1-ROADMAP.md` and individual phase SUMMARY.md files.
 
+**v1.2 scoping decisions (2026-04-27):**
+- Public sign-up: leave as-is (household model only, no public sign-up surface) — explicit product call, codified to Out of Scope
+- Nyquist validation gate: disable for v1.2, revisit at v1.3 — paperwork debt vs real coverage gap
+- EDHREC CORS proxy: Vercel Function (free, same repo) chosen over Cloudflare Worker (separate deploy) and Supabase Edge Function (couples to auth/sync project)
+- Milestone scope: ship-to-prod readiness only, no new user-facing features pulled from backlog
+
 ### Roadmap Evolution
 
-- Phase 8.1 inserted after Phase 8 to capture HUMAN-UAT polish + precon coverage gap
-- Phase 14 added 2026-04-22 via `/gsd:plan-milestone-gaps` to close audit findings; expanded inline from 3 plans to 12 as 2 latent v1.1 bugs surfaced during UAT (Phase 11 schema drift, Phase 13 auth-wall race) and 4 quality items were pulled forward from v1.2 backlog per user direction "1.2 only has two small items, just merge them into this phase"
+- v1.0 → v1.1: Phase 8.1 inserted to capture HUMAN-UAT polish + precon coverage gap
+- v1.1 → v1.1: Phase 14 added 2026-04-22 via `/gsd:plan-milestone-gaps` to close audit findings; expanded inline from 3 plans to 12 as 2 latent v1.1 bugs surfaced during UAT
+- v1.1 → v1.2: New cleanup-themed milestone, no carry-over of in-flight work — v1.1 fully shipped before v1.2 began
 
 ### Pending Todos
 
-None — milestone complete. Next step: `/gsd:new-milestone` to scope v1.2.
+None — v1.2 requirements next.
 
-### Blockers/Concerns (carry-over to v1.2)
+### Blockers/Concerns (resolving in v1.2)
 
-- **EDHREC CORS proxy needed for production deployment** — works via Vite dev proxy only. Carry-over from v1.0 → v1.1; will need a real proxy solution before any production deploy
-- **Public sign-up UI surface deferred** — current model is existing-account credentials only (household/private-collaborator). v1.2 product call required: open public sign-up vs invite-only vs leave as-is. Documented in `phases/10-supabase-auth-foundation/10-CONTEXT.md:113`
-- **Nyquist VALIDATION.md backfill across 8 phases** — process debt from v1.1. Either backfill per-phase or disable via `gsd-tools config-set workflow.nyquist_validation false`. Surface during v1.2 planning
-- **Live-environment UAT items deferred to first Vercel deploy** — Plan 13 soft-gate fire on real PR + Vercel `Cache-Control: no-cache` header emission. No production deploy exists yet; tracked in `phases/13-performance-optimisation/13-HUMAN-UAT.md`
+- **EDHREC CORS proxy needed for production deployment** — IN SCOPE for v1.2 (Vercel Function)
+- **Public sign-up UI surface** — IN SCOPE for v1.2 (codify household-model decision, no new UI)
+- **Nyquist VALIDATION.md backfill** — IN SCOPE for v1.2 (disable gate, revisit at v1.3)
+- **Live-environment UAT items deferred to first Vercel deploy** — IN SCOPE for v1.2 (first deploy + UAT pass clears them)
 
 ## Session Continuity
 
-Last session: 2026-04-27 — v1.1 milestone completion via `/gsd:complete-milestone`
-Stopped at: v1.1 Second Sunrise archived to `milestones/v1.1-*`; PROJECT.md evolved; RETROSPECTIVE.md updated; ready for v1.2 scoping
-Resume: Run `/gsd:new-milestone` to begin v1.2 questioning → research → requirements → roadmap
+Last session: 2026-04-27 — v1.2 milestone scoping via `/gsd:new-milestone`
+Stopped at: PROJECT.md + STATE.md updated; milestone confirmed; ready for requirements + roadmap
+Resume: Continue `/gsd:new-milestone` workflow — research decision → REQUIREMENTS.md → ROADMAP.md
