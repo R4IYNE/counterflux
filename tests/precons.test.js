@@ -402,9 +402,45 @@ describe('Phase 14.07j: splitPreconIntoDecks (MTGJSON membership-driven)', () =>
     ];
     const decks = splitPreconIntoDecks({ code: 'fic', decklist });
     const limitBreak = decks.find(d => d.name.includes('Limit Break'));
-    expect(limitBreak.cards).toHaveLength(2); // local subset
+    expect(limitBreak.cards).toHaveLength(2); // local subset (unique)
     expect(limitBreak.scryfallIds).toHaveLength(4); // MTGJSON truth
     expect(limitBreak.total).toBe(4);
+  });
+
+  // Phase 14.07M — basic-land multiples should aggregate into ONE preview
+  // row with the right quantity, not collapse to 1 (visually undercounting)
+  // or render 30 dedup-by-key rows. Stable row keys keep the preview honest.
+  it('Phase 14.07M — aggregates duplicate scryfall_ids into one row with combined quantity', async () => {
+    const mod = await import('../src/services/precons.js');
+    mod.__setPreconDeckMembershipsForTests({
+      memberships: {
+        fic: {
+          'Limit Break (FINAL FANTASY VII)': [
+            { id: 'fic-1-cloud', name: 'Cloud, Ex-SOLDIER' },
+            // Plains × 30 — the bug case: 30 references to the same id
+            ...Array.from({ length: 30 }, () => ({ id: 'plains-id', name: 'Plains' })),
+            { id: 'fic-1-tifa', name: 'Tifa, Martial Artist' },
+          ],
+        },
+      },
+    });
+    const decklist = [
+      _card('fic-1-cloud', 'Cloud, Ex-SOLDIER', true, ['W']),
+      _card('plains-id', 'Plains', false, []),
+      _card('fic-1-tifa', 'Tifa, Martial Artist', false, ['W']),
+    ];
+    const decks = mod.splitPreconIntoDecks({ code: 'fic', decklist });
+    const limitBreak = decks.find(d => d.name.includes('Limit Break'));
+
+    // 3 unique rows (Cloud + Plains + Tifa) — Plains aggregated, not deduped
+    expect(limitBreak.cards).toHaveLength(3);
+    const plainsRow = limitBreak.cards.find(c => c.name === 'Plains');
+    expect(plainsRow.quantity).toBe(30);
+
+    // Sum of quantity = MTGJSON total (32)
+    const sumQty = limitBreak.cards.reduce((acc, c) => acc + c.quantity, 0);
+    expect(sumQty).toBe(32);
+    expect(limitBreak.total).toBe(32);
   });
 
   // Phase 14.07k — name fallback. MTGJSON sometimes lists a different

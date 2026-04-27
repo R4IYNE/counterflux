@@ -333,23 +333,43 @@ export function splitPreconIntoDecks(precon) {
   const decks = [];
   for (const [deckName, rawEntries] of Object.entries(bundleMap)) {
     const entries = (rawEntries || []).map(_normEntry);
-    const deckCards = [];
-    const commanders = [];
+    // Phase 14.07M — aggregate duplicates by row-key so the preview shows
+    // "30× Plains" as a single row with quantity 30, not 30 deduped-to-1
+    // rows that visually undercount the deck. Track the unique commander
+    // set separately so identity union still works correctly.
+    const aggregateMap = new Map(); // rowKey → { card, quantity }
+    const commanderRowKeys = new Set();
     const scryfallIds = [];
     const identitySet = new Set();
     for (const { id, name } of entries) {
-      // Phase 14.07L — always include the MTGJSON id in scryfallIds so
-      // ADD ALL imports the complete WotC-published 100-card list, even if
-      // the card lives in a bonus Scryfall set (e.g. "set:fca" promo cards
-      // shipped alongside FIC) that isn't in the local unique=prints cache.
       if (id) scryfallIds.push(id);
       const card = byId.get(id) || byName.get(_normName(name));
       if (!card) continue;
-      deckCards.push(card);
-      if (card.is_commander) commanders.push(card);
+      // Stable row key: prefer scryfall_id (unique per printing). Fall back
+      // to normalized name for cards that resolved via name match (where
+      // the MTGJSON id and the local id differ across printings — without
+      // a stable key, the preview would render two rows for "the same" card).
+      const rowKey = card.scryfall_id || _normName(card.name);
+      if (!aggregateMap.has(rowKey)) {
+        aggregateMap.set(rowKey, { card, quantity: 0 });
+      }
+      aggregateMap.get(rowKey).quantity += 1;
+      if (card.is_commander) commanderRowKeys.add(rowKey);
       for (const ci of (card.color_identity || [])) identitySet.add(ci);
     }
     if (entries.length === 0) continue;
+
+    // Project the aggregate map into card objects whose `quantity` reflects
+    // the multiplicity in the deck. The original card object is shallow-
+    // cloned so we don't mutate the cache's quantity field (which is used
+    // elsewhere for non-precon flows).
+    const deckCards = [];
+    const commanders = [];
+    for (const [rowKey, { card, quantity }] of aggregateMap.entries()) {
+      const projected = { ...card, quantity };
+      deckCards.push(projected);
+      if (commanderRowKeys.has(rowKey)) commanders.push(projected);
+    }
     const identity = Array.from(identitySet);
     decks.push({
       key: code + '::' + deckName,
@@ -357,7 +377,10 @@ export function splitPreconIntoDecks(precon) {
       identity,
       identityLabel: _idDisplay(identity),
       commanders,
-      // `cards` = locally-renderable subset (used by the decklist preview).
+      // `cards` = locally-renderable rows with aggregated `quantity` so the
+      // preview renders "30× Plains" once, not 30 separate rows nor 1
+      // row of "1× Plains". Card-row count = unique cards; sum of quantity
+      // = MTGJSON total.
       // `scryfallIds` = full MTGJSON id list (used by ADD ALL so the count
       // landing in the collection always equals the WotC-published 100).
       // `total` = MTGJSON entry count (the truth) — stays at 100 even when
