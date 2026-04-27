@@ -289,7 +289,7 @@ describe('Phase 14.07e: splitPreconIntoDecks (manifest-driven)', () => {
       { scryfall_id: 'a', quantity: 1, is_commander: true },
       { scryfall_id: 'b', quantity: 1, is_commander: false },
     ];
-    expect(splitPreconIntoDecks({ code: 'fin', decklist: legacyDecklist })).toEqual([]);
+    expect(splitPreconIntoDecks({ code: 'fic', decklist: legacyDecklist })).toEqual([]);
   });
 
   it('returns [] when there is no manifest entry for this set code', async () => {
@@ -300,9 +300,9 @@ describe('Phase 14.07e: splitPreconIntoDecks (manifest-driven)', () => {
 
   it('returns [] when manifest exists but no manifest commanders are in the decklist', async () => {
     const { splitPreconIntoDecks } = await import('../src/services/precons.js');
-    // 'fin' manifest expects Cloud / Tifa / Aerith / etc. Decklist has none.
+    // 'fic' manifest expects Cloud / Tifa / Aerith / etc. Decklist has none.
     const decklist = [_commander('Random Commander', ['R'])];
-    expect(splitPreconIntoDecks({ code: 'fin', decklist })).toEqual([]);
+    expect(splitPreconIntoDecks({ code: 'fic', decklist })).toEqual([]);
   });
 
   it('builds named decks from the fin manifest and assigns supporters by subset match', async () => {
@@ -324,7 +324,7 @@ describe('Phase 14.07e: splitPreconIntoDecks (manifest-driven)', () => {
       _support('Cultivate', ['G']),
     ];
 
-    const decks = splitPreconIntoDecks({ code: 'fin', decklist });
+    const decks = splitPreconIntoDecks({ code: 'fic', decklist });
     expect(decks).toHaveLength(4);
     const names = decks.map(d => d.name);
     expect(names).toEqual(['Limit Break', 'Revival Trance', 'Counter Blow', 'Scions & Spellcraft']);
@@ -349,7 +349,7 @@ describe('Phase 14.07e: splitPreconIntoDecks (manifest-driven)', () => {
       // None of the other 3 decks' commanders are in the decklist
       _support('Plains', []),
     ];
-    const decks = splitPreconIntoDecks({ code: 'fin', decklist });
+    const decks = splitPreconIntoDecks({ code: 'fic', decklist });
     expect(decks).toHaveLength(1);
     expect(decks[0].name).toBe('Limit Break');
   });
@@ -363,7 +363,7 @@ describe('Phase 14.07e: splitPreconIntoDecks (manifest-driven)', () => {
       _commander('Tifa, Martial Artist', ['W']),
       ...supporters,
     ];
-    const decks = splitPreconIntoDecks({ code: 'fin', decklist });
+    const decks = splitPreconIntoDecks({ code: 'fic', decklist });
     expect(decks).toHaveLength(1);
     // 2 commanders + up to 99 supporters
     expect(decks[0].cards.filter(c => !c.is_commander).length).toBeLessThanOrEqual(99);

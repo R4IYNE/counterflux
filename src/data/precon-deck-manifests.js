@@ -23,10 +23,10 @@
 // shipped in 14-07d (informational banner above the decklist; no tile grid).
 
 export const PRECON_DECK_MANIFESTS = {
-  // Final Fantasy Commander (2025 — set code 'fin').
+  // Final Fantasy Commander (2025 — set code 'fic').
   // 4 decks, 2 face commanders each per WotC product page.
   // Reference: https://magic.wizards.com/en/news/announcements/final-fantasy-commander
-  fin: [
+  fic: [
     {
       name: 'Limit Break',
       commanderNames: ['Cloud, Ex-SOLDIER', 'Tifa, Martial Artist'],
