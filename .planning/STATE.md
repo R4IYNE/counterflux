@@ -2,10 +2,10 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Deploy the Gatewatch
-status: v1.2 roadmap created — 3 phases, 16 requirements mapped
-stopped_at: ROADMAP.md written; ready for /gsd:plan-phase 15
-last_updated: "2026-04-27T22:30:00.000Z"
-last_activity: 2026-04-27
+status: Roadmap created, awaiting plan-phase
+stopped_at: Phase 15 context gathered
+last_updated: "2026-04-27T21:25:40.593Z"
+last_activity: 2026-04-27 — ROADMAP.md written, REQUIREMENTS.md traceability populated
 progress:
   total_phases: 3
   completed_phases: 0
@@ -55,12 +55,14 @@ Forward-looking work captured during v1.1 — parked for v1.3 with production-tr
 Full decision log in PROJECT.md Key Decisions table. Per-phase implementation decisions archived in `milestones/v1.1-ROADMAP.md` and individual phase SUMMARY.md files.
 
 **v1.2 scoping decisions (2026-04-27):**
+
 - Public sign-up: leave as-is (household model only, no public sign-up surface) — explicit product call, codified to Out of Scope
 - Nyquist validation gate: disable for v1.2, revisit at v1.3 — paperwork debt vs real coverage gap
 - EDHREC CORS proxy: Vercel Function (free, same repo) chosen over Cloudflare Worker (separate deploy) and Supabase Edge Function (couples to auth/sync project)
 - Milestone scope: ship-to-prod readiness only, no new user-facing features pulled from backlog
 
 **v1.2 roadmap decisions (2026-04-27):**
+
 - 3 phases (not 4+) — small operational milestone; DECIDE-01/02 piggy-back on the Vercel infra phase rather than getting their own paperwork-only phase
 - DEPLOY + DECIDE collapsed into Phase 15 — both are config/doc-only work that ships alongside the Vercel project link, no parallel-execution benefit from splitting
 - PROXY isolated as Phase 16 — only depends on Vercel project existing, has its own bundle-budget test, naturally atomic
@@ -86,6 +88,6 @@ None — Phase 15 planning is the next step (`/gsd:plan-phase 15`).
 
 ## Session Continuity
 
-Last session: 2026-04-27 — v1.2 roadmap created via `/gsd:new-project` → `gsd-roadmapper`
-Stopped at: ROADMAP.md, STATE.md, REQUIREMENTS.md traceability written; ready for plan-phase
+Last session: 2026-04-27T21:25:40.591Z
+Stopped at: Phase 15 context gathered
 Resume: `/gsd:plan-phase 15` — decompose Phase 15 (Vercel Foundation & Codified Decisions) into plans
