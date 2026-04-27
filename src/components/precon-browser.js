@@ -191,10 +191,56 @@ export function renderPreconBrowser() {
           <!-- VIEW B: Decklist preview -->
           <template x-if="$store.collection.selectedPreconCode">
             <div x-data="{
+              selectedDeckKey: null,
               get precon() { return $store.collection.precons.find(p => p.code === $store.collection.selectedPreconCode); },
               get isBundle() { return window.__cf_isMultiDeckBundle ? window.__cf_isMultiDeckBundle(this.precon) : false; },
+              // Phase 14.07e — manifest-driven deck tiles for known multi-deck
+              // products (Final Fantasy, Doctor Who, etc.). Returns [] when no
+              // manifest entry exists for this set code, falling back to the
+              // 14-07d full-bundle banner + ADD ALL flow.
+              get manifestDecks() {
+                if (!this.isBundle) return [];
+                if (!window.__cf_splitPreconIntoDecks) return [];
+                return window.__cf_splitPreconIntoDecks(this.precon);
+              },
+              get hasManifest() { return this.manifestDecks.length > 0; },
+              get selectedDeck() {
+                if (!this.selectedDeckKey) return null;
+                return this.manifestDecks.find(d => d.key === this.selectedDeckKey) || null;
+              },
+              get effectiveDecklist() {
+                if (this.selectedDeck) return this.selectedDeck.cards || [];
+                return this.precon?.decklist || [];
+              },
+              get effectiveTitle() {
+                if (this.selectedDeck) return this.precon?.name + ' — ' + this.selectedDeck.name;
+                return this.precon?.name || '';
+              },
+              addAllEffective() {
+                if (this.selectedDeck) {
+                  const ids = this.selectedDeck.cards.map(c => c.scryfall_id);
+                  const label = (this.precon?.name || 'precon') + ' — ' + this.selectedDeck.name;
+                  if ($store.collection.addCardsFromIds) {
+                    $store.collection.addCardsFromIds(ids, { label });
+                  } else {
+                    $store.collection.addAllFromPrecon($store.collection.selectedPreconCode);
+                  }
+                } else {
+                  $store.collection.addAllFromPrecon($store.collection.selectedPreconCode);
+                }
+              },
+              addButtonLabel() {
+                if (this.isBundle && this.hasManifest && !this.selectedDeck) return 'PICK A DECK BELOW';
+                if (!this.effectiveDecklist.length) return 'LOADING…';
+                return 'ADD ALL ' + this.effectiveDecklist.length + ' CARDS';
+              },
+              get addButtonEnabled() {
+                if ($store.collection.preconDecklistLoading) return false;
+                if (this.isBundle && this.hasManifest && !this.selectedDeck) return false;
+                return !!this.effectiveDecklist.length;
+              },
               get sortedDecklist() {
-                const list = this.precon?.decklist || [];
+                const list = this.effectiveDecklist;
                 return [...list].sort((a, b) => {
                   if (a.is_commander !== b.is_commander) return b.is_commander ? 1 : -1;
                   return 0;
@@ -205,33 +251,75 @@ export function renderPreconBrowser() {
               <!-- Preview header -->
               <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 16px;">
                 <button
-                  @click="$store.collection.selectedPreconCode = null"
+                  @click="selectedDeckKey ? selectedDeckKey = null : $store.collection.selectedPreconCode = null"
                   style="padding: 8px 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; color: var(--color-text-primary); background: var(--color-surface-hover); border: 1px solid var(--color-border-ghost); cursor: pointer; text-transform: uppercase;"
-                >← BACK TO PRECONS</button>
+                  x-text="selectedDeckKey ? '← BACK TO DECKS' : '← BACK TO PRECONS'"
+                ></button>
 
                 <h3
                   style="flex: 1; font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; color: var(--color-text-primary); margin: 0; text-transform: uppercase;"
-                  x-text="precon?.name || ''"
+                  x-text="effectiveTitle"
                 ></h3>
 
                 <button
-                  @click="$store.collection.addAllFromPrecon($store.collection.selectedPreconCode)"
-                  :disabled="$store.collection.preconDecklistLoading || !(precon?.decklist?.length)"
-                  :style="(precon?.decklist?.length && !$store.collection.preconDecklistLoading)
+                  @click="addAllEffective()"
+                  :disabled="!addButtonEnabled"
+                  :style="addButtonEnabled
                     ? 'padding: 8px 16px; font-family: JetBrains Mono, monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; color: var(--color-text-primary); background: var(--color-primary); border: 1px solid var(--color-primary); cursor: pointer; text-transform: uppercase;'
                     : 'padding: 8px 16px; font-family: JetBrains Mono, monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; color: var(--color-text-dim); background: var(--color-surface-hover); border: 1px solid var(--color-border-ghost); cursor: not-allowed; text-transform: uppercase; opacity: 0.5;'"
-                  x-text="precon?.decklist?.length ? ('ADD ALL ' + precon.decklist.length + ' CARDS') : 'LOADING…'"
+                  x-text="addButtonLabel()"
                 ></button>
               </div>
 
-              <!-- Phase 14.07d — bundles get an informational banner above the
-                   full decklist (still addable). Replaces the prior gate that
-                   blocked ADD ALL on multi-deck products. -->
-              <template x-if="!$store.collection.preconDecklistLoading && !$store.collection.preconDecklistError && isBundle">
+              <!-- Phase 14.07e — manifest-driven deck tile grid (Final Fantasy,
+                   Doctor Who, etc.). Drill into a tile to preview/import that
+                   single deck; ADD ALL on the bundle product code is gated until
+                   a deck is picked so the user can't accidentally dump 486 cards. -->
+              <template x-if="!$store.collection.preconDecklistLoading && !$store.collection.preconDecklistError && isBundle && hasManifest && !selectedDeck">
+                <div>
+                  <p style="font-family: 'Space Grotesk', sans-serif; font-size: 14px; line-height: 1.5; color: var(--color-text-muted); margin: 0 0 16px 0; max-width: 720px;">
+                    Pick one of the <span x-text="manifestDecks.length"></span> decks in this product to preview its cards or add it to your collection. To import the whole boxed set instead, return to the precon list and use ADD ALL on a non-bundle product.
+                  </p>
+                  <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px;">
+                    <template x-for="deck in manifestDecks" :key="deck.key">
+                      <button
+                        @click="selectedDeckKey = deck.key"
+                        class="card-tile-hover"
+                        style="width: 100%; aspect-ratio: 220 / 308; padding: 0; background: var(--color-surface); border: 1px solid var(--color-border-ghost); cursor: pointer; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end;"
+                      >
+                        <span
+                          style="position: absolute; top: 8px; left: 8px; padding: 2px 6px; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; color: var(--color-text-muted); background: var(--color-surface-hover); text-transform: uppercase;"
+                          x-text="deck.identityLabel"
+                        ></span>
+                        <span
+                          style="position: absolute; top: 8px; right: 8px; padding: 2px 6px; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; color: var(--color-text-muted); background: var(--color-surface-hover);"
+                          x-text="deck.total + ' CARDS'"
+                        ></span>
+                        <div style="position: relative; z-index: 2; padding: 16px; background: linear-gradient(to top, var(--color-background), transparent); text-align: left;">
+                          <div
+                            style="font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; color: var(--color-text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-transform: uppercase;"
+                            x-text="deck.name"
+                          ></div>
+                          <div
+                            style="font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--color-text-muted); margin-top: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"
+                            x-text="deck.commanders.map(c => c.name).join(' · ')"
+                          ></div>
+                        </div>
+                      </button>
+                    </template>
+                  </div>
+                </div>
+              </template>
+
+              <!-- Phase 14.07d/e — bundles WITHOUT a manifest entry get the
+                   informational banner + full decklist + ADD ALL flow.
+                   Manifest-backed bundles use the tile grid above; the banner
+                   below only fires when no per-deck split is available. -->
+              <template x-if="!$store.collection.preconDecklistLoading && !$store.collection.preconDecklistError && isBundle && !hasManifest">
                 <div style="margin-bottom: 16px; padding: 12px 16px; background: var(--color-surface-hover); border-left: 2px solid var(--color-warning);">
                   <p style="font-family: 'Space Grotesk', sans-serif; font-size: 14px; line-height: 1.5; color: var(--color-text-primary); margin: 0;">
                     <strong style="font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; color: var(--color-warning); text-transform: uppercase; margin-right: 8px;">MULTI-DECK PRODUCT</strong>
-                    This boxed set bundles multiple decks. ADD ALL imports every card from every deck — only do this if you own the whole product.
+                    This boxed set bundles multiple decks. Per-deck import isn't supported for this product yet — ADD ALL imports every card from every deck. Only do this if you own the whole product.
                   </p>
                 </div>
               </template>
@@ -251,10 +339,12 @@ export function renderPreconBrowser() {
 
 
               <!-- Decklist rows.
-                   Phase 14.07d — single decklist regardless of bundle status.
-                   Bundles get the warning banner above + still render the
-                   full card list so users can preview before adding. -->
-              <template x-if="precon?.decklist?.length && !$store.collection.preconDecklistLoading">
+                   Phase 14.07e — when a manifest deck is selected the rows
+                   filter to that deck's cards via effectiveDecklist;
+                   otherwise the full bundle (or non-bundle precon) renders.
+                   Hidden on manifest-backed bundles when no deck is selected
+                   (the tile grid takes that slot). -->
+              <template x-if="effectiveDecklist.length && !$store.collection.preconDecklistLoading && !(isBundle && hasManifest && !selectedDeck)">
                 <div style="display: flex; flex-direction: column;">
                   <template x-for="entry in sortedDecklist" :key="entry.scryfall_id">
                     <div

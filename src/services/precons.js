@@ -16,6 +16,7 @@
 
 import { db } from '../db/schema.js';
 import { queueScryfallRequest } from './scryfall-queue.js';
+import { getDeckManifest } from '../data/precon-deck-manifests.js';
 
 // D-09: Commander + duel_deck only. starter (Welcome Deck 2017, etc.) is
 // intentionally excluded — these are intro products, not user-collectable
@@ -238,102 +239,114 @@ function inferIsCommander(card) {
 }
 
 /**
- * Phase 14.07c — split a multi-deck bundle into individual virtual decks
- * keyed by commander identity.
+ * Phase 14.07e — split a multi-deck bundle into the actual WotC decks using
+ * a curated deck-name → commander-name manifest in src/data/precon-deck-manifests.js.
  *
- * Scryfall does not expose deck-membership metadata, so this is a heuristic.
- * The approach:
- *   1. Take every card flagged is_commander=true (Legendary Creatures /
- *      Planeswalkers per inferIsCommander).
- *   2. Group by colorless-stable color_identity signature
- *      (e.g. ['U','R'] → "U,R"). Two commanders with the same identity in
- *      the same set are likely partners or alternate face cards of the same
- *      deck — we keep them together.
- *   3. For each commander group, build a virtual deck of the matched
- *      commanders + every non-commander card in the bundle whose
- *      color_identity is a subset of the group's identity. Cap at the
- *      first 99 non-commander matches per deck (a true Commander deck).
- *   4. Cards whose color_identity does NOT match any commander group fall
- *      into a residual "Other Cards" bucket — visible to the user so the
- *      heuristic's misses are obvious rather than silently dropped.
+ * Scryfall doesn't expose deck-membership metadata, so 14-07c's pure-heuristic
+ * splitter produced one "deck" per legendary creature in the set (19 tiny
+ * tiles for Final Fantasy Commander instead of the 4 real WotC decks).
+ * 14-07e keys the split on a manifest:
  *
- * Returns an empty array if the precon decklist lacks the metadata
- * (color_identity, name) needed to split — in that case the caller should
- * fall back to the legacy MULTI-DECK PRODUCT gate.
+ *   1. Look up `code` in PRECON_DECK_MANIFESTS. If absent → return [] so the
+ *      caller falls back to the full-bundle ADD ALL flow shipped in 14-07d.
+ *   2. For each manifest entry: find commanders in `precon.decklist` whose
+ *      `name` matches one of the entry's `commanderNames` (case-insensitive,
+ *      smart-quote-tolerant). Skip entries with no matched commanders.
+ *   3. Compute the union color identity across the matched commanders.
+ *   4. Assign non-commander cards to the FIRST manifest entry whose union
+ *      identity is a superset of the card's color identity. Cap at 99
+ *      supporters per deck (Commander format).
  *
- * @param {{ decklist?: Array }} precon
- * @returns {Array<{ key: string, name: string, identity: string[], commanders: Array, cards: Array, total: number }>}
+ * Cards that don't fit any manifest entry's identity are dropped from the
+ * per-deck previews but ADD ALL on the bundle still includes them (via the
+ * unchanged addAllFromPrecon path). Per-deck adds use addCardsFromIds.
+ *
+ * @param {{ code?: string, decklist?: Array }} precon
+ * @returns {Array<{ key: string, name: string, identity: string[], identityLabel: string, commanders: Array, cards: Array, total: number }>}
  */
 export function splitPreconIntoDecks(precon) {
   const list = precon?.decklist;
   if (!Array.isArray(list) || list.length === 0) return [];
-  // Bail out cleanly if the cache pre-dates 14.07c and lacks color_identity.
   const hasMetadata = list.some((c) => Array.isArray(c.color_identity) && typeof c.name === 'string');
   if (!hasMetadata) return [];
 
-  const commanders = list.filter((c) => c.is_commander);
-  if (commanders.length === 0) return [];
+  // Phase 14.07e — manifest gate. Without a manifest the splitter falls back
+  // to the legacy gate (caller renders the 14-07d full-bundle banner instead).
+  const manifest = getDeckManifest(precon?.code);
+  if (!manifest || manifest.length === 0) return [];
 
-  // Group commanders by their color identity signature.
-  const _sig = (ci) => (ci || []).slice().sort().join(',') || 'C'; // 'C' = colorless
+  // Smart-quote / curly-apostrophe tolerance (e.g. "Y’shtola" vs "Y'shtola").
+  const _normName = (s) => (s || '').toLowerCase().replace(/[‘’‛′‵]/g, "'");
+
+  // Build {normalizedName → card} lookup once.
+  const byName = new Map();
+  for (const card of list) {
+    if (!card?.name) continue;
+    byName.set(_normName(card.name), card);
+  }
+
   const _idDisplay = (ci) => {
     const sorted = (ci || []).slice().sort();
     return sorted.length === 0 ? 'Colorless' : sorted.join('');
   };
 
-  const groups = new Map(); // sig → { identity, commanders, name }
-  for (const c of commanders) {
-    const sig = _sig(c.color_identity);
-    if (!groups.has(sig)) {
-      groups.set(sig, { identity: c.color_identity || [], commanders: [], names: [] });
-    }
-    const g = groups.get(sig);
-    g.commanders.push(c);
-    g.names.push(c.name);
-  }
+  const _sig = (ci) => (ci || []).slice().sort().join(',') || 'C';
 
-  // For each group, gather supporting cards whose color identity is a
-  // subset of the group's identity.
   const _isSubset = (cardCI, deckCI) => {
-    if (!Array.isArray(cardCI) || cardCI.length === 0) return true; // colorless fits anywhere
+    if (!Array.isArray(cardCI) || cardCI.length === 0) return true;
     const deckSet = new Set(deckCI || []);
     for (const c of cardCI) if (!deckSet.has(c)) return false;
     return true;
   };
 
+  // Pass 1: resolve manifest entries → commanders + union identity.
   const decks = [];
-  const claimedIds = new Set(commanders.map((c) => c.scryfall_id));
-
-  for (const [sig, group] of groups.entries()) {
-    const supportCap = 99; // Commander format
-    const cards = [...group.commanders];
-    const supporters = [];
-    for (const card of list) {
-      if (card.is_commander) continue;
-      if (claimedIds.has(card.scryfall_id)) continue; // already assigned to a tighter-fit deck
-      if (_isSubset(card.color_identity, group.identity)) {
-        supporters.push(card);
-        if (supporters.length >= supportCap) break;
-      }
+  for (const entry of manifest) {
+    const matched = [];
+    const identitySet = new Set();
+    for (const cmdName of entry.commanderNames || []) {
+      const card = byName.get(_normName(cmdName));
+      if (!card) continue;
+      matched.push(card);
+      for (const ci of (card.color_identity || [])) identitySet.add(ci);
     }
-    for (const s of supporters) claimedIds.add(s.scryfall_id);
-    cards.push(...supporters);
-
+    if (matched.length === 0) continue; // skip decks whose commanders aren't in the cache yet
+    const identity = Array.from(identitySet);
     decks.push({
-      key: sig,
-      identity: group.identity,
-      identityLabel: _idDisplay(group.identity),
-      commanders: group.commanders,
-      name: group.names.length === 1
-        ? group.names[0]
-        : group.names.join(' / '),
-      cards,
-      total: cards.length,
+      key: entry.name + '::' + _sig(identity),
+      name: entry.name,
+      identity,
+      identityLabel: _idDisplay(identity),
+      commanders: matched,
+      cards: [...matched],
+      total: matched.length,
     });
   }
 
-  // Sort decks by name for stable rendering.
-  decks.sort((a, b) => a.name.localeCompare(b.name));
+  if (decks.length === 0) return [];
+
+  // Pass 2: assign non-commander cards to the first deck whose identity
+  // is a superset of the card's color identity. Cap 99 supporters per deck.
+  const supportCap = 99;
+  const claimedIds = new Set();
+  for (const deck of decks) for (const c of deck.commanders) claimedIds.add(c.scryfall_id);
+
+  for (const card of list) {
+    if (card.is_commander) continue;
+    if (claimedIds.has(card.scryfall_id)) continue;
+    for (const deck of decks) {
+      if (deck.cards.length - deck.commanders.length >= supportCap) continue;
+      if (_isSubset(card.color_identity, deck.identity)) {
+        deck.cards.push(card);
+        claimedIds.add(card.scryfall_id);
+        break;
+      }
+    }
+  }
+
+  for (const deck of decks) deck.total = deck.cards.length;
+
+  // Manifest-defined order is the WotC product ordering; preserve it.
   return decks;
 }
 

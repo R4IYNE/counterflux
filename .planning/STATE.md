@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Second Sunrise
 status: milestone_ready_to_ship
-stopped_at: Phase 14 complete — 10 plans landed (14-01..14-04 audit closes, 14-05 schema parity, 14-06 auth-wall, 14-07 Preordain dropdown + bulk sync-errors, 14-07b reconcile flag + release calendar, 14-07c per-user reconcile keying + bundle splitter, 14-07d revert bundle gate so ADD ALL imports the whole boxed product); v1.1 audit re-verified as `passed`
-last_updated: "2026-04-27T10:00:00.000Z"
+stopped_at: Phase 14 complete — 11 plans landed (14-01..14-04 audit closes, 14-05 schema parity, 14-06 auth-wall, 14-07 Preordain dropdown + bulk sync-errors, 14-07b reconcile flag + release calendar, 14-07c per-user reconcile keying, 14-07d full-bundle ADD ALL, 14-07e manifest-driven multi-deck split for FF Commander); v1.1 audit re-verified as `passed`
+last_updated: "2026-04-27T11:00:00.000Z"
 last_activity: 2026-04-27 -- v1.1 milestone closed; ready to ship
 progress:
   total_phases: 9
   completed_phases: 9
-  total_plans: 45
-  completed_plans: 45
+  total_plans: 46
+  completed_plans: 46
   percent: 100
 ---
 

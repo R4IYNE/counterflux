@@ -272,8 +272,10 @@ describe('FOLLOWUP-4B: isMultiDeckBundle helper (Phase 08.1)', () => {
   });
 });
 
-// Phase 14.07c — split bundles into virtual decks by commander color identity
-describe('Phase 14.07c: splitPreconIntoDecks helper', () => {
+// Phase 14.07e — splitPreconIntoDecks now consumes a curated WotC deck-name
+// manifest in src/data/precon-deck-manifests.js. Returns [] for products
+// without a manifest (caller falls back to full-bundle ADD ALL).
+describe('Phase 14.07e: splitPreconIntoDecks (manifest-driven)', () => {
   function _commander(name, ci, id = name.toLowerCase().replace(/[^a-z]+/g, '-')) {
     return { scryfall_id: id, quantity: 1, is_commander: true, name, color_identity: ci, type_line: 'Legendary Creature' };
   }
@@ -287,74 +289,84 @@ describe('Phase 14.07c: splitPreconIntoDecks helper', () => {
       { scryfall_id: 'a', quantity: 1, is_commander: true },
       { scryfall_id: 'b', quantity: 1, is_commander: false },
     ];
-    expect(splitPreconIntoDecks({ decklist: legacyDecklist })).toEqual([]);
+    expect(splitPreconIntoDecks({ code: 'fin', decklist: legacyDecklist })).toEqual([]);
   });
 
-  it('returns [] when there are no commanders in the bundle', async () => {
+  it('returns [] when there is no manifest entry for this set code', async () => {
     const { splitPreconIntoDecks } = await import('../src/services/precons.js');
-    expect(splitPreconIntoDecks({
-      decklist: [_support('Mountain', ['R']), _support('Forest', ['G'])],
-    })).toEqual([]);
+    const decklist = [_commander('Some Commander', ['R'])];
+    expect(splitPreconIntoDecks({ code: 'unknown-set', decklist })).toEqual([]);
   });
 
-  it('groups commanders by color_identity signature and assigns supporters by subset match', async () => {
+  it('returns [] when manifest exists but no manifest commanders are in the decklist', async () => {
+    const { splitPreconIntoDecks } = await import('../src/services/precons.js');
+    // 'fin' manifest expects Cloud / Tifa / Aerith / etc. Decklist has none.
+    const decklist = [_commander('Random Commander', ['R'])];
+    expect(splitPreconIntoDecks({ code: 'fin', decklist })).toEqual([]);
+  });
+
+  it('builds named decks from the fin manifest and assigns supporters by subset match', async () => {
     const { splitPreconIntoDecks } = await import('../src/services/precons.js');
     const decklist = [
-      _commander('Krenko Mob Boss', ['R']),
-      _commander('Atraxa', ['W', 'U', 'B', 'G']),
-      _support('Lightning Bolt', ['R']),
-      _support('Mountain', []),
-      _support('Sol Ring', []),
+      // Limit Break (Cloud + Tifa) — give them a shared mono-W identity for the test
+      _commander('Cloud, Ex-SOLDIER', ['W']),
+      _commander('Tifa, Martial Artist', ['W']),
+      // Revival Trance (Aerith + Sephiroth) — GW
+      _commander('Aerith, Last Ancient', ['G', 'W']),
+      _commander('Sephiroth, Fabled SOLDIER', ['G', 'W']),
+      // Counter Blow (Tidus + Yuna)
+      _commander('Tidus, Yuna’s Guardian', ['U']),
+      _commander('Yuna, Grand Summoner', ['U']),
+      // Scions & Spellcraft (Y'shtola + G'raha) — straight + curly apostrophes to test normalisation
+      _commander("Y'shtola, Night's Blessed", ['B']),
+      _commander('G’raha Tia, Scion Reborn', ['B']),
+      _support('Plains', []),
       _support('Cultivate', ['G']),
-      _support('Counterspell', ['U']),
     ];
-    const decks = splitPreconIntoDecks({ decklist });
-    expect(decks).toHaveLength(2);
 
-    const krenko = decks.find(d => d.name.includes('Krenko'));
-    const atraxa = decks.find(d => d.name.includes('Atraxa'));
-    expect(krenko).toBeTruthy();
-    expect(atraxa).toBeTruthy();
+    const decks = splitPreconIntoDecks({ code: 'fin', decklist });
+    expect(decks).toHaveLength(4);
+    const names = decks.map(d => d.name);
+    expect(names).toEqual(['Limit Break', 'Revival Trance', 'Counter Blow', 'Scions & Spellcraft']);
 
-    // Krenko (mono-red) deck contains its commander + lightning bolt; only
-    // colors-or-colorless allowed.
-    expect(krenko.cards.some(c => c.scryfall_id === 'krenko-mob-boss')).toBe(true);
-    expect(krenko.cards.some(c => c.scryfall_id === 'lightning-bolt')).toBe(true);
-    expect(krenko.cards.every(c => (c.color_identity || []).every(x => x === 'R'))).toBe(true);
+    const limitBreak = decks.find(d => d.name === 'Limit Break');
+    expect(limitBreak.commanders.map(c => c.name).sort()).toEqual(['Cloud, Ex-SOLDIER', 'Tifa, Martial Artist']);
 
-    // Atraxa (4-color) deck contains its commander + green + blue cards.
-    expect(atraxa.cards.some(c => c.scryfall_id === 'atraxa')).toBe(true);
-    expect(atraxa.cards.some(c => c.scryfall_id === 'cultivate')).toBe(true);
-    expect(atraxa.cards.some(c => c.scryfall_id === 'counterspell')).toBe(true);
+    const revival = decks.find(d => d.name === 'Revival Trance');
+    // GW union → cultivate (G) fits
+    expect(revival.cards.some(c => c.name === 'Cultivate')).toBe(true);
 
-    // Identity label rendering
-    expect(krenko.identityLabel).toBe('R');
-    expect(atraxa.identityLabel).toBe('BGUW');
+    // Smart-quote tolerance worked
+    const scions = decks.find(d => d.name === 'Scions & Spellcraft');
+    expect(scions.commanders).toHaveLength(2);
   });
 
-  it('groups partner commanders sharing identity into one deck', async () => {
+  it('skips manifest decks whose commanders are not in the cache yet (graceful degradation)', async () => {
     const { splitPreconIntoDecks } = await import('../src/services/precons.js');
     const decklist = [
-      _commander('Will Kenrith', ['U', 'W']),
-      _commander('Rowan Kenrith', ['U', 'W']),
-      _support('Brainstorm', ['U']),
+      _commander('Cloud, Ex-SOLDIER', ['W']),
+      _commander('Tifa, Martial Artist', ['W']),
+      // None of the other 3 decks' commanders are in the decklist
+      _support('Plains', []),
     ];
-    const decks = splitPreconIntoDecks({ decklist });
+    const decks = splitPreconIntoDecks({ code: 'fin', decklist });
     expect(decks).toHaveLength(1);
-    expect(decks[0].commanders).toHaveLength(2);
-    expect(decks[0].name).toContain('Will');
-    expect(decks[0].name).toContain('Rowan');
+    expect(decks[0].name).toBe('Limit Break');
   });
 
-  it('caps each virtual deck at 100 cards (1 commander + 99 supporters)', async () => {
+  it('caps each manifest deck at 100 cards (1 commander + 99 supporters)', async () => {
     const { splitPreconIntoDecks } = await import('../src/services/precons.js');
     const supporters = [];
-    for (let i = 0; i < 150; i++) supporters.push(_support('Card ' + i, ['R'], 'sup-' + i));
-    const decklist = [_commander('Krenko', ['R']), ...supporters];
-
-    const decks = splitPreconIntoDecks({ decklist });
+    for (let i = 0; i < 150; i++) supporters.push(_support('Card ' + i, ['W'], 'sup-' + i));
+    const decklist = [
+      _commander('Cloud, Ex-SOLDIER', ['W']),
+      _commander('Tifa, Martial Artist', ['W']),
+      ...supporters,
+    ];
+    const decks = splitPreconIntoDecks({ code: 'fin', decklist });
     expect(decks).toHaveLength(1);
-    expect(decks[0].cards.length).toBeLessThanOrEqual(100);
+    // 2 commanders + up to 99 supporters
     expect(decks[0].cards.filter(c => !c.is_commander).length).toBeLessThanOrEqual(99);
+    expect(decks[0].cards.length).toBeLessThanOrEqual(101);
   });
 });
