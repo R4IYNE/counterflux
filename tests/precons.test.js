@@ -284,8 +284,17 @@ describe('Phase 14.07j: splitPreconIntoDecks (MTGJSON membership-driven)', () =>
     mod.__setPreconDeckMembershipsForTests({
       memberships: {
         fic: {
-          'Limit Break (FINAL FANTASY VII)': ['fic-1-cloud', 'fic-1-tifa', 'fic-1-c1', 'fic-1-c2'],
-          'Revival Trance (FINAL FANTASY VI)': ['fic-2-terra', 'fic-2-celes', 'fic-2-c1'],
+          'Limit Break (FINAL FANTASY VII)': [
+            { id: 'fic-1-cloud', name: 'Cloud, Ex-SOLDIER' },
+            { id: 'fic-1-tifa', name: 'Tifa, Martial Artist' },
+            { id: 'fic-1-c1', name: 'Lightning Bolt' },
+            { id: 'fic-1-c2', name: 'Plains' },
+          ],
+          'Revival Trance (FINAL FANTASY VI)': [
+            { id: 'fic-2-terra', name: 'Terra, Herald of Hope' },
+            { id: 'fic-2-celes', name: 'Celes, Rune Knight' },
+            { id: 'fic-2-c1', name: 'Cultivate' },
+          ],
         },
       },
     });
@@ -370,5 +379,45 @@ describe('Phase 14.07j: splitPreconIntoDecks (MTGJSON membership-driven)', () =>
     const limitBreak = decks.find(d => d.name.includes('Limit Break'));
     expect(limitBreak.cards).toHaveLength(2);
     expect(limitBreak.cards.map(c => c.scryfall_id).sort()).toEqual(['fic-1-c1', 'fic-1-cloud']);
+  });
+
+  // Phase 14.07k — name fallback. MTGJSON sometimes lists a different
+  // printing's scryfall_id than the local Scryfall search returns
+  // (bonus-set basics, alt-art, etc.). Falling back to name match
+  // recovers those so the deck count stays honest.
+  it('falls back to name match when the scryfall_id misses (different printing)', async () => {
+    const { splitPreconIntoDecks } = await import('../src/services/precons.js');
+    // MTGJSON expects fic-1-c2 (Plains printing A); local cache has plains-printing-B.
+    // Name "Plains" should match across printings.
+    const decklist = [
+      _card('fic-1-cloud', 'Cloud, Ex-SOLDIER', true, ['W']),
+      _card('fic-1-tifa', 'Tifa, Martial Artist', false, ['W']),
+      _card('fic-1-c1', 'Lightning Bolt', false, ['R']),
+      _card('plains-printing-B', 'Plains', false, []),  // different id, same name
+    ];
+    const decks = splitPreconIntoDecks({ code: 'fic', decklist });
+    const limitBreak = decks.find(d => d.name.includes('Limit Break'));
+    // All 4 IDs satisfied — Plains via name fallback
+    expect(limitBreak.cards).toHaveLength(4);
+    expect(limitBreak.cards.some(c => c.scryfall_id === 'plains-printing-B')).toBe(true);
+  });
+
+  it('handles legacy bare-string entries (pre-14-07k JSON) for backwards compat', async () => {
+    const mod = await import('../src/services/precons.js');
+    mod.__setPreconDeckMembershipsForTests({
+      memberships: {
+        fic: {
+          'Limit Break (FINAL FANTASY VII)': ['fic-1-cloud', 'fic-1-tifa'],
+        },
+      },
+    });
+    const { splitPreconIntoDecks } = mod;
+    const decklist = [
+      _card('fic-1-cloud', 'Cloud, Ex-SOLDIER', true, ['W']),
+      _card('fic-1-tifa', 'Tifa, Martial Artist', false, ['W']),
+    ];
+    const decks = splitPreconIntoDecks({ code: 'fic', decklist });
+    expect(decks).toHaveLength(1);
+    expect(decks[0].cards).toHaveLength(2);
   });
 });

@@ -298,11 +298,24 @@ export function splitPreconIntoDecks(precon) {
   const bundleMap = (_membershipsCache?.memberships || {})[code];
   if (!bundleMap || Object.keys(bundleMap).length === 0) return [];
 
-  // O(1) lookup of the Scryfall dump by id so we can pluck cards out by
-  // exact-id match against the MTGJSON deck lists.
-  const cardLookup = new Map();
+  // Phase 14.07k — match by both scryfall_id AND name. Scryfall's
+  // unique=prints search returns one row per printing in the focal set;
+  // MTGJSON occasionally lists a different printing's id (e.g. bonus-set
+  // cards that ride along with the boxed product but live in a sibling
+  // Scryfall set). Falling back to name match recovers those, restoring
+  // the full 100-card-per-deck count.
+  const byId = new Map();
+  const byName = new Map();
+  const _normName = (s) => (s || '').toLowerCase().trim();
   for (const card of list) {
-    if (card?.scryfall_id) cardLookup.set(card.scryfall_id, card);
+    if (card?.scryfall_id) byId.set(card.scryfall_id, card);
+    if (card?.name) {
+      const key = _normName(card.name);
+      // Keep the first-seen printing only; we only need a representative
+      // card object for downstream UI (the count comes from how many times
+      // we push the reference into deckCards).
+      if (!byName.has(key)) byName.set(key, card);
+    }
   }
 
   const _idDisplay = (ci) => {
@@ -310,15 +323,21 @@ export function splitPreconIntoDecks(precon) {
     return sorted.length === 0 ? 'Colorless' : sorted.join('');
   };
 
-  const _sig = (ci) => (ci || []).slice().sort().join(',') || 'C';
+  // Backwards-compat: older membership JSONs (pre-14-07k) stored a flat
+  // string[] of scryfall IDs. Newer ones store {id, name}[]. Normalise.
+  const _normEntry = (entry) => {
+    if (typeof entry === 'string') return { id: entry, name: '' };
+    return { id: entry?.id || '', name: entry?.name || '' };
+  };
 
   const decks = [];
-  for (const [deckName, scryfallIds] of Object.entries(bundleMap)) {
+  for (const [deckName, rawEntries] of Object.entries(bundleMap)) {
     const deckCards = [];
     const commanders = [];
     const identitySet = new Set();
-    for (const id of scryfallIds) {
-      const card = cardLookup.get(id);
+    for (const entry of (rawEntries || [])) {
+      const { id, name } = _normEntry(entry);
+      const card = byId.get(id) || byName.get(_normName(name));
       if (!card) continue;
       deckCards.push(card);
       if (card.is_commander) commanders.push(card);

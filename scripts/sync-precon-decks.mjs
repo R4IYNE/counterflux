@@ -114,19 +114,24 @@ async function main() {
       }
       const deck = deckJson.data || {};
       const cards = [...(deck.commander || []), ...(deck.mainBoard || [])];
-      const scryfallIds = [];
+      const entries = [];
       for (const card of cards) {
         const id = card?.identifiers?.scryfallId;
+        const name = card?.name || '';
         const count = card?.count ?? 1;
-        if (!id) continue;
-        for (let i = 0; i < count; i++) scryfallIds.push(id);
+        if (!id && !name) continue;
+        // Phase 14.07k — store {id, name} per card so the runtime splitter
+        // can fall back to name match when the id misses (different printings,
+        // bonus-set cards). Honour count by repeating the entry verbatim so
+        // basic lands and other multiples land in deckCards N times.
+        for (let i = 0; i < count; i++) entries.push({ id, name });
       }
       const deckName = normalizeDeckName(deck.name || meta.name);
-      memberships[code][deckName] = scryfallIds;
+      memberships[code][deckName] = entries;
       totalDecksFetched += 1;
-      totalCards += scryfallIds.length;
+      totalCards += entries.length;
       console.log(
-        `[sync-precons]   ${code} · ${deckName} → ${scryfallIds.length} cards`,
+        `[sync-precons]   ${code} · ${deckName} → ${entries.length} cards`,
       );
     }
   }
