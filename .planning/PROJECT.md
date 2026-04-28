@@ -10,34 +10,28 @@ The deck builder knows what you own, and the collection knows what's in your dec
 
 ## Current State
 
-**Shipped:** v1.0 (2026-04-13) → v1.1 Second Sunrise (2026-04-27)
-**Codebase:** ~24,296 LOC across 127 source files, ~18,075 LOC across 119 test files, 541 commits
-**Stack:** Alpine.js 3.15 + Dexie.js 4 + Chart.js 4 + Vite 8 + Tailwind CSS v4 + SortableJS + Navigo + mana-font + **Supabase JS 2.103+** (lazy-loaded for sync/auth)
+**Shipped:** v1.0 (2026-04-13) → v1.1 Second Sunrise (2026-04-27) → v1.2 Deploy the Gatewatch (2026-04-28)
+**Codebase:** ~24,470 LOC across 132 source/api files, 134 test files, 568 commits
+**Stack:** Alpine.js 3.15 + Dexie.js 4 + Chart.js 4 + Vite 8 + Tailwind CSS v4 + SortableJS + Navigo + mana-font + **Supabase JS 2.103+** (lazy-loaded for sync/auth) + **2 Vercel Functions** (`api/edhrec/[...path].js` + `api/spellbook/[...path].js`, server-side-only, never enter client bundle)
 
-All six modules operational and synced: Dashboard (Epic Experiment), Collection Manager (Treasure Cruise), Deck Builder (Thousand-Year Storm), Intelligence Layer, Market Intel (Preordain), Game Tracker (Vandalblast). Local-first IndexedDB persistence (Dexie schema v10) backed by Supabase Postgres + Realtime sync when signed in. Anonymous-first remains intact: the Supabase client is not in the bundle until first auth click.
+All six modules operational and synced: Dashboard (Epic Experiment), Collection Manager (Treasure Cruise), Deck Builder (Thousand-Year Storm), Intelligence Layer, Market Intel (Preordain), Game Tracker (Vandalblast). Local-first IndexedDB persistence (Dexie schema v10) backed by Supabase Postgres + Realtime sync when signed in. Anonymous-first remains intact: the Supabase client is not in the bundle until first auth click. EDHREC + Spellbook integrations now work in production via catch-all Vercel Functions (previously silently broken since v1.0 because the Vite dev proxy didn't ship to production).
 
-**Auth:** email magic-link + Google OAuth via Supabase (PKCE flow). RLS-enforced on every synced table.
+**Auth:** email + password sign-in + Google OAuth via Supabase (PKCE flow). RLS-enforced on every synced table via household whitelist (`counterflux.shared_users`).
 **Sync:** Dexie hook outbox → batched upsert, Realtime subscription for incoming changes, last-write-wins conflict resolution (`updated_at` field-level), 4-state topbar chip (synced/syncing/offline/error), reconciliation modal for first sign-in.
-**Performance:** Final v1.1 Lighthouse — LCP 2.49s, FCP 0.4s, CLS 0.059, Perf 86. All Web Vitals `Good`.
+**Production performance (measured 2026-04-28):** Lighthouse against `https://counterflux.vercel.app/` returns Perf 99 / FCP 0.6s / **LCP 0.7s** / CLS 0.048 / TBT 0ms. All Web Vitals Good with substantial headroom (production LCP 0.7s vs v1.1 lab measurement of 2.49s — Vercel edge CDN crushes the localhost number).
+**Deployment:** Vercel project `counterflux` (Hobby tier, personal account), auto-deploy on master push to `https://counterflux.vercel.app/`. `vercel.json` emits `Cache-Control: no-cache` on `/` and `/index.html`.
 
-## Current Milestone: v1.2 Deploy the Gatewatch — ✅ COMPLETE 2026-04-28
+## Next Milestone: v1.3 (TBD)
 
-**Goal:** Close the only two real production gaps remaining from v1.1 — the EDHREC CORS proxy (silently broken on Vercel since launch) and the live-environment UAT pass.
+Run `/gsd:new-milestone` to scope. Three seeds with explicit re-trigger conditions surface automatically during scoping:
 
-**Outcome:** Phase 15 shipped both EDHREC and Spellbook CORS proxies (catch-all Vercel Functions, zero client-side changes). Phase 16 collapsed inline — UAT-02 (production Lighthouse: Perf 99) + UAT-03 (HUMAN-UAT closures) validated inline; UAT-01 (LHCi-on-Preview wiring) deferred to v1.3 via SEED-003 on honest-ROI grounds. 7 of 8 v1.2 active requirements closed; 1 explicit deferral with re-trigger conditions. Plus 8 originally-scoped requirements (DEPLOY-01..06 + DECIDE-01..02) validated inline during the 2026-04-28 scope reset.
+- **SEED-001** — Catalog/userdata storage split (wa-sqlite + OPFS for catalog, keep Dexie for user data). Trigger: Phase 11 sync engine has now been live for 10+ days without regressions; eligible for re-evaluation
+- **SEED-002** — Revisit Nyquist VALIDATION.md gate (currently disabled). Decide: re-enable for v1.3+, leave disabled permanently, or backfill phases 7–14
+- **SEED-003** — Wire `@lhci/cli` soft-gate to a real Vercel Preview URL (UAT-01 deferred from v1.2 Phase 16). Trigger when CDN edge perf becomes a real concern OR when introducing dynamic SSR / per-request server logic
 
-**Headline numbers:** Production Lighthouse Perf 99, LCP 0.7s, CLS 0.048 — comfortably ahead of the v1.1 lab budget. Main client bundle stays 36.0 KB gz (well under 300 KB). EDHREC + Spellbook synergy/combo features now functional in production after years of being silently broken.
-
-**Scope reset (2026-04-28):** original v1.2 scope assumed Vercel deployment infrastructure was unbuilt. Discovery confirmed Counterflux has been live on Vercel since 2025-04-05 (8 production deploys, `Cache-Control: no-cache` headers serving correctly, auto-deploy on master push, env vars present and observably working since Phase 10/11 auth + sync ship in production). DEPLOY-01..06 and DECIDE-01..02 (8 of the original 16 requirements) were validated inline during this scoping session. The originally-planned "Phase 15 Vercel Foundation & Codified Decisions" was deleted — the work it described had already happened.
-
-**Target features (post-reset):**
-- EDHREC CORS proxy → Vercel Function (`/api/edhrec-proxy`) replacing the dev-only Vite proxy. Production has been silently broken on EDHREC features since v1.0 (Vite dev proxy doesn't ship to Vercel; CloudFront blocks the CORS preflight). Env-aware in `src/services/edhrec.js`. Anonymous bundle untouched.
-- Live-environment UAT pass — `perf-soft-gate.yml` rewritten to target a real Vercel Preview URL (currently uses `npx http-server dist`). Production Lighthouse run against `https://counterflux.vercel.app/` confirms the v1.1 perf budget holds in the wild. `phases/13-performance-optimisation-conditional/13-HUMAN-UAT.md` closed with deploy-URL evidence.
-
-**Key context:**
-- 2 phases (15 PROXY, 16 UAT), 8 active requirements. Tighter than the original 3 phases / 16 reqs after scope reset.
-- Anonymous-first principle preserved: EDHREC proxy lazy-loads with the existing `src/services/edhrec.js` service. Bundle-budget test gates regressions.
-- `src/services/spellbook.js` carries the same "wire to a serverless proxy" comment — Phase 15 plan-phase decides whether Spellbook ships alongside EDHREC or stays parked for v1.3.
+Plus two backlog candidates waiting for production-traffic-driven user demand:
+- **999.1** — MTGJSON Tokens.json "Required Tokens" tab in Thousand-Year Storm (lightweight, additive)
+- **999.2** — MTGJSON AllPrices.json historical price charts (scoped to user data: collection + watchlist + recently-viewed)
 - Backlog parked: 999.1 (MTGJSON Tokens — Required Tokens tab), 999.2 (MTGJSON AllPrices — historical price charts), SEED-001 (catalog/userdata storage split), SEED-002 (Nyquist gate revisit). Re-evaluate at v1.3 with production-traffic data in hand.
 
 ## Requirements
@@ -76,14 +70,7 @@ All six modules operational and synced: Dashboard (Epic Experiment), Collection 
 
 ### Active
 
-(Empty — v1.2 shipped 2026-04-28. Run `/gsd:complete-milestone` to archive v1.2 or `/gsd:new-milestone` to scope v1.3.)
-
-**Validated inline during scoping (2026-04-28):**
-- ✓ Vercel project linked + auto-deploy on master push (8 production deploys observed)
-- ✓ `Cache-Control: no-cache` confirmed live on `/` and `/index.html`
-- ✓ Supabase env vars present (Phase 11 cloud sync + auth observably work in production)
-- ✓ Public sign-up codified as permanent "household model" decision
-- ✓ Nyquist validation gate disabled (`workflow.nyquist_validation = false`); SEED-002 planted
+(Empty — v1.2 shipped + archived 2026-04-28. Run `/gsd:new-milestone` to scope v1.3. Three seeds + two backlog items surface automatically — see "Next Milestone" above.)
 
 ### Out of Scope
 
@@ -95,8 +82,9 @@ All six modules operational and synced: Dashboard (Epic Experiment), Collection 
 - All-printings view including MTGO/Arena-only — v1.1 scoped to `games: paper`; review only if user demand emerges
 - Mila loading animation (MILA-03) — accepted as minor tech debt from v1.0
 - Public sign-up UI surface — explicit product decision (v1.2): household model only, existing-account credentials, no public sign-up route. Auth-wall UX stays as-is. Re-open if a future milestone adopts a community/multi-user pivot.
-- Nyquist `VALIDATION.md` backfill across phases 7–14 — disabled for v1.2 (`workflow.nyquist_validation = false`). Tests exist (119 files, ~18K LOC), only the per-phase receipt artifact is missing. v1.3 backlog item planted to revisit.
-- Catalog migration from Dexie to wa-sqlite + OPFS — captured as SEED-001. Trigger: only after Phase 11 sync engine has been live for a meaningful period without regressions
+- Nyquist `VALIDATION.md` backfill across phases 7–14 — disabled for v1.2 (`workflow.nyquist_validation = false`). Tests exist (134 test files at v1.2 ship), only the per-phase receipt artifact is missing. SEED-002 surfaces during v1.3 scoping
+- Catalog migration from Dexie to wa-sqlite + OPFS — captured as SEED-001. Trigger eligible at v1.3 scoping (Phase 11 sync engine has now been live 10+ days without regressions, condition met)
+- LHCi soft-gate against real Vercel Preview URL — captured as SEED-003 (UAT-01 deferred from v1.2 Phase 16). Trigger: when CDN edge perf becomes a real concern OR when Counterflux gains SSR / per-request server logic
 
 ## Context
 
@@ -172,4 +160,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-28 — **v1.2 Deploy the Gatewatch COMPLETE.** Phase 15 shipped EDHREC + Spellbook catch-all Vercel proxies (5 PROXY requirements). Phase 16 collapsed inline (UAT-02 Production Lighthouse Perf 99 / LCP 0.7s; UAT-03 HUMAN-UAT closure across 13 + 11 + sibling audit; UAT-01 LHCi-on-Preview wiring deferred to v1.3 via SEED-003). Phase 13 path-resolution test failure fixed inline. 1057 of 1069 tests pass; remaining 1 is unrelated test-ordering flake. Backlog (999.1, 999.2, SEED-001, SEED-002, SEED-003) parked for v1.3 scoping. Run `/gsd:complete-milestone` to archive.*
+*Last updated: 2026-04-28 — **v1.2 Deploy the Gatewatch SHIPPED + ARCHIVED.** Three milestones in two months: v1.0 (2026-04-13), v1.1 (2026-04-27), v1.2 (2026-04-28). v1.2 demonstrated the "honest-ROI scope reset" pattern — collapsed two phases when discovery revealed they were theater. EDHREC + Spellbook proxies + production Lighthouse + HUMAN-UAT cascade closure shipped in 24 hours. Run `/gsd:new-milestone` to scope v1.3. Three seeds (SEED-001/002/003) + two backlog items (999.1/999.2) surface automatically during scoping.*

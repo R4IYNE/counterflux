@@ -1,14 +1,14 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.2
-milestone_name: Deploy the Gatewatch
-status: complete
-stopped_at: v1.2 Deploy the Gatewatch shipped — Phase 15 plans complete + Phase 16 collapsed inline. Run /gsd:complete-milestone to archive.
-last_updated: "2026-04-28T20:50:00.000Z"
+milestone_name: Deploy the Gatewatch — COMPLETE 2026-04-28
+status: completed
+stopped_at: ROADMAP/REQUIREMENTS/PROJECT/STATE all updated to milestone-complete; SEED-003 planted; PERF-PROD-2026-04-28.md captured; 13-HUMAN-UAT + 11-HUMAN-UAT resolved; pre-existing Phase 13 path-resolution test fixed
+last_updated: "2026-04-28T19:50:12.584Z"
 last_activity: 2026-04-28
 progress:
   total_phases: 2
-  completed_phases: 2
+  completed_phases: 1
   total_plans: 3
   completed_plans: 3
   percent: 100
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-04-28 with v1.2 completion)
 Phase: — (v1.2 complete)
 Plan: —
 Status: Milestone complete; ready for archive
-Last activity: 2026-04-28 — Phase 16 collapsed inline (UAT-02 + UAT-03 validated, UAT-01 deferred to v1.3 via SEED-003)
+Last activity: 2026-04-28
 Progress: ██████████ 100% (2/2 phases — 1 shipped, 1 collapsed inline)
 
 ## Milestone Progress
@@ -56,23 +56,27 @@ Forward-looking work captured during v1.1/v1.2 — re-evaluate at v1.3 with prod
 Full decision log in PROJECT.md Key Decisions table.
 
 **v1.2 scoping decisions (2026-04-27, original):**
+
 - Public sign-up: leave as-is (household model only)
 - Nyquist validation gate: disable, revisit at v1.3
 - EDHREC CORS proxy: Vercel Function (free, same repo)
 - Milestone scope: ship-to-prod readiness only
 
 **v1.2 scope reset (2026-04-28):**
+
 - DEPLOY-01..06 + DECIDE-01..02 validated inline (Counterflux already on Vercel since 2025-04-05)
 - Original Phase 15 (Vercel Foundation) deleted; what was Phase 16 became Phase 15, Phase 17 became Phase 16
 - Auto-deploy on master push retained (reality differs from the originally-locked manual-promotion plan)
 
 **v1.2 Phase 15 ship (2026-04-28):**
+
 - Catch-all path strategy chosen — `api/edhrec/[...path].js` + `api/spellbook/[...path].js` with zero client-side path changes
 - Spellbook proxy folded in (PROXY-01..05 service-generic, no parallel SPELLBOOK-* IDs)
 - PROXY-04 reframed from "anonymous bundle parity" to "main bundle stays ≤ 300 KB gz" (existing test gates)
 - Server-side hardening: UA injection only; no rate-limiting; no caching; no CORS headers (same-origin)
 
 **v1.2 Phase 16 collapse (2026-04-28):**
+
 - Phase 16 collapsed inline on honest-ROI grounds — same pattern as the original Phase 15 reset
 - UAT-02 validated inline via `npx lighthouse https://counterflux.vercel.app/`: Perf 99 / FCP 0.6s / LCP 0.7s / CLS 0.048 (Vercel edge CDN crushes the v1.1 lab 2.49s LCP measurement)
 - UAT-03 validated inline: 13-HUMAN-UAT.md flipped `partial` → `resolved`; 11-HUMAN-UAT.md flipped `partial` → `live-use-validated` (10-day production household-use track record + sibling test coverage); pre-existing 8-test path-resolution failure in `tests/perf/remeasure-contract.test.js` fixed inline
@@ -102,6 +106,6 @@ None — v1.2 milestone shipped. Run `/gsd:complete-milestone` for archival, or 
 
 ## Session Continuity
 
-Last session: 2026-04-28 — v1.2 Phase 16 collapse + milestone closure
-Stopped at: ROADMAP/REQUIREMENTS/PROJECT/STATE all updated to milestone-complete; SEED-003 planted; PERF-PROD-2026-04-28.md captured; 13-HUMAN-UAT + 11-HUMAN-UAT resolved; pre-existing Phase 13 path-resolution test fixed
-Resume: `/gsd:complete-milestone` to archive v1.2 OR `/gsd:new-milestone` to scope v1.3
+Last session: 2026-04-28 — v1.2 milestone archived via `/gsd:complete-milestone`
+Stopped at: v1.2 Deploy the Gatewatch fully archived. ROADMAP collapsed to one-line entry; REQUIREMENTS.md deleted (fresh for v1.3); MILESTONES.md entry rewritten with proper accomplishments; phase 15 directory moved to `milestones/v1.2-phases/`; PROJECT.md evolution review complete; RETROSPECTIVE.md v1.2 section appended; STATE.md updated. Awaiting v1.2 git tag + push, and `/gsd:new-milestone` to scope v1.3.
+Resume: `/gsd:new-milestone` to scope v1.3 — three seeds (SEED-001/002/003) and two backlog items (999.1/999.2) surface automatically during scoping
