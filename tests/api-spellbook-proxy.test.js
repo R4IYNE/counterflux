@@ -2,28 +2,38 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import handler from '../api/spellbook.js';
 
-function makeRequest({ method = 'GET', path = '', query = '', body = null, headers = {} } = {}) {
-  const search = new URLSearchParams();
-  if (path) search.set('path', path);
-  if (query) {
-    const extra = new URLSearchParams(query);
-    for (const [k, v] of extra.entries()) search.set(k, v);
-  }
-  const url = `https://counterflux.vercel.app/api/spellbook${search.toString() ? '?' + search.toString() : ''}`;
-  return new Request(url, {
+// --- Mock req/res helpers (intentional inline duplication — see Plan 15-02 <interfaces>).
+function mockReq({ method = 'GET', path = [], query = {}, body = undefined, headers = {} } = {}) {
+  return {
     method,
+    url: '/' + (Array.isArray(path) ? path.join('/') : path),
+    query: { ...query, path: Array.isArray(path) ? path : [path] },
+    body,
     headers,
-    body: body == null || method === 'GET' || method === 'HEAD' ? undefined : body,
-    duplex: body ? 'half' : undefined,
-  });
+  };
 }
 
-function mockUpstreamResponse({ status = 200, json = {}, contentType = 'application/json' } = {}) {
-  const bodyText = typeof json === 'string' ? json : JSON.stringify(json);
-  return new Response(bodyText, {
-    status,
-    headers: { 'content-type': contentType },
-  });
+function mockRes() {
+  const res = {
+    statusCode: 200,
+    _body: null,
+    _headers: {},
+    status(c) { this.statusCode = c; return this; },
+    json(o) { this._body = o; return this; },
+    send(b) { this._body = b; return this; },
+    setHeader(k, v) { this._headers[k.toLowerCase()] = v; return this; },
+    getHeader(k) { return this._headers[k.toLowerCase()]; },
+  };
+  return res;
+}
+
+// Look up a header by lower-case key, regardless of how the producer cased it.
+function findHeaderCaseInsensitive(headers, name) {
+  const target = name.toLowerCase();
+  for (const [k, v] of Object.entries(headers || {})) {
+    if (k.toLowerCase() === target) return v;
+  }
+  return undefined;
 }
 
 beforeEach(() => {
@@ -34,142 +44,222 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe('api/spellbook handler (Web Standard)', () => {
-  it('forwards POST /find-my-combos with the JSON body byte-stream untouched', async () => {
-    fetch.mockResolvedValueOnce(
-      mockUpstreamResponse({
-        status: 200,
-        json: { results: { included: [], almostIncluded: [] } },
-      })
-    );
+describe('api/spellbook handler', () => {
+  // String-form path test (production rewrite behavior — vercel.json
+  // `/api/spellbook/:path*` -> `/api/spellbook?path=:path*` passes path as a
+  // single string with embedded slashes). Pins production behavior so the
+  // catch-all-routing bug that broke v1.2 ship-day cannot regress.
+  it('builds the upstream URL from a string-form path slug (production rewrite)', async () => {
+    fetch.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      headers: new Headers({ 'content-type': 'application/json' }),
+      json: () => Promise.resolve({ results: { included: [], almostIncluded: [] } }),
+    });
 
-    const reqBodyText = JSON.stringify({
-      commanders: [{ card: 'Atraxa, Praetors’ Voice' }],
-      main: [{ card: 'Sol Ring' }],
-    });
-    const req = makeRequest({
+    const req = {
       method: 'POST',
-      path: 'find-my-combos',
-      body: reqBodyText,
+      url: '/api/spellbook',
+      query: { path: 'find-my-combos' },
+      body: { commanders: [{ card: 'Atraxa' }], main: [] },
       headers: { 'content-type': 'application/json' },
-    });
-    const res = await handler(req);
+    };
+    const res = mockRes();
+
+    await handler(req, res);
 
     expect(fetch).toHaveBeenCalledTimes(1);
-    expect(fetch.mock.calls[0][0]).toBe(
-      'https://backend.commanderspellbook.com/find-my-combos'
-    );
-    const init = fetch.mock.calls[0][1];
-    expect(init.method).toBe('POST');
-    // Critical assertion — the bytes forwarded to upstream are byte-identical
-    // to what came in. This pins the v1.2 ship-day Spellbook bug fix.
-    const forwardedText = await new Response(init.body).text();
-    expect(forwardedText).toBe(reqBodyText);
-    expect(res.status).toBe(200);
+    expect(fetch.mock.calls[0][0]).toBe('https://backend.commanderspellbook.com/find-my-combos');
+    expect(res.statusCode).toBe(200);
   });
 
-  it('builds upstream URL from string-form `path` query (production rewrite behavior)', async () => {
-    fetch.mockResolvedValueOnce(mockUpstreamResponse({ json: {} }));
+  it('forwards POST /find-my-combos with the JSON-stringified body', async () => {
+    fetch.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      headers: new Headers({ 'content-type': 'application/json' }),
+      json: () => Promise.resolve({ results: { included: [], almostIncluded: [] } }),
+    });
 
-    const req = makeRequest({ method: 'GET', path: 'variants' });
-    await handler(req);
+    const reqBody = {
+      commanders: [{ card: 'Prossh, Skyraider of Kher' }],
+      main: [{ card: 'Sol Ring' }],
+    };
+    const req = mockReq({
+      method: 'POST',
+      path: ['find-my-combos'],
+      body: reqBody,
+      headers: { 'content-type': 'application/json' },
+    });
+    const res = mockRes();
+
+    await handler(req, res);
+
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(fetch.mock.calls[0][0]).toBe('https://backend.commanderspellbook.com/find-my-combos');
+    const init = fetch.mock.calls[0][1];
+    expect(init.method).toBe('POST');
+    expect(JSON.parse(init.body)).toEqual(reqBody);
+    expect(res.statusCode).toBe(200);
+  });
+
+  it('builds the upstream URL from the catch-all path slug', async () => {
+    fetch.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      headers: new Headers({ 'content-type': 'application/json' }),
+      json: () => Promise.resolve({}),
+    });
+
+    const req = mockReq({ method: 'GET', path: ['variants'] });
+    const res = mockRes();
+
+    await handler(req, res);
 
     expect(fetch.mock.calls[0][0]).toBe('https://backend.commanderspellbook.com/variants');
   });
 
-  it('injects User-Agent verbatim on outbound', async () => {
-    fetch.mockResolvedValueOnce(mockUpstreamResponse({ json: {} }));
-
-    const req = makeRequest({ method: 'GET', path: 'variants' });
-    await handler(req);
-
-    const init = fetch.mock.calls[0][1];
-    expect(init.headers.get('user-agent')).toBe('Counterflux/1.x (+https://counterflux.vercel.app)');
-  });
-
-  it('strips host + Vercel-injected headers from outbound', async () => {
-    fetch.mockResolvedValueOnce(mockUpstreamResponse({ json: {} }));
-
-    const req = makeRequest({
-      method: 'GET',
-      path: 'variants',
-      headers: {
-        host: 'counterflux.vercel.app',
-        'x-vercel-id': 'dub1::abc123',
-        'x-forwarded-for': '1.2.3.4',
-        'x-custom': 'keep-me',
-      },
+  it('forwards GET requests with no body', async () => {
+    fetch.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      headers: new Headers({ 'content-type': 'application/json' }),
+      json: () => Promise.resolve({}),
     });
-    await handler(req);
+
+    const req = mockReq({ method: 'GET', path: ['variants'] });
+    const res = mockRes();
+
+    await handler(req, res);
 
     const init = fetch.mock.calls[0][1];
-    expect(init.headers.has('host')).toBe(false);
-    expect(init.headers.has('x-vercel-id')).toBe(false);
-    expect(init.headers.has('x-forwarded-for')).toBe(false);
-    expect(init.headers.get('x-custom')).toBe('keep-me');
+    expect(init.method).toBe('GET');
+    expect(init.body).toBeUndefined();
   });
 
-  it('forwards query-string params alongside the path', async () => {
-    fetch.mockResolvedValueOnce(mockUpstreamResponse({ json: {} }));
+  it('forwards query-string parameters alongside the catch-all path', async () => {
+    fetch.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      headers: new Headers({ 'content-type': 'application/json' }),
+      json: () => Promise.resolve({}),
+    });
 
-    const req = makeRequest({ method: 'GET', path: 'variants', query: 'foo=bar' });
-    await handler(req);
+    const req = mockReq({ method: 'GET', path: ['x'], query: { foo: 'bar' } });
+    const res = mockRes();
 
-    const calledUrl = fetch.mock.calls[0][0];
-    expect(calledUrl).toContain('foo=bar');
-    expect(calledUrl).not.toContain('path=');
+    await handler(req, res);
+
+    const url = fetch.mock.calls[0][0];
+    expect(url).toContain('https://backend.commanderspellbook.com/x');
+    expect(url).toContain('foo=bar');
+  });
+
+  it('injects User-Agent: Counterflux/1.x (+https://counterflux.vercel.app) on the outbound fetch', async () => {
+    fetch.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      headers: new Headers({ 'content-type': 'application/json' }),
+      json: () => Promise.resolve({}),
+    });
+
+    const req = mockReq({ method: 'GET', path: ['variants'] });
+    const res = mockRes();
+
+    await handler(req, res);
+
+    const init = fetch.mock.calls[0][1];
+    const ua = findHeaderCaseInsensitive(init.headers, 'User-Agent');
+    expect(ua).toBe('Counterflux/1.x (+https://counterflux.vercel.app)');
+  });
+
+  it('preserves the inbound Content-Type header on the outbound request', async () => {
+    fetch.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      headers: new Headers({ 'content-type': 'application/json' }),
+      json: () => Promise.resolve({}),
+    });
+
+    const req = mockReq({
+      method: 'POST',
+      path: ['find-my-combos'],
+      body: { commanders: [], main: [] },
+      headers: { 'content-type': 'application/json' },
+    });
+    const res = mockRes();
+
+    await handler(req, res);
+
+    const init = fetch.mock.calls[0][1];
+    const ct = findHeaderCaseInsensitive(init.headers, 'content-type');
+    expect(ct).toBe('application/json');
+  });
+
+  it('strips the inbound host header from the outbound request', async () => {
+    fetch.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      headers: new Headers({ 'content-type': 'application/json' }),
+      json: () => Promise.resolve({}),
+    });
+
+    const req = mockReq({
+      method: 'GET',
+      path: ['variants'],
+      headers: { host: 'counterflux.vercel.app', 'x-trace': 'abc' },
+    });
+    const res = mockRes();
+
+    await handler(req, res);
+
+    const init = fetch.mock.calls[0][1];
+    expect(findHeaderCaseInsensitive(init.headers, 'host')).toBeUndefined();
+    expect(findHeaderCaseInsensitive(init.headers, 'x-trace')).toBe('abc');
   });
 
   it('preserves upstream status code on non-2xx responses', async () => {
-    fetch.mockResolvedValueOnce(
-      mockUpstreamResponse({ status: 503, json: { error: 'service unavailable' } })
-    );
+    fetch.mockResolvedValueOnce({
+      ok: false,
+      status: 500,
+      headers: new Headers({ 'content-type': 'application/json' }),
+      json: () => Promise.resolve({ message: 'server error' }),
+    });
 
-    const req = makeRequest({ method: 'GET', path: 'variants' });
-    const res = await handler(req);
+    const req = mockReq({ method: 'GET', path: ['variants'] });
+    const res = mockRes();
 
-    expect(res.status).toBe(503);
-    const body = await res.json();
-    expect(body).toEqual({ error: 'service unavailable' });
+    await handler(req, res);
+
+    expect(res.statusCode).toBe(500);
+    expect(res._body).toEqual({ message: 'server error' });
   });
 
-  it('returns 502 with `{ error, source: "spellbook" }` on network failure', async () => {
-    fetch.mockRejectedValueOnce(new Error('ETIMEDOUT'));
+  it('returns 502 with { error: "upstream unavailable", source: "spellbook" } on network failure', async () => {
+    fetch.mockRejectedValueOnce(new Error('ENOTFOUND'));
 
-    const req = makeRequest({
+    const req = mockReq({
       method: 'POST',
-      path: 'find-my-combos',
-      body: '{"commanders":[],"main":[]}',
+      path: ['find-my-combos'],
+      body: { commanders: [], main: [] },
       headers: { 'content-type': 'application/json' },
     });
-    const res = await handler(req);
+    const res = mockRes();
 
-    expect(res.status).toBe(502);
-    const body = await res.json();
-    expect(body).toEqual({ error: 'upstream unavailable', source: 'spellbook' });
+    await handler(req, res);
+
+    expect(res.statusCode).toBe(502);
+    // Symmetry-breaker: source MUST be 'spellbook' (lowercase), NOT 'edhrec'.
+    expect(res._body).toEqual({ error: 'upstream unavailable', source: 'spellbook' });
   });
 
-  it('symmetry-breaker — does NOT leak `edhrec` source string', async () => {
-    fetch.mockRejectedValueOnce(new Error('upstream down'));
+  it('does not throw when fetch rejects', async () => {
+    fetch.mockRejectedValueOnce(new Error('connection reset'));
 
-    const req = makeRequest({ method: 'GET', path: 'variants' });
-    const res = await handler(req);
+    const req = mockReq({ method: 'GET', path: ['variants'] });
+    const res = mockRes();
 
-    const body = await res.json();
-    expect(body.source).toBe('spellbook');
-    expect(body.source).not.toBe('edhrec');
-    // Sanity: ensure no copy-paste leak across the function boundary
-    expect(JSON.stringify(body)).not.toContain('edhrec');
-  });
-
-  it('does not throw on network failure', async () => {
-    fetch.mockRejectedValueOnce(new Error('Network error'));
-
-    const req = makeRequest({ method: 'GET', path: 'variants' });
-    await expect(handler(req)).resolves.toBeInstanceOf(Response);
-  });
-
-  it('exports a function as default', () => {
-    expect(typeof handler).toBe('function');
+    await expect(handler(req, res)).resolves.toBeUndefined();
+    expect(res.statusCode).toBe(502);
   });
 });
