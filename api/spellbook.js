@@ -1,11 +1,16 @@
 /**
- * Vercel Function: catch-all proxy for /api/spellbook/* → https://backend.commanderspellbook.com/*
+ * Vercel Function: proxy for /api/spellbook/* → https://backend.commanderspellbook.com/*
  *
  * Phase 15 (D-04 Spellbook parity) — same CORS-preflight problem as the
- * EDHREC proxy at api/edhrec/[...path].js. The Vite dev proxy in
- * vite.config.js:13-17 owns this URL prefix in `npm run dev`; this Function
- * owns it in production. Both serve the same URL shape — src/services/spellbook.js
+ * EDHREC proxy at api/edhrec.js. The Vite dev proxy in vite.config.js:13-17
+ * owns this URL prefix in `npm run dev`; this Function owns it in production.
+ * Both serve the same URL shape — src/services/spellbook.js
  * SPELLBOOK_BASE = '/api/spellbook' requires zero changes.
+ *
+ * Routing: `vercel.json` rewrites `/api/spellbook/:path*` → `/api/spellbook?path=:path*`
+ * so the upstream path arrives as a single string in `req.query.path`. See
+ * `api/edhrec.js` header for why catch-all `[...path]` filenames don't work
+ * for vanilla Vite projects on Vercel.
  *
  * Only call site today: POST /find-my-combos with a JSON body shaped as
  * { commanders: [{card: name}, ...], main: [{card: name}, ...] }
@@ -23,8 +28,13 @@ const USER_AGENT = 'Counterflux/1.x (+https://counterflux.vercel.app)';
 
 export default async function handler(req, res) {
   try {
-    // 1. Build upstream URL from the catch-all `path` segments + any other query params.
-    const segments = Array.isArray(req.query.path) ? req.query.path : [req.query.path].filter(Boolean);
+    // 1. Build upstream URL from `req.query.path` + remaining query params.
+    //    Production: rewrite passes path as a single string with slashes.
+    //    Dev/test mocks may pass an array. Both forms reduce to the same segments.
+    const rawPath = req.query.path;
+    const segments = Array.isArray(rawPath)
+      ? rawPath
+      : (rawPath ? String(rawPath).split('/').filter(Boolean) : []);
     const pathSuffix = segments.map(encodeURIComponent).join('/');
     const { path: _ignored, ...queryRest } = req.query;
     const qs = new URLSearchParams();

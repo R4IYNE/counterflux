@@ -1,4 +1,8 @@
 {
+  "rewrites": [
+    { "source": "/api/edhrec/:path*", "destination": "/api/edhrec?path=:path*" },
+    { "source": "/api/spellbook/:path*", "destination": "/api/spellbook?path=:path*" }
+  ],
   "headers": [
     {
       "source": "/index.html",

@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import handler from '../api/edhrec/[...path].js';
+import handler from '../api/edhrec.js';
 
 // ---------------------------------------------------------------------------
 // Mock req/res helpers — small inline utility, no shared fixture.
@@ -58,9 +58,9 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe('api/edhrec/[...path] handler', () => {
-  // ---- Test 1: catch-all path -> upstream URL ----
-  it('builds the upstream URL from the catch-all path slug', async () => {
+describe('api/edhrec handler', () => {
+  // ---- Test 1: array-form path -> upstream URL ----
+  it('builds the upstream URL from an array-form path slug (legacy/dev mock)', async () => {
     fetch.mockResolvedValueOnce(mockUpstreamResponse({ json: { ok: 1 } }));
 
     const req = mockReq({ path: ['pages', 'commanders', 'prossh-skyraider-of-kher.json'] });
@@ -70,6 +70,28 @@ describe('api/edhrec/[...path] handler', () => {
     expect(fetch).toHaveBeenCalledTimes(1);
     const calledUrl = fetch.mock.calls[0][0];
     expect(calledUrl).toBe('https://json.edhrec.com/pages/commanders/prossh-skyraider-of-kher.json');
+  });
+
+  // ---- Test 1b: string-form path (production rewrite behavior) ----
+  it('builds the upstream URL from a string-form path slug (production rewrite)', async () => {
+    fetch.mockResolvedValueOnce(mockUpstreamResponse({ json: { ok: 1 } }));
+
+    // vercel.json `/api/edhrec/:path*` -> `/api/edhrec?path=:path*` rewrites pass
+    // path as a single string with embedded slashes — NOT an array. This test
+    // pins production behavior so the bug that broke v1.2 ship-day cannot regress.
+    const req = {
+      method: 'GET',
+      url: '/api/edhrec',
+      query: { path: 'pages/commanders/atraxa-praetors-voice.json' },
+      body: undefined,
+      headers: {},
+    };
+    const res = mockRes();
+    await handler(req, res);
+
+    expect(fetch).toHaveBeenCalledTimes(1);
+    const calledUrl = fetch.mock.calls[0][0];
+    expect(calledUrl).toBe('https://json.edhrec.com/pages/commanders/atraxa-praetors-voice.json');
   });
 
   // ---- Test 2: GET passthrough, no body ----

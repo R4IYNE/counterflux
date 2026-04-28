@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import handler from '../api/spellbook/[...path].js';
+import handler from '../api/spellbook.js';
 
 // --- Mock req/res helpers (intentional inline duplication — see Plan 15-02 <interfaces>).
 function mockReq({ method = 'GET', path = [], query = {}, body = undefined, headers = {} } = {}) {
@@ -44,7 +44,35 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe('api/spellbook/[...path] handler', () => {
+describe('api/spellbook handler', () => {
+  // String-form path test (production rewrite behavior — vercel.json
+  // `/api/spellbook/:path*` -> `/api/spellbook?path=:path*` passes path as a
+  // single string with embedded slashes). Pins production behavior so the
+  // catch-all-routing bug that broke v1.2 ship-day cannot regress.
+  it('builds the upstream URL from a string-form path slug (production rewrite)', async () => {
+    fetch.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      headers: new Headers({ 'content-type': 'application/json' }),
+      json: () => Promise.resolve({ results: { included: [], almostIncluded: [] } }),
+    });
+
+    const req = {
+      method: 'POST',
+      url: '/api/spellbook',
+      query: { path: 'find-my-combos' },
+      body: { commanders: [{ card: 'Atraxa' }], main: [] },
+      headers: { 'content-type': 'application/json' },
+    };
+    const res = mockRes();
+
+    await handler(req, res);
+
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(fetch.mock.calls[0][0]).toBe('https://backend.commanderspellbook.com/find-my-combos');
+    expect(res.statusCode).toBe(200);
+  });
+
   it('forwards POST /find-my-combos with the JSON-stringified body', async () => {
     fetch.mockResolvedValueOnce({
       ok: true,
