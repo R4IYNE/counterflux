@@ -22,19 +22,19 @@ All six modules operational and synced: Dashboard (Epic Experiment), Collection 
 
 ## Current Milestone: v1.2 Deploy the Gatewatch
 
-**Goal:** Make Counterflux production-deployable on Vercel by closing every v1.1 carry-over blocker — pure cleanup, no new user-facing features.
+**Goal:** Close the only two real production gaps remaining from v1.1 — the EDHREC CORS proxy (silently broken on Vercel since launch) and the live-environment UAT pass.
 
-**Target features:**
-- EDHREC CORS proxy → Vercel Function (`/api/edhrec-proxy`) replacing the dev-only Vite proxy. Lazy-loaded, rate-limited, env-aware (dev keeps Vite proxy, prod uses Vercel Function). Anonymous-bundle untouched.
-- Public sign-up UI codified as "household model" (existing-account credentials only) — explicit product decision logged, deferral comment in `phases/10-supabase-auth-foundation/10-CONTEXT.md` cleaned up.
-- Nyquist validation gate disabled (`workflow.nyquist_validation = false`). Tests exist (119 files, ~18K LOC); the receipt artifact does not. v1.3 backlog item planted to revisit.
-- First Vercel deploy + UAT pass — Vercel project linked, preview pipeline running on PRs, Supabase env vars migrated, `@lhci/cli` soft-gate fires on a real PR, `Cache-Control: no-cache` confirmed in production headers, Plan 13 HUMAN-UAT items closed.
+**Scope reset (2026-04-28):** original v1.2 scope assumed Vercel deployment infrastructure was unbuilt. Discovery confirmed Counterflux has been live on Vercel since 2025-04-05 (8 production deploys, `Cache-Control: no-cache` headers serving correctly, auto-deploy on master push, env vars present and observably working since Phase 10/11 auth + sync ship in production). DEPLOY-01..06 and DECIDE-01..02 (8 of the original 16 requirements) were validated inline during this scoping session. The originally-planned "Phase 15 Vercel Foundation & Codified Decisions" was deleted — the work it described had already happened.
+
+**Target features (post-reset):**
+- EDHREC CORS proxy → Vercel Function (`/api/edhrec-proxy`) replacing the dev-only Vite proxy. Production has been silently broken on EDHREC features since v1.0 (Vite dev proxy doesn't ship to Vercel; CloudFront blocks the CORS preflight). Env-aware in `src/services/edhrec.js`. Anonymous bundle untouched.
+- Live-environment UAT pass — `perf-soft-gate.yml` rewritten to target a real Vercel Preview URL (currently uses `npx http-server dist`). Production Lighthouse run against `https://counterflux.vercel.app/` confirms the v1.1 perf budget holds in the wild. `phases/13-performance-optimisation-conditional/13-HUMAN-UAT.md` closed with deploy-URL evidence.
 
 **Key context:**
-- Vercel Hobby (free) sufficient for expected EDHREC proxy traffic — well within 1M invocations / 100GB bandwidth.
-- Anonymous-first principle preserved: EDHREC proxy lazy-loads with the existing `intelligence-edhrec.js` service, no new always-loaded weight.
-- Production promotion is one button-press — milestone counts as "done" once preview pipeline + UAT are green; the user pulls the trigger when ready.
-- Backlog parked: 999.1 (MTGJSON Tokens — Required Tokens tab), 999.2 (MTGJSON AllPrices — historical price charts), SEED-001 (catalog/userdata storage split). Re-evaluate at v1.3 with production-traffic data in hand.
+- 2 phases (15 PROXY, 16 UAT), 8 active requirements. Tighter than the original 3 phases / 16 reqs after scope reset.
+- Anonymous-first principle preserved: EDHREC proxy lazy-loads with the existing `src/services/edhrec.js` service. Bundle-budget test gates regressions.
+- `src/services/spellbook.js` carries the same "wire to a serverless proxy" comment — Phase 15 plan-phase decides whether Spellbook ships alongside EDHREC or stays parked for v1.3.
+- Backlog parked: 999.1 (MTGJSON Tokens — Required Tokens tab), 999.2 (MTGJSON AllPrices — historical price charts), SEED-001 (catalog/userdata storage split), SEED-002 (Nyquist gate revisit). Re-evaluate at v1.3 with production-traffic data in hand.
 
 ## Requirements
 
@@ -70,13 +70,18 @@ All six modules operational and synced: Dashboard (Epic Experiment), Collection 
 
 ### Active
 
-**v1.2 — Deploy the Gatewatch (in flight)**
-- ◯ Production-grade EDHREC CORS proxy — Vercel Function replacing Vite dev proxy
-- ◯ First Vercel deploy + preview pipeline running on PRs
-- ◯ Supabase environment variables migrated to Vercel
-- ◯ Plan 13 live-environment UAT items closed (`@lhci/cli` soft-gate fires on real PR, `Cache-Control: no-cache` confirmed)
-- ◯ Public sign-up product decision codified ("household model" — existing-account credentials only)
-- ◯ Nyquist validation gate disabled with v1.3 revisit flag
+**v1.2 — Deploy the Gatewatch (in flight, post-reset)**
+- ◯ Production-grade EDHREC CORS proxy — Vercel Function replacing Vite dev proxy (Phase 15)
+- ◯ `perf-soft-gate.yml` retargeted to real Vercel Preview URL (Phase 16)
+- ◯ Production Lighthouse run against live URL confirms v1.1 perf budget holds (Phase 16)
+- ◯ Plan 13 HUMAN-UAT items closed with deploy-URL evidence (Phase 16)
+
+**Validated inline during scoping (2026-04-28):**
+- ✓ Vercel project linked + auto-deploy on master push (8 production deploys observed)
+- ✓ `Cache-Control: no-cache` confirmed live on `/` and `/index.html`
+- ✓ Supabase env vars present (Phase 11 cloud sync + auth observably work in production)
+- ✓ Public sign-up codified as permanent "household model" decision
+- ✓ Nyquist validation gate disabled (`workflow.nyquist_validation = false`); SEED-002 planted
 
 ### Out of Scope
 
@@ -143,6 +148,8 @@ All six modules operational and synced: Dashboard (Epic Experiment), Collection 
 | Static paint-critical `<h1>` in initial HTML (Plan 13-05) | Auth wall creating DOM at runtime delayed LCP to 6.1s; pre-existing DOM gets to ~2.49s | ✓ Good — auth-wall now decorates rather than creates; Phase 14-06 patched the closeAuthWall stale-static race that surfaced |
 | `Cache-Control: no-cache` + `vite:preloadError` recovery (Pitfall 15) | Stale chunk references after deploy cause hard failures; need cache-bust + reload recovery | ✓ Good — shipped in Plan 13-05 |
 | GitHub Action for weekly precon membership sync (`scheduled-precon-sync.yml`, Node 24 runner) | Scryfall + MTGJSON both update; manual sync drifts | ✓ Good — `chore(precons): weekly MTGJSON deck-membership sync` runs on cron, opens PR (single tag-only release model retained) |
+| Household model permanent — no public sign-up UI (v1.2 decision, 2026-04-28) | App is a personal-collaborator tool for two known users (James + Sharon) on the shared huxley Supabase project. Phase 10 D-38 already implemented household-RLS via the `counterflux.shared_users` whitelist post-ship. Adding a public sign-up surface would invite outsider account creation that household RLS is designed to block. Existing-account credentials remain the entry path | ✓ Good — codifies what the auth-wall already enforces; Out-of-Scope rewritten from "deferred to v1.2 scoping" to permanent decision |
+| Nyquist VALIDATION.md gate disabled (v1.2 decision, 2026-04-28) | v1.1's 8 phases shipped without per-phase VALIDATION.md receipts; the tests exist (119 files, ~18K LOC) but the receipt artifact does not. Backfilling 8 archived phases is process debt that returns no functional value. Disabling unblocks v1.2 phases without weakening real coverage. SEED-002 planted to revisit at v1.3 | ✓ Good — `workflow.nyquist_validation: false` in `.planning/config.json`. Re-evaluate at v1.3 milestone scoping or earlier if a regression VALIDATION.md would have caught surfaces |
 
 ## Evolution
 
@@ -162,4 +169,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-27 — v1.2 Deploy the Gatewatch scoped. Pure production-readiness milestone closing four v1.1 carry-over blockers: EDHREC CORS proxy (Vercel Function), public sign-up product decision (household model — leave as-is), Nyquist gate disabled, first Vercel deploy + UAT pass. No new user-facing features. Backlog (999.1, 999.2, SEED-001) parked for v1.3 with production-traffic data.*
+*Last updated: 2026-04-28 — v1.2 scope reset. Counterflux has been live on Vercel since 2025-04-05 (8 production deploys) — DEPLOY-01..06 + DECIDE-01..02 validated inline rather than allocated to a phase. Milestone collapses to 2 phases: Phase 15 EDHREC CORS Proxy (production silently broken on EDHREC features since launch), Phase 16 Live-Environment UAT Pass (run against real `https://counterflux.vercel.app/`). Backlog (999.1, 999.2, SEED-001, SEED-002) parked for v1.3.*
