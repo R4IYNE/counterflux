@@ -3,51 +3,37 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import handler from '../api/edhrec.js';
 
 // ---------------------------------------------------------------------------
-// Mock req/res helpers — small inline utility, no shared fixture.
-// Mirrors the shape of Vercel's Node.js Function req/res objects (the bits
-// the EDHREC handler actually touches).
+// Web Standard fetch handler tests. Inputs are real `Request` objects (from
+// the Node 18+ global Request constructor); outputs are real `Response`
+// objects. This pins the production behavior — the v1.2 ship-day bug was
+// caused by the legacy req/res Node.js handler auto-parsing JSON bodies and
+// re-stringifying them with subtly-different bytes that Spellbook's Django
+// backend rejected. Web Standard handler forwards the raw body stream.
 // ---------------------------------------------------------------------------
-function mockReq({ method = 'GET', path = [], query = {}, body = undefined, headers = {} } = {}) {
-  const segments = Array.isArray(path) ? path : [path];
-  return {
+
+function makeRequest({ method = 'GET', path = '', query = '', body = null, headers = {} } = {}) {
+  // vercel.json rewrites /api/edhrec/:path* -> /api/edhrec?path=:path*
+  const search = new URLSearchParams();
+  if (path) search.set('path', path);
+  if (query) {
+    const extra = new URLSearchParams(query);
+    for (const [k, v] of extra.entries()) search.set(k, v);
+  }
+  const url = `https://counterflux.vercel.app/api/edhrec${search.toString() ? '?' + search.toString() : ''}`;
+  return new Request(url, {
     method,
-    url: '/' + segments.join('/'),
-    query: { ...query, path: segments },
-    body,
     headers,
-  };
+    body: body == null || method === 'GET' || method === 'HEAD' ? undefined : body,
+    duplex: body ? 'half' : undefined,
+  });
 }
 
-function mockRes() {
-  const res = {
-    statusCode: 200,
-    _body: null,
-    _headers: {},
-    status(c) { this.statusCode = c; return this; },
-    json(o) { this._body = o; return this; },
-    send(b) { this._body = b; return this; },
-    setHeader(k, v) { this._headers[k.toLowerCase()] = v; return this; },
-    getHeader(k) { return this._headers[k.toLowerCase()]; },
-  };
-  return res;
-}
-
-// Helper: pull the User-Agent header (case-insensitive) from a fetch init object.
-function getUA(init) {
-  const headers = init?.headers || {};
-  const entry = Object.entries(headers).find(([k]) => k.toLowerCase() === 'user-agent');
-  return entry ? entry[1] : undefined;
-}
-
-// Helper: build a Response-like object the handler will await.
-function mockUpstreamResponse({ ok = true, status = 200, json = {}, contentType = 'application/json' } = {}) {
-  return {
-    ok,
+function mockUpstreamResponse({ status = 200, json = {}, contentType = 'application/json' } = {}) {
+  const bodyText = typeof json === 'string' ? json : JSON.stringify(json);
+  return new Response(bodyText, {
     status,
-    headers: new Headers({ 'content-type': contentType }),
-    json: () => Promise.resolve(json),
-    text: () => Promise.resolve(typeof json === 'string' ? json : JSON.stringify(json)),
-  };
+    headers: { 'content-type': contentType },
+  });
 }
 
 beforeEach(() => {
@@ -58,158 +44,126 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe('api/edhrec handler', () => {
-  // ---- Test 1: array-form path -> upstream URL ----
-  it('builds the upstream URL from an array-form path slug (legacy/dev mock)', async () => {
+describe('api/edhrec handler (Web Standard)', () => {
+  it('builds upstream URL from string-form `path` query (production rewrite behavior)', async () => {
     fetch.mockResolvedValueOnce(mockUpstreamResponse({ json: { ok: 1 } }));
 
-    const req = mockReq({ path: ['pages', 'commanders', 'prossh-skyraider-of-kher.json'] });
-    const res = mockRes();
-    await handler(req, res);
+    const req = makeRequest({ path: 'pages/commanders/atraxa-praetors-voice.json' });
+    const res = await handler(req);
 
     expect(fetch).toHaveBeenCalledTimes(1);
-    const calledUrl = fetch.mock.calls[0][0];
-    expect(calledUrl).toBe('https://json.edhrec.com/pages/commanders/prossh-skyraider-of-kher.json');
+    expect(fetch.mock.calls[0][0]).toBe(
+      'https://json.edhrec.com/pages/commanders/atraxa-praetors-voice.json'
+    );
+    expect(res.status).toBe(200);
   });
 
-  // ---- Test 1b: string-form path (production rewrite behavior) ----
-  it('builds the upstream URL from a string-form path slug (production rewrite)', async () => {
-    fetch.mockResolvedValueOnce(mockUpstreamResponse({ json: { ok: 1 } }));
+  it('forwards GET with no body', async () => {
+    fetch.mockResolvedValueOnce(mockUpstreamResponse({ json: {} }));
 
-    // vercel.json `/api/edhrec/:path*` -> `/api/edhrec?path=:path*` rewrites pass
-    // path as a single string with embedded slashes — NOT an array. This test
-    // pins production behavior so the bug that broke v1.2 ship-day cannot regress.
-    const req = {
-      method: 'GET',
-      url: '/api/edhrec',
-      query: { path: 'pages/commanders/atraxa-praetors-voice.json' },
-      body: undefined,
-      headers: {},
-    };
-    const res = mockRes();
-    await handler(req, res);
-
-    expect(fetch).toHaveBeenCalledTimes(1);
-    const calledUrl = fetch.mock.calls[0][0];
-    expect(calledUrl).toBe('https://json.edhrec.com/pages/commanders/atraxa-praetors-voice.json');
-  });
-
-  // ---- Test 2: GET passthrough, no body ----
-  it('forwards GET requests with no body', async () => {
-    fetch.mockResolvedValueOnce(mockUpstreamResponse({ json: { ok: 1 } }));
-
-    const req = mockReq({ method: 'GET', path: ['pages', 'commanders', 'prossh.json'] });
-    const res = mockRes();
-    await handler(req, res);
+    const req = makeRequest({ method: 'GET', path: 'pages/top/salt.json' });
+    await handler(req);
 
     const init = fetch.mock.calls[0][1];
     expect(init.method).toBe('GET');
     expect(init.body).toBeUndefined();
   });
 
-  // ---- Test 3: POST passthrough with JSON-stringified body ----
-  it('forwards POST requests with JSON-stringified body', async () => {
+  it('forwards POST body untouched (raw stream, no parse/re-stringify)', async () => {
     fetch.mockResolvedValueOnce(mockUpstreamResponse({ json: {} }));
 
-    const req = mockReq({
+    const bodyJson = '{"foo":"bar","nested":{"a":1}}';
+    const req = makeRequest({
       method: 'POST',
-      path: ['find-my-combos'],
-      body: { foo: 'bar' },
+      path: 'find',
+      body: bodyJson,
       headers: { 'content-type': 'application/json' },
     });
-    const res = mockRes();
-    await handler(req, res);
+    await handler(req);
 
     const init = fetch.mock.calls[0][1];
     expect(init.method).toBe('POST');
-    expect(init.body).toBe('{"foo":"bar"}');
-    // Inbound content-type should pass through alongside the injected UA.
-    const inboundCT = Object.entries(init.headers).find(([k]) => k.toLowerCase() === 'content-type');
-    expect(inboundCT?.[1]).toBe('application/json');
+    // The body forwarded to upstream must be the same byte-stream — verified
+    // by reading it back as text.
+    const forwardedText = await new Response(init.body).text();
+    expect(forwardedText).toBe(bodyJson);
   });
 
-  // ---- Test 4: query string passthrough ----
-  it('forwards query-string parameters alongside the catch-all path', async () => {
+  it('forwards query-string params alongside the path', async () => {
     fetch.mockResolvedValueOnce(mockUpstreamResponse({ json: {} }));
 
-    const req = mockReq({ path: ['x'], query: { foo: 'bar', baz: 'qux' } });
-    const res = mockRes();
-    await handler(req, res);
+    const req = makeRequest({ path: 'x', query: 'foo=bar&baz=qux' });
+    await handler(req);
 
     const calledUrl = fetch.mock.calls[0][0];
     expect(calledUrl.startsWith('https://json.edhrec.com/x?')).toBe(true);
     expect(calledUrl).toContain('foo=bar');
     expect(calledUrl).toContain('baz=qux');
+    expect(calledUrl).not.toContain('path=');
   });
 
-  // ---- Test 5: UA injection (verbatim string, case-insensitive header lookup) ----
-  it('injects User-Agent: Counterflux/1.x (+https://counterflux.vercel.app) on the outbound fetch', async () => {
+  it('injects User-Agent verbatim on outbound', async () => {
     fetch.mockResolvedValueOnce(mockUpstreamResponse({ json: {} }));
 
-    const req = mockReq({ path: ['pages', 'top', 'salt.json'] });
-    const res = mockRes();
-    await handler(req, res);
+    const req = makeRequest({ path: 'pages/top/salt.json' });
+    await handler(req);
 
     const init = fetch.mock.calls[0][1];
-    const ua = getUA(init);
-    expect(ua).toBe('Counterflux/1.x (+https://counterflux.vercel.app)');
+    expect(init.headers.get('user-agent')).toBe('Counterflux/1.x (+https://counterflux.vercel.app)');
   });
 
-  // ---- Test 6: host header strip (with other headers retained) ----
-  it('strips the inbound host header from the outbound request', async () => {
+  it('strips host + Vercel-injected headers from outbound', async () => {
     fetch.mockResolvedValueOnce(mockUpstreamResponse({ json: {} }));
 
-    const req = mockReq({
-      path: ['x'],
-      headers: { host: 'counterflux.vercel.app', 'x-custom': 'keep-me' },
+    const req = makeRequest({
+      path: 'x',
+      headers: {
+        host: 'counterflux.vercel.app',
+        'x-vercel-id': 'dub1::abc123',
+        'x-forwarded-for': '1.2.3.4',
+        'x-custom': 'keep-me',
+      },
     });
-    const res = mockRes();
-    await handler(req, res);
+    await handler(req);
 
     const init = fetch.mock.calls[0][1];
-    const headerKeys = Object.keys(init.headers).map((k) => k.toLowerCase());
-    expect(headerKeys).not.toContain('host');
-    // Custom header retained
-    const xCustom = Object.entries(init.headers).find(([k]) => k.toLowerCase() === 'x-custom');
-    expect(xCustom?.[1]).toBe('keep-me');
+    expect(init.headers.has('host')).toBe(false);
+    expect(init.headers.has('x-vercel-id')).toBe(false);
+    expect(init.headers.has('x-forwarded-for')).toBe(false);
+    expect(init.headers.get('x-custom')).toBe('keep-me');
   });
 
-  // ---- Test 7: status preservation on non-2xx upstream ----
   it('preserves upstream status code on non-2xx responses', async () => {
     fetch.mockResolvedValueOnce(
-      mockUpstreamResponse({ ok: false, status: 404, json: { message: 'not found' } })
+      mockUpstreamResponse({ status: 404, json: { message: 'not found' } })
     );
 
-    const req = mockReq({ path: ['pages', 'commanders', 'nonexistent.json'] });
-    const res = mockRes();
-    await handler(req, res);
+    const req = makeRequest({ path: 'pages/commanders/nonexistent.json' });
+    const res = await handler(req);
 
-    expect(res.statusCode).toBe(404);
-    expect(res._body).toEqual({ message: 'not found' });
+    expect(res.status).toBe(404);
+    const body = await res.json();
+    expect(body).toEqual({ message: 'not found' });
   });
 
-  // ---- Test 8: 502 + verbatim error body on network failure ----
-  it('returns 502 with { error: "upstream unavailable", source: "edhrec" } on network failure', async () => {
+  it('returns 502 with `{ error, source: "edhrec" }` on network failure', async () => {
     fetch.mockRejectedValueOnce(new Error('ECONNREFUSED'));
 
-    const req = mockReq({ path: ['pages', 'top', 'salt.json'] });
-    const res = mockRes();
-    await handler(req, res);
+    const req = makeRequest({ path: 'pages/top/salt.json' });
+    const res = await handler(req);
 
-    expect(res.statusCode).toBe(502);
-    expect(res._body).toEqual({ error: 'upstream unavailable', source: 'edhrec' });
+    expect(res.status).toBe(502);
+    const body = await res.json();
+    expect(body).toEqual({ error: 'upstream unavailable', source: 'edhrec' });
   });
 
-  // ---- Test 9: handler never throws on network failure ----
-  it('does not throw when fetch rejects', async () => {
+  it('does not throw on network failure', async () => {
     fetch.mockRejectedValueOnce(new Error('Network error'));
 
-    const req = mockReq({ path: ['x'] });
-    const res = mockRes();
-    await expect(handler(req, res)).resolves.toBeUndefined();
+    const req = makeRequest({ path: 'x' });
+    await expect(handler(req)).resolves.toBeInstanceOf(Response);
   });
 
-  // ---- Test 10: handler signature ----
   it('exports a function as default', () => {
     expect(typeof handler).toBe('function');
   });

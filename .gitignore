@@ -13,3 +13,6 @@ lighthouse-report/
 # look-yourself UAT credentials (do not commit)
 .claude/uat-credentials.local.md
 .claude/uat.json
+
+# /loop ScheduleWakeup runtime lock file (per-session, never commit)
+.claude/scheduled_tasks.lock
