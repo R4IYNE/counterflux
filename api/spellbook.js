@@ -76,8 +76,29 @@ export default async function handler(req, res) {
       init.body = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
     }
 
+    // === DEBUG INSTRUMENTATION (temp — Phase 15 hot-fix #4 diagnosis) ===
+    // Logs everything we send to upstream so we can compare against a known-good
+    // direct-curl request. Remove once Spellbook 400 is diagnosed and fixed.
+    console.error('[spellbook-debug] method:', req.method);
+    console.error('[spellbook-debug] inbound req.body typeof:', typeof req.body);
+    console.error('[spellbook-debug] inbound req.body keys:', req.body && typeof req.body === 'object' ? Object.keys(req.body) : '(not object)');
+    console.error('[spellbook-debug] inbound req.body sample:', JSON.stringify(req.body).slice(0, 500));
+    console.error('[spellbook-debug] outbound URL:', upstreamUrl);
+    console.error('[spellbook-debug] outbound headers:', JSON.stringify(outboundHeaders));
+    if (init.body !== undefined) {
+      const bodyStr = typeof init.body === 'string' ? init.body : String(init.body);
+      console.error('[spellbook-debug] outbound body bytes:', Buffer.byteLength(bodyStr, 'utf-8'));
+      console.error('[spellbook-debug] outbound body content:', bodyStr.slice(0, 500));
+    }
+    // === END DEBUG ===
+
     // 3. Make the upstream call.
     const upstreamRes = await fetch(upstreamUrl, init);
+
+    // === DEBUG: log upstream response ===
+    console.error('[spellbook-debug] upstream status:', upstreamRes.status);
+    console.error('[spellbook-debug] upstream content-type:', upstreamRes.headers.get('content-type'));
+    // === END DEBUG ===
 
     // 4. Forward status + body unchanged.
     const contentType = upstreamRes.headers.get('content-type') || '';
