@@ -54,20 +54,20 @@ Full phase details, success criteria, and plan-by-plan breakdown: [milestones/v1
 
 ### Phase 15: EDHREC CORS Proxy
 
-**Goal**: Production deploys can fetch EDHREC synergies, salt scores, and bulk Top-100 data without the CloudFront CORS preflight failure — via a Vercel Function at `/api/edhrec-proxy` — while development continues to use the Vite dev proxy and the anonymous bundle stays exactly the same size.
+**Goal**: Production deploys can fetch EDHREC synergies, salt scores, bulk Top-100 data, AND Commander Spellbook combo lookups without the CloudFront CORS preflight failure — via two catch-all Vercel Functions (`api/edhrec/[...path].js` + `api/spellbook/[...path].js`) — while development continues to use the Vite dev proxy unchanged. Zero client-side path changes (catch-all alignment with the existing `/api/edhrec/*` and `/api/spellbook/*` URL shapes).
 
 **Depends on**: Nothing (Vercel project already linked, vercel.json already shipped, env vars already set).
 
-**Requirements**: PROXY-01, PROXY-02, PROXY-03, PROXY-04, PROXY-05
+**Requirements**: PROXY-01, PROXY-02, PROXY-03, PROXY-04, PROXY-05 (REQUIREMENTS.md PROXY-* requirements were reworded during discuss-phase to cover BOTH services in one set, not parallel EDHREC/SPELLBOOK ID sets — see 15-CONTEXT.md D-04, D-05).
 
 **Success Criteria** (what must be TRUE):
-  1. On the Production deploy at `https://counterflux.vercel.app/`, opening Thousand-Year Storm with a Commander selected loads EDHREC synergies and salt scores end-to-end — the function returns 200, the intelligence store populates, and the UI renders synergies (no CloudFront CORS error in the console).
-  2. `src/services/edhrec.js` routes through the Vite dev proxy when `import.meta.env.PROD === false` and through `/api/edhrec-proxy` when `import.meta.env.PROD === true` — `npm run dev` still works, `npm run build` produces a bundle that calls the Vercel path.
-  3. Outbound requests from the function carry the `User-Agent: Counterflux/1.x` header and respect existing client-side rate-limit spacing — verifiable from Vercel function logs.
-  4. A new bundle-inspection test (sibling to `tests/auth-bundle.test.js`) asserts the EDHREC/proxy code path stays out of the initial chunk for anonymous users, and the test passes in CI.
-  5. Forcing an upstream EDHREC error (timeout, 5xx, malformed payload) surfaces a clean error to the intelligence-store error handler — the function does not crash, does not leak partial responses, and the existing UI error path renders unchanged.
+  1. On the Production deploy at `https://counterflux.vercel.app/`, opening Thousand-Year Storm with a Commander selected loads EDHREC synergies + salt scores AND Spellbook combo lookups end-to-end — both Functions return 200, the intelligence store populates, the UI renders synergies + combos (no CloudFront CORS error in the console).
+  2. `src/services/edhrec.js` (`EDHREC_BASE = '/api/edhrec'`) and `src/services/spellbook.js` (`SPELLBOOK_BASE = '/api/spellbook'`) require **zero changes** — the catch-all path alignment means the same URL shape works in dev (Vite proxy) and prod (Vercel Function). `npm run dev` still works; `npm run build` succeeds; both environments call the same paths.
+  3. Outbound requests from each Function carry `User-Agent: Counterflux/1.x (+https://counterflux.vercel.app)` (server-side UA is unrestricted, unlike browsers — see `src/services/edhrec.js:42-43`). Method, query, body, and request headers pass through transparently. NO server-side rate limiting, NO server-side caching (client already enforces both per CONTEXT.md D-10/D-11).
+  4. The existing `tests/bundle-budget.test.js` continues to pass post-change — main bundle stays under the 300 KB gz budget enforced by `scripts/assert-bundle-budget.js`. Vercel Function files in `api/` are server-side-only by Vercel's bundling and do not enter the client bundle (no new test added — existing budget test is sufficient per CONTEXT.md D-08).
+  5. Forcing upstream errors (network timeout, 5xx, malformed payload) surfaces a clean error to the intelligence-store error handler — Functions never crash, network failures map to 502 Bad Gateway with a small JSON body, upstream non-2xx responses pass through with status code preserved. Existing `error.edhrec` / `error.spellbook` flags in `src/stores/intelligence.js` continue to work unchanged.
 
-**Spellbook parity question**: `src/services/spellbook.js:8` carries the same "wire to a serverless proxy or edge function" comment as EDHREC. During plan-phase, decide whether Spellbook's `/api/spellbook` proxy ships in this phase (low marginal cost, same pattern, different upstream) or stays parked for v1.3.
+**Spellbook parity decided**: `src/services/spellbook.js:8` carries the same broken-in-prod problem as EDHREC. Discuss-phase folded `api/spellbook/[...path].js` into Phase 15 scope (CONTEXT.md D-04). Both Functions ship in the same PR.
 
 **Plans**: TBD
 
