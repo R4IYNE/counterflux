@@ -48,11 +48,22 @@ export default async function handler(req, res) {
     const queryString = qs.toString();
     const upstreamUrl = `${UPSTREAM_BASE}/${pathSuffix}${queryString ? '?' + queryString : ''}`;
 
-    // 2. Build outbound fetch init. Strip host/connection/UA on inbound, inject our UA.
+    // 2. Build outbound fetch init. Strip hop-by-hop headers + content-length
+    //    (re-stringifying req.body can change the byte length; let Node's fetch
+    //    compute it from init.body) + accept-encoding (Vercel may auto-decompress
+    //    inbound, so the stored body is already plain). Inject our server UA.
     const outboundHeaders = {};
     for (const [k, v] of Object.entries(req.headers || {})) {
       const lower = k.toLowerCase();
-      if (lower === 'host' || lower === 'connection' || lower === 'user-agent') continue;
+      if (
+        lower === 'host' ||
+        lower === 'connection' ||
+        lower === 'user-agent' ||
+        lower === 'content-length' ||
+        lower === 'accept-encoding'
+      ) {
+        continue;
+      }
       outboundHeaders[k] = v;
     }
     outboundHeaders['User-Agent'] = USER_AGENT;

@@ -63,7 +63,17 @@ export default async function handler(req, res) {
     const outboundHeaders = {};
     for (const [k, v] of Object.entries(req.headers || {})) {
       const lower = k.toLowerCase();
-      if (lower === 'host' || lower === 'connection' || lower === 'user-agent') continue;
+      // Strip hop-by-hop headers + content-length (re-stringifying req.body can
+      // change the byte length; let Node's fetch compute it from init.body).
+      if (
+        lower === 'host' ||
+        lower === 'connection' ||
+        lower === 'user-agent' ||
+        lower === 'content-length' ||
+        lower === 'accept-encoding'
+      ) {
+        continue;
+      }
       outboundHeaders[k] = v;
     }
     outboundHeaders['User-Agent'] = USER_AGENT;
