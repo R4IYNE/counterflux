@@ -72,7 +72,7 @@ Full phase details, success criteria, and plan-by-plan breakdown: [milestones/v1
 **Plans**: 3 plans
 
 Plans:
-- [ ] 15-01-PLAN.md — Build EDHREC Vercel Function (`api/edhrec/[...path].js`) with UA injection + 502 error mapping + Vitest tests
+- [x] 15-01-PLAN.md — Build EDHREC Vercel Function (`api/edhrec/[...path].js`) with UA injection + 502 error mapping + Vitest tests
 - [x] 15-02-PLAN.md — Build Spellbook Vercel Function (`api/spellbook/[...path].js`) with UA injection + 502 error mapping + Vitest tests
 - [ ] 15-03-PLAN.md — Retire stale TODO comments + run `npm run build:check` for PROXY-04 closure
 
@@ -98,7 +98,7 @@ Plans:
 |-------|-----------|-------|--------|-----------|
 | 1-6 | v1.0 | 31/31 | Shipped | 2026-04-13 |
 | 7-14 | v1.1 | 47/47 | Shipped | 2026-04-27 |
-| 15 | v1.2 | 1/3 | In Progress|  |
+| 15 | v1.2 | 2/3 | In Progress|  |
 | 16 | v1.2 | 0/0 | Not started | — |
 
 ## v1.2 Coverage Summary
@@ -120,7 +120,7 @@ Plans:
 
 **Goal:** [Captured for future planning] Add a "Required Tokens" tab to the Thousand-Year Storm deck builder that uses MTGJSON's `Tokens.json` to map every card in a deck to the exact tokens, emblems, and helper cards it produces — then renders a checklist of physical tokens the user needs to gather to play the deck. Lightweight dataset, additive feature, no data-layer changes required.
 **Requirements:** TBD
-**Plans:** 1/3 plans executed
+**Plans:** 2/3 plans executed
 
 Plans:
 - [ ] TBD (promote with /gsd:review-backlog when ready)

@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Deploy the Gatewatch
 status: executing
-stopped_at: Completed 15-02-PLAN.md (Spellbook Function + 10 unit tests)
-last_updated: "2026-04-28T10:18:49.182Z"
+stopped_at: Completed 15-01-PLAN.md (EDHREC CORS proxy Function + tests)
+last_updated: "2026-04-28T10:19:09.125Z"
 last_activity: 2026-04-28
 progress:
   total_phases: 2
@@ -70,6 +70,7 @@ Full decision log in PROJECT.md Key Decisions table.
 - Auto-deploy on master push retained (NOT manual promotion as the 2026-04-27 discussion locked) — reality already differs and works fine
 - Spellbook proxy parity question deferred to Phase 15 plan-phase (low marginal cost vs deferred to v1.3)
 - [Phase 15-edhrec-cors-proxy]: Plan 15-02: Spellbook Vercel Function shipped at api/spellbook/[...path].js (77 lines) with 10 vitest unit tests; mirrors EDHREC sibling Function structure with SOURCE='spellbook' and UPSTREAM_BASE='https://backend.commanderspellbook.com'. PROXY-02 verified by zero-line git diff on src/services/spellbook.js.
+- [Phase 15]: Plan 15-01 (EDHREC proxy) shipped: api/edhrec/[...path].js Vercel Function with verbatim UA Counterflux/1.x (+url), 502 on network failure with { error: 'upstream unavailable', source: 'edhrec' }, status preserved on non-2xx, zero changes to src/services/edhrec.js (PROXY-02 satisfied via catch-all path alignment). 10 vitest tests passing.
 
 ### Roadmap Evolution
 
@@ -92,6 +93,6 @@ None — Phase 15 (EDHREC Proxy) planning is the next step (`/gsd:discuss-phase 
 
 ## Session Continuity
 
-Last session: 2026-04-28T10:18:16.141Z
-Stopped at: Completed 15-02-PLAN.md (Spellbook Function + 10 unit tests)
+Last session: 2026-04-28T10:19:09.123Z
+Stopped at: Completed 15-01-PLAN.md (EDHREC CORS proxy Function + tests)
 Resume: `/gsd:discuss-phase 15` (recommended — Phase 15 is now meaningfully different work) or `/gsd:plan-phase 15`
