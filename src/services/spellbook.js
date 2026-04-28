@@ -4,8 +4,8 @@
  * Caching is handled by the intelligence store (Plan 03), not here.
  */
 
-// Proxy through Vite dev server to avoid CORS issues.
-// In production, wire /api/spellbook to a serverless proxy or edge function.
+// SPELLBOOK_BASE serves /api/spellbook/* in both environments:
+// dev → Vite proxy (vite.config.js:13-17); prod → Vercel Function (api/spellbook/[...path].js).
 const SPELLBOOK_BASE = '/api/spellbook';
 
 /**

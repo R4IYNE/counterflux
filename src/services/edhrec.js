@@ -1,7 +1,7 @@
 import { db } from '../db/schema.js';
 
-// Proxy through Vite dev server to avoid CORS preflight rejection from CloudFront.
-// In production, wire /api/edhrec to a serverless proxy or edge function.
+// EDHREC_BASE serves /api/edhrec/* in both environments:
+// dev → Vite proxy (vite.config.js:7-12); prod → Vercel Function (api/edhrec/[...path].js).
 const EDHREC_BASE = '/api/edhrec';
 const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 const REQUEST_DELAY_MS = 200; // Rate limit: 5 req/sec max
