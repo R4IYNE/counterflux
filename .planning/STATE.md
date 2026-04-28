@@ -4,7 +4,7 @@ milestone: v1.2
 milestone_name: Deploy the Gatewatch
 status: executing
 stopped_at: Completed 15-03-PLAN.md (TODO cleanup + bundle-budget verification — Phase 15 fully closed)
-last_updated: "2026-04-28T10:26:48.374Z"
+last_updated: "2026-04-28T10:57:53.175Z"
 last_activity: 2026-04-28
 progress:
   total_phases: 2
@@ -25,8 +25,8 @@ See: .planning/PROJECT.md (updated 2026-04-28 with v1.2 scope reset)
 
 ## Current Position
 
-Phase: 15 (EDHREC CORS Proxy) — EXECUTING
-Plan: 3 of 3
+Phase: 16
+Plan: Not started
 Status: Ready to execute
 Last activity: 2026-04-28
 Progress: ░░░░░░░░░░ 0% (0/2 phases complete)
