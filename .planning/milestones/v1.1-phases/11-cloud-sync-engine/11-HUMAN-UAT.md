@@ -1,9 +1,12 @@
 ---
-status: partial
+status: live-use-validated
 phase: 11-cloud-sync-engine
 source: [11-UI-SPEC.md, 11-CONTEXT.md, 11-VALIDATION.md]
 started: 2026-04-18T22:41:00Z
-updated: 2026-04-26T00:00:00Z
+updated: 2026-04-28
+resolved_during: v1.2 Phase 16 collapse (sibling UAT audit)
+resolved_by: user
+resolved_at: 2026-04-28
 ---
 
 # Phase 11 Human UAT — Cloud Sync Engine
@@ -12,9 +15,37 @@ updated: 2026-04-26T00:00:00Z
 plus a live-Supabase gate. Walk through anchors 1 → 8 in order; tick the
 checkbox next to each verification; log any failure under "Gaps".
 
+## Status (2026-04-28 audit during v1.2 Phase 16 collapse)
+
+**Resolved as `live-use-validated`** — the cloud sync engine has been deployed
+and in real-world use since 2026-04-18 (Phase 11 ship date) across 8 production
+deploys with two configured household accounts (James + Sharon). The Phase 14
+milestone audit re-verified `passed` 2026-04-26 against a fresh production
+state. None of the 8 visual-regression anchors below have surfaced as failures
+during the 10 days of real use that span this UAT's "started" → "resolved"
+window.
+
+The formal walk-through was deliberately not performed during v1.2 Phase 16
+because:
+1. The chip states, reconciliation lockdown, and Realtime echo prevention are
+   covered end-to-end by `tests/sync-reconciliation.test.js`,
+   `tests/sync-engine-integration.test.js`, `tests/sync-status-chip.test.js`,
+   and 6+ sibling test files (98 test files / 882 tests passed at Phase 11
+   ship time; suite has since grown to 1057+ tests passing on master).
+2. Real-world household use over a multi-week window is a stronger signal than
+   a single walk-through against a dev build.
+3. Phase 16's honest-ROI conversation (2026-04-28) determined that re-running
+   these anchors would produce no new information given the production
+   evidence already in hand.
+
+If a sync-related regression surfaces in production at any point, this file
+flips back to `partial` and the failing anchor(s) get walked deliberately.
+Until then the anchors below stand as **historical specification** of the
+expected behavior, not pending UAT debt.
+
 ## Current Test
 
-[awaiting human testing]
+[resolved 2026-04-28 — live-use-validated; see Status above]
 
 ## Prerequisites
 
