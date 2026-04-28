@@ -67,14 +67,16 @@ All six modules operational and synced: Dashboard (Epic Experiment), Collection 
 - ✓ Notification bell + Preordain spoiler refresh (SYNC-08, MARKET-01..03) — unified notification inbox combining sync errors (deduped) with watchlist price alerts, custom Keyrune set-icon dropdown, sectioned spoiler grid with day/section headers, NEW badges (last 48 hours), hover preview, quick add-to-watchlist button — v1.1 Phase 12
 - ✓ Performance optimisation (PERF-04) — v1.1 meets Web Vitals budget. LCP 6.1s → 2.49s (−59%) via bfcache handlers, shimmer composability fix, splash-to-migration-only + topbar bulk-data pill + honest empty-state gating, Vite `manualChunks` CSS/JS split, `font-display: swap` + Syne preload, Pitfall 15 cache-bust recovery (`vite:preloadError` + `Cache-Control: no-cache`), bundle-budget enforcement, and the actual LCP win — static paint-critical `<h1>` in initial HTML with auth-wall decorating pre-existing DOM. CI soft-gate via `@lhci/cli` warns-not-blocks. Final Lighthouse: LCP 2.49s / FCP 0.4s / CLS 0.059 / Perf 86 — all Web Vitals `Good` — v1.1 Phase 13
 - ✓ v1.1 audit gap closure — closed audit Issues A/C/D + 2 latent v1.1 bugs (Phase 11 schema drift on `counterflux.*` columns, Phase 13 auth-wall stale-static race), per-user reconcile keying, MTGJSON-sourced multi-deck precon split (45 bundles, 168 decks, exactly 100 cards each, lazy-loaded), 4 quality items pulled forward (Preordain dropdown sort, sync-errors bulk RETRY/DISCARD, reconcile one-shot guard, release calendar newest-first) — v1.1 Phase 14
+- ✓ EDHREC + Spellbook CORS proxies (PROXY-01..05) — two catch-all Vercel Functions (`api/edhrec/[...path].js` + `api/spellbook/[...path].js`) proxying upstream API requests with verbatim `User-Agent: Counterflux/1.x (+https://counterflux.vercel.app)`, transparent passthrough, 502 mapping with `{ error: "upstream unavailable", source: "edhrec"|"spellbook" }`. Zero client-side path changes via catch-all alignment. Symmetry-breaker test prevents EDHREC/Spellbook source-leak. Main bundle stays 36.0 KB gz (well under 300 KB budget) — Vercel Functions never enter client bundle. 20 new unit tests pass; 92/92 focused regression tests pass — v1.2 Phase 15
 
 ### Active
 
 **v1.2 — Deploy the Gatewatch (in flight, post-reset)**
-- ◯ Production-grade EDHREC CORS proxy — Vercel Function replacing Vite dev proxy (Phase 15)
 - ◯ `perf-soft-gate.yml` retargeted to real Vercel Preview URL (Phase 16)
 - ◯ Production Lighthouse run against live URL confirms v1.1 perf budget holds (Phase 16)
 - ◯ Plan 13 HUMAN-UAT items closed with deploy-URL evidence (Phase 16)
+- ◯ Sibling deferred UAT items in phases 7–14 audited (closed or carried to v1.3) — Phase 16
+- ◯ Pre-existing Phase 13 path-resolution test failures (8 tests in `tests/perf/remeasure-contract.test.js`, caused by v1.1 milestone archive shuffle) — fix during Phase 16 before Production Lighthouse re-baseline. Tracked in `phases/15-edhrec-cors-proxy/deferred-items.md`
 
 **Validated inline during scoping (2026-04-28):**
 - ✓ Vercel project linked + auto-deploy on master push (8 production deploys observed)
@@ -169,4 +171,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-28 — v1.2 scope reset. Counterflux has been live on Vercel since 2025-04-05 (8 production deploys) — DEPLOY-01..06 + DECIDE-01..02 validated inline rather than allocated to a phase. Milestone collapses to 2 phases: Phase 15 EDHREC CORS Proxy (production silently broken on EDHREC features since launch), Phase 16 Live-Environment UAT Pass (run against real `https://counterflux.vercel.app/`). Backlog (999.1, 999.2, SEED-001, SEED-002) parked for v1.3.*
+*Last updated: 2026-04-28 — Phase 15 complete (EDHREC + Spellbook CORS proxies shipped). 2 catch-all Vercel Functions, 20 new unit tests, all 5 PROXY-* requirements validated. Production EDHREC + Spellbook features previously silently broken since v1.0 are now fixable via the next deploy. Phase 16 (Live UAT) remains; Phase 13 perf path-resolution test failures (pre-existing, milestone-archive-related) flagged for Phase 16 fix. Backlog (999.1, 999.2, SEED-001, SEED-002) parked for v1.3.*
