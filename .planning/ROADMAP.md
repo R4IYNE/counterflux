@@ -4,7 +4,7 @@
 
 - [x] **v1.0 The Aetheric Archive** — Phases 1-6 (shipped 2026-04-13) — [archive](milestones/v1.0-ROADMAP.md)
 - [x] **v1.1 Second Sunrise** — Phases 7-14 (shipped 2026-04-27) — [archive](milestones/v1.1-ROADMAP.md)
-- [ ] **v1.2 Deploy the Gatewatch** — Phases 15-16 (in flight)
+- [x] **v1.2 Deploy the Gatewatch** — Phase 15 shipped, Phase 16 collapsed inline (complete 2026-04-28)
 
 ## Phases
 
@@ -37,7 +37,7 @@ Full phase details, success criteria, and plan-by-plan breakdown: [milestones/v1
 
 </details>
 
-### v1.2 Deploy the Gatewatch (in flight — Phases 15-16)
+### ✅ v1.2 Deploy the Gatewatch — COMPLETE 2026-04-28 (Phase 15 shipped, Phase 16 collapsed inline)
 
 **Milestone goal:** Close the only two real production gaps remaining from v1.1 — the EDHREC CORS proxy (silently broken on Vercel since launch because the Vite dev proxy doesn't ship to production) and the live-environment UAT pass.
 
@@ -48,7 +48,7 @@ Full phase details, success criteria, and plan-by-plan breakdown: [milestones/v1
 **Phases:**
 
 - [x] **Phase 15: EDHREC CORS Proxy** — Replace the Vite dev proxy with a Vercel Function at `/api/edhrec-proxy`, environment-aware in `src/services/edhrec.js`, with bundle-budget parity preserved. Production has been silently broken on EDHREC features since v1.0; this fixes it. (completed 2026-04-28)
-- [ ] **Phase 16: Live-Environment UAT Pass** — Run `@lhci/cli` soft-gate against a real Preview URL, confirm the perf budget on Production (`https://counterflux.vercel.app/`), and close every Plan 13 deferred UAT item with deploy-URL evidence.
+- [⊘] **Phase 16: Live-Environment UAT Pass** — Collapsed inline 2026-04-28. UAT-02 (Production Lighthouse: Perf 99 / LCP 0.7s) + UAT-03 (HUMAN-UAT closure + sibling audit) validated inline. UAT-01 (LHCi-on-Preview wiring) deferred to v1.3 via [SEED-003](seeds/SEED-003-lhci-preview-url.md) on honest-ROI grounds.
 
 ## Phase Details
 
@@ -76,21 +76,22 @@ Plans:
 - [x] 15-02-PLAN.md — Build Spellbook Vercel Function (`api/spellbook/[...path].js`) with UA injection + 502 error mapping + Vitest tests
 - [x] 15-03-PLAN.md — Retire stale TODO comments + run `npm run build:check` for PROXY-04 closure
 
-### Phase 16: Live-Environment UAT Pass
+### Phase 16: Live-Environment UAT Pass — COLLAPSED INLINE (2026-04-28)
 
-**Goal**: Every Plan 13 deferred UAT item is closed with deploy-URL evidence, the v1.1 perf budget is reconfirmed on a real Production build, and any sibling deferred items in other phases are explicitly resolved (closed or carried to v1.3).
+**Status:** Collapsed during v1.2 closure on honest-ROI grounds. Did not become a planned phase. UAT-02 and UAT-03 validated inline; UAT-01 deferred to v1.3 via [SEED-003](seeds/SEED-003-lhci-preview-url.md).
 
-**Depends on**: Phase 15 (perf run reflects real EDHREC traffic via the live proxy).
+**Why collapsed:** A second honest-ROI conversation (the first one collapsed the original "Phase 15 Vercel Foundation") surfaced that all three Phase 16 requirements were either documentation closure or marginal-value engineering. UAT-01's "rewrite perf-soft-gate.yml to target a real Vercel Preview URL" would catch only CDN-edge perf regressions, which Counterflux barely has surface area for (no SSR, no edge functions with significant cache behavior, no per-request API divergence between Preview and `npx http-server dist`). UAT-02 and UAT-03 were faster as inline closures than as a phase plan with subagent overhead.
 
-**Requirements**: UAT-01, UAT-02, UAT-03
+**Original goal:** Every Plan 13 deferred UAT item closed with deploy-URL evidence, the v1.1 perf budget reconfirmed on real Production, and any sibling deferred items audited.
 
-**Success Criteria** (what must be TRUE):
-  1. `perf-soft-gate.yml` is rewritten to run `@lhci/cli` against a real Vercel Preview deploy URL (instead of `npx http-server dist`), and a status check or PR comment surfaces the result. At least one PR has the workflow visibly fire.
-  2. A Production Lighthouse run against `https://counterflux.vercel.app/` is logged confirming LCP ≤ 2.5s, FCP ≤ 0.5s, CLS ≤ 0.1, Perf ≥ 85 — and if any metric drifts, `.planning/PERF-BASELINE.md` is updated with new numbers plus a regression analysis (not silently re-baselined).
-  3. `phases/13-performance-optimisation-conditional/13-HUMAN-UAT.md` shows every item checked. Test 2 (`Cache-Control: no-cache` on `/` and `/index.html`) was verified inline 2026-04-28 (`curl -sI` confirms both endpoints emit the header) — record the proof. Test 1 (soft-gate fires on real PR) closes when criterion #1 above lands.
-  4. Sibling deferred UAT items in any phase 7–14 (e.g. live RLS verification on prod Supabase) are audited — each is either closed with evidence or explicitly carried to v1.3 with a one-line reason.
+**Original requirements:** UAT-01, UAT-02, UAT-03 — see REQUIREMENTS.md for current status of each.
 
-**Plans**: TBD
+**Outcomes (2026-04-28):**
+  - **UAT-01 deferred** to v1.3 via [SEED-003](seeds/SEED-003-lhci-preview-url.md) with explicit re-trigger conditions (CDN edge perf becomes a real concern; SSR / per-request server logic introduced; or Vercel ships native LHCi tooling).
+  - **UAT-02 validated inline** via `npx lighthouse https://counterflux.vercel.app/ --preset=desktop`. Production results: Perf 99 / FCP 0.6s / LCP 0.7s / CLS 0.048 / TBT 0ms — all four metrics pass with substantial headroom (production LCP 0.7s vs v1.1 lab 2.49s, Vercel edge CDN crushes the localhost measurement). Captured in [.planning/PERF-PROD-2026-04-28.md](PERF-PROD-2026-04-28.md). PERF-BASELINE.md unchanged.
+  - **UAT-03 validated inline.** [13-HUMAN-UAT.md](milestones/v1.1-phases/13-performance-optimisation-conditional/13-HUMAN-UAT.md) flipped `partial` → `resolved` (Test 2 Cache-Control verified via curl, Test 1 soft-gate marked deferred via UAT-01/SEED-003). Sibling UAT audit: 4 of 6 v1.1 HUMAN-UATs (08, 08.1, 09, 10) already `resolved`; [11-HUMAN-UAT.md](milestones/v1.1-phases/11-cloud-sync-engine/11-HUMAN-UAT.md) flipped `partial` → `live-use-validated` (10 days of production household use without sync regression; covered end-to-end by `tests/sync-reconciliation.test.js` + 6 sibling test files). Plus the pre-existing 8-test path-resolution failure in `tests/perf/remeasure-contract.test.js` (introduced by v1.1 milestone archive shuffle) was fixed inline — one-line constant update.
+
+**Plans:** None. Phase 16 closed as collapse-inline rather than as a plan-driven phase.
 
 ## Progress
 
@@ -98,21 +99,24 @@ Plans:
 |-------|-----------|-------|--------|-----------|
 | 1-6 | v1.0 | 31/31 | Shipped | 2026-04-13 |
 | 7-14 | v1.1 | 47/47 | Shipped | 2026-04-27 |
-| 15 | v1.2 | 3/3 | Complete    | 2026-04-28 |
-| 16 | v1.2 | 0/0 | Not started | — |
+| 15 | v1.2 | 3/3 | Shipped | 2026-04-28 |
+| 16 | v1.2 | 0/0 | Collapsed inline | 2026-04-28 |
+
+**v1.2 milestone status: Complete (2026-04-28)** — 1 phase shipped (Phase 15: EDHREC + Spellbook proxies), 1 phase collapsed inline (Phase 16: UAT-02/03 validated, UAT-01 deferred to v1.3).
 
 ## v1.2 Coverage Summary
 
-8 active requirements across 2 phases. 8 additional requirements (DEPLOY-01..06 + DECIDE-01..02) validated inline during scoping reset.
+8 original requirements; 7 closed (5 shipped via Phase 15 + 2 validated inline as Phase 16 collapse), 1 deferred to v1.3 (UAT-01 → SEED-003). Plus 8 originally-scoped requirements (DEPLOY-01..06 + DECIDE-01..02) that were validated inline during the 2026-04-28 scope reset.
 
 | Category | Count | Phase / Status |
 |----------|-------|----------------|
-| PROXY-01..05 | 5 | Phase 15 |
-| UAT-01..03 | 3 | Phase 16 |
-| **Active total** | **8** | **2 phases** |
-| DEPLOY-01..06 | 6 | Validated inline (2026-04-28) |
-| DECIDE-01..02 | 2 | Validated inline (2026-04-28) |
-| **Validated inline** | **8** | **No phase work** |
+| PROXY-01..05 | 5 | Phase 15 — Shipped 2026-04-28 |
+| UAT-02..03 | 2 | Phase 16 collapsed — validated inline 2026-04-28 |
+| UAT-01 | 1 | Phase 16 collapsed — deferred to v1.3 (SEED-003) |
+| **v1.2 active total** | **8** | **7 closed, 1 deferred** |
+| DEPLOY-01..06 | 6 | Validated inline (2026-04-28 scope reset) |
+| DECIDE-01..02 | 2 | Validated inline (2026-04-28 scope reset) |
+| **Originally scoped, validated inline** | **8** | **No phase work** |
 
 ## Backlog
 
@@ -140,6 +144,7 @@ Forward-looking ideas with trigger conditions — surface automatically during `
 
 - [SEED-001](seeds/SEED-001-catalog-userdata-storage-split.md) — Catalog-vs-userdata storage split (wa-sqlite + OPFS for catalog, keep Dexie for user data). Trigger: after Phase 11 Cloud Sync Engine has been live for a meaningful period without regressions. Re-evaluate at v1.3 milestone planning with production-traffic data.
 - [SEED-002](seeds/SEED-002-nyquist-revisit.md) — Revisit Nyquist `VALIDATION.md` gate. Re-enable for v1.3 if backfilling phases 7–14 makes sense, otherwise leave disabled permanently. Planted 2026-04-28 during v1.2 scoping reset.
+- [SEED-003](seeds/SEED-003-lhci-preview-url.md) — Wire `@lhci/cli` soft-gate to a real Vercel Preview URL (UAT-01 deferred from v1.2 Phase 16). Trigger when CDN edge perf becomes a real concern OR when Counterflux gains SSR / per-request server logic. Planted 2026-04-28 during v1.2 Phase 16 collapse.
 
 ---
-*Last updated: 2026-04-28 — v1.2 scope reset. 8 active requirements across 2 phases (15 PROXY, 16 UAT). DEPLOY-01..06 + DECIDE-01..02 validated inline. Ready for `/gsd:plan-phase 15`.*
+*Last updated: 2026-04-28 — **v1.2 Deploy the Gatewatch COMPLETE.** Phase 15 shipped (EDHREC + Spellbook catch-all proxies, 5 PROXY requirements). Phase 16 collapsed inline (UAT-02 production Lighthouse passed with Perf 99 / LCP 0.7s; UAT-03 HUMAN-UAT files resolved; UAT-01 LHCi-on-Preview wiring deferred to v1.3 via SEED-003). 7 of 8 v1.2 requirements closed; 1 explicit deferral with re-trigger conditions. Ready for `/gsd:complete-milestone` or `/gsd:new-milestone`.*
