@@ -18,7 +18,9 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync, existsSync } from 'node:fs';
 
-const REMEASURE_PATH = '.planning/phases/13-performance-optimisation-conditional/13-REMEASURE.md';
+// v1.1 milestone archive (commit dfad4e7, 2026-04-27) moved phase 13 artifacts
+// from .planning/phases/ to .planning/milestones/v1.1-phases/. Test path follows.
+const REMEASURE_PATH = '.planning/milestones/v1.1-phases/13-performance-optimisation-conditional/13-REMEASURE.md';
 
 describe('13-REMEASURE.md contract (Phase 13 Plan 1)', () => {
   it('exists on disk', () => {
