@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Deploy the Gatewatch
 status: executing
-stopped_at: Completed 15-01-PLAN.md (EDHREC CORS proxy Function + tests)
-last_updated: "2026-04-28T10:19:09.125Z"
+stopped_at: Completed 15-03-PLAN.md (TODO cleanup + bundle-budget verification — Phase 15 fully closed)
+last_updated: "2026-04-28T10:26:48.374Z"
 last_activity: 2026-04-28
 progress:
   total_phases: 2
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 3
-  completed_plans: 2
+  completed_plans: 3
   percent: 0
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-28 with v1.2 scope reset)
 ## Current Position
 
 Phase: 15 (EDHREC CORS Proxy) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 Status: Ready to execute
 Last activity: 2026-04-28
 Progress: ░░░░░░░░░░ 0% (0/2 phases complete)
@@ -71,6 +71,8 @@ Full decision log in PROJECT.md Key Decisions table.
 - Spellbook proxy parity question deferred to Phase 15 plan-phase (low marginal cost vs deferred to v1.3)
 - [Phase 15-edhrec-cors-proxy]: Plan 15-02: Spellbook Vercel Function shipped at api/spellbook/[...path].js (77 lines) with 10 vitest unit tests; mirrors EDHREC sibling Function structure with SOURCE='spellbook' and UPSTREAM_BASE='https://backend.commanderspellbook.com'. PROXY-02 verified by zero-line git diff on src/services/spellbook.js.
 - [Phase 15]: Plan 15-01 (EDHREC proxy) shipped: api/edhrec/[...path].js Vercel Function with verbatim UA Counterflux/1.x (+url), 502 on network failure with { error: 'upstream unavailable', source: 'edhrec' }, status preserved on non-2xx, zero changes to src/services/edhrec.js (PROXY-02 satisfied via catch-all path alignment). 10 vitest tests passing.
+- [Phase 15-edhrec-cors-proxy]: Plan 15-03 (Phase 15 closure): retired stale 'wire to a serverless proxy' TODO comments at src/services/edhrec.js:4 and src/services/spellbook.js:8 with replacement comments documenting the dual-environment URL alignment (dev → Vite proxy, prod → Vercel Function); verified npm run build:check exits 0 with main bundle 36.0 KB gz (budget 300 KB) — PROXY-04 closed via the existing tests/bundle-budget.test.js + scripts/assert-bundle-budget.js gate, no new test added per D-08.
+- [Phase 15-edhrec-cors-proxy]: Plan 15-03 discovered 8 pre-existing test failures in tests/perf/remeasure-contract.test.js (Phase 13 path-resolution drift after v1.1 milestone archive moved 13-REMEASURE.md); logged to .planning/phases/15-edhrec-cors-proxy/deferred-items.md and explicitly NOT fixed — out of plan 15-03 scope. Phase 16 (Live UAT) will need this fixed before running the Production Lighthouse re-baseline against the v1.1 PERF-BASELINE.md cross-reference.
 
 ### Roadmap Evolution
 
@@ -93,6 +95,6 @@ None — Phase 15 (EDHREC Proxy) planning is the next step (`/gsd:discuss-phase 
 
 ## Session Continuity
 
-Last session: 2026-04-28T10:19:09.123Z
-Stopped at: Completed 15-01-PLAN.md (EDHREC CORS proxy Function + tests)
+Last session: 2026-04-28T10:26:41.881Z
+Stopped at: Completed 15-03-PLAN.md (TODO cleanup + bundle-budget verification — Phase 15 fully closed)
 Resume: `/gsd:discuss-phase 15` (recommended — Phase 15 is now meaningfully different work) or `/gsd:plan-phase 15`

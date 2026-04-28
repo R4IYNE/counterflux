@@ -47,7 +47,7 @@ Full phase details, success criteria, and plan-by-plan breakdown: [milestones/v1
 
 **Phases:**
 
-- [ ] **Phase 15: EDHREC CORS Proxy** — Replace the Vite dev proxy with a Vercel Function at `/api/edhrec-proxy`, environment-aware in `src/services/edhrec.js`, with bundle-budget parity preserved. Production has been silently broken on EDHREC features since v1.0; this fixes it.
+- [x] **Phase 15: EDHREC CORS Proxy** — Replace the Vite dev proxy with a Vercel Function at `/api/edhrec-proxy`, environment-aware in `src/services/edhrec.js`, with bundle-budget parity preserved. Production has been silently broken on EDHREC features since v1.0; this fixes it. (completed 2026-04-28)
 - [ ] **Phase 16: Live-Environment UAT Pass** — Run `@lhci/cli` soft-gate against a real Preview URL, confirm the perf budget on Production (`https://counterflux.vercel.app/`), and close every Plan 13 deferred UAT item with deploy-URL evidence.
 
 ## Phase Details
@@ -74,7 +74,7 @@ Full phase details, success criteria, and plan-by-plan breakdown: [milestones/v1
 Plans:
 - [x] 15-01-PLAN.md — Build EDHREC Vercel Function (`api/edhrec/[...path].js`) with UA injection + 502 error mapping + Vitest tests
 - [x] 15-02-PLAN.md — Build Spellbook Vercel Function (`api/spellbook/[...path].js`) with UA injection + 502 error mapping + Vitest tests
-- [ ] 15-03-PLAN.md — Retire stale TODO comments + run `npm run build:check` for PROXY-04 closure
+- [x] 15-03-PLAN.md — Retire stale TODO comments + run `npm run build:check` for PROXY-04 closure
 
 ### Phase 16: Live-Environment UAT Pass
 
@@ -98,7 +98,7 @@ Plans:
 |-------|-----------|-------|--------|-----------|
 | 1-6 | v1.0 | 31/31 | Shipped | 2026-04-13 |
 | 7-14 | v1.1 | 47/47 | Shipped | 2026-04-27 |
-| 15 | v1.2 | 2/3 | In Progress|  |
+| 15 | v1.2 | 3/3 | Complete   | 2026-04-28 |
 | 16 | v1.2 | 0/0 | Not started | — |
 
 ## v1.2 Coverage Summary
@@ -120,7 +120,7 @@ Plans:
 
 **Goal:** [Captured for future planning] Add a "Required Tokens" tab to the Thousand-Year Storm deck builder that uses MTGJSON's `Tokens.json` to map every card in a deck to the exact tokens, emblems, and helper cards it produces — then renders a checklist of physical tokens the user needs to gather to play the deck. Lightweight dataset, additive feature, no data-layer changes required.
 **Requirements:** TBD
-**Plans:** 2/3 plans executed
+**Plans:** 3/3 plans complete
 
 Plans:
 - [ ] TBD (promote with /gsd:review-backlog when ready)
