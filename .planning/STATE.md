@@ -2,10 +2,10 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Deploy the Gatewatch
-status: v1.2 scope reset — 2 phases, 8 active requirements (DEPLOY/DECIDE validated inline)
-stopped_at: Scope reset complete — ready for /gsd:discuss-phase 15 (EDHREC Proxy) or /gsd:plan-phase 15
-last_updated: "2026-04-28T08:00:00.000Z"
-last_activity: 2026-04-28
+status: Roadmap reset, awaiting plan-phase
+stopped_at: Phase 15 context gathered (EDHREC + Spellbook proxies)
+last_updated: "2026-04-28T09:49:06.343Z"
+last_activity: 2026-04-28 — v1.2 scope reset; DEPLOY/DECIDE validated inline; ROADMAP/REQUIREMENTS/PROJECT updated
 progress:
   total_phases: 2
   completed_phases: 0
@@ -55,12 +55,14 @@ Forward-looking work captured during v1.1/v1.2 — parked for v1.3 with producti
 Full decision log in PROJECT.md Key Decisions table.
 
 **v1.2 scoping decisions (2026-04-27, original):**
+
 - Public sign-up: leave as-is (household model only) — explicit product call
 - Nyquist validation gate: disable, revisit at v1.3
 - EDHREC CORS proxy: Vercel Function (free, same repo)
 - Milestone scope: ship-to-prod readiness only
 
 **v1.2 scope reset (2026-04-28):**
+
 - DEPLOY-01..06 validated inline — Counterflux has been live on Vercel since 2025-04-05 (8 production deploys, `Cache-Control: no-cache` confirmed live, env vars present, auto-deploy on master push). Original "Phase 15 Vercel Foundation" deleted; the work it described had already happened.
 - DECIDE-01 validated inline — household-model Key Decision row added to PROJECT.md, Out-of-Scope rewritten from "deferred" to "permanent decision"
 - DECIDE-02 validated inline — `gsd-tools config-set workflow.nyquist_validation false` ran 2026-04-28; SEED-002 planted with v1.3 trigger
@@ -89,6 +91,6 @@ None — Phase 15 (EDHREC Proxy) planning is the next step (`/gsd:discuss-phase 
 
 ## Session Continuity
 
-Last session: 2026-04-28 — v1.2 scope reset
-Stopped at: ROADMAP/REQUIREMENTS/PROJECT/STATE updated; SEED-002 planted; Nyquist gate disabled. Old Phase 15 directory deleted (premise was wrong). Ready for Phase 15 (EDHREC Proxy) discussion or planning.
+Last session: 2026-04-28T09:49:06.341Z
+Stopped at: Phase 15 context gathered (EDHREC + Spellbook proxies)
 Resume: `/gsd:discuss-phase 15` (recommended — Phase 15 is now meaningfully different work) or `/gsd:plan-phase 15`
