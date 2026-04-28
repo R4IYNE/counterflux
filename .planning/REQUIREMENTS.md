@@ -13,13 +13,15 @@ Original v1.2 scope assumed Vercel deployment infrastructure needed to be stood 
 
 ## v1.2 Requirements
 
-### EDHREC CORS Proxy
+### EDHREC + Spellbook CORS Proxies
 
-- [ ] **PROXY-01**: A Vercel Function at `/api/edhrec-proxy` proxies EDHREC API requests so production deploys can fetch synergies, salt scores, and bulk Top-100 data without the CloudFront CORS preflight failure that currently blocks production
-- [ ] **PROXY-02**: The EDHREC service client (`src/services/edhrec.js`) routes through the Vite dev proxy in development and the Vercel Function in production, switching automatically based on `import.meta.env.PROD`
-- [ ] **PROXY-03**: The proxy preserves the existing User-Agent header convention (`Counterflux/1.x`) and any rate-limit/spacing behavior already enforced client-side
-- [ ] **PROXY-04**: Anonymous users still load zero proxy-related code in their initial bundle — parity with the lazy-load principle gated by `tests/auth-bundle.test.js`. A bundle-inspection test asserts the proxy/EDHREC path stays out of the initial chunk
-- [ ] **PROXY-05**: The proxy surfaces upstream EDHREC errors and timeouts back to the client without crashing the function or leaking partial responses; existing intelligence-store error handling continues to work unchanged
+Phase 15 ships Vercel Functions for **both** EDHREC and Spellbook — they have the identical CORS-preflight problem in production (silently broken since v1.0) and the identical fix shape (catch-all path-aligned proxy). Requirements below apply to both services unless noted.
+
+- [ ] **PROXY-01**: Vercel Functions at `api/edhrec/[...path].js` and `api/spellbook/[...path].js` (catch-all routes matching `/api/edhrec/*` and `/api/spellbook/*`) proxy upstream API requests to `https://json.edhrec.com/*` and `https://backend.commanderspellbook.com/*` respectively. Production deploys can fetch synergies, salt scores, and combo lookups without the CloudFront CORS preflight failure currently blocking them
+- [ ] **PROXY-02**: Existing client services (`src/services/edhrec.js` and `src/services/spellbook.js`) require **no client-side path changes** — the catch-all path-alignment means `EDHREC_BASE = '/api/edhrec'` and `SPELLBOOK_BASE = '/api/spellbook'` continue to work identically in dev (via Vite proxy) and in production (via Vercel Functions). Verified by `npm run dev` and `npm run build` both producing working code paths against the same URLs
+- [ ] **PROXY-03**: Each Vercel Function sets `User-Agent: Counterflux/1.x (+https://counterflux.vercel.app)` on its outbound request to the upstream API — server-side User-Agent is unrestricted (unlike browsers, where the existing client code intentionally omits it per `src/services/edhrec.js:42-43`). Functions otherwise pass query, body, method, and headers through transparently. NO server-side rate limiting (client already enforces 200ms spacing for EDHREC); NO server-side caching beyond Vercel's defaults
+- [ ] **PROXY-04**: Adding the proxy Functions does not grow the main client bundle past the existing 300 KB gz budget. Vercel Function files in `api/` are server-side-only and not imported by client code; the existing `tests/bundle-budget.test.js` asserts the budget on every `npm run build:check`. Phase 15 success: bundle-budget test passes on the post-change build
+- [ ] **PROXY-05**: Each Function surfaces upstream errors and timeouts back to the client cleanly — non-2xx upstream responses pass through with status code preserved, network failures return 502 (Bad Gateway), function never crashes, never leaks partial responses. Existing intelligence-store error handling (`src/stores/intelligence.js` `error.edhrec` and `error.spellbook` flags, `result.error: true` fallback) continues to work unchanged
 
 ### Live-Environment UAT Pass
 
@@ -55,8 +57,10 @@ The original v1.2 scope (defined 2026-04-27) included these requirements; discov
 - Production analytics / observability stack (Vercel Analytics, Sentry, Logflare) — Web Vitals instrumentation already shipped in v1.1 covers core perf telemetry
 - Edge runtime migration — Vercel platform default is Fluid Compute (Node.js); do not introduce edge runtime constraints
 - Promotion of any backlog item (999.1, 999.2, SEED-001) into v1.2 scope — milestone is intentionally cleanup-only
-- Spellbook proxy parity (`src/services/spellbook.js:8`) — Phase 15 EDHREC scope is explicit. Spellbook may be folded into Phase 15 during plan-phase if marginal cost is low; otherwise carried to v1.3 alongside any other production-traffic-driven gaps
 - Manual production promotion gate — original 2026-04-27 plan; reality is auto-deploy and that's been working. No change
+- Server-side rate limiting on the proxy Functions — client already enforces 200ms spacing for EDHREC. Add only if abuse / runaway-loop telemetry demands it
+- Server-side caching on the proxy Functions — Vercel's default behavior is sufficient; client (Dexie + meta table) already caches synergies (7d TTL) and Top-Salt map (7d TTL)
+- Edge runtime for the proxy Functions — Fluid Compute / Node.js per Vercel platform default. Edge runtime explicitly NOT used (deprecated for new work per platform note)
 
 ## Traceability
 
@@ -80,4 +84,4 @@ The original v1.2 scope (defined 2026-04-27) included these requirements; discov
 | **Total** | | **8** | **All 2 categories** |
 
 ---
-*Last updated: 2026-04-28 — v1.2 scope reset. DEPLOY-01..06 + DECIDE-01..02 validated inline; PROXY-01..05 (Phase 15) + UAT-01..03 (Phase 16) remain. 8 active requirements across 2 phases.*
+*Last updated: 2026-04-28 — Phase 15 discuss-phase folded Spellbook proxy parity into PROXY-01..05 and reframed PROXY-04 to enforce the existing 300 KB gz main-bundle budget. PROXY-* requirements now cover both EDHREC and Spellbook (one phase, two services, same Vercel Function pattern).*
