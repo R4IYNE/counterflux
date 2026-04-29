@@ -643,6 +643,13 @@ export function renderDeckAnalyticsPanel(container) {
 
         // Try to attach to the matching tag row first (visual locality wins);
         // fall back to a panel-level chips container otherwise.
+        //
+        // Layout note (v1.2 hot-fix #6): the row is `[label][count][bar]` with
+        // `flex: 1` on the bar so it fills available width. Appending the
+        // badge AFTER the bar pushed it to the far right edge with a giant
+        // gap (the now-shorter `+N` text exposed the issue once `[RED]` was
+        // dropped). Insert the badge BETWEEN count and bar so it sits adjacent
+        // to the count and the bar shrinks to occupy the remaining width.
         let attached = false;
         for (const row of tagRows) {
           const nameSpan = row.querySelector('span');
@@ -651,7 +658,14 @@ export function renderDeckAnalyticsPanel(container) {
               attached = true;
               break;
             }
-            row.appendChild(badge);
+            // The bar is the third child (label, count, bar) and has flex: 1.
+            // Insert the badge before it so the bar reflows around it.
+            const barEl = row.children[2];
+            if (barEl) {
+              row.insertBefore(badge, barEl);
+            } else {
+              row.appendChild(badge);
+            }
             attached = true;
             break;
           }
