@@ -5,8 +5,19 @@ import {
   normalizeSalt,
   aggregateDeckSalt,
   fetchTopSaltMap,
+  getCommanderCombos,
+  intersectCombosWithDeck,
 } from '../services/edhrec.js';
-import { findDeckCombos } from '../services/spellbook.js';
+// findDeckCombos (Spellbook) is dormant pending SEED-004 — the Vercel Function
+// proxy at api/spellbook.js returns HTTP 400 from upstream and we couldn't
+// isolate the root cause within the v1.2 hot-fix budget. Combos now flow
+// through EDHREC's commander-combos endpoint (see edhrec.js getCommanderCombos)
+// which gives us 70-80% of Spellbook's value: included + almost-included
+// detection for combos involving the commander, with deck-count popularity
+// and a link to the EDHREC combo page for produces / prerequisites metadata.
+// Re-enable Spellbook in v1.3 when SEED-004 is closed; the import is left
+// here (commented) as a marker.
+// import { findDeckCombos } from '../services/spellbook.js';
 import {
   detectGaps,
   DEFAULT_THRESHOLDS,
@@ -126,10 +137,18 @@ export function initIntelligenceStore() {
       this.loading.edhrec = false;
     },
 
-    // === Spellbook combos ===
+    // === Combos (EDHREC commander-combos endpoint) ===
+    //
+    // v1.2 hot-fix #5: combos sourced from EDHREC's
+    // /pages/combos/{commander}.json instead of Commander Spellbook's
+    // /find-my-combos. Intersection (included / almostIncluded) is computed
+    // client-side via intersectCombosWithDeck. State field names retain
+    // `loading.spellbook` / `error.spellbook` to avoid churn in the
+    // deck-analytics-panel UI; rename to `loading.combos` is v1.3 cleanup
+    // when SEED-004 promotes Spellbook back as the primary source.
 
     /**
-     * Fetch combo data for a deck via Commander Spellbook.
+     * Fetch combo data for a deck via EDHREC's commander-combos endpoint.
      * Checks local combo_cache first (24h TTL), fetches fresh on miss.
      * Builds comboMap for O(1) per-card badge lookup.
      * @param {Object} deck - Active deck object with id, commander_name, partner_name
@@ -144,17 +163,31 @@ export function initIntelligenceStore() {
       );
       const cardNames = cards.map((c) => c.card?.name).filter(Boolean);
 
+      // No commander -> no combo data to fetch (EDHREC's endpoint is
+      // commander-anchored).
+      if (commanderNames.length === 0) {
+        this.combos = { included: [], almostIncluded: [] };
+        this.comboMap = {};
+        this.loading.spellbook = false;
+        return;
+      }
+
       try {
-        // Check cache
+        // Check cache (keyed by deck.id — same key used pre-hot-fix; cache
+        // entries from the Spellbook era will be invalidated by the 24h TTL).
         const cached = await db.combo_cache.get(deck.id);
-        let result;
+        let edhrecResult;
 
         if (cached && Date.now() - cached.fetched_at < COMBO_CACHE_TTL_MS) {
-          result = cached.data;
+          edhrecResult = cached.data;
         } else {
-          result = await findDeckCombos(commanderNames, cardNames);
+          // EDHREC commander-combos: fetch the canonical combo list for the
+          // primary commander. Partner support is best-effort (we fetch primary
+          // only — covers the dominant case; SEED-004 will restore full
+          // multi-commander support when Spellbook returns).
+          edhrecResult = await getCommanderCombos(commanderNames[0]);
 
-          if (result.error) {
+          if (edhrecResult.error) {
             this.error.spellbook = true;
             this.combos = { included: [], almostIncluded: [] };
             this.comboMap = {};
@@ -163,21 +196,22 @@ export function initIntelligenceStore() {
             return;
           }
 
-          // Cache result
+          // Cache the raw EDHREC combo list (intersection is cheap, no point
+          // caching the per-deck result).
           await db.combo_cache.put({
             deck_id: deck.id,
-            data: result,
+            data: edhrecResult,
             fetched_at: Date.now(),
           });
         }
 
-        // Mark missing pieces on almostIncluded combos
-        const deckCardSet = new Set([...commanderNames, ...cardNames]);
-        for (const combo of result.almostIncluded) {
-          for (const piece of combo.pieces) {
-            piece.missing = !deckCardSet.has(piece.name);
-          }
-        }
+        // Compute included + almostIncluded against the current deck list.
+        // Recomputed every call (cheap; cardNames change as deck is edited).
+        const result = intersectCombosWithDeck(
+          edhrecResult.combos,
+          cardNames,
+          commanderNames
+        );
 
         this.combos = result;
         this.comboMap = buildComboMap(result.included);

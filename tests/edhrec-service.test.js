@@ -6,6 +6,8 @@ import {
   normalizeSalt,
   aggregateDeckSalt,
   fetchTopSaltMap,
+  getCommanderCombos,
+  intersectCombosWithDeck,
 } from '../src/services/edhrec.js';
 import prosshFixture from './fixtures/edhrec-prossh.json';
 import topSaltFixture from './fixtures/edhrec-top-salt.json';
@@ -244,5 +246,222 @@ describe('normalizeSalt', () => {
   it('caps at 10', () => {
     expect(normalizeSalt(5.0)).toBe(10);
     expect(normalizeSalt(10.0)).toBe(10);
+  });
+});
+
+// ============================================================================
+// getCommanderCombos + intersectCombosWithDeck — v1.2 hot-fix #5
+// EDHREC-sourced commander combo detection (Spellbook proxy fallback).
+// ============================================================================
+
+describe('getCommanderCombos', () => {
+  // Minimal EDHREC combos-page fixture mirroring the real shape we observed
+  // against /pages/combos/atraxa-praetors-voice.json: each cardlist is one
+  // combo, with header `"Card A + Card B (N decks)"` and cardviews entries.
+  const combosFixture = {
+    container: {
+      json_dict: {
+        cardlists: [
+          {
+            tag: "demonicconsultation+thassa'soracle(138436decks)",
+            header: "Demonic Consultation + Thassa's Oracle (138436 decks)",
+            cardviews: [
+              { name: 'Demonic Consultation', sanitized: 'demonic-consultation', url: '/combos/dimir/123-456' },
+              { name: "Thassa's Oracle", sanitized: 'thassas-oracle', url: '/combos/dimir/123-456' },
+            ],
+          },
+          {
+            tag: 'walkingballista+heliod,sun-crowned(45906decks)',
+            header: 'Walking Ballista + Heliod, Sun-Crowned (45906 decks)',
+            cardviews: [
+              { name: 'Walking Ballista', sanitized: 'walking-ballista', url: '/combos/orzhov/789-012' },
+              { name: 'Heliod, Sun-Crowned', sanitized: 'heliod-sun-crowned', url: '/combos/orzhov/789-012' },
+            ],
+          },
+          {
+            tag: "atraxa,praetors'voice+magistrate'sscepter+contagionengine(1615decks)",
+            header: "Atraxa, Praetors' Voice + Magistrate's Scepter + Contagion Engine (1615 decks)",
+            cardviews: [
+              { name: "Atraxa, Praetors' Voice", sanitized: 'atraxa-praetors-voice', url: '/combos/witch/3-piece' },
+              { name: "Magistrate's Scepter", sanitized: 'magistrates-scepter', url: '/combos/witch/3-piece' },
+              { name: 'Contagion Engine', sanitized: 'contagion-engine', url: '/combos/witch/3-piece' },
+            ],
+          },
+        ],
+      },
+    },
+  };
+
+  it('hits the EDHREC commander-combos endpoint with sanitized commander slug', async () => {
+    fetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve(combosFixture),
+    });
+
+    await getCommanderCombos("Atraxa, Praetors' Voice");
+
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(fetch.mock.calls[0][0]).toBe('/api/edhrec/pages/combos/atraxa-praetors-voice.json');
+  });
+
+  it('parses each cardlist into a Spellbook-compatible combo object with deckCount + edhrecUrl', async () => {
+    fetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve(combosFixture),
+    });
+
+    const { combos } = await getCommanderCombos('Atraxa');
+
+    expect(combos).toHaveLength(3);
+    expect(combos[0]).toMatchObject({
+      header: "Demonic Consultation + Thassa's Oracle (138436 decks)",
+      pieces: [
+        { name: 'Demonic Consultation', sanitized: 'demonic-consultation', url: '/combos/dimir/123-456' },
+        { name: "Thassa's Oracle", sanitized: 'thassas-oracle', url: '/combos/dimir/123-456' },
+      ],
+      produces: [],
+      description: null,
+      edhrecUrl: 'https://edhrec.com/combos/dimir/123-456',
+      deckCount: 138436,
+    });
+  });
+
+  it('returns { combos: [], error: true } on fetch failure', async () => {
+    fetch.mockRejectedValueOnce(new Error('Network error'));
+
+    const result = await getCommanderCombos('Atraxa');
+    expect(result).toEqual({ combos: [], error: true });
+  });
+
+  it('caches results in db.edhrec_cache and serves cached on subsequent calls', async () => {
+    fetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve(combosFixture),
+    });
+
+    await getCommanderCombos('Atraxa');
+    expect(fetch).toHaveBeenCalledTimes(1);
+
+    // Second call should hit cache, not network
+    fetch.mockClear();
+    const second = await getCommanderCombos('Atraxa');
+    expect(fetch).not.toHaveBeenCalled();
+    expect(second.combos).toHaveLength(3);
+  });
+});
+
+describe('intersectCombosWithDeck', () => {
+  // Compact combo objects mirroring getCommanderCombos output shape.
+  const combos = [
+    {
+      id: '/combos/dimir/123',
+      header: "Demonic Consultation + Thassa's Oracle (138436 decks)",
+      pieces: [
+        { name: 'Demonic Consultation', sanitized: 'demonic-consultation' },
+        { name: "Thassa's Oracle", sanitized: 'thassas-oracle' },
+      ],
+      produces: [],
+      description: null,
+      edhrecUrl: 'https://edhrec.com/combos/dimir/123',
+      deckCount: 138436,
+    },
+    {
+      id: '/combos/witch/3-piece',
+      header: "Atraxa, Praetors' Voice + Magistrate's Scepter + Contagion Engine (1615 decks)",
+      pieces: [
+        { name: "Atraxa, Praetors' Voice", sanitized: 'atraxa-praetors-voice' },
+        { name: "Magistrate's Scepter", sanitized: 'magistrates-scepter' },
+        { name: 'Contagion Engine', sanitized: 'contagion-engine' },
+      ],
+      produces: [],
+      description: null,
+      edhrecUrl: 'https://edhrec.com/combos/witch/3-piece',
+      deckCount: 1615,
+    },
+    {
+      id: '/combos/orzhov/789',
+      header: 'Walking Ballista + Heliod, Sun-Crowned (45906 decks)',
+      pieces: [
+        { name: 'Walking Ballista', sanitized: 'walking-ballista' },
+        { name: 'Heliod, Sun-Crowned', sanitized: 'heliod-sun-crowned' },
+      ],
+      produces: [],
+      description: null,
+      edhrecUrl: 'https://edhrec.com/combos/orzhov/789',
+      deckCount: 45906,
+    },
+  ];
+
+  it('classifies a combo as "included" when every piece is in the deck', () => {
+    const { included, almostIncluded } = intersectCombosWithDeck(
+      combos,
+      ['Demonic Consultation', "Thassa's Oracle", 'Sol Ring'],
+      []
+    );
+
+    expect(included).toHaveLength(1);
+    expect(included[0].header).toContain('Demonic Consultation');
+    expect(included[0].pieces.every((p) => p.missing === false)).toBe(true);
+    expect(almostIncluded).toHaveLength(0);
+  });
+
+  it('classifies a combo as "almostIncluded" when exactly one piece is missing, with the missing piece flagged', () => {
+    // Atraxa combo has 3 pieces; deck has 2 (commander + Magistrate's Scepter), 1 missing.
+    const { included, almostIncluded } = intersectCombosWithDeck(
+      combos,
+      ["Magistrate's Scepter"],
+      ["Atraxa, Praetors' Voice"]
+    );
+
+    expect(included).toHaveLength(0);
+    expect(almostIncluded).toHaveLength(1);
+    const combo = almostIncluded[0];
+    expect(combo.header).toContain('Atraxa');
+
+    const present = combo.pieces.filter((p) => !p.missing).map((p) => p.name);
+    const missing = combo.pieces.filter((p) => p.missing).map((p) => p.name);
+    expect(present).toEqual(["Atraxa, Praetors' Voice", "Magistrate's Scepter"]);
+    expect(missing).toEqual(['Contagion Engine']);
+  });
+
+  it('skips combos missing 2 or more pieces (too speculative)', () => {
+    const { included, almostIncluded } = intersectCombosWithDeck(
+      combos,
+      ['Sol Ring'], // none of the combo cards present
+      []
+    );
+
+    expect(included).toHaveLength(0);
+    expect(almostIncluded).toHaveLength(0);
+  });
+
+  it('treats commander names as in-deck for matching', () => {
+    // 3-piece Atraxa combo. Commander present, scepter present, engine missing.
+    const { almostIncluded } = intersectCombosWithDeck(
+      combos,
+      ["Magistrate's Scepter"],
+      ["Atraxa, Praetors' Voice"]
+    );
+    expect(almostIncluded).toHaveLength(1);
+    expect(almostIncluded[0].pieces.find((p) => p.name === "Atraxa, Praetors' Voice").missing).toBe(false);
+  });
+
+  it('matching is case-insensitive', () => {
+    const { included } = intersectCombosWithDeck(
+      combos,
+      ['demonic consultation', "THASSA'S ORACLE"],
+      []
+    );
+    expect(included).toHaveLength(1);
+  });
+
+  it('returns empty result when combos is empty or null', () => {
+    expect(intersectCombosWithDeck([], ['Sol Ring'], [])).toEqual({ included: [], almostIncluded: [] });
+    expect(intersectCombosWithDeck(null, ['Sol Ring'], [])).toEqual({ included: [], almostIncluded: [] });
+  });
+
+  it('skips combos with empty pieces arrays defensively', () => {
+    const malformed = [{ ...combos[0], pieces: [] }];
+    expect(intersectCombosWithDeck(malformed, [], [])).toEqual({ included: [], almostIncluded: [] });
   });
 });

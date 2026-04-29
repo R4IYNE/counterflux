@@ -195,3 +195,170 @@ export function aggregateDeckSalt(saltValues) {
   const mean = valid.reduce((sum, v) => sum + v, 0) / valid.length;
   return normalizeSalt(mean);
 }
+
+// === Commander combos (v1.2 hot-fix #5 — Spellbook proxy fallback) ===
+//
+// EDHREC's `/pages/combos/{commander-slug}.json` endpoint returns the canonical
+// list of known combos that involve a given commander. Each combo arrives as a
+// `cardlist` entry whose `tag` and `header` encode the participating cards +
+// deck-count popularity, e.g.:
+//
+//   tag:    "demonicconsultation+thassa'soracle(138436decks)"
+//   header: "Demonic Consultation + Thassa's Oracle (138436 decks)"
+//   cardviews: [{name, sanitized, url, id}, ...]
+//
+// `cardview.url` looks like `/combos/golgari/1529-1887` and resolves to the
+// EDHREC combo page where the user can read the produces / prerequisites /
+// description (Spellbook-equivalent metadata that EDHREC doesn't surface in
+// the JSON). We expose `edhrecUrl: "https://edhrec.com${cv.url}"` so the UI
+// can link out.
+//
+// What this replaces: SEED-004 captures the full story — Spellbook's
+// /find-my-combos returns HTTP 400 when proxied through Vercel (root cause
+// not isolated yet). Until SEED-004 is closed, EDHREC commander-combos provide
+// 70-80% of Spellbook's value (included + almost-included detection from the
+// commander's combo list, computed client-side via intersectCombosWithDeck).
+// What's missing: combos that don't involve the commander, structured
+// "produces" metadata (infinite mana / damage / etc.), and combo descriptions.
+
+const COMBOS_TTL_MS = 24 * 60 * 60 * 1000; // 24h — combos shift slowly
+
+/**
+ * Parse an EDHREC combo cardlist tag's deck-count footer.
+ * Extracts the integer from "(NNNNdecks)" suffix. Returns 0 if missing.
+ * @param {string} tagOrHeader
+ * @returns {number}
+ */
+function parseDeckCount(tagOrHeader) {
+  const m = (tagOrHeader || '').match(/\((\d+)\s*decks?\)/i);
+  return m ? parseInt(m[1], 10) : 0;
+}
+
+/**
+ * Fetch the EDHREC commander-combos list.
+ *
+ * @param {string} commanderName Commander display name; sanitized internally.
+ * @returns {Promise<{combos: Array, error?: boolean}>}
+ *   combos: [{
+ *     id,           // EDHREC combo path (used as stable key)
+ *     header,       // human-readable "Card A + Card B (N decks)"
+ *     pieces,       // [{ name, sanitized, url }] — Spellbook-compatible shape
+ *     produces,     // [] — EDHREC doesn't expose; UI falls through to "COMBO" default
+ *     description,  // null
+ *     edhrecUrl,    // absolute URL to the combo page on edhrec.com
+ *     deckCount,    // popularity (decks running the combo)
+ *   }]
+ */
+export async function getCommanderCombos(commanderName) {
+  const sanitized = sanitizeCommanderName(commanderName);
+
+  try {
+    const cached = await db.edhrec_cache.get('combos:' + sanitized);
+    if (cached && Date.now() - cached.fetched_at < COMBOS_TTL_MS) {
+      return cached.data;
+    }
+
+    const data = await rateLimitedFetch(
+      `${EDHREC_BASE}/pages/combos/${sanitized}.json`
+    );
+    const cardlists = data?.container?.json_dict?.cardlists ?? [];
+
+    const combos = cardlists.map((cl) => {
+      const cardviews = cl.cardviews ?? [];
+      const firstUrl = cardviews[0]?.url || '';
+      // EDHREC returns paths like `/combos/golgari/1529-1887` — make absolute.
+      const edhrecUrl = firstUrl.startsWith('/')
+        ? `https://edhrec.com${firstUrl}`
+        : firstUrl;
+      return {
+        id: firstUrl || cl.tag, // fallback to tag if url missing
+        header: cl.header || cl.tag,
+        pieces: cardviews.map((cv) => ({
+          name: cv.name,
+          sanitized: cv.sanitized,
+          url: cv.url,
+        })),
+        produces: [],
+        description: null,
+        edhrecUrl,
+        deckCount: parseDeckCount(cl.header || cl.tag),
+      };
+    });
+
+    // EDHREC returns combos in deck-count order already; preserve that order
+    // so most-popular surfaces first when we slice for the panel.
+
+    const result = { combos };
+
+    try {
+      await db.edhrec_cache.put({
+        commander: 'combos:' + sanitized,
+        data: result,
+        fetched_at: Date.now(),
+      });
+    } catch {
+      // Cache write failure is non-fatal.
+    }
+
+    return result;
+  } catch {
+    return { combos: [], error: true };
+  }
+}
+
+/**
+ * Classify EDHREC combos against a deck's card list.
+ *
+ * - included: every piece of the combo is in the deck (commander counts).
+ * - almostIncluded: exactly one piece is missing — the deckbuilder action is
+ *   "add this one card and the combo lights up." Combos missing 2+ cards are
+ *   filtered out (too speculative; would clutter the panel).
+ *
+ * Pieces in `almostIncluded` carry `missing: boolean` to let the UI render the
+ * red "+ Card Name" affordance for the gap, matching the existing Spellbook
+ * combo panel shape exactly.
+ *
+ * Card name matching is done on the lowercase exact name. EDHREC uses the
+ * canonical Scryfall display name in `cardview.name`, so direct comparison
+ * against deck card names works for the 99 + commander.
+ *
+ * @param {Array} combos Output of getCommanderCombos().combos
+ * @param {string[]} deckCardNames All non-commander card names in the deck
+ * @param {string[]} commanderNames Commander + partner (always "in deck")
+ * @returns {{ included: Array, almostIncluded: Array }}
+ */
+export function intersectCombosWithDeck(combos, deckCardNames, commanderNames = []) {
+  const inDeck = new Set([
+    ...commanderNames.map((n) => (n || '').toLowerCase()),
+    ...deckCardNames.map((n) => (n || '').toLowerCase()),
+  ]);
+  inDeck.delete(''); // strip blank entries
+
+  const included = [];
+  const almostIncluded = [];
+
+  for (const combo of combos || []) {
+    const pieces = combo.pieces || [];
+    if (pieces.length === 0) continue;
+
+    let presentCount = 0;
+    for (const piece of pieces) {
+      if (inDeck.has((piece.name || '').toLowerCase())) presentCount++;
+    }
+
+    if (presentCount === pieces.length) {
+      included.push({ ...combo, pieces: pieces.map((p) => ({ ...p, missing: false })) });
+    } else if (presentCount === pieces.length - 1) {
+      almostIncluded.push({
+        ...combo,
+        pieces: pieces.map((p) => ({
+          ...p,
+          missing: !inDeck.has((p.name || '').toLowerCase()),
+        })),
+      });
+    }
+    // 2+ missing: skip (too speculative, would flood the panel)
+  }
+
+  return { included, almostIncluded };
+}
