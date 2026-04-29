@@ -76,29 +76,8 @@ export default async function handler(req, res) {
       init.body = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
     }
 
-    // === DEBUG INSTRUMENTATION (temp — Phase 15 hot-fix #4 diagnosis) ===
-    const debugBody = init.body !== undefined ? (typeof init.body === 'string' ? init.body : String(init.body)) : null;
-    const debugDump = {
-      method: req.method,
-      inbound_body_typeof: typeof req.body,
-      inbound_body_keys: req.body && typeof req.body === 'object' ? Object.keys(req.body) : null,
-      inbound_body_sample: req.body !== undefined ? JSON.stringify(req.body).slice(0, 500) : null,
-      inbound_headers: req.headers,
-      outbound_url: upstreamUrl,
-      outbound_headers: outboundHeaders,
-      outbound_body_bytes: debugBody ? Buffer.byteLength(debugBody, 'utf-8') : null,
-      outbound_body_content: debugBody ? debugBody.slice(0, 500) : null,
-    };
-    console.error('[spellbook-debug] DUMP:', JSON.stringify(debugDump));
-    // === END DEBUG ===
-
     // 3. Make the upstream call.
     const upstreamRes = await fetch(upstreamUrl, init);
-
-    console.error('[spellbook-debug] upstream:', JSON.stringify({
-      status: upstreamRes.status,
-      contentType: upstreamRes.headers.get('content-type'),
-    }));
 
     // 4. Forward status + body unchanged.
     const contentType = upstreamRes.headers.get('content-type') || '';

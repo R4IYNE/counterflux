@@ -20,7 +20,9 @@
 
 **Audit:** Skipped — `/gsd:audit-milestone` not run. Milestone is small (1 shipped phase + 1 inline collapse), every requirement closure has explicit evidence in REQUIREMENTS.md, 1057/1069 tests pass. Audit's marginal value was low
 
-**Known deferral:** UAT-01 (LHCi soft-gate against real Vercel Preview URL) → v1.3 via SEED-003. Deliberate deferral with re-trigger conditions, NOT silent slippage
+**Known deferrals:**
+- UAT-01 (LHCi soft-gate against real Vercel Preview URL) → v1.3 via SEED-003. Deliberate deferral with re-trigger conditions, NOT silent slippage
+- Spellbook proxy returns HTTP 400 in production despite identical headers working in direct curl → v1.3 via [SEED-004](seeds/SEED-004-spellbook-proxy-production-debug.md). Discovered post-ship during hot-fix verification. EDHREC proxy works; Spellbook combo detection in Thousand-Year Storm degrades to "no combos shown" — same UX as v1.0/v1.1 (Spellbook combos have NEVER worked in production via Counterflux because the v1.0 client used a Vite dev proxy that didn't deploy). Three hot-fix attempts in 2026-04-28→29 didn't isolate the root cause; main blocker was Vercel MCP log truncation preventing diagnosis. Approach + breadcrumbs documented in SEED-004 so a future fix takes 30 min – 3 hours rather than restarting from zero. Post-mortem lesson logged: hot-fix budget should cap at 2 attempts before deferring
 
 ---
 
