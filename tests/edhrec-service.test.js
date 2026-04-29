@@ -137,8 +137,11 @@ describe('getCommanderSynergies', () => {
 
     await getCommanderSynergies('Prossh, Skyraider of Kher');
 
+    // v1.2 hot-fix #6 added an AbortController { signal } as 2nd arg to fetch
+    // for the 15s timeout — match url first arg, allow any 2nd arg.
     expect(fetch).toHaveBeenCalledWith(
-      '/api/edhrec/pages/commanders/prossh-skyraider-of-kher.json'
+      '/api/edhrec/pages/commanders/prossh-skyraider-of-kher.json',
+      expect.any(Object)
     );
   });
 });

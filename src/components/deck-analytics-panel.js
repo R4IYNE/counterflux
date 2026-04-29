@@ -621,7 +621,11 @@ export function renderDeckAnalyticsPanel(container) {
         const badge = document.createElement('span');
         badge.className = `gap-badge-rag gap-badge-${gap.severity}`;
         badge.dataset.gapCategory = gap.category;
-        badge.textContent = `[${gap.severity.toUpperCase()}] +${gap.suggestedAdd}`;
+        // Phase 9 D-04 originally specified `[RED] +N` / `[AMBER] +N`.
+        // v1.2 hot-fix #6 (post-ship UX): word-color redundancy was hurting
+        // scan-ability — the badge IS red, the word "RED" adds no info. Drop
+        // the prefix; the colour + the +N value carry the meaning.
+        badge.textContent = `+${gap.suggestedAdd}`;
         badge.style.cssText = `
           margin-left: 8px;
           padding: 2px 6px;

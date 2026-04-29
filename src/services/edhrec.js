@@ -25,8 +25,22 @@ export function sanitizeCommanderName(name) {
 }
 
 /**
- * Rate-limited fetch wrapper. Enforces minimum REQUEST_DELAY_MS between calls.
- * Returns null on failure (graceful degradation per D-03).
+/**
+ * Hard timeout for upstream EDHREC requests. v1.2 hot-fix #6: production
+ * spinner-never-resolved bug surfaced when an EDHREC slug 404'd via the
+ * Vercel proxy and the upstream connection stalled. Without this cap the
+ * intelligence store's `loading.edhrec` flag stays `true` forever, locking
+ * the synergy + salt panels in a "LOADING..." state. 15s is generous —
+ * normal EDHREC responses arrive in <1s; anything slower deserves a
+ * graceful-degradation error path, not an indefinite hang.
+ */
+const FETCH_TIMEOUT_MS = 15000;
+
+/**
+ * Rate-limited fetch wrapper. Enforces minimum REQUEST_DELAY_MS between calls
+ * and aborts after FETCH_TIMEOUT_MS so the UI never hangs on a stalled
+ * connection. Throws on non-2xx, network failure, or timeout — callers
+ * convert that into a graceful-degradation error result.
  * @param {string} url
  * @returns {Promise<object|null>}
  */
@@ -40,9 +54,15 @@ async function rateLimitedFetch(url) {
 
   // User-Agent is a forbidden header in browsers (silently stripped).
   // EDHREC doesn't require it — safe to omit.
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`EDHREC ${res.status}`);
-  return res.json();
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  try {
+    const res = await fetch(url, { signal: controller.signal });
+    if (!res.ok) throw new Error(`EDHREC ${res.status}`);
+    return await res.json();
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 /**

@@ -123,7 +123,7 @@ describe('deck-analytics-panel gap badge (DECK-03)', () => {
     window.Alpine = originalAlpine;
   });
 
-  it('renders [RED] +6 badge for red severity gap, no category name in badge body', () => {
+  it('renders +6 badge for red severity gap, no category name in badge body, has red severity class', () => {
     seedStores({
       gaps: [{ category: 'Ramp', count: 4, threshold: 10, severity: 'red', suggestedAdd: 6 }],
     });
@@ -131,16 +131,18 @@ describe('deck-analytics-panel gap badge (DECK-03)', () => {
     const container = document.getElementById('container');
     renderDeckAnalyticsPanel(container);
 
-    // The badge is class 'gap-badge-rag' per the new render contract.
     const badge = container.querySelector('.gap-badge-rag');
     expect(badge).toBeTruthy();
-    // Per D-04 the badge text is `[RED] +6` — NO "Ramp" duplicated in the
-    // body (the Ramp label is already on the parent tag-row).
-    expect(badge.textContent).toMatch(/\[RED\]\s*\+6/);
+    // v1.2 hot-fix #6: word-color redundancy was hurting scan-ability — the
+    // badge IS red, so the word "RED" added no info. Severity is now carried
+    // by the `gap-badge-{severity}` class + the colour styles, not the text.
+    expect(badge.textContent.trim()).toBe('+6');
+    expect(badge.classList.contains('gap-badge-red')).toBe(true);
     expect(badge.textContent).not.toMatch(/Ramp/i);
+    expect(badge.textContent).not.toMatch(/\[RED\]/);
   });
 
-  it('renders [AMBER] +3 badge for amber severity gap', () => {
+  it('renders +3 badge for amber severity gap with amber severity class', () => {
     seedStores({
       gaps: [{ category: 'Ramp', count: 7, threshold: 10, severity: 'amber', suggestedAdd: 3 }],
     });
@@ -150,7 +152,9 @@ describe('deck-analytics-panel gap badge (DECK-03)', () => {
 
     const badge = container.querySelector('.gap-badge-rag');
     expect(badge).toBeTruthy();
-    expect(badge.textContent).toMatch(/\[AMBER\]\s*\+3/);
+    expect(badge.textContent.trim()).toBe('+3');
+    expect(badge.classList.contains('gap-badge-amber')).toBe(true);
+    expect(badge.textContent).not.toMatch(/\[AMBER\]/);
   });
 
   it('does NOT render a badge for green severity gaps', () => {
