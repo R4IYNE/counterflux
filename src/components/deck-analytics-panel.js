@@ -673,6 +673,12 @@ export function renderDeckAnalyticsPanel(container) {
         if (!attached) {
           // Lands / Creatures / categories without a tag row — render at the
           // tail of the tag-bars container so the warning stays visible.
+          //
+          // Orphan badges include the category label inline (`LANDS +10`)
+          // because there's no parent row to provide context — without this,
+          // post-hot-fix-#6 they became naked numbers floating at the bottom
+          // of the panel with no indication of what they referred to.
+          badge.textContent = `${gap.category.toUpperCase()} +${gap.suggestedAdd}`;
           tagBarsContainer.appendChild(badge);
         }
       }
