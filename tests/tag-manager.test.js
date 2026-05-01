@@ -64,3 +64,43 @@ describe('DEFAULT_TAGS', () => {
     expect(DEFAULT_TAGS).toContain('Tutor');
   });
 });
+
+// =============================================================================
+// Regression — Phase 15 hot-fix: lands must not be tagged as Ramp.
+// Without the typeLine guard, basic lands' oracle text ("{T}: Add {R}.")
+// matches the Ramp regex `/add \{[WUBRGC]\}/i` and every basic land in the
+// deck shows up tagged "RAMP" in the deck-builder breakdown.
+// =============================================================================
+
+describe('suggestTags — Land exemption regression', () => {
+  it('does NOT tag basic lands as Ramp when typeLine is provided', () => {
+    // Mountain's actual oracle text matches /add \{R\}/i which would
+    // otherwise be tagged Ramp.
+    const tags = suggestTags('({T}: Add {R}.)', 'Basic Land — Mountain');
+    expect(tags).toEqual([]);
+  });
+
+  it('does NOT tag dual-color non-basic lands either', () => {
+    // Plateau-style original duals
+    const tags = suggestTags(
+      '({T}: Add {R} or {W}.)',
+      'Land — Mountain Plains'
+    );
+    expect(tags).toEqual([]);
+  });
+
+  it('still tags non-land cards with Add-mana effects as Ramp (Llanowar Elves regression)', () => {
+    // Make sure the land guard is targeted — Llanowar Elves should still
+    // tag as Ramp because its type_line is Creature, not Land.
+    const tags = suggestTags(
+      '{T}: Add {G}.',
+      'Creature — Elf Druid'
+    );
+    expect(tags).toContain('Ramp');
+  });
+
+  it('falls back to oracle-only behavior when typeLine is omitted (backwards compat)', () => {
+    // Existing call sites that don't pass typeLine should keep working.
+    expect(suggestTags('Search your library for a basic land card')).toContain('Ramp');
+  });
+});

@@ -204,11 +204,23 @@ export const TAG_HEURISTICS = [
 
 /**
  * Suggest functional categories based on oracle text analysis.
+ *
+ * Lands are explicitly excluded — they have their own count in the breakdown
+ * and shouldn't be tagged as functional categories. Without this guard, basic
+ * lands match the Ramp regex (`/add \{[WUBRGC]\}/i`) because Mountain's oracle
+ * text is literally "{T}: Add {R}." — every basic land would be tagged Ramp.
+ *
  * @param {string|null} oracleText - Card's oracle_text from Scryfall
+ * @param {string|null} [typeLine] - Card's type_line from Scryfall (optional;
+ *                                   when provided, lands return [])
  * @returns {string[]} Array of matching category names
  */
-export function suggestTags(oracleText) {
+export function suggestTags(oracleText, typeLine = null) {
   if (!oracleText) return [];
+  // Skip lands entirely — they count as Lands in the breakdown, not as
+  // functional categories. Matches both basic ("Basic Land — Mountain") and
+  // non-basic ("Land — Plains Island") type lines.
+  if (typeLine && /(?:^|\s—\s|\s)Land(?:\s|$|—)/i.test(typeLine)) return [];
 
   const tags = [];
   for (const { tag, patterns } of TAG_HEURISTICS) {

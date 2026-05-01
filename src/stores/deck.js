@@ -135,7 +135,14 @@ export function initDeckStore() {
 
         if (existing) {
           const card = await db.cards.get(scryfallId);
-          if (card?.oracle_text?.includes('any number of cards named')) {
+          // Commander singleton rule has TWO exemptions:
+          //  1. Basic lands — unlimited copies (Mountain, Forest, etc.)
+          //  2. Cards with "any number of cards named" oracle text
+          //     (Shadowborn Apostle, Rat Colony, Persistent Petitioners, etc.)
+          // Both should bump quantity instead of returning a singleton warning.
+          const isBasicLand = /Basic\s+Land/i.test(card?.type_line || '');
+          const isAnyNumber = card?.oracle_text?.includes('any number of cards named');
+          if (isBasicLand || isAnyNumber) {
             await db.deck_cards.update(existing.id, { quantity: existing.quantity + 1 });
             await db.decks.update(deckId, { updated_at: new Date().toISOString() });
             await this.loadDeck(deckId);
@@ -156,11 +163,14 @@ export function initDeckStore() {
         }
       }
 
-      // Auto-suggest tags if not provided
+      // Auto-suggest tags if not provided.
+      // Pass type_line so basic lands (Mountain, Forest, etc.) skip
+      // functional categorisation — without this guard their oracle text
+      // ("{T}: Add {R}.") matches the Ramp regex and they tag as Ramp.
       let cardTags = tags;
       if (!cardTags) {
         const card = await db.cards.get(scryfallId);
-        cardTags = suggestTags(card?.oracle_text);
+        cardTags = suggestTags(card?.oracle_text, card?.type_line);
       }
 
       await db.deck_cards.add({
@@ -288,7 +298,9 @@ export function initDeckStore() {
       let updated = 0;
       for (const dc of deckCards) {
         const card = await db.cards.get(dc.scryfall_id);
-        const newTags = suggestTags(card?.oracle_text);
+        // Pass type_line so basic lands skip functional categorisation
+        // (otherwise re-categorisation would re-tag them as Ramp).
+        const newTags = suggestTags(card?.oracle_text, card?.type_line);
         await db.deck_cards.update(dc.id, { tags: newTags });
         updated++;
       }
