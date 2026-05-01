@@ -25,11 +25,17 @@ export function renderDeckCardTile(entry, options = {}) {
 function renderGridTile(entry, card, cardName, typeGroup) {
   const tile = document.createElement('div');
   tile.className = 'card-tile-hover cursor-pointer flex flex-col relative';
-  tile.style.cssText = 'background: #14161C; border: 1px solid #2A2D3A; overflow: hidden;';
+  // Compact mode (used for Commander tile per the deck-centre-panel) caps
+  // the tile width so the commander section doesn't dominate the page.
+  const compact = !!entry._compact;
+  tile.style.cssText = `background: #14161C; border: 1px solid #2A2D3A; overflow: hidden;${compact ? ' max-width: 180px;' : ''}`;
   tile.dataset.deckCardId = String(entry.id);
   tile.dataset.scryfallId = entry.scryfall_id;
   tile.dataset.typeGroup = typeGroup;
-  tile.style.cursor = 'grab';
+  // v1.2 hot-fix: drag-and-drop ordering removed; tiles are click-to-flyout
+  // only now. `cursor: grab` previously hinted draggability — switch to
+  // `pointer` to match the actual interaction model.
+  tile.style.cursor = 'pointer';
 
   // Image area
   const imgWrap = document.createElement('div');
@@ -69,6 +75,60 @@ function renderGridTile(entry, card, cardName, typeGroup) {
     imgWrap.appendChild(qtyBadge);
   }
 
+  // v1.2 hot-fix: +/- quantity steppers on basic land tiles. Commander rules
+  // exempt basic lands from the singleton rule, so a deck might run 36+
+  // Mountains and the user shouldn't have to click `+` on the search panel
+  // 36 times. Hover-revealed; positioned bottom-left so they don't conflict
+  // with the top-right remove button. Same pattern can extend later to
+  // "any number of cards named" (Shadowborn Apostle, Rat Colony, etc.).
+  const isBasicLand = card?.type_line && /Basic\s+Land/i.test(card.type_line);
+  let qtyControls = null;
+  if (isBasicLand) {
+    qtyControls = document.createElement('div');
+    qtyControls.style.cssText = `
+      position: absolute; bottom: 4px; left: 4px; display: none; gap: 4px; z-index: 5;
+    `;
+    const minusBtn = document.createElement('button');
+    minusBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 14px;">remove</span>';
+    minusBtn.title = 'Decrease quantity';
+    minusBtn.style.cssText = `
+      width: 24px; height: 24px; background: rgba(13, 82, 189, 0.9); color: #EAECEE;
+      border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;
+      padding: 0; border-radius: 0;
+    `;
+    minusBtn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const Alpine = window.Alpine;
+      const store = Alpine?.store('deck');
+      if (!store) return;
+      if (entry.quantity <= 1) {
+        await store.removeCard(entry.id);
+      } else {
+        await store.updateCardQuantity(entry.id, entry.quantity - 1);
+      }
+      Alpine?.store('toast')?.success(`${cardName} x${Math.max(0, entry.quantity - 1)}.`);
+      document.dispatchEvent(new CustomEvent('deck-cards-changed'));
+    });
+
+    const plusBtn = document.createElement('button');
+    plusBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 14px;">add</span>';
+    plusBtn.title = 'Increase quantity';
+    plusBtn.style.cssText = minusBtn.style.cssText;
+    plusBtn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const Alpine = window.Alpine;
+      const store = Alpine?.store('deck');
+      if (!store) return;
+      await store.updateCardQuantity(entry.id, (entry.quantity || 1) + 1);
+      Alpine?.store('toast')?.success(`${cardName} x${(entry.quantity || 1) + 1}.`);
+      document.dispatchEvent(new CustomEvent('deck-cards-changed'));
+    });
+
+    qtyControls.appendChild(minusBtn);
+    qtyControls.appendChild(plusBtn);
+    imgWrap.appendChild(qtyControls);
+  }
+
   // Remove button (visible on hover)
   const removeBtn = document.createElement('button');
   removeBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 14px;">close</span>';
@@ -91,8 +151,14 @@ function renderGridTile(entry, card, cardName, typeGroup) {
   });
   imgWrap.appendChild(removeBtn);
 
-  tile.addEventListener('mouseenter', () => { removeBtn.style.display = 'flex'; });
-  tile.addEventListener('mouseleave', () => { removeBtn.style.display = 'none'; });
+  tile.addEventListener('mouseenter', () => {
+    removeBtn.style.display = 'flex';
+    if (qtyControls) qtyControls.style.display = 'flex';
+  });
+  tile.addEventListener('mouseleave', () => {
+    removeBtn.style.display = 'none';
+    if (qtyControls) qtyControls.style.display = 'none';
+  });
 
   tile.appendChild(imgWrap);
 
@@ -148,10 +214,18 @@ function renderGridTile(entry, card, cardName, typeGroup) {
   }
 
   // Tag pills
-  if (entry.tags && entry.tags.length > 0) {
+  // v1.2 hot-fix: render-time filter to suppress functional tags on Land
+  // cards. Lands have their own count in the breakdown — they shouldn't
+  // also tag as Ramp / Tutor / etc. Existing decks in production may have
+  // these tags persisted (set before suggestTags() got the typeLine guard);
+  // this filter handles them at render time without needing a one-shot
+  // recategorize migration.
+  const isLandCard = card?.type_line && /(?:^|\s)Land(?:\s|—|$)/i.test(card.type_line);
+  const visibleTags = (entry.tags || []).filter(t => !isLandCard);
+  if (visibleTags.length > 0) {
     const tagWrap = document.createElement('div');
     tagWrap.style.cssText = 'display: flex; flex-wrap: wrap; gap: 2px; margin-top: 4px; overflow: hidden; max-height: 22px;';
-    for (const tag of entry.tags) {
+    for (const tag of visibleTags) {
       const pill = document.createElement('span');
       pill.className = 'tag-pill';
       pill.style.cssText += ' max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 9px; padding: 1px 4px;';

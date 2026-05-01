@@ -359,6 +359,31 @@ export function renderDeckSearchPanel(container) {
       }
       row.appendChild(priceEl);
 
+      // v1.2 hot-fix: quantity input next to the add button so users can
+      // specify N copies in one click instead of clicking `+` N times. Most
+      // useful for basic lands (Commander rules exempt them from singleton)
+      // — defaulted to 1 so non-basics still work as before. Setting >1 on
+      // a non-basic in commander format will silently fall through to the
+      // singleton-warning path on the second add; that's acceptable
+      // degradation (rare path).
+      const isBasicLand = card?.type_line && /Basic\s+Land/i.test(card.type_line);
+      const qtyInput = document.createElement('input');
+      qtyInput.type = 'number';
+      qtyInput.min = '1';
+      qtyInput.max = '99';
+      qtyInput.value = '1';
+      qtyInput.title = isBasicLand
+        ? `Quantity (basic land — unlimited copies allowed)`
+        : `Quantity`;
+      qtyInput.style.cssText = `
+        width: 36px; height: 28px; flex-shrink: 0; padding: 0 4px; text-align: center;
+        background: transparent; border: 1px solid #2A2D3A; color: #EAECEE;
+        font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700;
+      `;
+      qtyInput.addEventListener('click', (e) => e.stopPropagation());
+      qtyInput.addEventListener('keydown', (e) => e.stopPropagation());
+      row.appendChild(qtyInput);
+
       // Add button (explicit)
       const addBtn = document.createElement('button');
       addBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 18px;">add</span>';
@@ -373,11 +398,25 @@ export function renderDeckSearchPanel(container) {
       addBtn.addEventListener('click', async (e) => {
         e.stopPropagation();
         if (!deckStore) return;
-        const result = await deckStore.addCard(card.id);
-        if (result?.warning) {
-          toastStore?.warning(result.message);
-        } else if (result?.added) {
-          toastStore?.success(`${getCardName(card) || 'Card'} added to ${deckStore.activeDeck?.name || 'deck'}.`);
+        const qty = Math.max(1, Math.min(99, parseInt(qtyInput.value, 10) || 1));
+        // Add the first copy through the normal path (which handles
+        // initial tagging + duplicate detection). For qty > 1, follow up
+        // with addCard calls — the basic-land + "any number of" exemptions
+        // bump quantity, others return a singleton warning we log once.
+        let succeeded = 0;
+        let lastWarning = null;
+        for (let i = 0; i < qty; i++) {
+          const result = await deckStore.addCard(card.id);
+          if (result?.added) succeeded++;
+          else if (result?.warning) { lastWarning = result.message; break; }
+        }
+        if (succeeded > 0) {
+          const cardName = getCardName(card) || 'Card';
+          const suffix = succeeded > 1 ? ` x${succeeded}` : '';
+          toastStore?.success(`${cardName}${suffix} added to ${deckStore.activeDeck?.name || 'deck'}.`);
+        }
+        if (lastWarning && succeeded === 0) {
+          toastStore?.warning(lastWarning);
         }
       });
       row.appendChild(addBtn);
@@ -399,31 +438,11 @@ export function renderDeckSearchPanel(container) {
       resultsEl.appendChild(row);
     }
 
-    // Wire SortableJS for drag-to-deck from search results
-    if (searchSortable) {
-      searchSortable.destroy();
-      searchSortable = null;
-    }
-    if (results.length > 0) {
-      searchSortable = new Sortable(resultsEl, {
-        group: {
-          name: 'deck-cards',
-          pull: 'clone',
-          put: false,
-        },
-        sort: false,
-        ghostClass: 'drag-ghost',
-        onEnd(evt) {
-          // Remove the cloned DOM element (store handles rendering)
-          evt.item.remove();
-          const scryfallId = evt.item.dataset.scryfallId;
-          if (scryfallId && evt.to !== evt.from) {
-            const Alpine = window.Alpine;
-            Alpine?.store('deck')?.addCard(scryfallId);
-          }
-        },
-      });
-    }
+    // v1.2 hot-fix: drag-to-deck SortableJS removed per user request — the
+    // explicit `+` add button + the new quantity stepper are the only entry
+    // points now. This eliminates the TypeError null-options crashes that
+    // were firing when Sortable's global drag handlers fired on stale
+    // instances after rapid refreshes.
   }
 
   // Show browse results on initial load

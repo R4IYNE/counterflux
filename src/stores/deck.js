@@ -185,6 +185,31 @@ export function initDeckStore() {
       return { added: true };
     },
 
+    /**
+     * Set a deck card's quantity directly. Used by the basic-land tile
+     * +/- steppers (v1.2 hot-fix). When `quantity <= 0`, removes the card
+     * via the existing removeCard path (preserves undo + activity log).
+     *
+     * Returns { added: true } on success, { error: true } on failure.
+     */
+    async updateCardQuantity(deckCardId, quantity) {
+      if (!this.activeDeck) return { error: true };
+      const deckCard = await db.deck_cards.get(deckCardId);
+      if (!deckCard) return { error: true };
+      if (quantity <= 0) {
+        return this.removeCard(deckCardId);
+      }
+      await db.deck_cards.update(deckCardId, { quantity });
+      await db.decks.update(this.activeDeck.id, { updated_at: new Date().toISOString() });
+      // Optimistic local mutation so the tile re-renders without a full
+      // reload (loadDeck() also fires below for canonical state).
+      this.activeCards = this.activeCards.map((c) =>
+        c.id === deckCardId ? { ...c, quantity } : c
+      );
+      await this.loadDeck(this.activeDeck.id);
+      return { added: true };
+    },
+
     async removeCard(deckCardId) {
       if (!this.activeDeck) return;
       const deckCard = await db.deck_cards.get(deckCardId);

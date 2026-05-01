@@ -279,7 +279,11 @@ export function renderDeckCentrePanel(container) {
       // commander tile is intentionally NOT registered with SortableJS
       // (commanders aren't draggable into other type sections — moving a
       // commander card around is meaningless).
-      const cmdTile = renderDeckCardTile(commanderEntry, { mode: viewMode });
+      // v1.2 hot-fix: pass `_compact: true` so the commander tile caps at
+      // 180px instead of stretching to the grid track. The commander is a
+      // single card; making it the same size as the 99 wastes vertical
+      // real-estate above the rest of the deck.
+      const cmdTile = renderDeckCardTile({ ...commanderEntry, _compact: true }, { mode: viewMode });
       if (cmdTile) cmdBody.appendChild(cmdTile);
       cmdGroup.appendChild(cmdBody);
 
@@ -316,7 +320,12 @@ export function renderDeckCentrePanel(container) {
         font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase;
         letter-spacing: 0.15em; font-weight: 700; color: #7A8498;
       `;
-      headerLabel.textContent = `${type.toUpperCase()}S (${cards.length})`;
+      // v1.2 hot-fix: count by quantity, not unique cards. 28 Mountains
+      // should display as LANDS (28), not LANDS (1). The analytics layer
+      // already aggregates by quantity (deck-analytics.js multiplies by
+      // qty everywhere); this header was the last surface using `.length`.
+      const countByQty = cards.reduce((sum, c) => sum + (c.quantity || 1), 0);
+      headerLabel.textContent = `${type.toUpperCase()}S (${countByQty})`;
       // Fix pluralization for special cases
       if (type === 'Sorcery') headerLabel.textContent = `SORCERIES (${cards.length})`;
       else if (type === 'Other') headerLabel.textContent = `OTHER (${cards.length})`;
@@ -343,26 +352,11 @@ export function renderDeckCentrePanel(container) {
           const tile = renderDeckCardTile(entry, { mode: 'grid' });
           contentEl.appendChild(tile);
         }
-
-        // SortableJS for grid
-        const sortable = new Sortable(contentEl, {
-          group: 'deck-cards',
-          animation: 150,
-          ghostClass: 'drag-ghost',
-          fallbackOnBody: true,
-          onEnd(evt) {
-            const deckCardId = evt.item?.dataset?.deckCardId;
-            if (deckCardId && store) {
-              // If dropped from search panel (has scryfallId, no deckCardId on clone)
-              const scryfallId = evt.item?.dataset?.scryfallId;
-              if (evt.from !== evt.to) {
-                evt.item.remove(); // Prevent duplicate; store re-render handles it
-              }
-              store.reorderCard(parseInt(deckCardId, 10), evt.newIndex || 0).then(() => refresh());
-            }
-          },
-        });
-        sortableInstances.push(sortable);
+        // v1.2 hot-fix: drag-and-drop reordering removed per user request.
+        // SortableJS init was causing intermittent TypeError null-options
+        // crashes (see git history) and reordering wasn't a load-bearing
+        // feature — the deck displays cards grouped by type, not by sort
+        // order. If reordering returns later, also revisit search-panel DnD.
       } else {
         // List view
         const table = document.createElement('table');

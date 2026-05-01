@@ -51,12 +51,20 @@ export function renderDeckEditor(container) {
   panelRow.style.cssText = 'display: flex; flex: 1; overflow: hidden;';
 
   // Left panel: search (280px / 240px)
+  // v1.2 hot-fix: position: sticky + top: 0 + align-self: flex-start so the
+  // panel stays pinned when the centre panel scrolls. The flex parent's
+  // overflow: hidden caps height to viewport; the panel's own overflow-y:
+  // auto handles scrolling within the LHS when its content exceeds height.
+  // Net effect: search bar + filters + results stay in view as the user
+  // scrolls through a long deck.
   const leftPanel = document.createElement('div');
   leftPanel.className = 'deck-search-panel';
   leftPanel.style.cssText = `
     width: 280px; min-width: 240px; flex-shrink: 0;
     background: #14161C; overflow-y: auto; overflow-x: hidden;
     display: flex; flex-direction: column;
+    position: sticky; top: 0; align-self: flex-start;
+    max-height: 100%;
   `;
 
   // Centre panel: the 99 (flex)
