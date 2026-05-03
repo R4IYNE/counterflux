@@ -1,6 +1,6 @@
 {
   "$schema": "precon-deck-memberships v1",
-  "generated_at": "2026-04-27T17:53:36.724Z",
+  "generated_at": "2026-05-03T05:49:48.561Z",
   "generator": "scripts/sync-precon-decks.mjs",
   "source": "https://mtgjson.com/api/v5/DeckList.json",
   "bundle_count": 45,
