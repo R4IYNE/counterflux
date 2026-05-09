@@ -1,14 +1,14 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.2
-milestone_name: Deploy the Gatewatch — COMPLETE 2026-04-28
-status: completed
-stopped_at: ROADMAP/REQUIREMENTS/PROJECT/STATE all updated to milestone-complete; SEED-003 planted; PERF-PROD-2026-04-28.md captured; 13-HUMAN-UAT + 11-HUMAN-UAT resolved; pre-existing Phase 13 path-resolution test fixed
-last_updated: "2026-04-28T19:50:12.584Z"
-last_activity: 2026-04-28
+milestone_name: Deploy the Gatewatch — SHIPPED + ARCHIVED 2026-04-28
+status: archived
+stopped_at: v1.2 archived (commit b6025d5, tag v1.2 pushed). 6 post-archive hot-fixes also shipped — EDHREC combos integration (Spellbook fallback), gap-badge UX, Phase 13 path-resolution test, basic-land Ramp tag fix, basic-land singleton exemption, deck-builder UX batch (sticky LHS, +/- on basic lands, smaller commander tile, group counts use quantity, no DnD). All pushed to origin master.
+last_updated: "2026-05-01T00:00:00.000Z"
+last_activity: 2026-05-01
 progress:
   total_phases: 2
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 3
   completed_plans: 3
   percent: 100
@@ -106,6 +106,6 @@ None — v1.2 milestone shipped. Run `/gsd:complete-milestone` for archival, or 
 
 ## Session Continuity
 
-Last session: 2026-04-28 — v1.2 milestone archived via `/gsd:complete-milestone`
-Stopped at: v1.2 Deploy the Gatewatch fully archived. ROADMAP collapsed to one-line entry; REQUIREMENTS.md deleted (fresh for v1.3); MILESTONES.md entry rewritten with proper accomplishments; phase 15 directory moved to `milestones/v1.2-phases/`; PROJECT.md evolution review complete; RETROSPECTIVE.md v1.2 section appended; STATE.md updated. Awaiting v1.2 git tag + push, and `/gsd:new-milestone` to scope v1.3.
-Resume: `/gsd:new-milestone` to scope v1.3 — three seeds (SEED-001/002/003) and two backlog items (999.1/999.2) surface automatically during scoping
+Last session: 2026-05-01 — multi-day post-archive hot-fix sprint
+Stopped at: v1.2 archived (b6025d5, v1.2 tag pushed). Six post-archive feature/fix commits since the archive — EDHREC combos integration as Spellbook fallback (26d2ded), gap-badge UX iteration (05d9fab → a319953 → 956090b), basic-land Ramp tag fix + commander singleton exemption (a877852), deck-builder UX batch — sticky LHS + basic-land +/- + smaller commander + group counts by quantity + no DnD (5200baf). All pushed to origin master. Production EDHREC + Spellbook integrations functional via EDHREC fallback path; Spellbook proxy debug deferred to v1.3 via SEED-004.
+Resume: `/gsd:new-milestone` to scope v1.3 — four seeds (SEED-001/002/003/004) and two backlog items (999.1/999.2) surface automatically during scoping. Post-archive hot-fixes have NOT been formally rolled into a v1.2.x or v1.3 scope yet — that decision belongs to the next `/gsd:new-milestone` discussion.
