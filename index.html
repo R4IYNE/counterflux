@@ -143,77 +143,12 @@
        shows download progress in the background. -->
   <div x-cloak>
 
-    <!-- Sidebar -->
-    <aside
-      :class="$store.app.sidebarCollapsed ? 'w-16' : 'w-60'"
-      class="fixed left-0 top-0 bottom-0 z-30 bg-background border-r border-border-ghost transition-all duration-200 flex flex-col"
-    >
-      <!-- Brand section (D-29: collapse toggle lives here) -->
-      <div class="pt-2xl px-4 flex flex-col items-center gap-xs relative">
-        <span class="material-symbols-outlined text-primary text-3xl">cyclone</span>
-        <span
-          x-show="!$store.app.sidebarCollapsed"
-          class="font-mono text-text-primary uppercase text-[11px] tracking-[0.3em] font-bold"
-        >COUNTERFLUX</span>
-        <span
-          x-show="!$store.app.sidebarCollapsed"
-          class="font-mono text-text-dim uppercase text-[11px] tracking-[0.15em] font-normal"
-        >V1.0</span>
-        <!-- POLISH-09: Collapse toggle (D-29 — header placement) -->
-        <button
-          type="button"
-          class="cf-sidebar-toggle absolute top-2 right-2 flex items-center justify-center w-6 h-6 cursor-pointer text-text-muted hover:text-text-primary transition-colors"
-          @click="$store.app.toggleSidebar()"
-          :aria-label="$store.app.sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'"
-          style="background: transparent; border: none;"
-        >
-          <span
-            class="material-symbols-outlined"
-            style="font-size: 18px;"
-            x-text="$store.app.sidebarCollapsed ? 'chevron_right' : 'chevron_left'"
-          ></span>
-        </button>
-      </div>
+    <!-- Sidebar removed 2026-05-10 — nav + brand + profile widget hoisted to topbar -->
 
-      <!-- Navigation items -->
-      <nav class="mt-lg flex flex-col gap-sm px-2">
-        <template x-for="screen in $store.app.screens" :key="screen.id">
-          <a
-            :href="screen.locked ? 'javascript:void(0)' : '#' + screen.route"
-            :class="[
-              'flex items-center gap-sm py-2 px-4 transition-colors duration-150',
-              screen.locked
-                ? 'text-text-dim cursor-not-allowed opacity-50'
-                : $store.app.currentScreen === screen.id
-                  ? 'bg-primary/10 text-primary border-r-4 border-primary'
-                  : 'text-text-muted hover:bg-primary/5 hover:text-primary'
-            ]"
-            :aria-label="screen.label"
-            :title="$store.app.sidebarCollapsed ? screen.label : null"
-            :aria-current="$store.app.currentScreen === screen.id ? 'page' : false"
-            :aria-disabled="screen.locked"
-            @click.prevent="!screen.locked && $store.app.currentScreen !== screen.id && (window.__counterflux_router ? window.__counterflux_router.navigate(screen.route) : null)"
-          >
-            <span class="material-symbols-outlined text-2xl" x-text="screen.icon"></span>
-            <span
-              x-show="!$store.app.sidebarCollapsed"
-              x-text="screen.label"
-              class="font-mono uppercase text-[11px] tracking-[0.15em] font-normal whitespace-nowrap"
-            ></span>
-          </a>
-        </template>
-      </nav>
-
-      <!-- Spacer -->
-      <div class="flex-1"></div>
-
-      <!-- Profile widget moved to topbar (2026-05-10) -->
-    </aside>
 
     <!-- Topbar -->
     <header
-      :class="$store.app.sidebarCollapsed ? 'ml-16' : 'ml-60'"
-      class="fixed top-0 right-0 z-40 h-16 glass-overlay border-b border-border-ghost flex items-center px-xl transition-all duration-200"
+      class="fixed top-0 left-0 right-0 z-40 h-16 glass-overlay border-b border-border-ghost flex items-center px-xl"
     >
       <!-- Left group: brand + nav -->
       <div class="flex items-center gap-xl">
@@ -450,8 +385,7 @@
 
     <!-- Main content -->
     <main
-      :class="$store.app.sidebarCollapsed ? 'ml-16' : 'ml-60'"
-      class="mt-16 p-xl min-h-screen transition-all duration-200"
+      class="mt-16 p-xl min-h-screen"
     >
       <div id="main-content"></div>
     </main>

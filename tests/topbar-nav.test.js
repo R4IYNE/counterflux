@@ -113,6 +113,36 @@ describe('topbar profile widget (migrated from sidebar)', () => {
   });
 });
 
+describe('sidebar removal', () => {
+  it('index.html no longer references sidebarCollapsed (sidebar shell + nav are gone)', () => {
+    expect(html).not.toMatch(/sidebarCollapsed/);
+  });
+
+  it('index.html no longer references sidebarComponent (sidebar Alpine factory is gone)', () => {
+    expect(html).not.toMatch(/sidebarComponent/);
+  });
+
+  it('main content area no longer applies a sidebar-width offset class', () => {
+    expect(html).not.toMatch(/ml-16'\s*:\s*'ml-60/);
+  });
+});
+
+describe('app store cleanup (static grep against source)', () => {
+  const appJs = readFileSync('src/stores/app.js', 'utf-8');
+
+  it('no longer declares sidebarCollapsed state', () => {
+    expect(appJs).not.toMatch(/sidebarCollapsed/);
+  });
+
+  it('no longer exposes toggleSidebar action', () => {
+    expect(appJs).not.toMatch(/toggleSidebar/);
+  });
+
+  it('no longer references the sidebar_collapsed localStorage key', () => {
+    expect(appJs).not.toMatch(/sidebar_collapsed/);
+  });
+});
+
 describe('app store — topbarLabel field (static grep against source)', () => {
   // src/stores/app.js imports Alpine from 'alpinejs', so we can't stub it cleanly
   // in a node test. Static grep against the source file is reliable and matches

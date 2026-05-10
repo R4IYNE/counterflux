@@ -1,29 +1,13 @@
 import Alpine from 'alpinejs';
 
-/**
- * POLISH-09 (D-27/D-28/D-29): Sidebar collapsed preference lives in
- * localStorage under key `sidebar_collapsed`. On first load we hydrate
- * from the stored value (falling back to viewport-width default).
- * `toggleSidebar()` flips the flag and writes it back.
- */
-function hydrateSidebarCollapsed() {
-  try {
-    const raw = (typeof localStorage !== 'undefined') ? localStorage.getItem('sidebar_collapsed') : null;
-    if (raw === 'true') return true;
-    if (raw === 'false') return false;
-  } catch { /* ignore */ }
-  return (typeof window !== 'undefined' && window.innerWidth < 1024);
-}
-
 export function initAppStore() {
   Alpine.store('app', {
     currentScreen: 'epic-experiment',
-    sidebarCollapsed: hydrateSidebarCollapsed(),
-    // gameFullscreen field removed in Phase 09 Plan 2 — the real Fullscreen
-    // API now lives in floating-toolbar.js (document.documentElement.requestFullscreen),
-    // and document.fullscreenElement is the source of truth. The hashchange
-    // handler at the bottom of this file calls document.exitFullscreen() on
-    // navigation away from vandalblast.
+    // gameFullscreen field removed in Phase 09 Plan 2 — the real Fullscreen API
+    // now lives in floating-toolbar.js (document.documentElement.requestFullscreen);
+    // document.fullscreenElement is the source of truth. The hashchange handler
+    // at the bottom of this file calls document.exitFullscreen() on navigation
+    // away from vandalblast.
 
     screens: [
       { id: 'epic-experiment',     label: 'Epic Experiment',     topbarLabel: 'Dashboard',  icon: 'dashboard',             route: '/',                    locked: false },
@@ -41,15 +25,6 @@ export function initAppStore() {
       if (screenId !== 'vandalblast' && typeof document !== 'undefined' && document.fullscreenElement) {
         document.exitFullscreen?.();
       }
-    },
-
-    toggleSidebar() {
-      this.sidebarCollapsed = !this.sidebarCollapsed;
-      try {
-        if (typeof localStorage !== 'undefined') {
-          localStorage.setItem('sidebar_collapsed', String(this.sidebarCollapsed));
-        }
-      } catch { /* ignore */ }
     }
   });
 
@@ -108,15 +83,6 @@ export function initAppStore() {
     success(msg) { this.show(msg, 'success'); },
     warning(msg) { this.show(msg, 'warning'); },
     error(msg) { this.show(msg, 'error', 8000); },
-  });
-
-  // D-28: viewport resize no longer overrides a user-set preference.
-  // Only apply the responsive default when the user has not made a choice.
-  window.addEventListener('resize', () => {
-    try {
-      if (typeof localStorage !== 'undefined' && localStorage.getItem('sidebar_collapsed') !== null) return;
-    } catch { /* ignore */ }
-    Alpine.store('app').sidebarCollapsed = window.innerWidth < 1024;
   });
 
   // Exit game fullscreen on any navigation (back button, hash change).
