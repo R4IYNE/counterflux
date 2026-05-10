@@ -58,6 +58,20 @@ export const SYNCABLE_TABLES = ['collection', 'decks', 'deck_cards', 'games', 'w
 // point between the call and the Promise settling see the counter > 0.
 let _suppressHooks = 0;
 
+// Re-entrancy guard for flushQueue() — prevents parallel invocations from
+// racing on the same sync_queue rows. Without this guard, two callers can
+// both query sync_queue (returning overlapping row sets), both upsert the
+// same Postgres row IDs concurrently, and trigger AccessExclusiveLock
+// deadlocks (~25 parallel processes observed on bulk RETRY ALL of 90
+// dead-lettered conflicts; deadlock detected on tuple (10,25) of
+// relation 46471 in supabase-huxley postgres logs, 2026-05-10).
+//
+// A plain boolean is sufficient — flushQueue is the only setter, no
+// nesting concern. Released in flushQueue's finally block, which also
+// re-checks db.sync_queue.count() and schedules a follow-up flush if
+// new entries landed during the in-flight window.
+let _flushing = false;
+
 let _hooksInstalled = false;
 let _flushTimer = null;
 let _initialized = false;
@@ -408,84 +422,131 @@ export async function flushQueue() {
   const currentUserId = _currentUserId();
   if (!currentUserId) return; // anonymous or missing user_id — blocks flush (Test 3 cross-user)
 
-  // PITFALLS §7: only flush entries tagged with current user_id.
-  const queue = await db.sync_queue
-    .where('user_id').equals(currentUserId)
-    .limit(200)
-    .toArray();
+  // w54 re-entrancy guard — see _flushing declaration for full rationale.
+  // Placed AFTER the auth/online/user_id early-returns so harmless no-op
+  // calls don't get gated. Released in the finally block below.
+  if (_flushing) return;
+  _flushing = true;
 
-  if (queue.length === 0) {
-    _syncStoreTransition('synced');
-    return;
-  }
+  try {
+    // PITFALLS §7: only flush entries tagged with current user_id.
+    const queue = await db.sync_queue
+      .where('user_id').equals(currentUserId)
+      .limit(200)
+      .toArray();
 
-  _syncStoreTransition('syncing');
-
-  // Group by table_name
-  const byTable = new Map();
-  for (const entry of queue) {
-    if (!byTable.has(entry.table_name)) byTable.set(entry.table_name, []);
-    byTable.get(entry.table_name).push(entry);
-  }
-
-  const orderedTables = PUSH_ORDER.filter(t => byTable.has(t));
-
-  // Lazy-load supabase client (preserves AUTH-01 lazy-load discipline)
-  const { getSupabase } = await import('./supabase.js');
-  const supabase = getSupabase();
-
-  const succeededIds = [];
-  const deadLetter = []; // [{ entry, error }]
-
-  for (const tableName of orderedTables) {
-    const entries = byTable.get(tableName);
-    const puts = entries.filter(e => e.op === 'put');
-    const dels = entries.filter(e => e.op === 'del');
-
-    // Dedup puts by row_id — keep latest by created_at
-    const latestByRow = new Map();
-    for (const e of puts) {
-      const existing = latestByRow.get(e.row_id);
-      if (!existing || e.created_at >= existing.created_at) {
-        latestByRow.set(e.row_id, e);
-      }
+    if (queue.length === 0) {
+      _syncStoreTransition('synced');
+      return;
     }
 
-    // Batch upsert — stamp user_id from the authed session (Phase 14 Issue A fix).
-    // `currentUserId` is declared at line ~362 (const currentUserId = _currentUserId();).
-    // The dedicated stamp is mandatory: src/stores/collection.js:446 hard-codes
-    // user_id: null on new rows, and src/stores/deck.js + src/stores/game.js
-    // never set user_id at all — so payloads reach this seam with null/undefined.
-    // Supabase's counterflux.* tables declare user_id NOT NULL with no DEFAULT
-    // auth.uid(), so omitting the stamp returns SQLSTATE 23502 which classifyError
-    // treats as permanent → dead-letter → bell spam.
-    //
-    // The spread-then-stamp ordering is deliberate: `...e.payload` spreads first,
-    // then `user_id: currentUserId` OVERWRITES any stale/null value. PITFALLS §7
-    // cross-user safety — the client is the authority on user_id at push time.
-    if (latestByRow.size > 0) {
-      const rows = Array.from(latestByRow.values()).map(e => ({ ...e.payload, user_id: currentUserId }));
-      _isoStampTimestamps(rows);   // vn7 — convert Number timestamps to ISO before Supabase upsert
-      const { error } = await supabase.schema('counterflux').from(tableName).upsert(rows);
+    _syncStoreTransition('syncing');
 
-      if (error) {
-        const category = classifyError(error);
-        if (category === 'permanent') {
-          for (const e of latestByRow.values()) {
-            deadLetter.push({ entry: e, error });
-          }
-          // Also consume stale duplicate puts so they don't pile up
-          for (const e of puts) {
-            if (!latestByRow.has(e.row_id) || latestByRow.get(e.row_id).id !== e.id) {
-              succeededIds.push(e.id); // harmless — drop from queue
+    // Group by table_name
+    const byTable = new Map();
+    for (const entry of queue) {
+      if (!byTable.has(entry.table_name)) byTable.set(entry.table_name, []);
+      byTable.get(entry.table_name).push(entry);
+    }
+
+    const orderedTables = PUSH_ORDER.filter(t => byTable.has(t));
+
+    // Lazy-load supabase client (preserves AUTH-01 lazy-load discipline)
+    const { getSupabase } = await import('./supabase.js');
+    const supabase = getSupabase();
+
+    const succeededIds = [];
+    const deadLetter = []; // [{ entry, error }]
+
+    for (const tableName of orderedTables) {
+      const entries = byTable.get(tableName);
+      const puts = entries.filter(e => e.op === 'put');
+      const dels = entries.filter(e => e.op === 'del');
+
+      // Dedup puts by row_id — keep latest by created_at
+      const latestByRow = new Map();
+      for (const e of puts) {
+        const existing = latestByRow.get(e.row_id);
+        if (!existing || e.created_at >= existing.created_at) {
+          latestByRow.set(e.row_id, e);
+        }
+      }
+
+      // Batch upsert — stamp user_id from the authed session (Phase 14 Issue A fix).
+      // `currentUserId` is declared at line ~362 (const currentUserId = _currentUserId();).
+      // The dedicated stamp is mandatory: src/stores/collection.js:446 hard-codes
+      // user_id: null on new rows, and src/stores/deck.js + src/stores/game.js
+      // never set user_id at all — so payloads reach this seam with null/undefined.
+      // Supabase's counterflux.* tables declare user_id NOT NULL with no DEFAULT
+      // auth.uid(), so omitting the stamp returns SQLSTATE 23502 which classifyError
+      // treats as permanent → dead-letter → bell spam.
+      //
+      // The spread-then-stamp ordering is deliberate: `...e.payload` spreads first,
+      // then `user_id: currentUserId` OVERWRITES any stale/null value. PITFALLS §7
+      // cross-user safety — the client is the authority on user_id at push time.
+      if (latestByRow.size > 0) {
+        const rows = Array.from(latestByRow.values()).map(e => ({ ...e.payload, user_id: currentUserId }));
+        _isoStampTimestamps(rows);   // vn7 — convert Number timestamps to ISO before Supabase upsert
+        const { error } = await supabase.schema('counterflux').from(tableName).upsert(rows);
+
+        if (error) {
+          const category = classifyError(error);
+          if (category === 'permanent') {
+            for (const e of latestByRow.values()) {
+              deadLetter.push({ entry: e, error });
+            }
+            // Also consume stale duplicate puts so they don't pile up
+            for (const e of puts) {
+              if (!latestByRow.has(e.row_id) || latestByRow.get(e.row_id).id !== e.id) {
+                succeededIds.push(e.id); // harmless — drop from queue
+              }
+            }
+          } else {
+            // Transient — increment attempts + leave in queue, OR dead-letter if budget exhausted
+            for (const e of latestByRow.values()) {
+              const nextAttempts = (e.attempts || 0) + 1;
+              if (nextAttempts >= MAX_ATTEMPTS) {
+                // Budget exhausted — dead-letter the transient
+                deadLetter.push({ entry: e, error });
+              } else {
+                await db.sync_queue.update(e.id, {
+                  attempts: nextAttempts,
+                  last_error: error.message || String(error)
+                });
+              }
             }
           }
         } else {
-          // Transient — increment attempts + leave in queue, OR dead-letter if budget exhausted
+          // Success: stamp synced_at on source rows (under suppression so we don't re-enqueue)
+          const now = Date.now();
           for (const e of latestByRow.values()) {
+            try {
+              withHooksSuppressed(() =>
+                db.table(e.table_name).update(e.row_id, { synced_at: now })
+              );
+            } catch (updateErr) {
+              console.warn('[sync] synced_at stamp failed', e.row_id, updateErr);
+            }
+            succeededIds.push(e.id);
+          }
+          // Stale duplicates (earlier created_at on same row_id) also drop from queue
+          for (const e of puts) {
+            const latest = latestByRow.get(e.row_id);
+            if (latest && e.id !== latest.id) succeededIds.push(e.id);
+          }
+        }
+      }
+
+      // Deletes — one by one (row-targeted; no batch delete API)
+      for (const e of dels) {
+        const { error } = await supabase.schema('counterflux').from(tableName).delete().eq('id', e.row_id);
+        if (error) {
+          const category = classifyError(error);
+          if (category === 'permanent') {
+            deadLetter.push({ entry: e, error });
+          } else {
             const nextAttempts = (e.attempts || 0) + 1;
             if (nextAttempts >= MAX_ATTEMPTS) {
-              // Budget exhausted — dead-letter the transient
               deadLetter.push({ entry: e, error });
             } else {
               await db.sync_queue.update(e.id, {
@@ -494,85 +555,57 @@ export async function flushQueue() {
               });
             }
           }
-        }
-      } else {
-        // Success: stamp synced_at on source rows (under suppression so we don't re-enqueue)
-        const now = Date.now();
-        for (const e of latestByRow.values()) {
-          try {
-            withHooksSuppressed(() =>
-              db.table(e.table_name).update(e.row_id, { synced_at: now })
-            );
-          } catch (updateErr) {
-            console.warn('[sync] synced_at stamp failed', e.row_id, updateErr);
-          }
+        } else {
           succeededIds.push(e.id);
         }
-        // Stale duplicates (earlier created_at on same row_id) also drop from queue
-        for (const e of puts) {
-          const latest = latestByRow.get(e.row_id);
-          if (latest && e.id !== latest.id) succeededIds.push(e.id);
-        }
       }
     }
 
-    // Deletes — one by one (row-targeted; no batch delete API)
-    for (const e of dels) {
-      const { error } = await supabase.schema('counterflux').from(tableName).delete().eq('id', e.row_id);
-      if (error) {
-        const category = classifyError(error);
-        if (category === 'permanent') {
-          deadLetter.push({ entry: e, error });
-        } else {
-          const nextAttempts = (e.attempts || 0) + 1;
-          if (nextAttempts >= MAX_ATTEMPTS) {
-            deadLetter.push({ entry: e, error });
-          } else {
-            await db.sync_queue.update(e.id, {
-              attempts: nextAttempts,
-              last_error: error.message || String(error)
-            });
-          }
-        }
-      } else {
-        succeededIds.push(e.id);
+    // Drop successful queue entries
+    if (succeededIds.length > 0) {
+      await db.sync_queue.bulkDelete(succeededIds);
+    }
+
+    // Dead-letter permanent failures + budget-exhausted transients
+    if (deadLetter.length > 0) {
+      for (const { entry, error } of deadLetter) {
+        await db.sync_conflicts.add({
+          table_name: entry.table_name,
+          row_id: entry.row_id,
+          op: entry.op,
+          payload: entry.payload,
+          error_code: String(error?.code ?? 'unknown'),
+          error_message: error?.message || String(error),
+          detected_at: Date.now()
+        });
+        await db.sync_queue.delete(entry.id);
       }
+      _syncStoreTransition('error');
+      _syncStoreSetError(deadLetter[0].error?.message || 'Sync failed');
+      return;
     }
-  }
 
-  // Drop successful queue entries
-  if (succeededIds.length > 0) {
-    await db.sync_queue.bulkDelete(succeededIds);
-  }
-
-  // Dead-letter permanent failures + budget-exhausted transients
-  if (deadLetter.length > 0) {
-    for (const { entry, error } of deadLetter) {
-      await db.sync_conflicts.add({
-        table_name: entry.table_name,
-        row_id: entry.row_id,
-        op: entry.op,
-        payload: entry.payload,
-        error_code: String(error?.code ?? 'unknown'),
-        error_message: error?.message || String(error),
-        detected_at: Date.now()
-      });
-      await db.sync_queue.delete(entry.id);
+    // Remaining? (transient retry candidates not yet dead-lettered)
+    const remaining = await db.sync_queue.where('user_id').equals(currentUserId).count();
+    if (remaining > 0) {
+      _scheduleRetry();
+    } else {
+      _syncStoreTransition('synced');
+      try {
+        const store = window.Alpine.store('sync');
+        if (store) store.last_synced_at = Date.now();
+      } catch { /* decorative */ }
     }
-    _syncStoreTransition('error');
-    _syncStoreSetError(deadLetter[0].error?.message || 'Sync failed');
-    return;
-  }
-
-  // Remaining? (transient retry candidates not yet dead-lettered)
-  const remaining = await db.sync_queue.where('user_id').equals(currentUserId).count();
-  if (remaining > 0) {
-    _scheduleRetry();
-  } else {
-    _syncStoreTransition('synced');
+  } finally {
+    // w54 — release the re-entrancy guard, then drain any new entries that
+    // landed mid-flush. Unfiltered count() (no .where('user_id')) is fine —
+    // scheduleFlush(0) → flushQueue() re-applies the user_id filter at the
+    // top. The try/catch keeps a transient Dexie hiccup from masking the
+    // original error path.
+    _flushing = false;
     try {
-      const store = window.Alpine.store('sync');
-      if (store) store.last_synced_at = Date.now();
+      const remainingAny = await db.sync_queue.count();
+      if (remainingAny > 0) scheduleFlush(0);
     } catch { /* decorative */ }
   }
 }
@@ -699,6 +732,7 @@ export async function teardownSyncEngine() {
 
 export function __resetSyncEngineForTests() {
   _suppressHooks = 0;
+  _flushing = false;  // w54 re-entrancy guard reset for test isolation
   _hooksInstalled = false;
   _initialized = false;
   if (_flushTimer !== null) {
