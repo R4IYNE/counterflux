@@ -53,6 +53,44 @@ describe('topbar nav links', () => {
   });
 });
 
+describe('topbar nav — active state', () => {
+  let topbarComponent;
+  beforeAll(async () => {
+    const mod = await import('../src/components/topbar.js');
+    topbarComponent = mod.topbarComponent;
+  });
+
+  it('returns active classes when the screen matches currentScreen', () => {
+    const data = topbarComponent();
+    data.$store = { app: { currentScreen: 'preordain' } };
+    const screen = { id: 'preordain', locked: false };
+    const classes = data.navItemClasses(screen);
+    expect(classes).toMatch(/text-primary/);
+    expect(classes).toMatch(/border-primary/);
+  });
+
+  it('returns muted classes when the screen does NOT match currentScreen', () => {
+    const data = topbarComponent();
+    data.$store = { app: { currentScreen: 'epic-experiment' } };
+    const screen = { id: 'preordain', locked: false };
+    const classes = data.navItemClasses(screen);
+    expect(classes).toMatch(/text-text-muted/);
+    // The active-state-unique class (border-primary, not just transparent)
+    // must NOT be present in the muted state.
+    expect(classes).toMatch(/border-transparent/);
+    expect(classes).not.toMatch(/border-primary\b/);
+  });
+
+  it('returns locked classes when the screen is locked', () => {
+    const data = topbarComponent();
+    data.$store = { app: { currentScreen: 'epic-experiment' } };
+    const screen = { id: 'mila', locked: true };
+    const classes = data.navItemClasses(screen);
+    expect(classes).toMatch(/cursor-not-allowed/);
+    expect(classes).toMatch(/opacity-50/);
+  });
+});
+
 describe('app store — topbarLabel field (static grep against source)', () => {
   // src/stores/app.js imports Alpine from 'alpinejs', so we can't stub it cleanly
   // in a node test. Static grep against the source file is reliable and matches
