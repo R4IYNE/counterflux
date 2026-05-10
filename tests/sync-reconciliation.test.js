@@ -450,3 +450,69 @@ describe('Phase 14.07c: per-user sync_reconciled_at one-shot reconciliation', ()
     expect(currentFlag).toBeTruthy();
   });
 });
+
+// ---------------------------------------------------------------------------
+// Phase 14.07d — bulk-pull resume marks reconciled
+//
+// Bug: when reconcile() resumes an interrupted bulkPull (Pitfall 11-E branch),
+// the success path never stamps sync_reconciled_at:<userId>. On the NEXT boot
+// (after the resumed pull completes), the per-user one-shot guard at
+// reconcile() L121 returns false, classifyState runs, sees populated-populated
+// (the resumed pull made local non-empty), and the lockdown modal re-fires —
+// confusing users on large household collections who just sat through a
+// 5-minute resumed bulkPull.
+//
+// Fix: add `await _markReconciled(userId);` in the resume branch's try block,
+// matching the four other reconcile() success paths.
+// ---------------------------------------------------------------------------
+describe('Phase 14.07d: bulk-pull resume marks reconciled', () => {
+  test('reconcile() resuming an interrupted bulkPull marks the user as reconciled', async () => {
+    // Pre-seed the bulk-pull-in-progress flag — simulates an interrupted pull
+    // from the previous session that left the meta flag dangling.
+    await db.meta.put({ key: 'sync_pull_in_progress', value: true });
+
+    // bulkPull counts + data (empty is fine — the resumed pull just needs to
+    // complete end-to-end without throwing).
+    ['decks', 'collection', 'deck_cards', 'games', 'watchlist', 'profile'].forEach((t) => {
+      seedCloudCount(t, 0);
+      seedCloudData(t, []);
+    });
+
+    await reconcile();
+
+    // Sanity: the resume branch took it (modal NOT shown — this is the
+    // Pitfall 11-E early-return path), splash opened for the bulkPull.
+    expect(openReconciliationModal).not.toHaveBeenCalled();
+    expect(splashState.opened).toBeGreaterThan(0);
+
+    // Primary assertion — the bug. The resume branch must stamp
+    // sync_reconciled_at:<userId> just like the other four success paths so
+    // the next boot's per-user one-shot guard short-circuits classifyState.
+    const meta = await db.meta.get('sync_reconciled_at:user-test-uuid');
+    expect(meta).toBeTruthy();
+    expect(typeof meta.value).toBe('number');
+  });
+
+  test('second reconcile() after resume does NOT re-fire the modal even with populated-populated state', async () => {
+    // First reconcile — interrupted-pull resume path.
+    await db.meta.put({ key: 'sync_pull_in_progress', value: true });
+    ['decks', 'collection', 'deck_cards', 'games', 'watchlist', 'profile'].forEach((t) => {
+      seedCloudCount(t, 0);
+      seedCloudData(t, []);
+    });
+    await reconcile();
+
+    // Now simulate a row landing locally (e.g. via sync) so the world looks
+    // populated-populated for the SECOND reconcile call. Without the fix,
+    // classifyState runs and the modal fires.
+    await db.collection.add({ id: 'cx', scryfall_id: 'post-resume', user_id: 'u', updated_at: Date.now() });
+    await db.sync_queue.clear();
+    ['collection', 'decks', 'deck_cards', 'games', 'watchlist'].forEach((t) => seedCloudCount(t, 3));
+
+    openReconciliationModal.mockClear();
+    await reconcile();
+
+    // The flag set by the resume branch must short-circuit the second call.
+    expect(openReconciliationModal).not.toHaveBeenCalled();
+  });
+});
