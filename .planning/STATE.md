@@ -4,8 +4,8 @@ milestone: v1.2
 milestone_name: Deploy the Gatewatch — SHIPPED + ARCHIVED 2026-04-28
 status: archived
 stopped_at: v1.2 archived (commit b6025d5, tag v1.2 pushed). 6 post-archive hot-fixes also shipped — EDHREC combos integration (Spellbook fallback), gap-badge UX, Phase 13 path-resolution test, basic-land Ramp tag fix, basic-land singleton exemption, deck-builder UX batch (sticky LHS, +/- on basic lands, smaller commander tile, group counts use quantity, no DnD). All pushed to origin master.
-last_updated: "2026-05-01T00:00:00.000Z"
-last_activity: 2026-05-01
+last_updated: "2026-05-10T13:30:00.000Z"
+last_activity: 2026-05-10
 progress:
   total_phases: 2
   completed_phases: 2
@@ -104,8 +104,14 @@ None — v1.2 milestone shipped. Run `/gsd:complete-milestone` for archival, or 
 - **MTGJSON-driven features (backlog 999.1, 999.2)** — both depend on production-traffic data to validate; v1.3 candidates if real users surface demand
 - **Production EDHREC + Spellbook proxies not yet promoted** — Phase 15 commits are on master; the next Vercel Production deploy makes them live. Verify post-deploy via the existing intelligence-store flows (no manual UAT needed; symptom of failure would be EDHREC console errors which would surface immediately)
 
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 260510-k4t | Fix bulk-pull resume branch missing _markReconciled call | 2026-05-10 | 33d920a | [260510-k4t-fix-bulk-pull-resume-branch-missing-mark](./quick/260510-k4t-fix-bulk-pull-resume-branch-missing-mark/) |
+
 ## Session Continuity
 
-Last session: 2026-05-01 — multi-day post-archive hot-fix sprint
-Stopped at: v1.2 archived (b6025d5, v1.2 tag pushed). Six post-archive feature/fix commits since the archive — EDHREC combos integration as Spellbook fallback (26d2ded), gap-badge UX iteration (05d9fab → a319953 → 956090b), basic-land Ramp tag fix + commander singleton exemption (a877852), deck-builder UX batch — sticky LHS + basic-land +/- + smaller commander + group counts by quantity + no DnD (5200baf). All pushed to origin master. Production EDHREC + Spellbook integrations functional via EDHREC fallback path; Spellbook proxy debug deferred to v1.3 via SEED-004.
-Resume: `/gsd:new-milestone` to scope v1.3 — four seeds (SEED-001/002/003/004) and two backlog items (999.1/999.2) surface automatically during scoping. Post-archive hot-fixes have NOT been formally rolled into a v1.2.x or v1.3 scope yet — that decision belongs to the next `/gsd:new-milestone` discussion.
+Last session: 2026-05-10 — Completed quick task 260510-k4t: Fix bulk-pull resume branch missing _markReconciled call
+Stopped at: v1.2 archived (b6025d5, v1.2 tag pushed). Six post-archive feature/fix commits since the archive — EDHREC combos integration as Spellbook fallback (26d2ded), gap-badge UX iteration (05d9fab → a319953 → 956090b), basic-land Ramp tag fix + commander singleton exemption (a877852), deck-builder UX batch — sticky LHS + basic-land +/- + smaller commander + group counts by quantity + no DnD (5200baf). Plus quick-task fix (260510-k4t, commit 33d920a): bulk-pull resume branch in `src/services/sync-reconciliation.js:131` now calls `_markReconciled(userId)` on success, plugging the modal-loop trap where users with a large household collection got the populated-populated reconciliation modal every cold-load after an interrupted MERGE EVERYTHING. Two-test regression coverage in `tests/sync-reconciliation.test.js` (Phase 14.07d describe block). Production EDHREC + Spellbook integrations functional via EDHREC fallback path; Spellbook proxy debug deferred to v1.3 via SEED-004.
+Resume: `/gsd:new-milestone` to scope v1.3 — four seeds (SEED-001/002/003/004) and two backlog items (999.1/999.2) surface automatically during scoping. Strong v1.3 candidate now: SEED-005 — UX-level rework of the reconciliation modal (auto-resume + mark, escape hatch on N failed merges) so an in-flight bulkPull failure can't trap a user even after the 260510-k4t Band-Aid. Post-archive hot-fixes have NOT been formally rolled into a v1.2.x or v1.3 scope yet — that decision belongs to the next `/gsd:new-milestone` discussion.
