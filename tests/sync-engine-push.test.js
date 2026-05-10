@@ -355,4 +355,69 @@ describe('sync-engine push: flushQueue pipeline', () => {
     const c = (await db.sync_conflicts.toArray())[0];
     expect(c.error_code).toBe('503');
   });
+
+  test('flushQueue converts Number-typed timestamptz fields to ISO strings before upsert (vn7 hot-fix)', async () => {
+    // Regression — Postgres `timestamp with time zone` columns reject raw integers
+    // (epoch-ms like 1776555292268 is interpreted as ~year 58 million, "out of range").
+    // The Dexie creating/updating hooks intentionally stamp Number values into local
+    // Dexie (consumed by the LWW resolver via _toTs, which is tolerant of both shapes);
+    // the conversion to ISO must happen at the Supabase upsert seam. This test seeds
+    // sync_queue with Number-typed timestamps on two synced tables (deck_cards + games,
+    // covering 6 of the 8 whitelisted columns: updated_at, synced_at, added_at,
+    // started_at, ended_at) and asserts the captured upsert rows carry ISO strings.
+    const uid = 'user-test-uuid';
+    const ISO_REGEX = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/;
+
+    await db.sync_queue.bulkAdd([
+      {
+        table_name: 'deck_cards', op: 'put', row_id: 'dc1', user_id: uid,
+        payload: {
+          id: 'dc1', deck_id: 'd-uuid-1', scryfall_id: 'sc1', quantity: 4,
+          updated_at: 1776555292268,
+          synced_at: 1776555292000,
+          added_at: 1776555000000
+        },
+        attempts: 0, created_at: Date.now()
+      },
+      {
+        table_name: 'games', op: 'put', row_id: 'g-uuid-1', user_id: uid,
+        payload: {
+          id: 'g-uuid-1', deck_id: 'd-uuid-1',
+          updated_at: 1776555292268,
+          started_at: 1776555000000,
+          ended_at: 1776555292268
+        },
+        attempts: 0, created_at: Date.now()
+      }
+    ]);
+
+    await flushQueue();
+
+    const dcCalls = upsertCalls.filter(c => c.table === 'deck_cards');
+    const gamesCalls = upsertCalls.filter(c => c.table === 'games');
+    expect(dcCalls.length).toBeGreaterThanOrEqual(1);
+    expect(gamesCalls.length).toBeGreaterThanOrEqual(1);
+
+    const dcRow = dcCalls[0].rows[0];
+    expect(typeof dcRow.updated_at).toBe('string');
+    expect(typeof dcRow.synced_at).toBe('string');
+    expect(typeof dcRow.added_at).toBe('string');
+    expect(dcRow.updated_at).toMatch(ISO_REGEX);
+    expect(dcRow.synced_at).toMatch(ISO_REGEX);
+    expect(dcRow.added_at).toMatch(ISO_REGEX);
+    // Round-trip sanity — ISO string parses back to the original epoch-ms
+    expect(new Date(dcRow.updated_at).getTime()).toBe(1776555292268);
+    // Non-timestamptz fields untouched
+    expect(dcRow.quantity).toBe(4);
+    expect(dcRow.scryfall_id).toBe('sc1');
+
+    const gameRow = gamesCalls[0].rows[0];
+    expect(typeof gameRow.updated_at).toBe('string');
+    expect(typeof gameRow.started_at).toBe('string');
+    expect(typeof gameRow.ended_at).toBe('string');
+    expect(gameRow.updated_at).toMatch(ISO_REGEX);
+    expect(gameRow.started_at).toMatch(ISO_REGEX);
+    expect(gameRow.ended_at).toMatch(ISO_REGEX);
+    expect(gameRow.deck_id).toBe('d-uuid-1');
+  });
 });
