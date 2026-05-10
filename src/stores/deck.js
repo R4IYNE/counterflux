@@ -48,7 +48,17 @@ export function initDeckStore() {
     },
 
     async loadDecks() {
-      this.decks = await db.decks.orderBy('updated_at').reverse().toArray();
+      const rows = await db.decks.orderBy('updated_at').reverse().toArray();
+      // Alpine reactivity gotcha — pre-init the reactive keys deck-landing
+      // mutates (`_cardCount`, `_commanderCard`) BEFORE assigning to this.decks.
+      // Properties absent at Proxy-wrap time get no subscribers; later writes
+      // are silently dropped from the dep graph. See enrichDecks in
+      // src/components/deck-landing.js. Do NOT remove this loop.
+      for (const d of rows) {
+        if (d._cardCount === undefined) d._cardCount = 0;
+        if (d._commanderCard === undefined) d._commanderCard = null;
+      }
+      this.decks = rows;
     },
 
     async createDeck({ name, format = 'commander', deck_size = 100, commander_id = null, partner_id = null, companion_id = null, color_identity = [] }) {

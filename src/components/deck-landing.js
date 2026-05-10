@@ -107,27 +107,30 @@ export function renderDeckLanding(container) {
 
       async enrichDecks() {
         const store = Alpine.store('deck');
+        // Hoisted — one dynamic import per call, not 2 × N where N = deck count.
+        const { db } = await import('../db/schema.js');
         for (const deck of store.decks) {
-          // Load commander card data for art thumbnail
-          if (deck.commander_id && !deck._commanderCard) {
+          // Commander art — re-fetch on every watcher fire (the
+          // `!deck._commanderCard` guard used to be here; it short-circuited
+          // re-enrichment when a deck had its commander_id set after initial load).
+          if (deck.commander_id) {
             try {
-              const { db } = await import('../db/schema.js');
               const card = await db.cards.get(deck.commander_id);
               deck._commanderCard = card || null;
             } catch {
               deck._commanderCard = null;
             }
           }
-
-          // Load card count for deck
-          if (deck._cardCount === undefined) {
-            try {
-              const { db } = await import('../db/schema.js');
-              const cards = await db.deck_cards.where('deck_id').equals(deck.id).toArray();
-              deck._cardCount = cards.reduce((sum, c) => sum + c.quantity, 0);
-            } catch {
-              deck._cardCount = 0;
-            }
+          // Card count — recompute on every watcher fire. The `=== undefined`
+          // guard used to be here, but it skipped re-enrichment when loadDecks'
+          // pre-init left _cardCount at the seed value (0) before Dexie data
+          // was ready. Pair this with the pre-init in src/stores/deck.js
+          // loadDecks (Alpine reactivity gotcha — see comment there).
+          try {
+            const cards = await db.deck_cards.where('deck_id').equals(deck.id).toArray();
+            deck._cardCount = cards.reduce((sum, c) => sum + c.quantity, 0);
+          } catch {
+            deck._cardCount = 0;
           }
         }
       },
