@@ -16,3 +16,6 @@ lighthouse-report/
 
 # /loop ScheduleWakeup runtime lock file (per-session, never commit)
 .claude/scheduled_tasks.lock
+
+# superpowers brainstorming visual companion (mockups + state, per-session)
+.superpowers/
