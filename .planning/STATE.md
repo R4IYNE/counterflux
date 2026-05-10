@@ -110,6 +110,7 @@ None — v1.2 milestone shipped. Run `/gsd:complete-milestone` for archival, or 
 |---|-------------|------|--------|-----------|
 | 260510-k4t | Fix bulk-pull resume branch missing _markReconciled call | 2026-05-10 | 33d920a | [260510-k4t-fix-bulk-pull-resume-branch-missing-mark](./quick/260510-k4t-fix-bulk-pull-resume-branch-missing-mark/) |
 | 260510-vn7 | Fix sync push HTTP 400 on timestamptz fields | 2026-05-10 | 4cbda85 | [260510-vn7-fix-sync-push-400-on-timestamptz-fields-](./quick/260510-vn7-fix-sync-push-400-on-timestamptz-fields-/) |
+| 260510-w54 | Fix flushQueue re-entrancy bug causing Postgres deadlocks on bulk RETRY ALL | 2026-05-10 | e3e9ecd | [260510-w54-fix-flushqueue-re-entrancy-bug-causing-p](./quick/260510-w54-fix-flushqueue-re-entrancy-bug-causing-p/) |
 
 ## Session Continuity
 
