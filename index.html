@@ -256,12 +256,16 @@
     <!-- Topbar -->
     <header
       :class="$store.app.sidebarCollapsed ? 'ml-16' : 'ml-60'"
-      class="fixed top-0 right-0 z-40 h-16 glass-overlay border-b border-border-ghost flex items-center justify-between px-xl transition-all duration-200"
+      class="fixed top-0 right-0 z-40 h-16 glass-overlay border-b border-border-ghost flex items-center px-xl transition-all duration-200"
     >
-      <!-- Title -->
-      <h1 class="font-header text-xl font-bold text-text-primary whitespace-nowrap" style="font-size: 20px; line-height: 1.2; letter-spacing: 0.01em;">
-        COUNTERFLUX
-      </h1>
+      <!-- Left group: brand + nav (Task 2 inserts nav alongside brand) -->
+      <div class="flex items-center gap-xl">
+        <!-- Brand block — transplanted from sidebar (cyclone icon + COUNTERFLUX wordmark) -->
+        <a href="#/" class="flex items-center gap-sm whitespace-nowrap" aria-label="Counterflux home">
+          <span class="material-symbols-outlined text-primary text-3xl">cyclone</span>
+          <span class="font-mono text-text-primary uppercase text-[11px] tracking-[0.3em] font-bold">COUNTERFLUX</span>
+        </a>
+      </div>
 
       <!-- Topbar search -->
       <div class="flex-1 flex justify-center px-xl">
