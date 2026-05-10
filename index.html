@@ -207,50 +207,7 @@
       <!-- Spacer -->
       <div class="flex-1"></div>
 
-      <!-- Profile (bottom) — Phase 10 D-09 anonymous/authed branch -->
-      <div class="pb-4 px-2" x-data="sidebarComponent()">
-
-        <!-- ANONYMOUS: SIGN IN CTA (primary-blue button) -->
-        <template x-if="$store.auth?.status !== 'authed'">
-          <button
-            id="cf-sidebar-signin-cta"
-            @click="profileWidgetClick()"
-            :title="$store.app.sidebarCollapsed ? 'Sign in' : null"
-            aria-label="Sign in"
-            class="w-full flex items-center justify-center gap-sm cursor-pointer transition-shadow"
-            style="background:#0D52BD;color:#EAECEE;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;height:36px;border:none;padding:0 12px;"
-            onmouseover="this.style.boxShadow='0 0 12px rgba(13,82,189,0.3)'"
-            onmouseout="this.style.boxShadow=''"
-          >
-            <span class="material-symbols-outlined" style="font-size:18px;" x-show="$store.app.sidebarCollapsed">login</span>
-            <span x-show="!$store.app.sidebarCollapsed">SIGN IN</span>
-          </button>
-        </template>
-
-        <!-- AUTHED: avatar + name + email row opening settings-modal -->
-        <template x-if="$store.auth?.status === 'authed'">
-          <div
-            @click="profileWidgetClick()"
-            :aria-label="'Open settings — signed in as ' + authedDisplayName()"
-            class="flex items-center gap-sm px-2 py-2 cursor-pointer transition-colors hover:bg-surface-hover"
-          >
-            <!-- Avatar: uploaded → Google → initials -->
-            <template x-if="authedAvatarUrl()">
-              <img :src="authedAvatarUrl()" class="w-8 h-8 object-cover shrink-0" style="border:1px solid #2A2D3A;">
-            </template>
-            <template x-if="!authedAvatarUrl()">
-              <div class="w-8 h-8 shrink-0 flex items-center justify-center" style="background:#1C1F28;border:1px solid #2A2D3A;">
-                <span class="font-header text-text-muted" style="font-size:13px;font-weight:700;" x-text="$store.profile.initials"></span>
-              </div>
-            </template>
-            <div x-show="!$store.app.sidebarCollapsed" class="flex flex-col min-w-0">
-              <span class="font-body text-text-primary truncate" style="font-size:13px;font-weight:700;line-height:1.2;" x-text="authedDisplayName()"></span>
-              <span x-show="$store.auth.user?.email" class="font-mono text-text-dim truncate" style="font-size:10px;letter-spacing:0.05em;line-height:1.3;" x-text="$store.auth.user?.email"></span>
-            </div>
-          </div>
-        </template>
-
-      </div>
+      <!-- Profile widget moved to topbar (2026-05-10) -->
     </aside>
 
     <!-- Topbar -->
@@ -448,6 +405,46 @@
              after Alpine starts so the popover template is parsed once and
              Alpine binds every directive inside it in one pass. -->
         <div id="cf-notification-bell-mount"></div>
+
+        <!-- Profile widget — migrated from sidebar (Phase 10 D-09 anonymous/authed branch) -->
+        <div x-data="topbarComponent()" class="ml-sm">
+
+          <!-- ANONYMOUS: SIGN IN CTA -->
+          <template x-if="$store.auth?.status !== 'authed'">
+            <button
+              id="cf-topbar-signin-cta"
+              @click="profileWidgetClick()"
+              aria-label="Sign in"
+              class="flex items-center justify-center gap-sm cursor-pointer transition-shadow"
+              style="background:#0D52BD;color:#EAECEE;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;height:32px;border:none;padding:0 12px;"
+              onmouseover="this.style.boxShadow='0 0 12px rgba(13,82,189,0.3)'"
+              onmouseout="this.style.boxShadow=''"
+            >
+              <span>SIGN IN</span>
+            </button>
+          </template>
+
+          <!-- AUTHED: avatar + name row opening settings-modal -->
+          <template x-if="$store.auth?.status === 'authed'">
+            <div
+              @click="profileWidgetClick()"
+              :aria-label="'Open settings — signed in as ' + authedDisplayName()"
+              class="flex items-center gap-sm px-2 py-1 cursor-pointer transition-colors hover:bg-surface-hover"
+            >
+              <!-- Avatar: uploaded → Google → initials -->
+              <template x-if="authedAvatarUrl()">
+                <img :src="authedAvatarUrl()" class="w-8 h-8 object-cover shrink-0" style="border:1px solid #2A2D3A;">
+              </template>
+              <template x-if="!authedAvatarUrl()">
+                <div class="w-8 h-8 shrink-0 flex items-center justify-center" style="background:#1C1F28;border:1px solid #2A2D3A;">
+                  <span class="font-header text-text-muted" style="font-size:13px;font-weight:700;" x-text="$store.profile.initials"></span>
+                </div>
+              </template>
+              <span class="font-body text-text-primary truncate hidden lg:inline" style="font-size:13px;font-weight:700;line-height:1.2;max-width:140px;" x-text="authedDisplayName()"></span>
+            </div>
+          </template>
+
+        </div>
       </div>
     </header>
 

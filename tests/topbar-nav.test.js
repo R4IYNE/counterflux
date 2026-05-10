@@ -91,6 +91,28 @@ describe('topbar nav — active state', () => {
   });
 });
 
+describe('topbar profile widget (migrated from sidebar)', () => {
+  const topbar = topbarMarkup();
+
+  it('renders the anonymous SIGN IN button inside the topbar', () => {
+    expect(topbar).toMatch(/cf-topbar-signin-cta/);
+    expect(topbar).toMatch(/SIGN IN/);
+  });
+
+  it('renders the authed avatar/name row inside the topbar', () => {
+    expect(topbar).toMatch(/authedDisplayName\(\)/);
+    expect(topbar).toMatch(/authedAvatarUrl\(\)/);
+  });
+
+  it('topbarComponent exposes the three migrated methods', async () => {
+    const { topbarComponent } = await import('../src/components/topbar.js');
+    const data = topbarComponent();
+    expect(typeof data.profileWidgetClick).toBe('function');
+    expect(typeof data.authedDisplayName).toBe('function');
+    expect(typeof data.authedAvatarUrl).toBe('function');
+  });
+});
+
 describe('app store — topbarLabel field (static grep against source)', () => {
   // src/stores/app.js imports Alpine from 'alpinejs', so we can't stub it cleanly
   // in a node test. Static grep against the source file is reliable and matches

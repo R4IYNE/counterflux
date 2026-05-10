@@ -50,6 +50,45 @@ export function topbarComponent() {
         return 'text-primary border-b-2 border-primary';
       }
       return 'text-text-muted hover:text-primary border-b-2 border-transparent';
+    },
+
+    /**
+     * Phase 10 D-09 — profile-widget click handler branches on auth status.
+     * Migrated from sidebar.js as part of the topbar nav refactor (2026-05-10).
+     * Anonymous → open auth-modal. Authed → open settings-modal.
+     */
+    profileWidgetClick() {
+      const auth = this.$store.auth;
+      if (auth && auth.status === 'authed') {
+        if (typeof window.__openSettingsModal === 'function') window.__openSettingsModal();
+      } else {
+        if (typeof window.__openAuthModal === 'function') window.__openAuthModal();
+      }
+    },
+
+    /**
+     * Phase 10 — display name for the authed topbar widget.
+     * Priority: profile.name → user_metadata.full_name → user_metadata.given_name → email localpart.
+     */
+    authedDisplayName() {
+      const profile = this.$store.profile;
+      const auth = this.$store.auth;
+      if (profile?.name) return profile.name;
+      const u = auth?.user;
+      if (!u) return '';
+      return u.user_metadata?.full_name
+        || u.user_metadata?.given_name
+        || (u.email?.split('@')[0])
+        || '';
+    },
+
+    /**
+     * Phase 10 D-15 — avatar URL for the authed topbar widget.
+     * Returns null when no avatar is available (template falls back to initials).
+     */
+    authedAvatarUrl() {
+      const profile = this.$store.profile;
+      return profile?.effectiveAvatarUrl || null;
     }
   };
 }
