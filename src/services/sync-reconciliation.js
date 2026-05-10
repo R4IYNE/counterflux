@@ -129,6 +129,7 @@ export async function reconcile() {
       await bulkPull();
       await clearBulkPullFlag();
       closeSyncPullSplash();
+      await _markReconciled(userId);
     } catch (err) {
       // Partial data preserved in Dexie per D-13. Render error with retry.
       renderSyncPullError({
