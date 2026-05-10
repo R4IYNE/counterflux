@@ -420,4 +420,106 @@ describe('sync-engine push: flushQueue pipeline', () => {
     expect(gameRow.ended_at).toMatch(ISO_REGEX);
     expect(gameRow.deck_id).toBe('d-uuid-1');
   });
+
+  test('concurrent flushQueue() calls only fire one upsert (w54 re-entrancy guard)', async () => {
+    // Regression — without the _flushing guard, two parallel flushQueue() calls
+    // both query sync_queue (returning overlapping row sets), both upsert the
+    // same Postgres row IDs concurrently, and trigger AccessExclusiveLock
+    // deadlocks (~25 parallel processes observed on bulk RETRY ALL of 90
+    // dead-lettered conflicts; deadlock detected on tuple (10,25) of relation
+    // 46471 in supabase-huxley postgres logs, 2026-05-10). The fix is a
+    // module-level `_flushing` boolean inside src/services/sync-engine.js,
+    // released in a finally block. This test seeds one row, overrides the
+    // upsert mock to delay-resolve so the first flush is in-flight when the
+    // second call lands, and asserts only ONE upsert reached the wire.
+    const uid = 'user-test-uuid';
+
+    // Replace the supabase mock for THIS test only — delay-resolving upsert
+    const originalSchema = supabaseStub.schema;
+    supabaseStub.schema = vi.fn((_schemaName) => ({
+      from: vi.fn((tableName) => ({
+        upsert: vi.fn(async (rows) => {
+          upsertCalls.push({ table: tableName, rows });
+          await new Promise(r => setTimeout(r, 30));
+          return { error: null };
+        }),
+        delete: vi.fn(() => ({
+          eq: vi.fn(async () => ({ error: null }))
+        }))
+      }))
+    }));
+
+    try {
+      await db.sync_queue.add({
+        table_name: 'decks', op: 'put', row_id: 'd1', user_id: uid,
+        payload: { id: 'd1', name: 'Concurrent' }, attempts: 0, created_at: Date.now()
+      });
+
+      await Promise.all([flushQueue(), flushQueue()]);
+
+      const deckCalls = upsertCalls.filter(c => c.table === 'decks');
+      expect(deckCalls.length).toBe(1);
+      expect(await db.sync_queue.count()).toBe(0);
+    } finally {
+      supabaseStub.schema = originalSchema;
+    }
+  });
+
+  test('new sync_queue entry added during flush triggers a follow-up flush (w54 mid-flight drain)', async () => {
+    // Regression — the _flushing guard alone could strand a write that lands
+    // mid-flush. The fix's finally block re-checks `db.sync_queue.count()` and
+    // calls `scheduleFlush(0)` if rows remain, so a row added between the
+    // initial query at the top of flushQueue and the guard release is drained
+    // by an immediately-scheduled follow-up flush. This test starts a flush
+    // that delay-resolves, slips a SECOND sync_queue row in during the
+    // in-flight window, then awaits both the original flush AND the follow-up
+    // and asserts both rows reached the wire.
+    const uid = 'user-test-uuid';
+
+    const originalSchema = supabaseStub.schema;
+    supabaseStub.schema = vi.fn((_schemaName) => ({
+      from: vi.fn((tableName) => ({
+        upsert: vi.fn(async (rows) => {
+          upsertCalls.push({ table: tableName, rows });
+          await new Promise(r => setTimeout(r, 30));
+          return { error: null };
+        }),
+        delete: vi.fn(() => ({
+          eq: vi.fn(async () => ({ error: null }))
+        }))
+      }))
+    }));
+
+    try {
+      await db.sync_queue.add({
+        table_name: 'decks', op: 'put', row_id: 'd1', user_id: uid,
+        payload: { id: 'd1', name: 'First' }, attempts: 0, created_at: Date.now()
+      });
+
+      // Kick off the flush WITHOUT awaiting — first row is in-flight.
+      const inflight = flushQueue();
+
+      // Sleep briefly so the first flush has past its initial sync_queue query
+      // and is sitting inside the delay-resolving upsert when we add row 2.
+      await new Promise(r => setTimeout(r, 5));
+
+      await db.sync_queue.add({
+        table_name: 'decks', op: 'put', row_id: 'd2', user_id: uid,
+        payload: { id: 'd2', name: 'Second' }, attempts: 0, created_at: Date.now()
+      });
+
+      await inflight;
+
+      // The finally block schedules a follow-up flush via scheduleFlush(0).
+      // Wait long enough for that timer to fire AND its delay-resolving upsert
+      // (~30ms) to settle.
+      await new Promise(r => setTimeout(r, 80));
+
+      const deckCalls = upsertCalls.filter(c => c.table === 'decks');
+      expect(deckCalls.length).toBe(2);
+      expect(await db.sync_queue.count()).toBe(0);
+    } finally {
+      supabaseStub.schema = originalSchema;
+    }
+  });
 });
