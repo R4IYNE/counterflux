@@ -164,7 +164,7 @@ Full design contract: `.planning/phases/01-foundation-data-layer/01-UI-SPEC.md`
 - **Thousand-Year Storm** — Deck Builder
 - **Preordain** — Market Intel
 - **Vandalblast** — Game Tracker
-- **Mila** — Corgi system familiar (sidebar, empty states, tips)
+- **Mila** — Corgi system familiar (Dashboard insights, empty states, tips)
 
 ## Tailwind v4 Notes
 

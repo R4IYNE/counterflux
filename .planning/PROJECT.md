@@ -49,7 +49,7 @@ Plus two backlog candidates waiting for production-traffic-driven user demand:
 - ✓ Market Intel (Preordain) — spoiler browser, price watchlist with alerts, market trends, release calendar — v1.0
 - ✓ Game Tracker (Vandalblast) — life totals, commander damage, poison/counters, dice, turn tracking, post-game summary, game history and stats — v1.0
 - ✓ Full visual identity — colour palette, typography (Syne / Space Grotesk / JetBrains Mono), ghost borders, active glow, aether gradient — v1.0
-- ✓ Mila (System Familiar) — sidebar presence, insights, empty states — v1.0
+- ✓ Mila (System Familiar) — Dashboard insights, empty states (chrome moved off sidebar 2026-05-10) — v1.0
 - ✓ Keyboard-first interaction patterns, right-click context menus, undo support — v1.0
 - ✓ Offline capability for collection, decks, and game tracking — v1.0
 
