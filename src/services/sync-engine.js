@@ -337,6 +337,52 @@ const PUSH_ORDER = ['collection', 'decks', 'deck_cards', 'games', 'watchlist', '
 const MAX_ATTEMPTS = 3;
 
 // ---------------------------------------------------------------------------
+// Number → ISO timestamp conversion (vn7 hot-fix)
+// ---------------------------------------------------------------------------
+// Postgres `timestamp with time zone` cannot parse a raw integer like
+// 1776555292268 — it interprets ms-since-epoch as ~year 58 million and
+// rejects with `date/time field value out of range` (HTTP 400). The Dexie
+// creating / updating hooks (sync-engine.js ~L220, ~L243) intentionally stamp
+// `updated_at` as a JS Number for local-side LWW math (consumed by
+// sync-pull.js _toTs, which is tolerant of BOTH Number and ISO shapes). At
+// the Supabase boundary we serialise to ISO so PostgREST + Postgres accept
+// the value.
+//
+// Whitelist is name-based across all 6 synced tables — any future timestamptz
+// column added under one of these names is auto-covered. Migrating local
+// Dexie data to ISO strings is intentionally OUT OF SCOPE for this hot-fix
+// (tracked as v1.3 SEED-006 candidate). Non-finite Numbers (NaN, Infinity)
+// are left untouched so Postgres rejects them and the real bug surfaces
+// rather than being masked by silent fix-up.
+const TIMESTAMPTZ_COLUMNS = [
+  'updated_at', 'synced_at', 'deleted_at', 'added_at',
+  'created_at', 'started_at', 'ended_at', 'last_alerted_at'
+];
+
+/**
+ * Mutates each row in place, converting whitelisted Number-typed timestamptz
+ * fields to ISO-8601 strings. Safe — caller's `{ ...e.payload, user_id: ... }`
+ * spread at the upsert seam produces a fresh top-level object on each
+ * flushQueue invocation, so in-place mutation does NOT bleed into the source
+ * sync_queue payload. Returns the same array reference for caller fluency.
+ *
+ * @param {Array<object>} rows
+ * @returns {Array<object>}
+ */
+function _isoStampTimestamps(rows) {
+  for (const row of rows) {
+    if (!row) continue;
+    for (const col of TIMESTAMPTZ_COLUMNS) {
+      const v = row[col];
+      if (typeof v === 'number' && Number.isFinite(v)) {
+        row[col] = new Date(v).toISOString();
+      }
+    }
+  }
+  return rows;
+}
+
+// ---------------------------------------------------------------------------
 // flushQueue — drain sync_queue to Supabase
 // ---------------------------------------------------------------------------
 
@@ -419,6 +465,7 @@ export async function flushQueue() {
     // cross-user safety — the client is the authority on user_id at push time.
     if (latestByRow.size > 0) {
       const rows = Array.from(latestByRow.values()).map(e => ({ ...e.payload, user_id: currentUserId }));
+      _isoStampTimestamps(rows);   // vn7 — convert Number timestamps to ISO before Supabase upsert
       const { error } = await supabase.schema('counterflux').from(tableName).upsert(rows);
 
       if (error) {
