@@ -26,11 +26,11 @@ export function initAppStore() {
     // navigation away from vandalblast.
 
     screens: [
-      { id: 'epic-experiment', label: 'Epic Experiment', icon: 'dashboard', route: '/', locked: false },
-      { id: 'treasure-cruise', label: 'Treasure Cruise', icon: 'collections_bookmark', route: '/treasure-cruise', locked: false },
-      { id: 'thousand-year-storm', label: 'Thousand-Year Storm', icon: 'auto_fix_high', route: '/thousand-year-storm', locked: false },
-      { id: 'preordain', label: 'Preordain', icon: 'insights', route: '/preordain', locked: false },
-      { id: 'vandalblast', label: 'Vandalblast', icon: 'local_fire_department', route: '/vandalblast', locked: false },
+      { id: 'epic-experiment',     label: 'Epic Experiment',     topbarLabel: 'Dashboard',  icon: 'dashboard',             route: '/',                    locked: false },
+      { id: 'treasure-cruise',     label: 'Treasure Cruise',     topbarLabel: 'Collection', icon: 'collections_bookmark',  route: '/treasure-cruise',     locked: false },
+      { id: 'thousand-year-storm', label: 'Thousand-Year Storm', topbarLabel: 'Decks',      icon: 'auto_fix_high',         route: '/thousand-year-storm', locked: false },
+      { id: 'preordain',           label: 'Preordain',           topbarLabel: 'Market',     icon: 'insights',              route: '/preordain',           locked: false },
+      { id: 'vandalblast',         label: 'Vandalblast',         topbarLabel: 'Game',       icon: 'local_fire_department', route: '/vandalblast',         locked: false },
     ],
 
     navigate(screenId) {

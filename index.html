@@ -258,13 +258,28 @@
       :class="$store.app.sidebarCollapsed ? 'ml-16' : 'ml-60'"
       class="fixed top-0 right-0 z-40 h-16 glass-overlay border-b border-border-ghost flex items-center px-xl transition-all duration-200"
     >
-      <!-- Left group: brand + nav (Task 2 inserts nav alongside brand) -->
+      <!-- Left group: brand + nav -->
       <div class="flex items-center gap-xl">
         <!-- Brand block — transplanted from sidebar (cyclone icon + COUNTERFLUX wordmark) -->
         <a href="#/" class="flex items-center gap-sm whitespace-nowrap" aria-label="Counterflux home">
           <span class="material-symbols-outlined text-primary text-3xl">cyclone</span>
           <span class="font-mono text-text-primary uppercase text-[11px] tracking-[0.3em] font-bold">COUNTERFLUX</span>
         </a>
+
+        <!-- Nav block — 5-screen router -->
+        <nav x-data="topbarComponent()" class="flex items-center gap-sm" aria-label="Primary">
+          <template x-for="screen in $store.app.screens" :key="screen.id">
+            <a
+              :href="screen.locked ? 'javascript:void(0)' : '#' + screen.route"
+              :class="navItemClasses(screen)"
+              class="font-mono text-[11px] font-bold uppercase tracking-[0.15em] py-2 px-3 transition-colors duration-150"
+              :aria-current="$store.app.currentScreen === screen.id ? 'page' : false"
+              :aria-disabled="screen.locked"
+              @click.prevent="handleNavClick(screen)"
+              x-text="screen.topbarLabel"
+            ></a>
+          </template>
+        </nav>
       </div>
 
       <!-- Topbar search -->

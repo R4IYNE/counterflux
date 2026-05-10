@@ -34,3 +34,46 @@ describe('topbar brand block', () => {
     expect(topbar).toMatch(/tracking-\[0\.3em\]/);
   });
 });
+
+describe('topbar nav links', () => {
+  const topbar = topbarMarkup();
+
+  const plainLabels = ['Dashboard', 'Collection', 'Decks', 'Market', 'Game'];
+
+  it('uses an x-for loop driven by $store.app.screens', () => {
+    expect(topbar).toMatch(/x-for="screen in \$store\.app\.screens"/);
+  });
+
+  it('binds each link to screen.route', () => {
+    expect(topbar).toMatch(/'#' \+ screen\.route|"#" \+ screen\.route/);
+  });
+
+  it('renders the topbarLabel field, not the card-name label', () => {
+    expect(topbar).toMatch(/x-text="screen\.topbarLabel"/);
+  });
+});
+
+describe('app store — topbarLabel field (static grep against source)', () => {
+  // src/stores/app.js imports Alpine from 'alpinejs', so we can't stub it cleanly
+  // in a node test. Static grep against the source file is reliable and matches
+  // the pattern used by tests/topbar-bulkdata-pill.test.js (readFileSync + regex).
+  const appJs = readFileSync('src/stores/app.js', 'utf-8');
+
+  const expected = {
+    'epic-experiment': 'Dashboard',
+    'treasure-cruise': 'Collection',
+    'thousand-year-storm': 'Decks',
+    'preordain': 'Market',
+    'vandalblast': 'Game',
+  };
+
+  for (const [id, topbarLabel] of Object.entries(expected)) {
+    it(`screen "${id}" has topbarLabel "${topbarLabel}"`, () => {
+      // Find the screen entry by id, then assert topbarLabel appears in the
+      // same { ... } block.
+      const idMatch = appJs.match(new RegExp(`\\{[^}]*id:\\s*'${id}'[^}]*\\}`));
+      expect(idMatch).toBeTruthy();
+      expect(idMatch[0]).toMatch(new RegExp(`topbarLabel:\\s*'${topbarLabel}'`));
+    });
+  }
+});
