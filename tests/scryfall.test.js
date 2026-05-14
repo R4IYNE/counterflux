@@ -52,8 +52,12 @@ describe('Scryfall utils', () => {
   });
 
   describe('constants', () => {
-    it('SCRYFALL_BULK_API points to default-cards endpoint', () => {
-      expect(SCRYFALL_BULK_API).toBe('https://api.scryfall.com/bulk-data/default-cards');
+    // Quick task 260514-uqc Layer 2: switched from default-cards (~500MB
+    // / ~500k printings) to oracle-cards (~100MB / ~30k cards). Layer 1's
+    // API fallback in src/db/search.js covers the search/browse flows
+    // during the smaller boot bulk-streaming window (~30-60s vs 3-5 min).
+    it('SCRYFALL_BULK_API points to oracle-cards endpoint', () => {
+      expect(SCRYFALL_BULK_API).toBe('https://api.scryfall.com/bulk-data/oracle-cards');
     });
   });
 });

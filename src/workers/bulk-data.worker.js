@@ -185,7 +185,12 @@ db.version(10).stores({
   precons_cache: 'code, set_type, released_at, updated_at'
 });
 
-const SCRYFALL_BULK_API = 'https://api.scryfall.com/bulk-data/default-cards';
+// Quick task 260514-uqc Layer 2: switched from default-cards (~500MB / ~500k
+// printings) to oracle-cards (~100MB / ~30k cards). Worker constant must
+// mirror src/utils/scryfall.js. Pipeline shape unchanged — oracle-cards
+// rows carry the same {id,oracle_id,name,set,collector_number,…} fields the
+// processStream + db.cards.bulkPut path already consumes.
+const SCRYFALL_BULK_API = 'https://api.scryfall.com/bulk-data/oracle-cards';
 const USER_AGENT = 'Counterflux/1.0 (MTG collection manager)';
 
 self.onmessage = async (e) => {

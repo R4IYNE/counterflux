@@ -178,24 +178,28 @@ export function renderDeckSearchPanel(container) {
   `;
   container.appendChild(noResults);
 
-  // Phase 13 Plan 3 — D-05: Bulk data loading placeholder (Thousand-Year Storm
-  // card-search). Rendered when browseCards() / searchCards() returns an
-  // empty array flagged with `bulkDataNotReady: true`. Mirrors the add-card
-  // panel's placeholder visual density.
+  // Quick task 260514-uqc: repurposed from a blocking "Bulk data loading…"
+  // placeholder into a small inline affordance hint. Layer 1's API fallback
+  // in src/db/search.js now serves real Scryfall results during the boot
+  // bulk-streaming window, so this strip is shown ABOVE the results list
+  // (not as a no-results substitute) when bulkdata.status !== 'ready' AND
+  // results.length > 0. Inserted before resultsEl in renderResults() so it
+  // sits at the top of the scroll region.
   const bulkLoadingPlaceholder = document.createElement('div');
   bulkLoadingPlaceholder.id = 'deck-search-bulk-loading';
   bulkLoadingPlaceholder.style.cssText = `
-    display: none; align-items: center; gap: 8px; padding: 12px;
-    background: #1C1F28; border: 1px solid #2A2D3A; color: #7A8498;
-    margin-top: 8px;
+    display: none; align-items: center; gap: 6px; padding: 6px 12px;
+    background: #1C1F28; border-bottom: 1px solid #2A2D3A; color: #7A8498;
+    margin-bottom: 4px;
   `;
   bulkLoadingPlaceholder.innerHTML = `
-    <span class="material-symbols-outlined" style="font-size: 16px;">hourglass_empty</span>
-    <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase;">
-      Bulk data loading &mdash; card search available when archive is indexed
+    <span class="material-symbols-outlined" style="font-size: 12px;">cloud_sync</span>
+    <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;">
+      Using Scryfall search &mdash; local catalog warming up
     </span>
   `;
-  container.appendChild(bulkLoadingPlaceholder);
+  // Insert before resultsEl so the affordance sits at the top of the results region.
+  container.insertBefore(bulkLoadingPlaceholder, resultsEl);
 
   async function executeSearch() {
     const query = searchInput.value.trim();
@@ -270,21 +274,25 @@ export function renderDeckSearchPanel(container) {
       });
     }
 
-    // Phase 13 Plan 3 — D-05: propagate bulkDataNotReady flag so renderResults
-    // can swap the normal "no results" copy for the bulk-data skeleton.
-    const bulkDataNotReady = !!raw?.bulkDataNotReady;
+    // Quick task 260514-uqc: bulkDataNotReady flag no longer exists on the
+    // searchCards/browseCards return — Layer 1's API fallback returns real
+    // cards. renderResults() reads window.Alpine.store('bulkdata').status
+    // directly to toggle the affordance hint visibility.
     results = raw.slice(0, 20);
-    results.bulkDataNotReady = bulkDataNotReady;
     renderResults();
   }
 
   function renderResults() {
     resultsEl.innerHTML = '';
-    const bulkDataNotReady = !!results.bulkDataNotReady;
-    // Phase 13 Plan 3 — D-05: show the bulk-data skeleton instead of the
-    // normal "no results" copy when the archive isn't indexed yet.
-    bulkLoadingPlaceholder.style.display = bulkDataNotReady ? 'flex' : 'none';
-    noResults.style.display = (!bulkDataNotReady && results.length === 0) ? 'block' : 'none';
+    // Quick task 260514-uqc: affordance hint visible when bulkdata is still
+    // streaming AND we have results to show (i.e. the Scryfall API fallback
+    // is currently serving). When status === 'ready' or there are no results
+    // (genuine no-match), the hint stays hidden.
+    const bulkStatus = window.Alpine?.store?.('bulkdata')?.status;
+    const showAffordance = bulkStatus && bulkStatus !== 'ready' && results.length > 0;
+    bulkLoadingPlaceholder.style.display = showAffordance ? 'flex' : 'none';
+    // No-results state is reachable again — genuine empty Scryfall match.
+    noResults.style.display = (results.length === 0) ? 'block' : 'none';
 
     const ownedSet = getOwnedSet();
 

@@ -176,21 +176,16 @@ export function renderAddCardPanel() {
         >MASS ENTRY</button>
       </div>
 
-      <!-- Phase 13 Plan 3 — D-05: bulk-data loading placeholder (Treasure Cruise add-card).
-           Rendered BELOW the header + ABOVE the search input while the archive
-           is still downloading/parsing. Once \$store.bulkdata.status === 'ready'
-           this collapses and the regular empty state takes over. -->
-      <template x-if="\$store.bulkdata && \$store.bulkdata.status !== 'ready'">
-        <div class="cf-add-card-placeholder" style="display: flex; align-items: center; gap: 8px; padding: 12px; background: var(--color-surface-hover); border: 1px solid var(--color-border-ghost); color: var(--color-text-muted);">
-          <span class="material-symbols-outlined" style="font-size: 16px;">hourglass_empty</span>
-          <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase;">
-            Bulk data loading &mdash; autocomplete available when archive is indexed
-          </span>
-        </div>
-      </template>
+      <!-- Quick task 260514-uqc: removed the top-of-panel blocking
+           "Bulk data loading…" template. Layer 1's API fallback (src/db/search.js)
+           now keeps search functional while bulk data is still streaming, so
+           there's nothing to block on. A softer inline affordance is rendered
+           above the results dropdown below — see the x-show="searchResults.length > 0"
+           block. -->
 
-      <!-- Empty state (idle — no query, no selected card) -->
-      <template x-if="(!\$store.bulkdata || \$store.bulkdata.status === 'ready') && !searchQuery && !selectedCard">
+      <!-- Empty state (idle — no query, no selected card). Quick task 260514-uqc:
+           drop the bulkdata gate; search works regardless of bulkdata.status now. -->
+      <template x-if="!searchQuery && !selectedCard">
         <div style="display: flex; flex-direction: column; gap: 4px; padding: 8px 0;">
           <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; color: var(--color-text-muted); text-transform: uppercase;">
             READY TO ARCHIVE
@@ -217,6 +212,16 @@ export function renderAddCardPanel() {
         <!-- Search results dropdown -->
         <div x-show="searchResults.length > 0"
              style="position: absolute; top: 100%; left: 0; right: 0; margin-top: 4px; background: var(--color-surface); border: 1px solid var(--color-border-ghost); max-height: 280px; overflow-y: auto; z-index: 10;">
+          <!-- Quick task 260514-uqc: inline affordance hint shown above the
+               results when bulk data is still streaming. Layer 1's API fallback
+               is serving these results; once \$store.bulkdata.status === 'ready'
+               this banner collapses and Dexie takes over silently. -->
+          <template x-if="\$store.bulkdata && \$store.bulkdata.status !== 'ready'">
+            <div style="display: flex; align-items: center; gap: 6px; padding: 6px 12px; background: var(--color-surface-hover); border-bottom: 1px solid var(--color-border-ghost); color: var(--color-text-muted); font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;">
+              <span class="material-symbols-outlined" style="font-size: 12px;">cloud_sync</span>
+              <span>Using Scryfall search &mdash; local catalog warming up</span>
+            </div>
+          </template>
           <template x-for="(card, idx) in searchResults" :key="card.id">
             <button
               @click="selectCard(card)"
