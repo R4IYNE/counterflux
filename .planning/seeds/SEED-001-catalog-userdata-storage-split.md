@@ -1,9 +1,11 @@
 ---
 id: SEED-001
-status: dormant
+status: active
 planted: 2026-04-27
 planted_during: v1.1 Second Sunrise (milestone_ready_to_ship)
 trigger_when: After Phase 11 Cloud Sync Engine has been live in production for a meaningful period without regressions — re-evaluate at v1.2 milestone planning
+triggered: 2026-05-14
+triggered_by: User reported 3-5 min boot dead-time on real connection; quick task 260514-uqc shipped Layers 1+2 (Scryfall API search fallback + oracle-cards bulk feed swap) as the immediate UX fix, but the underlying ~100MB JSON stream-parse on every catalog refresh remains; SEED-001 is the architectural endgame
 scope: Large
 ---
 
@@ -60,3 +62,21 @@ Related code and decisions in the current codebase:
 - Phase 11 sync engine state to verify before promoting: zero `sync_conflicts` rows accumulating in production over a multi-week window; topbar chip stays `synced` for active users; no schema-drift incidents like the one closed in Plan 14-05.
 - OPFS browser support: Chromium-based browsers fully supported; Firefox shipped in 111+; Safari 17+. Counterflux is desktop-first so this is fine, but confirm at promotion time.
 - MTGJSON licensing: confirm AllPrintings.sqlite redistribution is permitted under their terms (it is at time of planting — CC-BY-4.0 — but re-verify).
+
+## 2026-05-14 trigger fire (Layer 3 of load-perf fix)
+
+User feedback on 2026-05-14 surfaced a 3-5 min "broken" window at first load — the LCP 0.7s production number was technically true but experientially misleading because `searchCards()` / `browseCards()` returned empty-with-flag results until `bulkdata.status === 'ready'`.
+
+Quick task **260514-uqc** ([summary](../quick/260514-uqc-defer-catalog-readiness-scryfall-api-sea/260514-uqc-SUMMARY.md)) shipped Layers 1+2 of a three-layer fix:
+
+- **Layer 1** — `src/db/search.js` falls through to Scryfall REST `/cards/search` via `queueScryfallRequest()` when the local catalog isn't ready. Search works in second 1.
+- **Layer 2** — boot bulk feed switched from `default-cards` (~500MB raw) to `oracle-cards` (~100MB raw). Boot-time stream-parse window shrinks ~5×.
+
+**SEED-001 is Layer 3** — the architectural endgame. Layers 1+2 buy ~30-60s of warm-up time and a usable app during it; SEED-001's wa-sqlite + OPFS approach eliminates the stream-parse step entirely (queryable SQL in ms from an OPFS-resident `AllPrintings.sqlite`). When SEED-001 ships, Layers 1+2 remain valuable as the always-available fallback for first-ever-visit before the SQLite download completes.
+
+**Known scope expansion since 2026-04-27 planting:**
+
+- Layer 2's `default-cards` → `oracle-cards` swap means `db.cards.get(scryfall_id)` returns `undefined` for any non-canonical printing in an existing v1.2 user's collection. ~20+ call sites in `src/stores/`, `src/screens/`, and `src/components/` rely on this lookup for card name/image metadata display. SEED-001's MTGJSON `AllPrintings.sqlite` carries every printing, so this gap closes naturally when SEED-001 ships. In the interim, surfaced as **SEED-008** (printing-specific Scryfall `/cards/{id}` fallback with `db.cards` cache-on-miss) — SEED-008 is the bridge; SEED-001 is the destination.
+- Layer 2 also means the daily catalog refresh now downloads ~100MB instead of ~500MB — a non-trivial recurring win even before SEED-001 ships. SEED-001 should preserve this property (download deltas, not full snapshots, on update).
+
+**Promotion criteria refresh:** With Layer 2 shipped, the urgency is dialled down from "users can't search" to "metadata gaps for non-canonical printings". v1.3 scoping should weigh SEED-001 vs SEED-008 (the smaller bridge fix) on user impact — SEED-008 patches the gap in days; SEED-001 closes the architecture in weeks.

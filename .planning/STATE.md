@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-04-28 with v1.2 completion)
 Phase: — (v1.2 complete)
 Plan: —
 Status: Milestone complete; ready for archive
-Last activity: 2026-04-28
+Last activity: 2026-05-14 - Completed quick task 260514-uqc: Defer catalog readiness via Scryfall API search fallback + oracle-cards bulk feed (Layers 1+2 of load-perf fix)
 Progress: ██████████ 100% (2/2 phases — 1 shipped, 1 collapsed inline)
 
 ## Milestone Progress
@@ -112,6 +112,7 @@ None — v1.2 milestone shipped. Run `/gsd:complete-milestone` for archival, or 
 | 260510-vn7 | Fix sync push HTTP 400 on timestamptz fields | 2026-05-10 | 4cbda85 | [260510-vn7-fix-sync-push-400-on-timestamptz-fields-](./quick/260510-vn7-fix-sync-push-400-on-timestamptz-fields-/) |
 | 260510-w54 | Fix flushQueue re-entrancy bug causing Postgres deadlocks on bulk RETRY ALL | 2026-05-10 | e3e9ecd | [260510-w54-fix-flushqueue-re-entrancy-bug-causing-p](./quick/260510-w54-fix-flushqueue-re-entrancy-bug-causing-p/) |
 | 260511-0k0 | Fix Alpine reactivity gotcha in deck-landing showing stale 0/100 + missing commander art | 2026-05-11 | 70b500b | [260511-0k0-fix-alpine-reactivity-gotcha-in-deck-lan](./quick/260511-0k0-fix-alpine-reactivity-gotcha-in-deck-lan/) |
+| 260514-uqc | Defer catalog readiness: Scryfall API search fallback + oracle-cards bulk feed | 2026-05-14 | b676a12 | [260514-uqc-defer-catalog-readiness-scryfall-api-sea](./quick/260514-uqc-defer-catalog-readiness-scryfall-api-sea/) |
 
 ## Session Continuity
 
