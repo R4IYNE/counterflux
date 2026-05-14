@@ -141,40 +141,50 @@ export function renderAddCardPanel() {
     >
       <!-- FOLLOWUP-1 (Phase 08.1): aside is overflow:visible so the
            absolutely-positioned search dropdown can escape its content box;
-           the panel body's own scroll lives on this inner wrapper instead. -->
-      <div class="tc-panel-body" style="flex: 1; min-height: 0; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 16px;">
-      <!-- Header row: title + chevron close -->
-      <div style="display: flex; align-items: center; justify-content: space-between;">
-        <h2 style="font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; line-height: 1.2; letter-spacing: 0.01em; color: var(--color-text-primary); margin: 0; text-transform: uppercase;">
-          ADD TO COLLECTION
-        </h2>
-        <button
-          @click="$store.collection.togglePanel()"
-          aria-label="Collapse add panel"
-          title="Collapse panel"
-          style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; background: transparent; border: none; cursor: pointer; color: var(--color-text-muted); transition: all 120ms ease-out;"
-          onmouseenter="this.style.color='var(--color-secondary)'; this.style.boxShadow='0 0 8px var(--color-glow-red)'"
-          onmouseleave="this.style.color='var(--color-text-muted)'; this.style.boxShadow='none'"
-        >
-          <span class="material-symbols-outlined" style="font-size: 20px;">chevron_left</span>
-        </button>
+           the panel body's own scroll lives on this inner wrapper instead.
+           Quick task 260515-05m: split into a sticky header (title + chevron
+           close + action row) that pins to the top of the panel, and the
+           scrollable body below. Keeps ADD TO COLLECTION + BROWSE PRECONS +
+           MASS ENTRY reachable while the user scrolls the form's printings
+           strip / qty / category / action buttons. -->
+      <!-- Sticky header region — title, close, and action row -->
+      <div class="tc-panel-header" style="padding: 24px 24px 16px; background: var(--color-surface); border-bottom: 1px solid var(--color-border-ghost); display: flex; flex-direction: column; gap: 16px; flex-shrink: 0;">
+        <!-- Header row: title + chevron close -->
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+          <h2 style="font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; line-height: 1.2; letter-spacing: 0.01em; color: var(--color-text-primary); margin: 0; text-transform: uppercase;">
+            ADD TO COLLECTION
+          </h2>
+          <button
+            @click="$store.collection.togglePanel()"
+            aria-label="Collapse add panel"
+            title="Collapse panel"
+            style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; background: transparent; border: none; cursor: pointer; color: var(--color-text-muted); transition: all 120ms ease-out;"
+            onmouseenter="this.style.color='var(--color-secondary)'; this.style.boxShadow='0 0 8px var(--color-glow-red)'"
+            onmouseleave="this.style.color='var(--color-text-muted)'; this.style.boxShadow='none'"
+          >
+            <span class="material-symbols-outlined" style="font-size: 20px;">chevron_left</span>
+          </button>
+        </div>
+
+        <!-- Action row: BROWSE PRECONS (Plan 3 — wires to precon browser drawer) + MASS ENTRY -->
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <button
+            @click="$store.collection.preconBrowserOpen = true; $store.collection.loadPrecons()"
+            style="flex: 1; min-width: 120px; padding: 8px 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; color: var(--color-text-primary); background: var(--color-surface-hover); border: 1px solid var(--color-border-ghost); cursor: pointer; text-transform: uppercase;"
+            onmouseenter="this.style.background='var(--color-background)'"
+            onmouseleave="this.style.background='var(--color-surface-hover)'"
+          >BROWSE PRECONS</button>
+          <button
+            @click="$store.collection.massEntryOpen = true"
+            style="flex: 1; min-width: 120px; padding: 8px 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; color: var(--color-text-primary); background: var(--color-surface-hover); border: 1px solid var(--color-border-ghost); cursor: pointer; text-transform: uppercase;"
+            onmouseenter="this.style.background='var(--color-background)'"
+            onmouseleave="this.style.background='var(--color-surface-hover)'"
+          >MASS ENTRY</button>
+        </div>
       </div>
 
-      <!-- Action row: BROWSE PRECONS (Plan 3 — wires to precon browser drawer) + MASS ENTRY -->
-      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-        <button
-          @click="$store.collection.preconBrowserOpen = true; $store.collection.loadPrecons()"
-          style="flex: 1; min-width: 120px; padding: 8px 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; color: var(--color-text-primary); background: var(--color-surface-hover); border: 1px solid var(--color-border-ghost); cursor: pointer; text-transform: uppercase;"
-          onmouseenter="this.style.background='var(--color-background)'"
-          onmouseleave="this.style.background='var(--color-surface-hover)'"
-        >BROWSE PRECONS</button>
-        <button
-          @click="$store.collection.massEntryOpen = true"
-          style="flex: 1; min-width: 120px; padding: 8px 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; color: var(--color-text-primary); background: var(--color-surface-hover); border: 1px solid var(--color-border-ghost); cursor: pointer; text-transform: uppercase;"
-          onmouseenter="this.style.background='var(--color-background)'"
-          onmouseleave="this.style.background='var(--color-surface-hover)'"
-        >MASS ENTRY</button>
-      </div>
+      <!-- Scrollable body region -->
+      <div class="tc-panel-body" style="flex: 1; min-height: 0; overflow-y: auto; padding: 16px 24px 24px; display: flex; flex-direction: column; gap: 16px;">
 
       <!-- Quick task 260514-uqc: removed the top-of-panel blocking
            "Bulk data loading…" template. Layer 1's API fallback (src/db/search.js)

@@ -104,10 +104,10 @@ describe('Screen content', () => {
     expect(container.textContent).toContain('DECK ARCHIVE');
   });
 
-  it('treasure-cruise shows "Archive Manifest" heading', async () => {
+  it('treasure-cruise shows "Treasure Cruise" heading', async () => {
     const { mount } = await import('../src/screens/treasure-cruise.js');
     mount(container);
-    expect(container.textContent).toContain('Archive Manifest');
+    expect(container.textContent).toContain('Treasure Cruise');
   });
 
   it('preordain shows "PREORDAIN // MARKET INTEL" overline', async () => {

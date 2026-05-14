@@ -89,13 +89,37 @@ describe('FOLLOWUP-1: dropdown scroll containment', () => {
     expect(bodyTag).toMatch(/min-height:\s*0/);
   });
 
-  it('panel body wrapper opens before the header row and closes before </aside>', () => {
+  it('sticky tc-panel-header opens before tc-panel-body, header holds the title, body closes before </aside>', () => {
+    // Quick task 260515-05m: the panel was restructured into a sticky header
+    // (title + close + action row, outside the scroll region) and a scrollable
+    // body. The header pins to the top of the aside via flex-column layout +
+    // flex-shrink:0; the body remains the scroll container. This test locks
+    // both the ordering (header → body) and the constraint that the title
+    // ("ADD TO COLLECTION") lives in the header, not the body.
     const html = renderAddCardModal();
+    const headerOpenIdx = html.search(/<div\s+class="tc-panel-header"/);
     const bodyOpenIdx = html.search(/<div\s+class="tc-panel-body"/);
-    const headerIdx = html.indexOf('ADD TO COLLECTION');
+    // Match the rendered <h2> text, not the structural comment that mentions
+    // "ADD TO COLLECTION" by name (the comment lands before the header div).
+    const titleMatch = html.match(/>\s*ADD TO COLLECTION\s*</);
+    const titleIdx = titleMatch ? titleMatch.index : -1;
     const closeAsideIdx = html.indexOf('</aside>');
-    expect(bodyOpenIdx).toBeGreaterThan(-1);
-    expect(headerIdx).toBeGreaterThan(bodyOpenIdx);
-    expect(closeAsideIdx).toBeGreaterThan(headerIdx);
+    expect(headerOpenIdx).toBeGreaterThan(-1);
+    expect(bodyOpenIdx).toBeGreaterThan(headerOpenIdx);
+    expect(titleIdx).toBeGreaterThan(headerOpenIdx);
+    expect(titleIdx).toBeLessThan(bodyOpenIdx); // title is inside header, not body
+    expect(closeAsideIdx).toBeGreaterThan(bodyOpenIdx);
+  });
+
+  it('sticky tc-panel-header sets flex-shrink: 0 + background so it pins above the scrolling body', () => {
+    // Quick task 260515-05m: the header is the sticky region in a flex-column
+    // aside — flex-shrink: 0 prevents it collapsing under the body's flex:1,
+    // and an explicit background covers content scrolling underneath.
+    const html = renderAddCardModal();
+    const headerMatch = html.match(/class="tc-panel-header"[^>]*style="[^"]*"/);
+    expect(headerMatch).toBeTruthy();
+    const headerTag = headerMatch[0];
+    expect(headerTag).toMatch(/flex-shrink:\s*0/);
+    expect(headerTag).toMatch(/background:\s*var\(--color-surface\)/);
   });
 });

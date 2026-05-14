@@ -60,7 +60,7 @@ export function mount(container) {
       <!-- Screen header -->
       <div>
         <h2 class="syne-header text-[20px] font-bold leading-[1.2] tracking-[0.01em]"
-            style="color: #EAECEE;">Archive Manifest</h2>
+            style="color: #EAECEE;">Treasure Cruise</h2>
         <span class="font-mono uppercase text-[11px] tracking-[0.15em] font-bold"
               style="color: #7A8498;">MASTER REPOSITORY SUMMARY</span>
       </div>
