@@ -1,5 +1,6 @@
 import { db } from './schema.js';
 import { suggestTags } from '../utils/tag-heuristics.js';
+import { queueScryfallRequest } from '../services/scryfall-queue.js';
 
 /**
  * Check if a card is a paper-legal printing (not memorabilia/digital-only).
@@ -12,41 +13,135 @@ function isPaperLegal(card) {
 }
 
 /**
- * Phase 13 Plan 3 — D-05: inspect $store.bulkdata.status and return an
- * early annotated-empty result when the archive hasn't finished indexing.
- * This lets Treasure Cruise (add-card-panel.js) and Thousand-Year Storm
- * (deck-search-panel.js) distinguish "no matches" from "bulk data still
- * downloading" and render the appropriate skeleton placeholder.
+ * Returns true when the local Dexie catalog is ready to serve queries.
+ * - When `window.Alpine.store('bulkdata')` exists, gate on `.status === 'ready'`.
+ * - When Alpine is absent (test env or pre-mount), assume ready so the Dexie
+ *   path runs against fixtures.
  *
- * @returns {{ results: Array, bulkDataNotReady: true, message: string } | null}
+ * Quick task 260514-uqc Layer 1: callers now route to the Scryfall REST API
+ * fallback when this returns false (was: returned an empty-with-flag result).
  */
-function bulkDataGate() {
+function isBulkDataReady() {
   const alpine = (typeof window !== 'undefined' && window.Alpine) || null;
   const store = alpine?.store ? alpine.store('bulkdata') : null;
-  if (store && store.status !== 'ready') {
-    return {
-      results: [],
-      bulkDataNotReady: true,
-      message: 'Bulk data loading…',
-    };
+  if (!store) return true; // no Alpine store available → assume ready (test env / pre-mount)
+  return store.status === 'ready';
+}
+
+/**
+ * Quick task 260514-uqc Layer 1 — Scryfall REST API fallback for searchCards.
+ * Hits /cards/search through queueScryfallRequest (User-Agent + 100ms spacing
+ * per Scryfall ToS). Filters to paper-legal printings and drops Alchemy
+ * rebalanced cards (A-* prefix), matching the Dexie path's rules. Caps the
+ * result at `limit`. On API error (e.g. 404 no-match) returns [].
+ *
+ * @param {string} query - User-typed query (already validated >= 2 chars)
+ * @param {number} limit - Max results
+ * @returns {Promise<Object[]>}
+ */
+async function searchCardsViaApi(query, limit) {
+  const url = `https://api.scryfall.com/cards/search?q=${encodeURIComponent(query)}&unique=cards&order=name&include_extras=false`;
+  try {
+    const response = await queueScryfallRequest(url);
+    const data = Array.isArray(response?.data) ? response.data : [];
+    const filtered = [];
+    for (const card of data) {
+      if (card?.name && card.name.startsWith('A-')) continue;
+      if (!isPaperLegal(card)) continue;
+      filtered.push(card);
+      if (filtered.length >= limit) break;
+    }
+    return filtered;
+  } catch (_err) {
+    // 404 no-match (and any other transient API error) → empty results.
+    // The consumer pattern in deck-search-panel.js / add-card-panel.js
+    // already renders the standard "no results" path for [].
+    return [];
   }
-  return null;
+}
+
+/**
+ * Quick task 260514-uqc Layer 1 — Scryfall REST API fallback for browseCards.
+ * Composes a Scryfall query string from colour identity + filters and hits
+ * /cards/search. The `filters.tag` heuristic is intentionally NOT translated
+ * — it's a client-side oracle-text heuristic that the consumer applies
+ * post-fetch (preserves the parity behaviour with the Dexie path).
+ *
+ * @param {string[]} colorIdentity
+ * @param {object} filters
+ * @param {number} limit
+ * @returns {Promise<Object[]>}
+ */
+async function browseCardsViaApi(colorIdentity = [], filters = {}, limit = 20) {
+  const parts = [];
+
+  // Colour identity: `identity<=ABC` means "card identity is within ABC".
+  // Empty colorIdentity → don't constrain (commander has no identity context yet).
+  if (colorIdentity.length > 0) {
+    const ci = colorIdentity.map(c => String(c).toUpperCase()).join('');
+    parts.push(`identity<=${ci}`);
+  }
+
+  // Type filter
+  if (filters.type && filters.type !== 'All') {
+    parts.push(`type:${String(filters.type).toLowerCase()}`);
+  }
+
+  // CMC filter
+  if (filters.cmc && filters.cmc !== 'All') {
+    if (filters.cmc === '7+') {
+      parts.push('cmc>=7');
+    } else {
+      parts.push(`cmc=${parseInt(filters.cmc, 10)}`);
+    }
+  }
+
+  // Rarity filter
+  if (filters.rarity && filters.rarity !== 'All') {
+    parts.push(`rarity:${String(filters.rarity).toLowerCase()}`);
+  }
+
+  // Always paper-only (defensive; /cards/search is already paper-biased
+  // for the default unique=cards mode, but be explicit).
+  parts.push('game:paper');
+
+  // Wildcard fallback when no constraints were added (effectively
+  // "any colourless paper card") — Scryfall requires at least one term.
+  if (parts.length === 1) {
+    // Only `game:paper` was pushed; add a broad name filter that matches
+    // any non-empty card name.
+    parts.unshift('name:/./');
+  }
+
+  const q = parts.join(' ');
+  const url = `https://api.scryfall.com/cards/search?q=${encodeURIComponent(q)}&unique=cards&order=name`;
+
+  try {
+    const response = await queueScryfallRequest(url);
+    const data = Array.isArray(response?.data) ? response.data : [];
+    const filtered = [];
+    for (const card of data) {
+      if (card?.name && card.name.startsWith('A-')) continue;
+      if (!isPaperLegal(card)) continue;
+      filtered.push(card);
+      if (filtered.length >= limit) break;
+    }
+    return filtered;
+  } catch (_err) {
+    return [];
+  }
 }
 
 export async function searchCards(query, limit = 12) {
-  // D-05 guard — shape the empty result so consumers can render a placeholder.
-  // Historical contract: on non-match, searchCards returns []. We preserve
-  // that by returning [] when the gate fires; the flag lives on the array
-  // itself so consumers can opt-in.
-  const gated = bulkDataGate();
-  if (gated) {
-    const empty = [];
-    empty.bulkDataNotReady = true;
-    empty.message = gated.message;
-    return empty;
-  }
-
   if (!query || query.length < 2) return [];
+
+  // Quick task 260514-uqc Layer 1 — when the local Dexie catalog isn't ready
+  // yet, fall through to the Scryfall REST API instead of returning the
+  // legacy empty-with-flag. This restores search functionality during the
+  // bulk-streaming window (was the 3-5 min dead-time the user perceived).
+  if (!isBulkDataReady()) {
+    return await searchCardsViaApi(query, limit);
+  }
 
   const normalised = query.toLowerCase();
 
@@ -110,15 +205,12 @@ export async function searchCards(query, limit = 12) {
  * @returns {Promise<Object[]>}
  */
 export async function browseCards(colorIdentity = [], filters = {}, limit = 20) {
-  // D-05 guard — mirror searchCards() so deck-search-panel.js's browse-mode
-  // initial load also surfaces the placeholder while bulk data is still
-  // indexing.
-  const gated = bulkDataGate();
-  if (gated) {
-    const empty = [];
-    empty.bulkDataNotReady = true;
-    empty.message = gated.message;
-    return empty;
+  // Quick task 260514-uqc Layer 1 — mirror searchCards(): route to the
+  // Scryfall REST API while the bulk catalog is still streaming so
+  // Thousand-Year Storm's deck-search panel surfaces real cards on
+  // first paint instead of an empty browse list.
+  if (!isBulkDataReady()) {
+    return await browseCardsViaApi(colorIdentity, filters, limit);
   }
 
   const seen = new Set();
