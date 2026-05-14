@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-04-28 with v1.2 completion)
 Phase: — (v1.2 complete)
 Plan: —
 Status: Milestone complete; ready for archive
-Last activity: 2026-05-14 - Completed quick task 260514-uqc: Defer catalog readiness via Scryfall API search fallback + oracle-cards bulk feed (Layers 1+2 of load-perf fix)
+Last activity: 2026-05-15 - Completed quick task 260515-05m: UI cleanup (topbar dropdown grid layout + sticky add-card-panel header + Archive Manifest -> Treasure Cruise rename)
 Progress: ██████████ 100% (2/2 phases — 1 shipped, 1 collapsed inline)
 
 ## Milestone Progress
@@ -113,6 +113,7 @@ None — v1.2 milestone shipped. Run `/gsd:complete-milestone` for archival, or 
 | 260510-w54 | Fix flushQueue re-entrancy bug causing Postgres deadlocks on bulk RETRY ALL | 2026-05-10 | e3e9ecd | [260510-w54-fix-flushqueue-re-entrancy-bug-causing-p](./quick/260510-w54-fix-flushqueue-re-entrancy-bug-causing-p/) |
 | 260511-0k0 | Fix Alpine reactivity gotcha in deck-landing showing stale 0/100 + missing commander art | 2026-05-11 | 70b500b | [260511-0k0-fix-alpine-reactivity-gotcha-in-deck-lan](./quick/260511-0k0-fix-alpine-reactivity-gotcha-in-deck-lan/) |
 | 260514-uqc | Defer catalog readiness: Scryfall API search fallback + oracle-cards bulk feed | 2026-05-14 | b676a12 | [260514-uqc-defer-catalog-readiness-scryfall-api-sea](./quick/260514-uqc-defer-catalog-readiness-scryfall-api-sea/) |
+| 260515-05m | UI cleanup: topbar dropdown row layout + sticky add-card-panel header + rename Archive Manifest to Treasure Cruise | 2026-05-15 | 15b304a | [260515-05m-ui-cleanup-topbar-dropdown-row-layout-st](./quick/260515-05m-ui-cleanup-topbar-dropdown-row-layout-st/) |
 
 ## Session Continuity
 
