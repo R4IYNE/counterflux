@@ -34,7 +34,7 @@ export function initSearchStore() {
 
       this._debounceTimer = setTimeout(async () => {
         try {
-          const cards = await searchCards(query, 8);
+          const cards = await searchCards(query, 24);
           this.results = cards.map((card) => ({
             ...card,
             _thumbnail: getCardThumbnail(card),

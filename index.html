@@ -202,7 +202,7 @@
           <div
             x-show="($store.search._topbarFocused || false) && ($store.search.results.length > 0 || ($store.search.loading && $store.search.query.length >= 2) || (!$store.search.loading && $store.search.query.length >= 2 && $store.search.results.length === 0))"
             @click.outside="$store.search.clear()"
-            style="position: absolute; top: 100%; left: 0; right: 0; margin-top: 4px; background: var(--color-surface, #14161C); border: 1px solid var(--color-border-ghost, #2A2D3A); max-height: 360px; overflow-y: auto; overflow-x: hidden; z-index: 50; box-shadow: 0 0 20px rgba(13, 82, 189, 0.1); display: flex; flex-direction: column;"
+            style="position: absolute; top: 100%; left: 0; right: 0; margin-top: 4px; background: var(--color-surface, #14161C); border: 1px solid var(--color-border-ghost, #2A2D3A); max-height: 540px; overflow-y: auto; overflow-x: hidden; z-index: 50; box-shadow: 0 0 20px rgba(13, 82, 189, 0.1); display: flex; flex-direction: column;"
           >
             <div x-show="$store.search.loading" style="padding: 10px 14px; display: flex; align-items: center; gap: 8px;">
               <span class="material-symbols-outlined text-primary" style="font-size: 16px;">progress_activity</span>
