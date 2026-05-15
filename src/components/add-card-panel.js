@@ -137,7 +137,7 @@ export function renderAddCardPanel() {
       x-init="window.addEventListener('cf:printing-selected', (e) => onPrintingSelected(e.detail))"
       x-cloak
       class="tc-panel-column"
-      style="width: 360px; flex-shrink: 0; background: var(--color-surface); border-right: 1px solid var(--color-border-ghost); height: 100%; display: flex; flex-direction: column; overflow: visible; transition: transform 200ms ease-out;"
+      style="width: 360px; flex-shrink: 0; background: var(--color-surface); border-right: 1px solid var(--color-border-ghost); position: sticky; top: 64px; align-self: flex-start; height: calc(100vh - 64px); display: flex; flex-direction: column; overflow: visible; transition: transform 200ms ease-out;"
     >
       <!-- FOLLOWUP-1 (Phase 08.1): aside is overflow:visible so the
            absolutely-positioned search dropdown can escape its content box;
