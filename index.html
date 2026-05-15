@@ -194,11 +194,15 @@
             onfocus="this.style.borderColor='var(--color-primary, #0D52BD)'"
             onblur="this.style.borderColor='var(--color-border-ghost, #2A2D3A)'"
           >
-          <!-- Topbar autocomplete dropdown -->
+          <!-- Topbar autocomplete dropdown — Quick task 260515-thg:
+               forced display:flex + flex-direction:column on the container so
+               result rows stack predictably regardless of any inherited grid
+               context from ancestors. max-height + overflow-y: auto bounds the
+               panel and enables internal scroll when results exceed it. -->
           <div
             x-show="($store.search._topbarFocused || false) && ($store.search.results.length > 0 || ($store.search.loading && $store.search.query.length >= 2) || (!$store.search.loading && $store.search.query.length >= 2 && $store.search.results.length === 0))"
             @click.outside="$store.search.clear()"
-            style="position: absolute; top: 100%; left: 0; right: 0; margin-top: 4px; background: var(--color-surface, #14161C); border: 1px solid var(--color-border-ghost, #2A2D3A); max-height: 360px; overflow-y: auto; z-index: 50; box-shadow: 0 0 20px rgba(13, 82, 189, 0.1);"
+            style="position: absolute; top: 100%; left: 0; right: 0; margin-top: 4px; background: var(--color-surface, #14161C); border: 1px solid var(--color-border-ghost, #2A2D3A); max-height: 360px; overflow-y: auto; overflow-x: hidden; z-index: 50; box-shadow: 0 0 20px rgba(13, 82, 189, 0.1); display: flex; flex-direction: column;"
           >
             <div x-show="$store.search.loading" style="padding: 10px 14px; display: flex; align-items: center; gap: 8px;">
               <span class="material-symbols-outlined text-primary" style="font-size: 16px;">progress_activity</span>
@@ -207,30 +211,32 @@
             <div x-show="!$store.search.loading && $store.search.query.length >= 2 && $store.search.results.length === 0" style="padding: 10px 14px;">
               <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--color-text-muted, #8A8F98);">No cards match your query.</span>
             </div>
-            <!-- Quick task 260515-05m: restructured search row to a robust
-                 grid layout (40px thumb | 1fr name+set-meta | auto set icon |
-                 auto mana). Two-line text region (Space Grotesk name above,
-                 JetBrains Mono set code below) reads cleanly even at long
-                 names; row separator borders give visual rhythm; min-height:
-                 60px prevents collapse from missing images. -->
+            <!-- Quick task 260515-thg: rebuilt as plain flex (NOT grid) because
+                 grid columns on the <button> were rendering as stacked rows in
+                 the live screenshot — likely an interaction with how Alpine's
+                 <template x-for> material clones the button into a flex
+                 parent's auto-flow. Plain flex is bulletproof: outer button is
+                 a flex row with explicit column children. flex-shrink: 0 on the
+                 wrapper guards against shrink-in-flow if any ancestor turns out
+                 to be a flex container. -->
             <template x-for="(result, index) in $store.search.results" :key="result.id">
               <button
                 @click="$store.search.selectResult(result)"
                 @mouseenter="$store.search.selectedIndex = index"
                 :style="$store.search.selectedIndex === index ? 'background: var(--color-surface-hover, #1C1F28);' : ''"
-                style="width: 100%; display: grid; grid-template-columns: 40px 1fr auto auto; align-items: center; gap: 12px; padding: 10px 14px; min-height: 60px; text-align: left; border: none; border-bottom: 1px solid var(--color-border-ghost, #2A2D3A); cursor: pointer; background: transparent;"
+                style="display: flex; flex-direction: row; align-items: center; gap: 12px; width: 100%; box-sizing: border-box; flex-shrink: 0; padding: 10px 14px; min-height: 60px; text-align: left; border: none; border-bottom: 1px solid var(--color-border-ghost, #2A2D3A); cursor: pointer; background: transparent;"
                 onmouseenter="this.style.background='var(--color-surface-hover, #1C1F28)'"
                 onmouseleave="this.style.background='transparent'"
               >
-                <div style="width: 40px; height: 56px; overflow: hidden; background: var(--color-surface-hover, #1C1F28); border-radius: 2px;">
+                <div style="width: 40px; height: 56px; flex-shrink: 0; overflow: hidden; background: var(--color-surface-hover, #1C1F28); border-radius: 2px;">
                   <img :src="result._thumbnail" :alt="result._name" style="width: 100%; height: 100%; object-fit: cover;" loading="lazy" onerror="this.style.display='none'">
                 </div>
-                <div style="min-width: 0; display: flex; flex-direction: column; gap: 2px;">
+                <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px;">
                   <span style="font-family: 'Space Grotesk', sans-serif; font-size: 14px; font-weight: 700; color: var(--color-text-primary, #E8E6E3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" x-text="result._name"></span>
                   <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; font-weight: 700; color: var(--color-text-muted, #8A8F98); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" x-text="(result.set || '').toUpperCase() + (result.collector_number ? ' · #' + result.collector_number : '')"></span>
                 </div>
-                <i class="ss" :class="'ss-' + result.set" style="font-size: 16px; color: var(--color-text-dim);"></i>
-                <span style="display: flex; align-items: center; gap: 2px; font-size: 12px; line-height: 1;" x-html="window.renderManaCost(result._manaCost)"></span>
+                <i class="ss" :class="'ss-' + result.set" style="font-size: 16px; color: var(--color-text-dim); flex-shrink: 0;"></i>
+                <span style="display: inline-flex; align-items: center; gap: 2px; font-size: 12px; line-height: 1; flex-shrink: 0;" x-html="window.renderManaCost(result._manaCost)"></span>
               </button>
             </template>
           </div>
