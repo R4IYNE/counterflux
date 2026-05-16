@@ -111,6 +111,95 @@ export function initCollectionStore() {
       return sortEntries(this.filtered, this.sortBy);
     },
 
+    /**
+     * Grouped view (260516-08x): collapse entries that share an oracle_id (or
+     * card name fallback when oracle_id is missing) into a single group with
+     * aggregate counts across printings + foil/non-foil. The returned shape is
+     * consumed by src/components/grouped-view.js.
+     *
+     * Each group entry:
+     *   - key            unique grouping key (oracle_id || name || scryfall_id)
+     *   - card           the representative card (most expensive printing wins)
+     *   - totalQty       sum of entry.quantity across all matching entries
+     *   - foilQty        sum across foil:true entries
+     *   - nonFoilQty     sum across foil:false entries
+     *   - printingCount  distinct scryfall_ids in the group
+     *   - entries        the raw collection entries (for click-to-expand later)
+     *   - estimatedValue EUR price * qty rolled up per entry (foil vs non-foil)
+     *
+     * Conditions are not yet stored on collection entries (v10 schema has no
+     * column). When that schema change lands, extend each group with a
+     * `byCondition` breakdown — the grouped tile already reserves a row for it.
+     */
+    get grouped() {
+      const items = this.filtered;
+      const groups = new Map();
+      for (const entry of items) {
+        const card = entry.card;
+        // Fallback chain — oracle_id is the strongest grouping key (same card
+        // across all printings), name catches catalog-miss rows, scryfall_id
+        // is the per-printing last resort so a missing-metadata row still
+        // appears (rather than being silently dropped).
+        const key = card?.oracle_id || card?.name || entry.scryfall_id;
+        if (!key) continue;
+
+        let g = groups.get(key);
+        if (!g) {
+          g = {
+            key,
+            card,
+            totalQty: 0,
+            foilQty: 0,
+            nonFoilQty: 0,
+            printings: new Set(),
+            entries: [],
+            estimatedValue: 0,
+          };
+          groups.set(key, g);
+        }
+
+        const qty = entry.quantity || 0;
+        g.totalQty += qty;
+        if (entry.foil) g.foilQty += qty;
+        else g.nonFoilQty += qty;
+        if (entry.scryfall_id) g.printings.add(entry.scryfall_id);
+        g.entries.push(entry);
+
+        const eurStr = entry.foil
+          ? card?.prices?.eur_foil
+          : card?.prices?.eur;
+        g.estimatedValue += qty * (parseFloat(eurStr || '0') || 0);
+
+        // Prefer the most expensive printing's card object as the
+        // representative so the tile image isn't whatever Dexie returned first.
+        if (card && (!g.card || g.card === card)) {
+          // first encounter — keep
+        } else if (card) {
+          const newPrice = parseFloat(
+            (entry.foil ? card?.prices?.eur_foil : card?.prices?.eur) || '0',
+          ) || 0;
+          const curPrice = parseFloat(
+            (g.card?.prices?.eur_foil || g.card?.prices?.eur || '0'),
+          ) || 0;
+          if (newPrice > curPrice) g.card = card;
+        }
+      }
+
+      // Materialise printings as a count + sort alphabetically by name.
+      const out = [];
+      for (const g of groups.values()) {
+        out.push({
+          ...g,
+          printingCount: g.printings.size,
+          printings: undefined, // drop the Set from the public shape
+        });
+      }
+      out.sort((a, b) =>
+        (a.card?.name || '').localeCompare(b.card?.name || ''),
+      );
+      return out;
+    },
+
     get stats() {
       return {
         totalCards: this.entries.reduce((sum, e) => sum + e.quantity, 0),

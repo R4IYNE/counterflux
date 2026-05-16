@@ -2,6 +2,7 @@ import { renderEmptyState } from '../components/empty-state.js';
 import { renderStatsHeader } from '../components/stats-header.js';
 import { renderFilterBar } from '../components/filter-bar.js';
 import { renderGalleryView } from '../components/gallery-view.js';
+import { renderGroupedView } from '../components/grouped-view.js';
 import { renderTableView } from '../components/table-view.js';
 import { renderSetCompletionView } from '../components/set-completion.js';
 import { renderAddCardPanel } from '../components/add-card-panel.js';
@@ -138,6 +139,16 @@ export function mount(container) {
                 style="border-top: none; border-left: none; border-right: none;"
               >GALLERY</button>
               <button
+                @click="$store.collection.setViewMode('grouped')"
+                :class="$store.collection.viewMode === 'grouped'
+                  ? 'text-[#0D52BD] border-b-2 border-[#0D52BD]'
+                  : 'text-[#7A8498] hover:text-[#EAECEE] border-b-2 border-transparent'"
+                :style="$store.collection.viewMode === 'grouped' ? 'background: rgba(13,82,189,0.1);' : ''"
+                class="font-mono text-[11px] uppercase tracking-[0.15em] font-bold cursor-pointer px-[16px] py-[8px] bg-transparent"
+                style="border-top: none; border-left: none; border-right: none;"
+                title="Group same card across printings, foil, and conditions"
+              >GROUPED</button>
+              <button
                 @click="$store.collection.setViewMode('table')"
                 :class="$store.collection.viewMode === 'table'
                   ? 'text-[#0D52BD] border-b-2 border-[#0D52BD]'
@@ -168,6 +179,11 @@ export function mount(container) {
             <!-- Gallery view -->
             <template x-if="$store.collection.viewMode === 'gallery'">
               ${renderGalleryView()}
+            </template>
+
+            <!-- Grouped view (260516-08x) — aggregates entries by oracle_id -->
+            <template x-if="$store.collection.viewMode === 'grouped'">
+              ${renderGroupedView()}
             </template>
 
             <!-- Table view -->
