@@ -69,6 +69,21 @@ export function renderPreconBrowser() {
   return `
     <div
       x-data="{
+        preconSearch: '',
+        get filteredPrecons() {
+          // 260516-pcs: client-side fuzzy on precon name + code so the user
+          // can type 'commander' / 'duel' / a year / a code like 'cmm' and
+          // narrow down the tile grid quickly. Empty query = full list.
+          const list = $store.collection.precons || [];
+          const q = (this.preconSearch || '').trim().toLowerCase();
+          if (!q) return list;
+          return list.filter(p =>
+            (p.name || '').toLowerCase().includes(q) ||
+            (p.code || '').toLowerCase().includes(q) ||
+            (p.set_type || '').toLowerCase().includes(q) ||
+            ((p.released_at || '').slice(0, 4)).includes(q)
+          );
+        },
         async hydrateNames(decklist) {
           if (!decklist || !decklist.length) return;
           const ids = decklist.map(e => e.scryfall_id);
@@ -92,11 +107,39 @@ export function renderPreconBrowser() {
         @click.stop
         style="position: relative; z-index: 10; background: var(--color-surface); border: 1px solid var(--color-border-ghost); width: 90vw; max-width: 1280px; height: 90vh; display: flex; flex-direction: column; padding: 24px; gap: 16px; overflow: hidden;"
       >
-        <!-- Header: title + REFRESH + close -->
-        <div style="display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;">
+        <!-- Header: title + search + REFRESH + close -->
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; gap: 16px; flex-wrap: wrap;">
           <h2 style="font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; letter-spacing: 0.01em; color: var(--color-text-primary); margin: 0; text-transform: uppercase;">
             BROWSE PRECONS
           </h2>
+
+          <!-- 260516-pcs: precon name search. Filters the tile grid as you
+               type — name, code, set_type, or year all match. -->
+          <div style="position: relative; flex: 1; min-width: 200px; max-width: 360px;"
+            x-show="!$store.collection.selectedPreconCode">
+            <span class="material-symbols-outlined" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 16px; color: var(--color-text-dim); pointer-events: none;">search</span>
+            <input
+              type="text"
+              x-model="preconSearch"
+              placeholder="SEARCH PRECONS..."
+              style="width: 100%; box-sizing: border-box; background: var(--color-background); border: 1px solid var(--color-border-ghost); color: var(--color-text-primary); padding: 6px 30px 6px 32px; font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; outline: none;"
+              onfocus="this.style.borderColor='var(--color-primary)'"
+              onblur="this.style.borderColor='var(--color-border-ghost)'"
+              autocomplete="off"
+            >
+            <button
+              x-show="preconSearch.length > 0"
+              @click="preconSearch = ''"
+              title="Clear search"
+              aria-label="Clear precon search"
+              style="position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; background: transparent; border: none; cursor: pointer; color: var(--color-text-muted);"
+              onmouseenter="this.style.color='var(--color-secondary)'"
+              onmouseleave="this.style.color='var(--color-text-muted)'"
+            >
+              <span class="material-symbols-outlined" style="font-size: 16px;">close</span>
+            </button>
+          </div>
+
           <div style="display: flex; gap: 8px; align-items: center;">
             <button
               @click="$store.collection.refreshPrecons()"
@@ -153,10 +196,29 @@ export function renderPreconBrowser() {
             </div>
           </template>
 
-          <!-- VIEW A: Tile grid -->
-          <template x-if="$store.collection.precons.length && !$store.collection.selectedPreconCode">
+          <!-- VIEW A: Tile grid — filteredPrecons honours the search input
+               in the header (260516-pcs). When the user has typed a query
+               that matches nothing, the no-results template below fires
+               instead of the tile grid. -->
+          <template x-if="$store.collection.precons.length && !$store.collection.selectedPreconCode && filteredPrecons.length === 0">
+            <div style="padding: 48px; text-align: center; display: flex; flex-direction: column; gap: 12px; align-items: center;">
+              <span class="material-symbols-outlined" style="color: var(--color-text-muted); font-size: 32px;">search_off</span>
+              <h3 style="font-family: 'Syne', sans-serif; font-size: 18px; color: var(--color-text-primary); text-transform: uppercase; margin: 0;">No matching precons</h3>
+              <p style="font-family: 'Space Grotesk', sans-serif; font-size: 14px; color: var(--color-text-muted); margin: 0;">
+                Nothing matches "<span x-text="preconSearch"></span>". Try a different name, code, or year.
+              </p>
+              <button
+                @click="preconSearch = ''"
+                style="padding: 6px 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; color: var(--color-text-primary); background: transparent; border: 1px solid var(--color-border-ghost); cursor: pointer; text-transform: uppercase; margin-top: 4px;"
+                onmouseenter="this.style.borderColor='var(--color-primary)'"
+                onmouseleave="this.style.borderColor='var(--color-border-ghost)'"
+              >CLEAR SEARCH</button>
+            </div>
+          </template>
+
+          <template x-if="filteredPrecons.length > 0 && !$store.collection.selectedPreconCode">
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 24px;">
-              <template x-for="precon in $store.collection.precons" :key="precon.code">
+              <template x-for="precon in filteredPrecons" :key="precon.code">
                 <button
                   @click="$store.collection.selectPrecon(precon.code)"
                   class="card-tile-hover"
