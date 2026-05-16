@@ -181,47 +181,28 @@ export function renderAddCardPanel() {
             onmouseleave="this.style.background='var(--color-surface-hover)'"
           >MASS ENTRY</button>
         </div>
-      </div>
 
-      <!-- Scrollable body region -->
-      <div class="tc-panel-body" style="flex: 1; min-height: 0; overflow-y: auto; padding: 16px 24px 24px; display: flex; flex-direction: column; gap: 16px;">
+        <!-- Search input + dropdown (260516-vp4: moved from body to header so
+             the dropdown's containing block is OUTSIDE tc-panel-body's
+             overflow:auto context. Otherwise the dropdown gets clipped at the
+             body's bottom edge regardless of its own max-height. -->
+        <div style="position: relative;">
+          <input
+            type="text"
+            :value="searchQuery"
+            @input="doSearch($event.target.value)"
+            placeholder="SEARCH CARD NAME..."
+            style="width: 100%; box-sizing: border-box; background: var(--color-background); border: 1px solid var(--color-border-ghost); color: var(--color-text-primary); padding: 8px 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; outline: none;"
+            onfocus="this.style.borderColor='var(--color-primary)'"
+            onblur="this.style.borderColor='var(--color-border-ghost)'"
+            autocomplete="off"
+          >
 
-      <!-- Quick task 260514-uqc: removed the top-of-panel blocking
-           "Bulk data loading…" template. Layer 1's API fallback (src/db/search.js)
-           now keeps search functional while bulk data is still streaming, so
-           there's nothing to block on. A softer inline affordance is rendered
-           above the results dropdown below — see the x-show="searchResults.length > 0"
-           block. -->
-
-      <!-- Empty state (idle — no query, no selected card). Quick task 260514-uqc:
-           drop the bulkdata gate; search works regardless of bulkdata.status now. -->
-      <template x-if="!searchQuery && !selectedCard">
-        <div style="display: flex; flex-direction: column; gap: 4px; padding: 8px 0;">
-          <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; color: var(--color-text-muted); text-transform: uppercase;">
-            READY TO ARCHIVE
-          </span>
-          <span style="font-family: 'Space Grotesk', sans-serif; font-size: 14px; font-weight: 400; line-height: 1.5; color: var(--color-text-muted);">
-            Search for a card, or browse a precon to add one hundred at once.
-          </span>
-        </div>
-      </template>
-
-      <!-- Search input -->
-      <div style="position: relative;">
-        <input
-          type="text"
-          :value="searchQuery"
-          @input="doSearch($event.target.value)"
-          placeholder="SEARCH CARD NAME..."
-          style="width: 100%; box-sizing: border-box; background: var(--color-background); border: 1px solid var(--color-border-ghost); color: var(--color-text-primary); padding: 8px 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; outline: none;"
-          onfocus="this.style.borderColor='var(--color-primary)'"
-          onblur="this.style.borderColor='var(--color-border-ghost)'"
-          autocomplete="off"
-        >
-
-        <!-- Search results dropdown -->
-        <div x-show="searchResults.length > 0"
-             style="position: absolute; top: 100%; left: 0; right: 0; margin-top: 4px; background: var(--color-surface); border: 1px solid var(--color-border-ghost); max-height: 540px; overflow-y: auto; z-index: 10;">
+          <!-- Search results dropdown — max-height uses min(540px, viewport
+               minus header offset) so on short viewports the dropdown shrinks
+               instead of running off the bottom of the screen. -->
+          <div x-show="searchResults.length > 0"
+               style="position: absolute; top: 100%; left: 0; right: 0; margin-top: 4px; background: var(--color-surface); border: 1px solid var(--color-border-ghost); max-height: min(540px, calc(100vh - 240px)); overflow-y: auto; z-index: 10; box-shadow: 0 8px 20px rgba(11, 12, 16, 0.6);">
           <!-- Quick task 260514-uqc: inline affordance hint shown above the
                results when bulk data is still streaming. Layer 1's API fallback
                is serving these results; once \$store.bulkdata.status === 'ready'
@@ -254,8 +235,27 @@ export function renderAddCardPanel() {
                  style="font-size: 14px; color: var(--color-text-dim);"></i>
             </button>
           </template>
+          </div>
         </div>
-      </div>
+      </div><!-- /.tc-panel-header -->
+
+      <!-- Scrollable body region (260516-vp4: search input moved into the
+           header above; this body now starts with the empty state and selected-
+           card preview). -->
+      <div class="tc-panel-body" style="flex: 1; min-height: 0; overflow-y: auto; padding: 16px 24px 24px; display: flex; flex-direction: column; gap: 16px;">
+
+      <!-- Empty state (idle — no query, no selected card). Quick task 260514-uqc:
+           drop the bulkdata gate; search works regardless of bulkdata.status now. -->
+      <template x-if="!searchQuery && !selectedCard">
+        <div style="display: flex; flex-direction: column; gap: 4px; padding: 8px 0;">
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; color: var(--color-text-muted); text-transform: uppercase;">
+            READY TO ARCHIVE
+          </span>
+          <span style="font-family: 'Space Grotesk', sans-serif; font-size: 14px; font-weight: 400; line-height: 1.5; color: var(--color-text-muted);">
+            Search for a card, or browse a precon to add one hundred at once.
+          </span>
+        </div>
+      </template>
 
       <!-- Selected card preview -->
       <template x-if="selectedCard">

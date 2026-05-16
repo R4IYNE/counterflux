@@ -58,14 +58,15 @@ describe('COLLECT-03: dropdown row thumbnail', () => {
  * `.tc-panel-body` wrapper that owns its own `overflow-y: auto`.
  */
 describe('FOLLOWUP-1: dropdown scroll containment', () => {
-  it('dropdown wrapper declares max-height: 540px and overflow-y: auto in the same style', () => {
-    // Quick task 260516-bnp: bumped from 280px to 540px to surface ~7 result
-    // rows at the new 70px row height, matching the topbar dropdown cap.
+  it('dropdown wrapper declares a viewport-responsive max-height and overflow-y: auto', () => {
+    // Quick task 260516-vp4: max-height is min(540px, calc(100vh - 240px)) so
+    // on short viewports the dropdown shrinks instead of running off the
+    // bottom of the screen. The 540px ceiling matches the topbar dropdown cap.
     const html = renderAddCardModal();
     const dropdownMatch = html.match(/<div[^>]*x-show="searchResults\.length > 0"[^>]*>/);
     expect(dropdownMatch).toBeTruthy();
     const dropdownTag = dropdownMatch[0];
-    expect(dropdownTag).toMatch(/max-height:\s*540px/);
+    expect(dropdownTag).toMatch(/max-height:\s*min\(540px,\s*calc\(100vh\s*-\s*240px\)\)/);
     expect(dropdownTag).toMatch(/overflow-y:\s*auto/);
     expect(dropdownTag).toMatch(/position:\s*absolute/);
   });
