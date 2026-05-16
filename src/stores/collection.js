@@ -270,6 +270,9 @@ export function initCollectionStore() {
     async toggleFoilForEntry(entryId) {
       const entry = await db.collection.get(entryId);
       if (!entry) return;
+      // newFoil is already 0/1 (defensive against entry.foil being boolean,
+      // null, or undefined — IndexedDB rejects boolean keys, see
+      // splitAndChangePrinting for the rationale).
       const newFoil = entry.foil ? 0 : 1;
 
       const sibling = await db.collection
@@ -308,6 +311,13 @@ export function initCollectionStore() {
       const moveQty = Math.min(qty, ownedQty);
       if (moveQty < 1) return;
 
+      // Coerce foil to 0/1 — IndexedDB rejects boolean keys, and historical
+      // entries from older addCard paths may have stored `foil: false` or
+      // `foil: true` which breaks .where('[scryfall_id+foil]').equals([...])
+      // with `bound IDBKeyRange not a valid key`. Normalising here keeps the
+      // query valid regardless of how the source row was persisted.
+      const foilKey = entry.foil ? 1 : 0;
+
       // Full-quantity moves delegate to the in-place printing swap — no
       // remainder to leave behind, no need to create a new entry.
       if (moveQty >= ownedQty) {
@@ -337,7 +347,7 @@ export function initCollectionStore() {
       // creating hook supplies a UUID for new rows automatically.
       const sibling = await db.collection
         .where('[scryfall_id+foil]')
-        .equals([newScryfallId, entry.foil])
+        .equals([newScryfallId, foilKey])
         .and(e => e.category === entry.category && e.id !== entry.id)
         .first();
 
@@ -349,7 +359,7 @@ export function initCollectionStore() {
         await db.collection.add({
           scryfall_id: newScryfallId,
           quantity: moveQty,
-          foil: entry.foil,
+          foil: foilKey,
           category: entry.category,
           added_at: new Date().toISOString(),
         });
@@ -374,6 +384,10 @@ export function initCollectionStore() {
       const entry = await db.collection.get(entryId);
       if (!entry || entry.scryfall_id === newScryfallId) return;
 
+      // Coerce foil to 0/1 — IndexedDB rejects boolean keys (see
+      // splitAndChangePrinting for the rationale).
+      const foilKey = entry.foil ? 1 : 0;
+
       // Hydrate db.cards for the new printing — oracle-cards bulk feed
       // doesn't carry every printing, so non-canonical IDs may miss.
       let newCard = await db.cards.get(newScryfallId);
@@ -394,7 +408,7 @@ export function initCollectionStore() {
 
       const sibling = await db.collection
         .where('[scryfall_id+foil]')
-        .equals([newScryfallId, entry.foil])
+        .equals([newScryfallId, foilKey])
         .and(e => e.category === entry.category && e.id !== entry.id)
         .first();
 
