@@ -290,6 +290,80 @@ export function initCollectionStore() {
     },
 
     /**
+     * Quick task 260516-pks — split N copies of an entry to a different
+     * printing without moving the rest. e.g. you own 4x Lightning Bolt from
+     * set A and want 2 of them to be set B; calling this with qty=2 reduces
+     * the source entry to 2 and creates (or merges into) a new entry with
+     * 2 copies of set B's printing. When qty >= entry.quantity this
+     * collapses to changePrintingForEntry (no remainder left behind).
+     *
+     * @param {number} entryId          source collection entry to split
+     * @param {number} qty              copies to move to the new printing
+     * @param {string} newScryfallId    target printing's scryfall id
+     */
+    async splitAndChangePrinting(entryId, qty, newScryfallId) {
+      const entry = await db.collection.get(entryId);
+      if (!entry || !qty || qty < 1) return;
+      const ownedQty = entry.quantity || 0;
+      const moveQty = Math.min(qty, ownedQty);
+      if (moveQty < 1) return;
+
+      // Full-quantity moves delegate to the in-place printing swap — no
+      // remainder to leave behind, no need to create a new entry.
+      if (moveQty >= ownedQty) {
+        return this.changePrintingForEntry(entryId, newScryfallId);
+      }
+
+      // Hydrate db.cards for the new printing — oracle-cards bulk feed
+      // doesn't carry every printing, so non-canonical IDs may miss.
+      let newCard = await db.cards.get(newScryfallId);
+      if (!newCard) {
+        try {
+          const fetched = await queueScryfallRequest(
+            `https://api.scryfall.com/cards/${encodeURIComponent(newScryfallId)}`,
+          );
+          if (fetched && fetched.id) {
+            newCard = fetched;
+            await db.cards.put(fetched);
+          }
+        } catch (err) {
+          console.error('[Counterflux] splitAndChangePrinting: fetch failed', err);
+          return;
+        }
+      }
+
+      // If a sibling entry exists for the destination (newPrinting, foil,
+      // category), merge into it; otherwise create a new entry. The Dexie
+      // creating hook supplies a UUID for new rows automatically.
+      const sibling = await db.collection
+        .where('[scryfall_id+foil]')
+        .equals([newScryfallId, entry.foil])
+        .and(e => e.category === entry.category && e.id !== entry.id)
+        .first();
+
+      if (sibling) {
+        await db.collection.update(sibling.id, {
+          quantity: (sibling.quantity || 0) + moveQty,
+        });
+      } else {
+        await db.collection.add({
+          scryfall_id: newScryfallId,
+          quantity: moveQty,
+          foil: entry.foil,
+          category: entry.category,
+          added_at: new Date().toISOString(),
+        });
+      }
+
+      // Reduce the source entry to leave the unsplit portion behind.
+      await db.collection.update(entry.id, {
+        quantity: ownedQty - moveQty,
+      });
+
+      await this.loadEntries();
+    },
+
+    /**
      * Quick task 260516-rls — change which printing (scryfall_id) a
      * collection entry points to. Fetches the new printing's card metadata
      * via Scryfall API on cache miss so db.cards is hydrated before the
