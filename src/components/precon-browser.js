@@ -30,6 +30,7 @@ import {
   splitPreconIntoDecks,
   getDeckManifestForPrecon,
   loadPreconDeckMemberships,
+  fetchPreconDecklist,
 } from '../services/precons.js';
 
 /**
@@ -113,6 +114,22 @@ export function renderPreconBrowser() {
     window.__cf_getDeckManifestForPrecon = getDeckManifestForPrecon;
     window.__cf_loadPreconDeckMemberships = loadPreconDeckMemberships;
   }
+  // 260516-pcd2: representative-commander cache for non-manifest precons
+  // (single-deck commander products, duel decks). Lazily filled by the
+  // backfill loop in the precon-browser x-data — see backfillNonManifestCommanders.
+  // Value semantics: { id, name } when a commander was identified, null
+  // when the decklist had no legendary creature (most duel decks),
+  // undefined when not yet fetched.
+  if (typeof window !== 'undefined' && !window.__cf_preconRepresentativeCommander) {
+    window.__cf_preconRepresentativeCommander = {};
+  }
+  // 260516-pcd2: expose fetchPreconDecklist for the backfill loop. Same
+  // service entry the store uses inside selectPrecon — and it's already
+  // cached in Dexie with a 7-day TTL, so repeated calls across sessions
+  // are free after the first load.
+  if (typeof window !== 'undefined' && !window.__cf_fetchPreconDecklist) {
+    window.__cf_fetchPreconDecklist = fetchPreconDecklist;
+  }
   // 260516-pcd: commander art cache (scryfall_id → art_crop URL).
   // Filled by hydrateCommanderImages(); empty entries render the
   // keyrune fallback until they resolve.
@@ -161,17 +178,74 @@ export function renderPreconBrowser() {
         _missingNamesFetched: false,
         _membershipsReady: false,
         _artHydrationKickedFor: new Set(),
+        _backfillStarted: false,
+        _commanderResolveBump: 0,
         async ensureMembershipsLoaded() {
           if (this._membershipsReady) return;
           if (window.__cf_loadPreconDeckMemberships) {
             await window.__cf_loadPreconDeckMemberships();
           }
           this._membershipsReady = true;
+          // Kick the non-manifest commander backfill once memberships are
+          // ready; the precons list may still be loading so the backfill
+          // loop guards on that internally.
+          this.backfillNonManifestCommanders();
         },
         commanderArt(id) {
           if (!id) return '';
           const cache = window.__cf_commanderArt || {};
           return cache[id] || '';
+        },
+        representativeCommanderFor(code) {
+          // Reads _commanderResolveBump so the getter that calls this
+          // re-evaluates whenever the backfill resolves a new commander.
+          return this._commanderResolveBump,
+            (window.__cf_preconRepresentativeCommander?.[code]) || null;
+        },
+        async backfillNonManifestCommanders() {
+          if (this._backfillStarted) return;
+          if (!this._membershipsReady) return;
+          const precons = $store.collection.precons || [];
+          if (precons.length === 0) {
+            // Try again once precons land — Alpine effect on filteredPrecons
+            // will re-trigger us via the x-effect on the root element.
+            return;
+          }
+          this._backfillStarted = true;
+          for (const p of precons) {
+            if (!p?.code) continue;
+            // Skip if cache already has an answer (or null sentinel).
+            if (Object.prototype.hasOwnProperty.call(
+              window.__cf_preconRepresentativeCommander || {}, p.code,
+            )) continue;
+            // Skip if manifest already provides commanders — those tiles
+            // get per-deck commanders from the manifest path, not this loop.
+            const decks = window.__cf_getDeckManifestForPrecon?.(p.code) || [];
+            if (decks.length > 0) continue;
+            try {
+              const decklist = await fetchPreconDecklist(p.code);
+              const cmdr = (decklist || []).find((e) => e.is_commander);
+              if (cmdr) {
+                window.__cf_preconRepresentativeCommander[p.code] = {
+                  id: cmdr.scryfall_id,
+                  name: cmdr.name,
+                };
+                // Hydrate the art immediately so the tile lights up as
+                // soon as the bump bubbles through the getter.
+                if (window.__cf_hydrateCommanderImages) {
+                  window.__cf_hydrateCommanderImages([cmdr.scryfall_id]);
+                }
+              } else {
+                // Decklist had no legendary creature (most duel decks).
+                // Cache null so we don't re-fetch on every render.
+                window.__cf_preconRepresentativeCommander[p.code] = null;
+              }
+              this._commanderResolveBump++;
+            } catch (err) {
+              console.warn('[precon-browser] non-manifest commander backfill failed for', p.code, err);
+              window.__cf_preconRepresentativeCommander[p.code] = null;
+            }
+          }
         },
         get filteredPrecons() {
           // 260516-pcs: client-side fuzzy on precon name + code so the user
@@ -211,12 +285,17 @@ export function renderPreconBrowser() {
                 });
               }
             } else {
+              // 260516-pcd2: non-manifest precons (single-deck commander
+              // products, duel decks). Use the backfilled representative
+              // commander when available; falls back to null until the
+              // background fetch lands and bumps _commanderResolveBump.
+              const repr = this.representativeCommanderFor(p.code);
               tiles.push({
                 isDeck: false,
                 precon: p,
                 deckKey: null,
                 deckName: p.name,
-                commander: null,
+                commander: repr,
                 cardCount: 0,
               });
             }
@@ -268,6 +347,7 @@ export function renderPreconBrowser() {
       @keydown.escape.window="$store.collection.closePreconBrowser()"
       x-effect="$store.collection.selectedPreconCode && hydrateNames(($store.collection.precons.find(p => p.code === $store.collection.selectedPreconCode))?.decklist)"
       x-effect="_membershipsReady && $store.collection.preconBrowserOpen && !$store.collection.selectedPreconCode && kickArtHydration()"
+      x-effect="_membershipsReady && ($store.collection.precons || []).length > 0 && backfillNonManifestCommanders()"
       style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9999; display: flex; align-items: center; justify-content: center;"
     >
       <!-- Backdrop -->
