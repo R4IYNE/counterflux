@@ -33,24 +33,9 @@ export function renderFilterBar() {
     <div class="flex items-center gap-[16px] p-[16px] flex-wrap"
          style="background: #1C1F28;">
 
-      <!-- Sort dropdown -->
-      <div class="flex items-center gap-[8px]">
-        <span class="font-mono uppercase text-[11px] tracking-[0.15em] font-bold"
-              style="color: #7A8498;">SORT:</span>
-        <select
-          x-model="$store.collection.sortBy"
-          class="font-mono text-[11px] uppercase tracking-[0.15em] cursor-pointer px-[8px] py-[4px] outline-none"
-          style="background: #0B0C10; border: 1px solid #2A2D3A; color: #EAECEE;"
-        >
-          <option value="name-asc">NAME A-Z</option>
-          <option value="name-desc">NAME Z-A</option>
-          <option value="price-desc">PRICE HIGH-LOW</option>
-          <option value="price-asc">PRICE LOW-HIGH</option>
-          <option value="date-desc">DATE ADDED (NEW)</option>
-          <option value="date-asc">DATE ADDED (OLD)</option>
-          <option value="set-asc">SET RELEASE</option>
-        </select>
-      </div>
+      <!-- 260516-srt: SORT dropdown removed — Gallery has its own inline
+           sort at the top of the grid (260516-gsr) and Table has clickable
+           column headers; the filter-bar copy was a third redundant control. -->
 
       <!-- Colour filter pips -->
       <div class="flex items-center gap-[4px]">

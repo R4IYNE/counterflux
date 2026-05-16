@@ -574,6 +574,21 @@ export function initCollectionStore() {
       await this.loadEntries();
     },
 
+    /**
+     * Quick task 260516-mss — bulk-delete multiple collection entries in a
+     * single Dexie transaction. Used by the gallery multi-select toolbar.
+     * Unlike deleteEntry, this skips the undo system — mass-delete is an
+     * intentional action that the caller is expected to gate behind a
+     * confirm() dialog at the UI layer.
+     *
+     * @param {Array} entryIds
+     */
+    async deleteEntries(entryIds) {
+      if (!Array.isArray(entryIds) || entryIds.length === 0) return;
+      await db.collection.bulkDelete(entryIds);
+      await this.loadEntries();
+    },
+
     async deleteEntry(entryId) {
       const entry = await db.collection.get(entryId);
       if (!entry) return;
