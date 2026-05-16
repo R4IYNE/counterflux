@@ -55,26 +55,44 @@ export function renderSetCompletionView() {
       rarityFilter: 'all',
       completionData: [],
       loading: false,
+      catalogEmpty: false,
+      catalogCount: 0,
+      lastError: null,
 
       async init() {
         await this.computeData();
         this.$watch('rarityFilter', () => this.computeData());
         this.$watch('$store.collection.entries', () => this.computeData());
+        // 260516-stv: when the bulk catalog finishes loading, re-compute so
+        // the SETS view fills in. Previously it stayed empty until the user
+        // bounced to a different tab and came back.
+        this.$watch('$store.bulkdata.status', (s) => {
+          if (s === 'ready') this.computeData();
+        });
       },
 
       async computeData() {
         this.loading = true;
+        this.lastError = null;
         try {
           const { computeSetCompletion } = await import('./set-completion.js');
           const allCards = await (await import('../db/schema.js')).db.cards.toArray();
-          this.completionData = computeSetCompletion(
-            $store.collection.entries,
-            allCards,
-            this.rarityFilter
-          );
+          this.catalogCount = allCards.length;
+          this.catalogEmpty = allCards.length === 0;
+          if (this.catalogEmpty) {
+            this.completionData = [];
+            console.warn('[SetCompletion] db.cards is empty — bulk catalog not yet loaded');
+          } else {
+            this.completionData = computeSetCompletion(
+              $store.collection.entries,
+              allCards,
+              this.rarityFilter
+            );
+          }
         } catch (e) {
           console.error('[SetCompletion] Error computing data:', e);
           this.completionData = [];
+          this.lastError = e?.message || String(e);
         }
         this.loading = false;
       },
@@ -135,11 +153,36 @@ export function renderSetCompletionView() {
             </div>
           </template>
 
-          <!-- Empty state -->
+          <!-- Empty state — 260516-stv: distinguish 'catalog still loading'
+               from 'no rows match the current rarity filter' from an
+               outright error so the user knows whether to wait or to fiddle. -->
           <template x-if="completionData.length === 0">
-            <div class="flex items-center justify-center py-[32px]">
-              <span class="font-mono text-[11px] uppercase tracking-[0.15em]"
-                    style="color: #7A8498;">No set data available</span>
+            <div class="flex flex-col items-center justify-center py-[32px] gap-[8px] text-center">
+              <template x-if="lastError">
+                <span class="font-mono text-[11px] uppercase tracking-[0.15em]"
+                      style="color: #E23838;"
+                      x-text="'Error: ' + lastError"></span>
+              </template>
+              <template x-if="!lastError && catalogEmpty && $store.bulkdata && $store.bulkdata.status !== 'ready'">
+                <div class="flex flex-col items-center gap-[8px]">
+                  <span class="material-symbols-outlined" style="color: #0D52BD; font-size: 24px;">cloud_sync</span>
+                  <span class="font-mono text-[11px] uppercase tracking-[0.15em]" style="color: #7A8498;">
+                    Catalog still loading — set completion will appear once cards finish indexing.
+                  </span>
+                  <span class="font-mono text-[10px] uppercase tracking-[0.1em]" style="color: #4A5064;"
+                    x-text="'Bulk status: ' + ($store.bulkdata.status || 'idle') + ($store.bulkdata.progress ? ' · ' + $store.bulkdata.progress + '%' : '')"></span>
+                </div>
+              </template>
+              <template x-if="!lastError && catalogEmpty && (!$store.bulkdata || $store.bulkdata.status === 'ready')">
+                <span class="font-mono text-[11px] uppercase tracking-[0.15em]" style="color: #7A8498;">
+                  Card catalog appears empty. Try reloading the app, or wait a moment if you just signed in.
+                </span>
+              </template>
+              <template x-if="!lastError && !catalogEmpty">
+                <span class="font-mono text-[11px] uppercase tracking-[0.15em]" style="color: #7A8498;">
+                  No sets match the current rarity filter.
+                </span>
+              </template>
             </div>
           </template>
         </div>
