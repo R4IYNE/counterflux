@@ -180,6 +180,7 @@ export function renderPreconBrowser() {
         _artHydrationKickedFor: new Set(),
         _backfillStarted: false,
         _commanderResolveBump: 0,
+        _artBump: 0,
         async ensureMembershipsLoaded() {
           if (this._membershipsReady) return;
           if (window.__cf_loadPreconDeckMemberships) {
@@ -192,6 +193,11 @@ export function renderPreconBrowser() {
           this.backfillNonManifestCommanders();
         },
         commanderArt(id) {
+          // Reads _artBump first so this getter re-evaluates whenever the
+          // hydration loop lands new art. Without it, window.__cf_commanderArt
+          // mutations are invisible to Alpine and the keyrune fallback
+          // would stay forever.
+          this._artBump;
           if (!id) return '';
           const cache = window.__cf_commanderArt || {};
           return cache[id] || '';
@@ -230,10 +236,11 @@ export function renderPreconBrowser() {
                   id: cmdr.scryfall_id,
                   name: cmdr.name,
                 };
-                // Hydrate the art immediately so the tile lights up as
-                // soon as the bump bubbles through the getter.
+                // Hydrate the art and wait — bump _artBump after the
+                // fetch lands so the tile re-renders with the image.
                 if (window.__cf_hydrateCommanderImages) {
-                  window.__cf_hydrateCommanderImages([cmdr.scryfall_id]);
+                  await window.__cf_hydrateCommanderImages([cmdr.scryfall_id]);
+                  this._artBump++;
                 }
               } else {
                 // Decklist had no legendary creature (most duel decks).
@@ -315,6 +322,9 @@ export function renderPreconBrowser() {
           if (fresh.length === 0) return;
           for (const id of fresh) this._artHydrationKickedFor.add(id);
           await window.__cf_hydrateCommanderImages(fresh);
+          // Bump tripwire so commanderArt(id) re-evaluates and tiles
+          // swap from keyrune to commander art.
+          this._artBump++;
         },
         async hydrateNames(decklist) {
           if (!decklist || !decklist.length) return;
@@ -346,7 +356,7 @@ export function renderPreconBrowser() {
       x-effect="$store.collection.preconBrowserOpen && ensureMembershipsLoaded()"
       @keydown.escape.window="$store.collection.closePreconBrowser()"
       x-effect="$store.collection.selectedPreconCode && hydrateNames(($store.collection.precons.find(p => p.code === $store.collection.selectedPreconCode))?.decklist)"
-      x-effect="_membershipsReady && $store.collection.preconBrowserOpen && !$store.collection.selectedPreconCode && kickArtHydration()"
+      x-effect="flatDeckTiles.length > 0 && _membershipsReady && $store.collection.preconBrowserOpen && !$store.collection.selectedPreconCode && kickArtHydration()"
       x-effect="_membershipsReady && ($store.collection.precons || []).length > 0 && backfillNonManifestCommanders()"
       style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9999; display: flex; align-items: center; justify-content: center;"
     >
