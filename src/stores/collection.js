@@ -261,6 +261,80 @@ export function initCollectionStore() {
       await this.loadEntries();
     },
 
+    /**
+     * Quick task 260516-rls — flip foil/non-foil on a collection entry.
+     * If a sibling entry exists with the new foil + same scryfall_id +
+     * same category, merge into it (sum qty, delete source) so we don't
+     * end up with duplicate (scryfall_id, foil, category) rows.
+     */
+    async toggleFoilForEntry(entryId) {
+      const entry = await db.collection.get(entryId);
+      if (!entry) return;
+      const newFoil = entry.foil ? 0 : 1;
+
+      const sibling = await db.collection
+        .where('[scryfall_id+foil]')
+        .equals([entry.scryfall_id, newFoil])
+        .and(e => e.category === entry.category && e.id !== entry.id)
+        .first();
+
+      if (sibling) {
+        await db.collection.update(sibling.id, {
+          quantity: (sibling.quantity || 0) + (entry.quantity || 0),
+        });
+        await db.collection.delete(entry.id);
+      } else {
+        await db.collection.update(entry.id, { foil: newFoil });
+      }
+      await this.loadEntries();
+    },
+
+    /**
+     * Quick task 260516-rls — change which printing (scryfall_id) a
+     * collection entry points to. Fetches the new printing's card metadata
+     * via Scryfall API on cache miss so db.cards is hydrated before the
+     * UI re-renders. Merges with an existing (newScryfallId, foil, category)
+     * sibling if one already exists, otherwise updates in place.
+     */
+    async changePrintingForEntry(entryId, newScryfallId) {
+      const entry = await db.collection.get(entryId);
+      if (!entry || entry.scryfall_id === newScryfallId) return;
+
+      // Hydrate db.cards for the new printing — oracle-cards bulk feed
+      // doesn't carry every printing, so non-canonical IDs may miss.
+      let newCard = await db.cards.get(newScryfallId);
+      if (!newCard) {
+        try {
+          const fetched = await queueScryfallRequest(
+            `https://api.scryfall.com/cards/${encodeURIComponent(newScryfallId)}`,
+          );
+          if (fetched && fetched.id) {
+            newCard = fetched;
+            await db.cards.put(fetched);
+          }
+        } catch (err) {
+          console.error('[Counterflux] changePrintingForEntry: fetch failed', err);
+          return;
+        }
+      }
+
+      const sibling = await db.collection
+        .where('[scryfall_id+foil]')
+        .equals([newScryfallId, entry.foil])
+        .and(e => e.category === entry.category && e.id !== entry.id)
+        .first();
+
+      if (sibling) {
+        await db.collection.update(sibling.id, {
+          quantity: (sibling.quantity || 0) + (entry.quantity || 0),
+        });
+        await db.collection.delete(entry.id);
+      } else {
+        await db.collection.update(entry.id, { scryfall_id: newScryfallId });
+      }
+      await this.loadEntries();
+    },
+
     async deleteEntry(entryId) {
       const entry = await db.collection.get(entryId);
       if (!entry) return;
