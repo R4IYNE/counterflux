@@ -750,16 +750,30 @@
                 ></button>
               </div>
             </template>
-          </div>
 
-          <!-- Action buttons -->
-          <div class="pt-md flex flex-col gap-sm">
-            <button
-              @click="window.open($store.search.selectedCard.scryfall_uri, '_blank')"
-              class="w-full px-4 py-3 font-mono uppercase text-[11px] tracking-[0.15em] font-bold text-text-primary bg-primary hover:bg-primary/80 transition-colors cursor-pointer"
-            >
-              View on Scryfall
-            </button>
+            <!-- Action buttons (260516-svp): SAVE is the primary CTA when
+                 editing an in-collection card; View on Scryfall is always
+                 secondary now (was previously the lone primary button).
+                 When the card isn't in the collection yet, the ADD CARD
+                 button inside the ADD TO COLLECTION template above is the
+                 primary CTA — View on Scryfall stays secondary here too. -->
+            <div class="pt-md flex flex-col gap-sm">
+              <template x-if="totalOwned > 0">
+                <button
+                  @click="$store.search.closeFlyout()"
+                  class="w-full px-4 py-3 font-mono uppercase text-[11px] tracking-[0.15em] font-bold text-text-primary bg-primary hover:bg-primary/80 transition-colors cursor-pointer"
+                  title="Close — your edits save as you make them"
+                >
+                  SAVE
+                </button>
+              </template>
+              <button
+                @click="window.open($store.search.selectedCard.scryfall_uri, '_blank')"
+                class="w-full px-4 py-2 font-mono uppercase text-[11px] tracking-[0.15em] font-bold text-text-muted hover:text-text-primary bg-transparent border border-border-ghost hover:border-primary transition-colors cursor-pointer"
+              >
+                View on Scryfall
+              </button>
+            </div>
           </div>
         </div>
       </aside>
