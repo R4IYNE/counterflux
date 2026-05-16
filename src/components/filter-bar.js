@@ -42,12 +42,13 @@ export function renderFilterBar() {
           class="font-mono text-[11px] uppercase tracking-[0.15em] cursor-pointer px-[8px] py-[4px] outline-none"
           style="background: #0B0C10; border: 1px solid #2A2D3A; color: #EAECEE;"
         >
-          <option value="price-desc">PRICE DESCENDING</option>
-          <option value="price-asc">PRICE ASCENDING</option>
           <option value="name-asc">NAME A-Z</option>
           <option value="name-desc">NAME Z-A</option>
+          <option value="price-desc">PRICE HIGH-LOW</option>
+          <option value="price-asc">PRICE LOW-HIGH</option>
+          <option value="date-desc">DATE ADDED (NEW)</option>
+          <option value="date-asc">DATE ADDED (OLD)</option>
           <option value="set-asc">SET RELEASE</option>
-          <option value="date-desc">DATE ADDED</option>
         </select>
       </div>
 

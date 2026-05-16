@@ -46,9 +46,12 @@ function sortEntries(items, sortBy) {
 export function initCollectionStore() {
   Alpine.store('collection', {
     entries: [],
-    // 260516-grd: default switched from 'gallery' to 'grouped' so the
-    // owned-count + foil breakdown is the primary view.
-    viewMode: 'grouped',
+    // 260516-gly: the GROUPED view is now THE gallery — the old per-entry
+    // gallery tab was removed. Internal value renamed to 'gallery' so the
+    // tab label, the viewMode value, and the user's mental model all
+    // converge on one name. renderGroupedView() is still the render
+    // function (filename TBD — not worth the churn yet).
+    viewMode: 'gallery',
     sortBy: 'name-asc',
     filters: {
       colours: [],
@@ -196,9 +199,33 @@ export function initCollectionStore() {
           printings: undefined, // drop the Set from the public shape
         });
       }
-      out.sort((a, b) =>
-        (a.card?.name || '').localeCompare(b.card?.name || ''),
-      );
+      // 260516-gly: respect $store.collection.sortBy so the sort dropdown
+      // in the filter-bar (NAME A-Z, PRICE DESC/ASC, SET RELEASE, DATE
+      // ADDED) works the same way it does on the legacy per-entry views.
+      const [field, dir] = (this.sortBy || 'name-asc').split('-');
+      const mul = dir === 'desc' ? -1 : 1;
+      out.sort((a, b) => {
+        switch (field) {
+          case 'price':
+            return mul * ((a.estimatedValue || 0) - (b.estimatedValue || 0));
+          case 'set':
+            return mul * (
+              (a.card?.released_at || '').localeCompare(b.card?.released_at || '')
+            );
+          case 'date': {
+            // Date-added on a group = newest added_at across its entries
+            // (a single newly-added printing surfaces the whole group).
+            const newestOf = (g) => (g.entries || []).reduce((m, e) => {
+              const t = e.added_at ? Date.parse(e.added_at) : 0;
+              return t > m ? t : m;
+            }, 0);
+            return mul * (newestOf(a) - newestOf(b));
+          }
+          case 'name':
+          default:
+            return mul * (a.card?.name || '').localeCompare(b.card?.name || '');
+        }
+      });
       return out;
     },
 

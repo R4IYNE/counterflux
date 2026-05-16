@@ -1,7 +1,8 @@
 import { renderEmptyState } from '../components/empty-state.js';
 import { renderStatsHeader } from '../components/stats-header.js';
 import { renderFilterBar } from '../components/filter-bar.js';
-import { renderGalleryView } from '../components/gallery-view.js';
+// 260516-gly: renderGalleryView removed — the old per-entry tile view was
+// retired and renderGroupedView is now the GALLERY surface.
 import { renderGroupedView } from '../components/grouped-view.js';
 import { renderTableView } from '../components/table-view.js';
 import { renderSetCompletionView } from '../components/set-completion.js';
@@ -129,6 +130,8 @@ export function mount(container) {
 
             <!-- View toggle tabs -->
             <div class="flex items-center gap-0 border-b border-[#2A2D3A]">
+              <!-- 260516-gly: old GALLERY tab (per-entry tiles) retired; the
+                   grouped-card layout below is now THE GALLERY. -->
               <button
                 @click="$store.collection.setViewMode('gallery')"
                 :class="$store.collection.viewMode === 'gallery'
@@ -137,17 +140,8 @@ export function mount(container) {
                 :style="$store.collection.viewMode === 'gallery' ? 'background: rgba(13,82,189,0.1);' : ''"
                 class="font-mono text-[11px] uppercase tracking-[0.15em] font-bold cursor-pointer px-[16px] py-[8px] bg-transparent"
                 style="border-top: none; border-left: none; border-right: none;"
+                title="Cards grouped by oracle id — total owned across all printings + foils"
               >GALLERY</button>
-              <button
-                @click="$store.collection.setViewMode('grouped')"
-                :class="$store.collection.viewMode === 'grouped'
-                  ? 'text-[#0D52BD] border-b-2 border-[#0D52BD]'
-                  : 'text-[#7A8498] hover:text-[#EAECEE] border-b-2 border-transparent'"
-                :style="$store.collection.viewMode === 'grouped' ? 'background: rgba(13,82,189,0.1);' : ''"
-                class="font-mono text-[11px] uppercase tracking-[0.15em] font-bold cursor-pointer px-[16px] py-[8px] bg-transparent"
-                style="border-top: none; border-left: none; border-right: none;"
-                title="Group same card across printings, foil, and conditions"
-              >GROUPED</button>
               <button
                 @click="$store.collection.setViewMode('table')"
                 :class="$store.collection.viewMode === 'table'
@@ -176,13 +170,11 @@ export function mount(container) {
           <!-- View content area -->
           <div class="min-h-[400px]">
 
-            <!-- Gallery view -->
+            <!-- Gallery view — 260516-gly: now uses renderGroupedView() as
+                 the single canonical gallery (aggregates by oracle_id with
+                 owned-count + foil breakdown). The old renderGalleryView
+                 (per-entry tiles) was retired. -->
             <template x-if="$store.collection.viewMode === 'gallery'">
-              ${renderGalleryView()}
-            </template>
-
-            <!-- Grouped view (260516-08x) — aggregates entries by oracle_id -->
-            <template x-if="$store.collection.viewMode === 'grouped'">
               ${renderGroupedView()}
             </template>
 

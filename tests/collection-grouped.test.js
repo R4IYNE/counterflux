@@ -168,6 +168,33 @@ describe('260516-08x: collection store `grouped` getter', () => {
     expect(groups[1].card.name).toBe('Sol Ring');
   });
 
+  it('260516-gly sort dispatch — price desc puts most-valuable group first', () => {
+    // Replica of the price branch in the store getter post-260516-gly.
+    const groups = computeGrouped([
+      { id: 1, scryfall_id: 'bolt-m10', quantity: 1, foil: 0, card: boltM10 }, // 1.20
+      { id: 2, scryfall_id: 'sol-c21', quantity: 1, foil: 0, card: solRing },  // 2.00
+    ]);
+    // Apply the price-desc sort branch from the store getter
+    groups.sort((a, b) => -1 * ((a.estimatedValue || 0) - (b.estimatedValue || 0)));
+    expect(groups[0].card.name).toBe('Sol Ring');
+    expect(groups[1].card.name).toBe('Lightning Bolt');
+  });
+
+  it('260516-gly sort dispatch — date-desc surfaces most-recently-added group first', () => {
+    const groups = computeGrouped([
+      { id: 1, scryfall_id: 'bolt-m10', quantity: 1, foil: 0, card: boltM10, added_at: '2025-01-01T00:00:00.000Z' },
+      { id: 2, scryfall_id: 'sol-c21', quantity: 1, foil: 0, card: solRing, added_at: '2026-05-01T00:00:00.000Z' },
+    ]);
+    // Apply the date-desc sort branch from the store getter
+    const newestOf = (g) => (g.entries || []).reduce((m, e) => {
+      const t = e.added_at ? Date.parse(e.added_at) : 0;
+      return t > m ? t : m;
+    }, 0);
+    groups.sort((a, b) => -1 * (newestOf(a) - newestOf(b)));
+    expect(groups[0].card.name).toBe('Sol Ring');
+    expect(groups[1].card.name).toBe('Lightning Bolt');
+  });
+
   it('does not drop the printings Set leaving raw internals on the public shape', () => {
     const entries = [
       { id: 1, scryfall_id: 'bolt-m10', quantity: 1, foil: 0, card: boltM10 },
