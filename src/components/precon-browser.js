@@ -53,6 +53,42 @@ export function renderPreconBrowser() {
     window.__cf_getPreconCardName = (scryfallId) => {
       return window.__cf_preconCardNames.get(scryfallId) || scryfallId;
     };
+    // 260516-pnm: when the local lookup misses (oracle-cards bulk only
+    // carries the canonical printing per oracle_id, so most precon-specific
+    // printings won't be in db.cards), batch-fetch the names from Scryfall's
+    // /cards/collection endpoint (up to 75 IDs per call). Cache locally so
+    // we don't refetch on every reopen, and populate db.cards so the rest
+    // of the app gets the metadata too.
+    window.__cf_hydratePreconNamesFromApi = async (scryfallIds) => {
+      const missing = scryfallIds.filter((id) => !window.__cf_preconCardNames.has(id));
+      if (!missing.length) return;
+      for (let i = 0; i < missing.length; i += 75) {
+        const batch = missing.slice(i, i + 75);
+        try {
+          const response = await fetch('https://api.scryfall.com/cards/collection', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'User-Agent': 'Counterflux/1.1 (MTG collection manager)',
+            },
+            body: JSON.stringify({ identifiers: batch.map((id) => ({ id })) }),
+          });
+          if (!response.ok) {
+            console.warn('[precon-browser] /cards/collection failed:', response.status);
+            continue;
+          }
+          const data = await response.json();
+          for (const card of (data.data || [])) {
+            if (card?.id && card?.name) {
+              window.__cf_preconCardNames.set(card.id, card.name);
+              try { await db.cards.put(card); } catch {}
+            }
+          }
+        } catch (err) {
+          console.warn('[precon-browser] /cards/collection batch failed:', err);
+        }
+      }
+    };
   }
 
   // FOLLOWUP-4B (Phase 08.1) — expose the bundle detector to the Alpine
@@ -70,6 +106,7 @@ export function renderPreconBrowser() {
     <div
       x-data="{
         preconSearch: '',
+        _missingNamesFetched: false,
         get filteredPrecons() {
           // 260516-pcs: client-side fuzzy on precon name + code so the user
           // can type 'commander' / 'duel' / a year / a code like 'cmm' and
@@ -86,8 +123,26 @@ export function renderPreconBrowser() {
         },
         async hydrateNames(decklist) {
           if (!decklist || !decklist.length) return;
+          // 260516-pnm: seed the in-memory map from the decklist's own .name
+          // field FIRST so older fetched decks render immediately even when
+          // db.cards doesn't have the printings (post oracle-cards swap).
+          for (const e of decklist) {
+            if (e?.scryfall_id && e?.name && window.__cf_preconCardNames && !window.__cf_preconCardNames.has(e.scryfall_id)) {
+              window.__cf_preconCardNames.set(e.scryfall_id, e.name);
+            }
+          }
           const ids = decklist.map(e => e.scryfall_id);
           if (window.__cf_hydratePreconNames) await window.__cf_hydratePreconNames(ids);
+          // 260516-pnm: anything still missing after the local sweep falls
+          // through to a batched /cards/collection API call. Guarded so we
+          // only fire it once per opened decklist.
+          if (!this._missingNamesFetched && window.__cf_hydratePreconNamesFromApi) {
+            const stillMissing = ids.filter(id => !window.__cf_preconCardNames.has(id));
+            if (stillMissing.length > 0) {
+              this._missingNamesFetched = true;
+              await window.__cf_hydratePreconNamesFromApi(stillMissing);
+            }
+          }
         }
       }"
       x-show="$store.collection.preconBrowserOpen"
@@ -334,7 +389,19 @@ export function renderPreconBrowser() {
                   return 0;
                 });
               },
-              cardName(id) { return (window.__cf_getPreconCardName && window.__cf_getPreconCardName(id)) || id; }
+              cardName(entryOrId) {
+                // 260516-pnm: prefer the decklist entry's own .name field
+                // (populated by fetchPreconDecklist) so we never render
+                // the raw scryfall_id even when db.cards / Scryfall API
+                // haven't hydrated yet.
+                if (entryOrId && typeof entryOrId === 'object') {
+                  if (entryOrId.name) return entryOrId.name;
+                  const lookup = window.__cf_getPreconCardName && window.__cf_getPreconCardName(entryOrId.scryfall_id);
+                  if (lookup && lookup !== entryOrId.scryfall_id) return lookup;
+                  return entryOrId.name || entryOrId.scryfall_id || '';
+                }
+                return (window.__cf_getPreconCardName && window.__cf_getPreconCardName(entryOrId)) || entryOrId;
+              }
             }">
               <!-- Preview header -->
               <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 16px;">
@@ -446,7 +513,7 @@ export function renderPreconBrowser() {
                       ></span>
                       <span
                         style="flex: 1; font-family: 'Space Grotesk', sans-serif; font-size: 14px; font-weight: 700; color: var(--color-text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"
-                        x-text="cardName(entry.scryfall_id)"
+                        x-text="cardName(entry)"
                       ></span>
                       <template x-if="entry.is_commander">
                         <span class="material-symbols-outlined" title="Commander" aria-label="Commander" style="font-size: 16px; color: var(--color-text-primary);">workspace_premium</span>
