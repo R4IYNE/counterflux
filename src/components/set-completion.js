@@ -1,5 +1,14 @@
 import { db } from '../db/schema.js';
 
+// 260516-stv: dynamic `await import('./set-completion.js')` from an Alpine
+// inline x-data expression had no module context so Vite mis-resolved it
+// into /node_modules/.vite/deps/ and the request failed in dev. Expose the
+// helper on window the same way main.js exposes __cf_searchCards / __cf_db
+// so the renderSetCompletionView x-data can call it directly.
+if (typeof window !== 'undefined') {
+  // Stamped below the export; eagerly assign so first render after HMR sees it.
+}
+
 /**
  * Compute set completion statistics from collection entries and card database.
  *
@@ -75,15 +84,24 @@ export function renderSetCompletionView() {
         this.loading = true;
         this.lastError = null;
         try {
-          const { computeSetCompletion } = await import('./set-completion.js');
-          const allCards = await (await import('../db/schema.js')).db.cards.toArray();
+          // 260516-stv: avoid dynamic imports here — Alpine inline x-data
+          // has no module context so Vite cannot resolve relative paths,
+          // and the previous dynamic import call was failing with
+          // 'Failed to fetch dynamically imported module'. Pull the helper
+          // and db off window (set at module top below).
+          const fn = window.__cf_computeSetCompletion;
+          const db = window.__cf_db;
+          if (typeof fn !== 'function' || !db) {
+            throw new Error('Set-completion helpers not initialised yet — reload the app.');
+          }
+          const allCards = await db.cards.toArray();
           this.catalogCount = allCards.length;
           this.catalogEmpty = allCards.length === 0;
           if (this.catalogEmpty) {
             this.completionData = [];
             console.warn('[SetCompletion] db.cards is empty — bulk catalog not yet loaded');
           } else {
-            this.completionData = computeSetCompletion(
+            this.completionData = fn(
               $store.collection.entries,
               allCards,
               this.rarityFilter
@@ -190,4 +208,12 @@ export function renderSetCompletionView() {
 
     </div>
   `;
+}
+
+// 260516-stv: expose computeSetCompletion on window for Alpine x-data
+// invocation (no module context available inside inline expressions, and
+// dynamic `import('./set-completion.js')` was failing through Vite's
+// optimized-deps resolver). __cf_db is already exposed by main.js.
+if (typeof window !== 'undefined') {
+  window.__cf_computeSetCompletion = computeSetCompletion;
 }
