@@ -311,6 +311,46 @@ function inferIsCommander(card) {
  * @param {{ code?: string, decklist?: Array }} precon
  * @returns {Array<{ key: string, name: string, identity: string[], identityLabel: string, commanders: Array, cards: Array, total: number }>}
  */
+/**
+ * 260516-pcd: manifest-only deck enumeration for tile-grid expansion.
+ *
+ * Unlike splitPreconIntoDecks(), this does NOT require precon.decklist to
+ * be loaded — it returns deck shells purely from the membership manifest.
+ * The tile grid in the precon browser uses this to show one tile per deck
+ * in a multi-deck bundle (e.g. Marvel Super Heroes Commander → 4 deck
+ * tiles) without waiting for any Scryfall fetch.
+ *
+ * Convention: the first card in each deck's MTGJSON membership list is
+ * treated as the commander. This matches WotC's deck-list layout and
+ * mtgjson's emit order; verified across the Final Fantasy, Doctor Who,
+ * Marvel and Warhammer 40K manifests.
+ *
+ * Returns [] when the manifest has no entry for `code` so callers can
+ * fall back to a single bundle tile.
+ *
+ * @param {string} code  Scryfall set code (lower or upper case)
+ * @returns {Array<{ key: string, deckName: string, commander: { id: string, name: string } | null, total: number }>}
+ */
+export function getDeckManifestForPrecon(code) {
+  if (!_membershipsCache) return [];
+  const bundleMap = (_membershipsCache?.memberships || {})[(code || '').toLowerCase()];
+  if (!bundleMap) return [];
+  const decks = [];
+  for (const [deckName, rawEntries] of Object.entries(bundleMap)) {
+    const entries = (rawEntries || []).map((e) =>
+      typeof e === 'string' ? { id: e, name: '' } : { id: e?.id || '', name: e?.name || '' }
+    );
+    if (entries.length === 0) continue;
+    decks.push({
+      key: (code || '').toLowerCase() + '::' + deckName,
+      deckName,
+      commander: entries[0] && entries[0].id ? { id: entries[0].id, name: entries[0].name } : null,
+      total: entries.length,
+    });
+  }
+  return decks;
+}
+
 export function splitPreconIntoDecks(precon) {
   const list = precon?.decklist;
   if (!Array.isArray(list) || list.length === 0) return [];

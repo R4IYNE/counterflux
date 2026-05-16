@@ -85,6 +85,11 @@ export function initCollectionStore() {
     // Phase 8 Plan 3 — COLLECT-02 precon browser state.
     preconBrowserOpen: false,
     selectedPreconCode: null,
+    // 260516-pcd: when the user clicks a per-deck tile in the precon
+    // browser (manifest-driven), set this alongside selectedPreconCode so
+    // VIEW B drills straight into the deck preview instead of stopping at
+    // the manifest-deck tile picker. Cleared whenever the user backs out.
+    pendingDeckKey: null,
     preconsLoading: false,
     preconsError: null,
     precons: [], // sorted newest-first by fetchPrecons() (D-12)

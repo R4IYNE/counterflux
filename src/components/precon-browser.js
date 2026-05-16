@@ -25,7 +25,12 @@
 // never blanks out.
 
 import { db } from '../db/schema.js';
-import { isMultiDeckBundle, splitPreconIntoDecks } from '../services/precons.js';
+import {
+  isMultiDeckBundle,
+  splitPreconIntoDecks,
+  getDeckManifestForPrecon,
+  loadPreconDeckMemberships,
+} from '../services/precons.js';
 
 /**
  * Render the Precon Browser drawer HTML.
@@ -101,12 +106,73 @@ export function renderPreconBrowser() {
   if (typeof window !== 'undefined' && !window.__cf_splitPreconIntoDecks) {
     window.__cf_splitPreconIntoDecks = splitPreconIntoDecks;
   }
+  // 260516-pcd: manifest-only deck enumerator + memberships loader so the
+  // top-level tile grid can expand bundles into per-deck tiles without
+  // pre-fetching Scryfall decklists.
+  if (typeof window !== 'undefined' && !window.__cf_getDeckManifestForPrecon) {
+    window.__cf_getDeckManifestForPrecon = getDeckManifestForPrecon;
+    window.__cf_loadPreconDeckMemberships = loadPreconDeckMemberships;
+  }
+  // 260516-pcd: commander art cache (scryfall_id → art_crop URL).
+  // Filled by hydrateCommanderImages(); empty entries render the
+  // keyrune fallback until they resolve.
+  if (typeof window !== 'undefined' && !window.__cf_commanderArt) {
+    window.__cf_commanderArt = {};
+    window.__cf_hydrateCommanderImages = async (scryfallIds) => {
+      const missing = scryfallIds.filter((id) => id && !(id in window.__cf_commanderArt));
+      if (!missing.length) return;
+      // Mark in-flight to suppress duplicate fetches on re-render.
+      for (const id of missing) window.__cf_commanderArt[id] = null;
+      // Batch via /cards/collection (max 75 IDs per call).
+      for (let i = 0; i < missing.length; i += 75) {
+        const batch = missing.slice(i, i + 75);
+        try {
+          const response = await fetch('https://api.scryfall.com/cards/collection', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'User-Agent': 'Counterflux/1.1 (MTG collection manager)',
+            },
+            body: JSON.stringify({ identifiers: batch.map((id) => ({ id })) }),
+          });
+          if (!response.ok) continue;
+          const data = await response.json();
+          for (const card of (data.data || [])) {
+            const art = card?.image_uris?.art_crop
+              || card?.card_faces?.[0]?.image_uris?.art_crop
+              || card?.image_uris?.normal
+              || '';
+            if (card?.id) {
+              window.__cf_commanderArt[card.id] = art;
+              try { await db.cards.put(card); } catch {}
+            }
+          }
+        } catch (err) {
+          console.warn('[precon-browser] commander-art batch failed:', err);
+        }
+      }
+    };
+  }
 
   return `
     <div
       x-data="{
         preconSearch: '',
         _missingNamesFetched: false,
+        _membershipsReady: false,
+        _artHydrationKickedFor: new Set(),
+        async ensureMembershipsLoaded() {
+          if (this._membershipsReady) return;
+          if (window.__cf_loadPreconDeckMemberships) {
+            await window.__cf_loadPreconDeckMemberships();
+          }
+          this._membershipsReady = true;
+        },
+        commanderArt(id) {
+          if (!id) return '';
+          const cache = window.__cf_commanderArt || {};
+          return cache[id] || '';
+        },
         get filteredPrecons() {
           // 260516-pcs: client-side fuzzy on precon name + code so the user
           // can type 'commander' / 'duel' / a year / a code like 'cmm' and
@@ -120,6 +186,56 @@ export function renderPreconBrowser() {
             (p.set_type || '').toLowerCase().includes(q) ||
             ((p.released_at || '').slice(0, 4)).includes(q)
           );
+        },
+        get flatDeckTiles() {
+          // 260516-pcd: produce ONE tile per deck rather than one per bundle.
+          // For products with a manifest entry, each deck becomes its own
+          // tile with the deck's commander as the thumbnail. For products
+          // without a manifest (single-deck commander products, duel decks,
+          // older sets), emit one tile per product as before.
+          if (!this._membershipsReady) return [];
+          const tiles = [];
+          for (const p of (this.filteredPrecons || [])) {
+            const decks = (window.__cf_getDeckManifestForPrecon
+              ? window.__cf_getDeckManifestForPrecon(p.code)
+              : []);
+            if (decks.length > 0) {
+              for (const d of decks) {
+                tiles.push({
+                  isDeck: true,
+                  precon: p,
+                  deckKey: d.key,
+                  deckName: d.deckName,
+                  commander: d.commander,
+                  cardCount: d.total,
+                });
+              }
+            } else {
+              tiles.push({
+                isDeck: false,
+                precon: p,
+                deckKey: null,
+                deckName: p.name,
+                commander: null,
+                cardCount: 0,
+              });
+            }
+          }
+          return tiles;
+        },
+        async kickArtHydration() {
+          // Pull commander IDs from the current tile list and batch-fetch
+          // their image URLs. Idempotent via _artHydrationKickedFor — a
+          // search-query change only re-fires for any NEW commander ids
+          // that surface.
+          if (!window.__cf_hydrateCommanderImages) return;
+          const ids = this.flatDeckTiles
+            .map(t => t.commander?.id)
+            .filter(Boolean);
+          const fresh = ids.filter(id => !this._artHydrationKickedFor.has(id));
+          if (fresh.length === 0) return;
+          for (const id of fresh) this._artHydrationKickedFor.add(id);
+          await window.__cf_hydrateCommanderImages(fresh);
         },
         async hydrateNames(decklist) {
           if (!decklist || !decklist.length) return;
@@ -147,8 +263,11 @@ export function renderPreconBrowser() {
       }"
       x-show="$store.collection.preconBrowserOpen"
       x-cloak
+      x-init="ensureMembershipsLoaded()"
+      x-effect="$store.collection.preconBrowserOpen && ensureMembershipsLoaded()"
       @keydown.escape.window="$store.collection.closePreconBrowser()"
       x-effect="$store.collection.selectedPreconCode && hydrateNames(($store.collection.precons.find(p => p.code === $store.collection.selectedPreconCode))?.decklist)"
+      x-effect="_membershipsReady && $store.collection.preconBrowserOpen && !$store.collection.selectedPreconCode && kickArtHydration()"
       style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9999; display: flex; align-items: center; justify-content: center;"
     >
       <!-- Backdrop -->
@@ -271,33 +390,73 @@ export function renderPreconBrowser() {
             </div>
           </template>
 
-          <template x-if="filteredPrecons.length > 0 && !$store.collection.selectedPreconCode">
+          <!-- 260516-pcd: flat deck tile grid. Multi-deck bundles (Marvel,
+               Final Fantasy, etc.) expand to one tile per deck so users see
+               the actual playable decks rather than the bundle product.
+               Single-deck commander products + duel decks emit one tile each.
+               Each tile attempts to show the commander's art_crop as its
+               background (lazy-fetched + cached on window.__cf_commanderArt);
+               fall back to the keyrune set glyph until art lands. -->
+          <template x-if="flatDeckTiles.length > 0 && !$store.collection.selectedPreconCode">
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 24px;">
-              <template x-for="precon in filteredPrecons" :key="precon.code">
+              <template x-for="tile in flatDeckTiles" :key="(tile.deckKey || tile.precon.code) + '::' + (tile.commander?.id || '')">
                 <button
-                  @click="$store.collection.selectPrecon(precon.code)"
+                  @click="$store.collection.pendingDeckKey = tile.isDeck ? tile.deckKey : null; $store.collection.selectPrecon(tile.precon.code)"
                   class="card-tile-hover"
                   style="width: 100%; aspect-ratio: 240 / 336; padding: 0; background: var(--color-surface); border: 1px solid var(--color-border-ghost); cursor: pointer; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end;"
                 >
-                  <!-- Background keyrune glyph (ss-fallback prevents blank on missing codes per Pitfall 4) -->
-                  <i class="ss ss-fallback" :class="'ss-' + precon.code"
-                     style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 96px; color: var(--color-text-dim); opacity: 0.4;"></i>
+                  <!-- Commander art background — lazy-loaded; rendered ABOVE
+                       the keyrune fallback once the URL resolves. -->
+                  <template x-if="tile.commander && commanderArt(tile.commander.id)">
+                    <img
+                      :src="commanderArt(tile.commander.id)"
+                      :alt="tile.commander.name || tile.deckName"
+                      style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.85;"
+                      loading="lazy"
+                      onerror="this.style.display='none'"
+                    >
+                  </template>
+
+                  <!-- Keyrune fallback when no commander art (single-deck
+                       products without manifest entries, OR while art is in
+                       flight from /cards/collection). ss-fallback prevents
+                       blank on missing codes per Pitfall 4. -->
+                  <template x-if="!tile.commander || !commanderArt(tile.commander.id)">
+                    <i class="ss ss-fallback" :class="'ss-' + tile.precon.code"
+                       style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 96px; color: var(--color-text-dim); opacity: 0.4;"></i>
+                  </template>
 
                   <!-- Set-type badge (top-left) -->
                   <span
-                    style="position: absolute; top: 8px; left: 8px; padding: 2px 6px; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; color: var(--color-text-muted); background: var(--color-surface-hover); text-transform: uppercase;"
-                    x-text="precon.set_type === 'commander' ? 'COMMANDER' : 'DUEL DECK'"
+                    style="position: absolute; top: 8px; left: 8px; padding: 2px 6px; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; color: var(--color-text-muted); background: rgba(20,22,28,0.85); text-transform: uppercase;"
+                    x-text="tile.precon.set_type === 'commander' ? 'COMMANDER' : (tile.precon.set_type === 'duel_deck' ? 'DUEL DECK' : (tile.precon.set_type || '').toUpperCase())"
                   ></span>
 
-                  <!-- Overlay strip (bottom) -->
-                  <div style="position: relative; z-index: 2; padding: 16px; background: linear-gradient(to top, var(--color-background), transparent); text-align: left;">
+                  <!-- Deck-card count badge (top-right) — only when manifest
+                       knows the total. Reads '100 CARDS' / '60 CARDS' etc. -->
+                  <template x-if="tile.isDeck && tile.cardCount > 0">
+                    <span
+                      style="position: absolute; top: 8px; right: 8px; padding: 2px 6px; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; color: var(--color-text-primary); background: rgba(20,22,28,0.85);"
+                      x-text="tile.cardCount + ' CARDS'"
+                    ></span>
+                  </template>
+
+                  <!-- Overlay strip (bottom) — deck name on top, then
+                       commander name + product / year below. -->
+                  <div style="position: relative; z-index: 2; padding: 16px; background: linear-gradient(to top, var(--color-background) 30%, transparent); text-align: left;">
                     <div
                       style="font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; color: var(--color-text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-transform: uppercase;"
-                      x-text="precon.name"
+                      x-text="tile.deckName"
                     ></div>
+                    <template x-if="tile.commander?.name">
+                      <div
+                        style="font-family: 'Space Grotesk', sans-serif; font-size: 12px; font-weight: 400; color: var(--color-text-primary); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"
+                        x-text="tile.commander.name"
+                      ></div>
+                    </template>
                     <div
-                      style="font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--color-text-muted); margin-top: 4px; text-transform: uppercase;"
-                      x-text="precon.code.toUpperCase() + ' · ' + (precon.released_at ? precon.released_at.slice(0,4) : '—')"
+                      style="font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--color-text-muted); margin-top: 4px; text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"
+                      x-text="tile.precon.code.toUpperCase() + ' · ' + (tile.precon.released_at ? tile.precon.released_at.slice(0,4) : '—')"
                     ></div>
                   </div>
                 </button>
@@ -309,6 +468,16 @@ export function renderPreconBrowser() {
           <template x-if="$store.collection.selectedPreconCode">
             <div x-data="{
               selectedDeckKey: null,
+              init() {
+                // 260516-pcd: if the outer tile click came from a per-deck
+                // tile, the store carries a pendingDeckKey — adopt it so
+                // VIEW B opens straight on the deck preview rather than
+                // the manifest deck-picker.
+                if ($store.collection.pendingDeckKey) {
+                  this.selectedDeckKey = $store.collection.pendingDeckKey;
+                  $store.collection.pendingDeckKey = null;
+                }
+              },
               get precon() { return $store.collection.precons.find(p => p.code === $store.collection.selectedPreconCode); },
               get isBundle() { return window.__cf_isMultiDeckBundle ? window.__cf_isMultiDeckBundle(this.precon) : false; },
               // Phase 14.07e — manifest-driven deck tiles for known multi-deck
