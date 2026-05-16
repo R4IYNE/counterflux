@@ -292,9 +292,13 @@ export function renderAddCardPanel() {
               </template>
             </div>
           </template>
-          <!-- Resolved strip -->
+          <!-- Resolved strip — Quick task 260516-2tg: cap at max-height 160px
+               with overflow-y: auto so cards with 40+ printings (e.g. Lightning
+               Bolt, Sol Ring) don't push QTY / FOIL / CATEGORY / ADD CARD
+               below the panel's scroll viewport. Padding-right reserves space
+               for the scrollbar so set icons don't crowd the gutter. -->
           <template x-if="!$store.collection.printingsByCardId[selectedCard.id]?.loading">
-            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; max-height: 160px; overflow-y: auto; padding-right: 4px;">
               <template x-for="p in ($store.collection.printingsByCardId[selectedCard.id]?.printings || [])" :key="p.id">
                 <button
                   @click="$store.collection.selectPrinting(selectedCard.id, p.id)"
@@ -302,8 +306,8 @@ export function renderAddCardPanel() {
                   :aria-label="p.set_name + ' printing, ' + (p.released_at ? p.released_at.slice(0,4) : '')"
                   :aria-pressed="$store.collection.activePrintingIdByCard[selectedCard.id] === p.id"
                   :style="$store.collection.activePrintingIdByCard[selectedCard.id] === p.id
-                    ? 'width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; background: var(--color-primary); color: var(--color-text-primary); border: 1px solid var(--color-primary); cursor: pointer; box-shadow: 0 0 12px var(--color-glow-blue); transition: all 150ms ease-out;'
-                    : 'width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; background: var(--color-background); color: var(--color-text-dim); border: 1px solid var(--color-border-ghost); cursor: pointer; transition: all 150ms ease-out;'"
+                    ? 'width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; background: var(--color-primary); color: var(--color-text-primary); border: 1px solid var(--color-primary); cursor: pointer; box-shadow: 0 0 12px var(--color-glow-blue); transition: all 150ms ease-out; flex-shrink: 0;'
+                    : 'width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; background: var(--color-background); color: var(--color-text-dim); border: 1px solid var(--color-border-ghost); cursor: pointer; transition: all 150ms ease-out; flex-shrink: 0;'"
                 >
                   <i class="ss" :class="'ss-' + p.set" style="font-size: 16px;"></i>
                 </button>

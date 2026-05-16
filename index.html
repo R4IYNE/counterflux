@@ -666,7 +666,7 @@
                           <span class="font-mono text-[11px] text-text-dim" style="font-family: 'JetBrains Mono', monospace;">Loading printings…</span>
                         </template>
                         <template x-if="!$store.collection.printingsByCardId[entry.card?.id]?.loading">
-                          <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px;">
+                          <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; max-height: 160px; overflow-y: auto; padding-right: 4px;">
                             <template x-for="p in ($store.collection.printingsByCardId[entry.card?.id]?.printings || [])" :key="p.id">
                               <button
                                 @click="$store.collection.changePrintingForEntry(entry.id, p.id); editPrintingFor = null;"
