@@ -478,20 +478,102 @@
           <!-- Oracle text -->
           <div class="font-body text-[14px] leading-[1.5] text-text-primary whitespace-pre-line" x-text="$store.search.selectedCard._oracleText" style="font-family: 'Space Grotesk', sans-serif;"></div>
 
-          <!-- Price section -->
-          <div class="pt-sm">
-            <span class="font-mono uppercase text-[11px] tracking-[0.15em] font-bold text-primary block mb-sm">MARKET PRICE</span>
-            <div class="flex items-baseline gap-md">
-              <span
-                class="font-header text-[28px] font-bold text-text-primary"
-                x-text="window.__cf_eurToGbp ? window.__cf_eurToGbp($store.search.selectedCard.prices?.eur) : 'N/A'"
-              ></span>
-              <span
-                x-show="$store.search.selectedCard.prices?.eur_foil"
-                class="font-mono uppercase text-[11px] tracking-[0.15em] font-normal text-text-muted"
-                x-text="$store.search.selectedCard.prices?.eur_foil ? 'Foil: ' + window.__cf_eurToGbp($store.search.selectedCard.prices.eur_foil) : ''"
-              ></span>
+          <!-- Price section — 260516-mkb: when the card is in collection, show
+               a per-printing breakdown (set+collector#, foil/normal, qty × unit
+               = subtotal) plus the rolled-up YOUR TOTAL. Falls back to the
+               original single-card market price when not owned. Reflects saved
+               collection state (not in-flight staged edits — those live in the
+               IN YOUR COLLECTION block below and surface via the UNSAVED pill). -->
+          <div class="pt-sm" x-data="{
+            get owned() {
+              const card = $store.search.selectedCard;
+              if (!card) return [];
+              const oid = card.oracle_id;
+              const entries = $store.collection.entries || [];
+              return oid
+                ? entries.filter(e => e.card?.oracle_id === oid)
+                : entries.filter(e => e.scryfall_id === card.id);
+            },
+            get breakdown() {
+              return this.owned.map(e => {
+                const eurStr = e.foil ? e.card?.prices?.eur_foil : e.card?.prices?.eur;
+                const unit = parseFloat(eurStr || '0') || 0;
+                const qty = e.quantity || 0;
+                return {
+                  id: e.id,
+                  set: (e.card?.set || '').toUpperCase(),
+                  collector: e.card?.collector_number || '',
+                  foil: !!e.foil,
+                  qty,
+                  unitEur: unit,
+                  totalEur: unit * qty,
+                };
+              });
+            },
+            get totalEur() {
+              return this.breakdown.reduce((s, b) => s + b.totalEur, 0);
+            },
+            fmt(eurValue) {
+              if (window.__cf_eurToGbpValue) {
+                return '£' + window.__cf_eurToGbpValue(eurValue).toFixed(2);
+              }
+              return '€' + (eurValue || 0).toFixed(2);
+            }
+          }">
+            <div class="flex items-baseline justify-between mb-sm">
+              <span class="font-mono uppercase text-[11px] tracking-[0.15em] font-bold text-primary">MARKET PRICE</span>
+              <template x-if="owned.length > 0">
+                <span class="font-mono uppercase text-[10px] tracking-[0.1em] font-bold text-text-muted">YOUR TOTAL</span>
+              </template>
             </div>
+
+            <!-- Owned: per-printing breakdown + rolled-up YOUR TOTAL -->
+            <template x-if="owned.length > 0">
+              <div class="flex flex-col gap-xs">
+                <span
+                  class="font-header text-[28px] font-bold text-text-primary"
+                  x-text="fmt(totalEur)"
+                ></span>
+
+                <div class="flex flex-col" style="margin-top: 4px;">
+                  <template x-for="b in breakdown" :key="b.id">
+                    <div class="flex items-baseline justify-between" style="padding: 4px 0; border-top: 1px solid var(--color-border-ghost); font-family: 'JetBrains Mono', monospace;">
+                      <span class="text-[11px] uppercase tracking-[0.1em] text-text-muted"
+                        x-text="b.set + ' #' + b.collector + ' · ' + (b.foil ? 'FOIL' : 'NORMAL') + ' × ' + b.qty"></span>
+                      <span class="text-[11px] uppercase tracking-[0.1em] text-text-primary font-bold"
+                        x-text="fmt(b.totalEur)"></span>
+                    </div>
+                  </template>
+                </div>
+
+                <!-- Single-card market reference under the breakdown -->
+                <div class="flex items-baseline justify-between" style="margin-top: 4px; padding-top: 8px; border-top: 1px solid var(--color-border-ghost);">
+                  <span class="font-mono text-[10px] uppercase tracking-[0.1em] text-text-muted">MARKET REFERENCE</span>
+                  <div class="flex items-baseline gap-sm">
+                    <span class="font-mono text-[11px] text-text-primary"
+                      x-text="window.__cf_eurToGbp ? window.__cf_eurToGbp($store.search.selectedCard.prices?.eur) : 'N/A'"></span>
+                    <span class="font-mono text-[10px] uppercase tracking-[0.1em] text-text-muted"
+                      x-show="$store.search.selectedCard.prices?.eur_foil"
+                      x-text="$store.search.selectedCard.prices?.eur_foil ? 'FOIL ' + window.__cf_eurToGbp($store.search.selectedCard.prices.eur_foil) : ''"></span>
+                  </div>
+                </div>
+              </div>
+            </template>
+
+            <!-- Not owned: original single-card price -->
+            <template x-if="owned.length === 0">
+              <div class="flex items-baseline gap-md">
+                <span
+                  class="font-header text-[28px] font-bold text-text-primary"
+                  x-text="window.__cf_eurToGbp ? window.__cf_eurToGbp($store.search.selectedCard.prices?.eur) : 'N/A'"
+                ></span>
+                <span
+                  x-show="$store.search.selectedCard.prices?.eur_foil"
+                  class="font-mono uppercase text-[11px] tracking-[0.15em] font-normal text-text-muted"
+                  x-text="$store.search.selectedCard.prices?.eur_foil ? 'Foil: ' + window.__cf_eurToGbp($store.search.selectedCard.prices.eur_foil) : ''"
+                ></span>
+              </div>
+            </template>
           </div>
 
           <!-- Legalities section -->
