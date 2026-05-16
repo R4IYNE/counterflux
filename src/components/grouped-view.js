@@ -38,14 +38,11 @@ export function renderGroupedView() {
                 <!-- Gradient overlay -->
                 <div class="absolute inset-x-0 bottom-0 h-[40%] bg-gradient-to-t from-[#14161C] to-transparent pointer-events-none"></div>
 
-                <!-- Owned-count badge (always visible in grouped view — the primary affordance) -->
+                <!-- Owned-count badge (always visible in grouped view — the primary affordance).
+                     260516-grd: previous "N PRINTS" pill removed per user request;
+                     the printing count is still surfaced inside the flyout's
+                     IN YOUR COLLECTION breakdown when the user clicks in. -->
                 <span class="qty-badge" x-text="'x' + g.totalQty"></span>
-
-                <!-- Printings pill, top-left when >1 distinct printings -->
-                <template x-if="g.printingCount > 1">
-                  <span style="position: absolute; top: 8px; left: 8px; background: rgba(20,22,28,0.85); border: 1px solid #2A2D3A; padding: 2px 6px; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; letter-spacing: 0.1em; color: #EAECEE; text-transform: uppercase;"
-                        x-text="g.printingCount + ' prints'"></span>
-                </template>
               </div>
 
               <!-- Metadata -->

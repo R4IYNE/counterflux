@@ -553,11 +553,12 @@
             </template>
           </div>
 
-          <!-- Collection state (260516-rls): split into IN-COLLECTION and
-               ADD-COLLECTION blocks based on whether any matching entries
-               exist for the card's oracle_id. IN-COLLECTION exposes per-entry
-               qty/remove/foil-toggle/change-printing controls; ADD-COLLECTION
-               keeps the original add-form for cards not yet owned. -->
+          <!-- Collection state (260516-stg refactor of 260516-rls): edits are
+               STAGED into a local workingEntries copy and only committed to
+               the database on SAVE via $store.collection.applyFlyoutDiff().
+               Clicking the close X / backdrop discards the staged changes
+               without persisting (the working state lived only in this
+               component, never in the DB). -->
           <div class="pt-md" x-data="{
             flyoutQty: 1,
             flyoutFoil: false,
@@ -565,51 +566,156 @@
             editPrintingFor: null,
             editPrintingQty: 1,
             expandAdd: false,
-            get matchingEntries() {
+            workingEntries: [],
+            originalSnapshot: [],
+            hasUnsavedChanges: false,
+            init() {
+              this.resetWorking();
+              this.$watch('$store.search.selectedCard?.id', (val) => {
+                if (val) this.resetWorking();
+              });
+              this.$watch('$store.collection.entries', () => {
+                // Only re-snapshot from store entries if we have no staged
+                // changes — otherwise we'd blow away the user's pending edits
+                // on every loadEntries() that fires elsewhere in the app.
+                if (!this.hasUnsavedChanges) this.resetWorking();
+              });
+            },
+            resetWorking() {
               const card = $store.search.selectedCard;
-              if (!card) return [];
+              if (!card) {
+                this.workingEntries = [];
+                this.originalSnapshot = [];
+                this.hasUnsavedChanges = false;
+                return;
+              }
               const oid = card.oracle_id;
               const entries = $store.collection.entries || [];
-              if (oid) return entries.filter(e => e.card?.oracle_id === oid);
-              // Oracle id missing on selected card — fall back to scryfall_id match.
-              return entries.filter(e => e.scryfall_id === card.id);
+              const matching = oid
+                ? entries.filter(e => e.card?.oracle_id === oid)
+                : entries.filter(e => e.scryfall_id === card.id);
+              this.originalSnapshot = matching.map(e => JSON.parse(JSON.stringify(e)));
+              this.workingEntries = matching.map(e => JSON.parse(JSON.stringify(e)));
+              this.hasUnsavedChanges = false;
             },
             get totalOwned() {
-              return this.matchingEntries.reduce((s, e) => s + (e.quantity || 0), 0);
+              return this.workingEntries.reduce((s, e) => s + (e.quantity || 0), 0);
             },
-            async flyoutAddCard() {
-              if (!$store.search.selectedCard) return;
-              await $store.collection.addCard(
-                $store.search.selectedCard.id,
-                this.flyoutQty,
-                this.flyoutFoil,
-                this.flyoutCategory
-              );
-              const _cfTarget = this.flyoutCategory === 'wishlist' ? 'wishlist' : 'collection';
-              $store.toast.success($store.search.selectedCard._name + ' added to ' + _cfTarget + '.');
+            markDirty() { this.hasUnsavedChanges = true; },
+            incrementQty(idx) {
+              this.workingEntries[idx].quantity = (this.workingEntries[idx].quantity || 1) + 1;
+              this.markDirty();
+            },
+            decrementQty(idx) {
+              const e = this.workingEntries[idx];
+              if ((e.quantity || 1) > 1) {
+                e.quantity = e.quantity - 1;
+                this.markDirty();
+              }
+            },
+            toggleFoil(idx) {
+              const e = this.workingEntries[idx];
+              e.foil = e.foil ? 0 : 1;
+              this.markDirty();
+            },
+            removeEntry(idx) {
+              this.workingEntries.splice(idx, 1);
+              if (this.editPrintingFor === idx) this.editPrintingFor = null;
+              this.markDirty();
+            },
+            openPrintingPicker(idx) {
+              this.editPrintingFor = idx;
+              this.editPrintingQty = this.workingEntries[idx].quantity || 1;
+              $store.collection.loadPrintings(this.workingEntries[idx].card);
+            },
+            applyPrintingChange(idx, printing) {
+              const entry = this.workingEntries[idx];
+              const moveQty = Math.max(1, Math.min(this.editPrintingQty, entry.quantity || 1));
+              const newCardLike = {
+                id: printing.id,
+                set: printing.set,
+                set_name: printing.set_name,
+                collector_number: printing.collector_number,
+                image_uris: printing.image_uris,
+                prices: printing.prices,
+                games: printing.games,
+                oracle_id: entry.card?.oracle_id,
+                name: entry.card?.name,
+                type_line: entry.card?.type_line,
+                cmc: entry.card?.cmc,
+                color_identity: entry.card?.color_identity,
+                mana_cost: entry.card?.mana_cost,
+                oracle_text: entry.card?.oracle_text,
+                layout: entry.card?.layout,
+              };
+              if (moveQty >= (entry.quantity || 1)) {
+                entry.scryfall_id = printing.id;
+                entry.card = newCardLike;
+              } else {
+                entry.quantity -= moveQty;
+                this.workingEntries.push({
+                  id: '__new_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8),
+                  _isNew: true,
+                  scryfall_id: printing.id,
+                  card: newCardLike,
+                  foil: entry.foil,
+                  category: entry.category || 'owned',
+                  quantity: moveQty,
+                  added_at: new Date().toISOString(),
+                });
+              }
+              this.editPrintingFor = null;
+              this.markDirty();
+            },
+            stageAdd() {
+              const card = $store.search.selectedCard;
+              if (!card) return;
+              this.workingEntries.push({
+                id: '__new_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8),
+                _isNew: true,
+                scryfall_id: card.id,
+                card: card,
+                foil: this.flyoutFoil ? 1 : 0,
+                category: this.flyoutCategory,
+                quantity: this.flyoutQty,
+                added_at: new Date().toISOString(),
+              });
               this.expandAdd = false;
               this.flyoutQty = 1;
+              this.markDirty();
             },
-            openPrintingPicker(entry) {
-              this.editPrintingFor = entry.id;
-              // Default the move-quantity to the entry's full qty so a
-              // one-click swap still moves everything (preserves prior UX).
-              this.editPrintingQty = entry.quantity || 1;
-              $store.collection.loadPrintings(entry.card);
+            async saveAndClose() {
+              if (this.hasUnsavedChanges) {
+                await $store.collection.applyFlyoutDiff(this.originalSnapshot, this.workingEntries);
+                $store.toast.success('Collection updated.');
+              }
+              $store.search.closeFlyout();
             }
           }">
             <!-- IN YOUR COLLECTION (rendered when any matching entries exist) -->
             <template x-if="totalOwned > 0">
               <div class="flex flex-col gap-sm">
                 <div class="flex items-baseline justify-between">
-                  <span class="font-mono uppercase text-[11px] tracking-[0.15em] font-bold text-primary">IN YOUR COLLECTION</span>
+                  <div class="flex items-baseline gap-sm">
+                    <span class="font-mono uppercase text-[11px] tracking-[0.15em] font-bold text-primary">IN YOUR COLLECTION</span>
+                    <!-- Unsaved-changes pill (260516-stg): visible only when
+                         workingEntries diverge from the original snapshot.
+                         Reassures user that edits are local until SAVE. -->
+                    <template x-if="hasUnsavedChanges">
+                      <span class="font-mono text-[10px] uppercase tracking-[0.1em] font-bold" style="font-family: 'JetBrains Mono', monospace; color: var(--color-warning); padding: 2px 6px; border: 1px solid var(--color-warning); border-radius: 0;">● UNSAVED</span>
+                    </template>
+                  </div>
                   <span class="font-mono text-[11px] uppercase tracking-[0.15em] text-text-muted" style="font-family: 'JetBrains Mono', monospace;">
                     <span x-text="totalOwned"></span> OWNED
                   </span>
                 </div>
 
-                <!-- Per-entry row: set + foil toggle + qty stepper + remove + change printing -->
-                <template x-for="entry in matchingEntries" :key="entry.id">
+                <!-- Per-entry row: set + foil toggle + qty stepper + remove + change printing.
+                     260516-stg: button handlers mutate the local workingEntries array
+                     instead of calling $store.collection.editEntry / deleteEntry /
+                     toggleFoilForEntry / splitAndChangePrinting. The store-side
+                     applyFlyoutDiff replays the diff in one batch on SAVE. -->
+                <template x-for="(entry, idx) in workingEntries" :key="entry.id">
                   <div class="flex flex-col gap-xs" style="border: 1px solid var(--color-border-ghost); padding: 8px;">
                     <div class="flex items-center gap-sm" style="flex-wrap: wrap;">
                       <!-- Set + collector number -->
@@ -618,40 +724,40 @@
 
                       <!-- Foil toggle -->
                       <button
-                        @click="$store.collection.toggleFoilForEntry(entry.id)"
+                        @click="toggleFoil(idx)"
                         :title="entry.foil ? 'Switch to non-foil' : 'Switch to foil'"
                         :style="entry.foil ? 'background: var(--color-warning); color: var(--color-background); border: 1px solid var(--color-warning);' : 'background: transparent; color: var(--color-text-muted); border: 1px solid var(--color-border-ghost);'"
                         style="padding: 2px 8px; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer;"
                         x-text="entry.foil ? 'FOIL' : 'NORMAL'"
                       ></button>
 
-                      <!-- Category badge (display-only — keep editEntry call for wishlist toggle as a separate affordance later) -->
+                      <!-- Category badge (display-only) -->
                       <span class="font-mono text-[10px] uppercase tracking-[0.1em] text-text-dim" style="font-family: 'JetBrains Mono', monospace;"
                         x-text="entry.category === 'wishlist' ? 'WISHLIST' : ''"></span>
 
                       <!-- Spacer + qty stepper + remove -->
                       <div class="flex items-center gap-xs" style="margin-left: auto;">
                         <button
-                          @click="$store.collection.editEntry(entry.id, { quantity: Math.max(1, (entry.quantity || 1) - 1) })"
+                          @click="decrementQty(idx)"
                           :disabled="(entry.quantity || 1) <= 1"
                           title="Decrease quantity"
                           style="width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; background: transparent; border: 1px solid var(--color-border-ghost); color: var(--color-text-muted); cursor: pointer;"
                         >−</button>
                         <span class="font-mono text-[12px] font-bold text-text-primary" style="font-family: 'JetBrains Mono', monospace; min-width: 24px; text-align: center;" x-text="entry.quantity || 1"></span>
                         <button
-                          @click="$store.collection.editEntry(entry.id, { quantity: (entry.quantity || 1) + 1 })"
+                          @click="incrementQty(idx)"
                           title="Increase quantity"
                           style="width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; background: transparent; border: 1px solid var(--color-border-ghost); color: var(--color-text-muted); cursor: pointer;"
                         >+</button>
                         <button
-                          @click="openPrintingPicker(entry)"
+                          @click="openPrintingPicker(idx)"
                           title="Change printing / set"
                           style="width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; background: transparent; border: 1px solid var(--color-border-ghost); color: var(--color-text-muted); cursor: pointer; margin-left: 4px;"
                         >
                           <span class="material-symbols-outlined" style="font-size: 14px;">swap_horiz</span>
                         </button>
                         <button
-                          @click="$store.collection.deleteEntry(entry.id); if (editPrintingFor === entry.id) editPrintingFor = null;"
+                          @click="removeEntry(idx)"
                           title="Remove from collection"
                           style="width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; background: transparent; border: 1px solid var(--color-border-ghost); color: var(--color-secondary); cursor: pointer;"
                           onmouseenter="this.style.borderColor='var(--color-secondary)'"
@@ -663,10 +769,10 @@
                     </div>
 
                     <!-- Printing picker (collapsed by default — opens when user clicks swap icon).
-                         260516-pks: split-move qty stepper lets the user move N of the
-                         entry's copies to a different printing without changing them all.
-                         Default qty = entry.quantity (so single-click still moves everything). -->
-                    <template x-if="editPrintingFor === entry.id">
+                         260516-stg: applyPrintingChange mutates workingEntries; printing
+                         changes (full or split) are staged in-memory and committed by
+                         applyFlyoutDiff on SAVE. -->
+                    <template x-if="editPrintingFor === idx">
                       <div class="flex flex-col gap-xs" style="padding-top: 8px; border-top: 1px solid var(--color-border-ghost);">
                         <div class="flex items-center justify-between" style="gap: 8px; flex-wrap: wrap;">
                           <span class="font-mono text-[10px] uppercase tracking-[0.1em] font-bold text-text-muted" style="font-family: 'JetBrains Mono', monospace;">SELECT PRINTING</span>
@@ -694,7 +800,7 @@
                           <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; max-height: 160px; overflow-y: auto; padding-right: 4px;">
                             <template x-for="p in ($store.collection.printingsByCardId[entry.card?.id]?.printings || [])" :key="p.id">
                               <button
-                                @click="$store.collection.splitAndChangePrinting(entry.id, editPrintingQty, p.id); editPrintingFor = null;"
+                                @click="applyPrintingChange(idx, p)"
                                 :title="'Move ' + editPrintingQty + ' of ' + (entry.quantity || 1) + ' to ' + p.set_name + ' (' + (p.released_at ? p.released_at.slice(0,4) : '') + ') · #' + p.collector_number"
                                 :style="p.id === entry.scryfall_id ? 'background: var(--color-primary); color: var(--color-text-primary); border: 1px solid var(--color-primary);' : 'background: transparent; color: var(--color-text-dim); border: 1px solid var(--color-border-ghost);'"
                                 style="width: 100%; aspect-ratio: 1; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: all 150ms ease-out;"
@@ -744,28 +850,28 @@
                   </label>
                 </div>
                 <button
-                  @click="flyoutAddCard()"
+                  @click="stageAdd()"
+                  :title="'Stage ' + (flyoutCategory === 'wishlist' ? 'in wishlist' : 'in collection') + ' — commits on SAVE'"
                   class="w-full px-4 py-3 font-mono uppercase text-[11px] tracking-[0.15em] font-bold text-text-primary bg-primary hover:bg-primary/80 transition-colors cursor-pointer"
-                  x-text="totalOwned > 0 ? 'Add Another' : 'Add to Collection'"
+                  x-text="totalOwned > 0 ? 'Add Another (stage)' : 'Add to Collection (stage)'"
                 ></button>
               </div>
             </template>
 
-            <!-- Action buttons (260516-svp): SAVE is the primary CTA when
-                 editing an in-collection card; View on Scryfall is always
-                 secondary now (was previously the lone primary button).
-                 When the card isn't in the collection yet, the ADD CARD
-                 button inside the ADD TO COLLECTION template above is the
-                 primary CTA — View on Scryfall stays secondary here too. -->
+            <!-- Action buttons (260516-stg): SAVE applies the staged
+                 working-entries diff via $store.collection.applyFlyoutDiff()
+                 and closes. Without unsaved changes it just closes. View on
+                 Scryfall is a thin secondary outline button below. -->
             <div class="pt-md flex flex-col gap-sm">
-              <template x-if="totalOwned > 0">
+              <template x-if="totalOwned > 0 || hasUnsavedChanges">
                 <button
-                  @click="$store.search.closeFlyout()"
-                  class="w-full px-4 py-3 font-mono uppercase text-[11px] tracking-[0.15em] font-bold text-text-primary bg-primary hover:bg-primary/80 transition-colors cursor-pointer"
-                  title="Close — your edits save as you make them"
-                >
-                  SAVE
-                </button>
+                  @click="saveAndClose()"
+                  :disabled="!hasUnsavedChanges && totalOwned === 0"
+                  :class="hasUnsavedChanges ? 'bg-primary hover:bg-primary/80' : 'bg-surface-hover hover:bg-primary/40'"
+                  class="w-full px-4 py-3 font-mono uppercase text-[11px] tracking-[0.15em] font-bold text-text-primary transition-colors cursor-pointer"
+                  :title="hasUnsavedChanges ? 'Commit staged edits to your collection' : 'No pending changes — closes the flyout'"
+                  x-text="hasUnsavedChanges ? 'SAVE CHANGES' : 'SAVE'"
+                ></button>
               </template>
               <button
                 @click="window.open($store.search.selectedCard.scryfall_uri, '_blank')"

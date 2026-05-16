@@ -46,7 +46,9 @@ function sortEntries(items, sortBy) {
 export function initCollectionStore() {
   Alpine.store('collection', {
     entries: [],
-    viewMode: 'gallery',
+    // 260516-grd: default switched from 'gallery' to 'grouped' so the
+    // owned-count + foil breakdown is the primary view.
+    viewMode: 'grouped',
     sortBy: 'name-asc',
     filters: {
       colours: [],
@@ -258,6 +260,128 @@ export function initCollectionStore() {
 
     async editEntry(entryId, updates) {
       await db.collection.update(entryId, updates);
+      await this.loadEntries();
+    },
+
+    /**
+     * Quick task 260516-stg — apply a staged flyout edit diff in one batch.
+     * The flyout snapshots the matching entries on open, mutates a working
+     * copy as the user clicks qty/foil/remove/change-printing/split, then
+     * calls this on SAVE to apply everything at once. Lets us defer DB
+     * writes until the user explicitly commits.
+     *
+     * Working entries with `_isNew: true` are split-additions or any other
+     * net-new rows from the flyout flow; they get appended (or merged into
+     * a sibling) on save. Originals missing from `working` are deleted.
+     *
+     * Scope notes:
+     * - Sibling-merge on update (e.g. toggling foil into a row that already
+     *   exists with the same scryfall_id/category) is intentionally NOT
+     *   applied here — the simpler `db.collection.update` keeps row ids
+     *   stable so the staging snapshot stays consistent. Worst case: two
+     *   rows with the same (scryfall_id, foil, category). Rare; tolerable.
+     * - Card metadata is hydrated via the Scryfall API on cache miss so
+     *   the new printing's row renders correctly immediately afterwards.
+     *
+     * @param {Array} originals  flyout's snapshot of matchingEntries at open
+     * @param {Array} working    current working copy with edits applied
+     */
+    async applyFlyoutDiff(originals, working) {
+      const originalsById = new Map((originals || []).map(e => [e.id, e]));
+      const workingExisting = (working || []).filter(e => e && !e._isNew);
+      const workingNew = (working || []).filter(e => e && e._isNew);
+      const workingById = new Map(workingExisting.map(e => [e.id, e]));
+
+      // 1. Deletes — any original whose id is missing from working
+      for (const id of originalsById.keys()) {
+        if (!workingById.has(id)) {
+          await db.collection.delete(id);
+        }
+      }
+
+      // 2. Updates — diff each working entry against its original
+      for (const [id, w] of workingById.entries()) {
+        const o = originalsById.get(id);
+        if (!o) continue;
+
+        const updates = {};
+        if ((w.quantity || 0) !== (o.quantity || 0)) {
+          updates.quantity = Math.max(1, w.quantity || 1);
+        }
+        if ((w.foil ? 1 : 0) !== (o.foil ? 1 : 0)) {
+          updates.foil = w.foil ? 1 : 0;
+        }
+        if (w.scryfall_id && w.scryfall_id !== o.scryfall_id) {
+          // Hydrate db.cards for the new printing before the update so the
+          // UI re-render after loadEntries() doesn't show a "no metadata"
+          // tile while a follow-up fetch is in flight.
+          let newCard = await db.cards.get(w.scryfall_id);
+          if (!newCard) {
+            try {
+              const fetched = await queueScryfallRequest(
+                `https://api.scryfall.com/cards/${encodeURIComponent(w.scryfall_id)}`,
+              );
+              if (fetched && fetched.id) {
+                await db.cards.put(fetched);
+              }
+            } catch (err) {
+              console.error('[Counterflux] applyFlyoutDiff: printing fetch failed', err);
+              continue; // skip this entry's printing change, keep other updates
+            }
+          }
+          updates.scryfall_id = w.scryfall_id;
+        }
+
+        if (Object.keys(updates).length > 0) {
+          await db.collection.update(id, updates);
+        }
+      }
+
+      // 3. New entries — splits or freshly-added rows from the flyout
+      for (const n of workingNew) {
+        if (!n.scryfall_id) continue;
+
+        // Hydrate db.cards if missing.
+        let card = await db.cards.get(n.scryfall_id);
+        if (!card) {
+          try {
+            const fetched = await queueScryfallRequest(
+              `https://api.scryfall.com/cards/${encodeURIComponent(n.scryfall_id)}`,
+            );
+            if (fetched && fetched.id) {
+              await db.cards.put(fetched);
+            }
+          } catch (err) {
+            console.error('[Counterflux] applyFlyoutDiff: new-entry fetch failed', err);
+            continue;
+          }
+        }
+
+        // Sibling-merge: if a row already exists with the same
+        // (scryfall_id, foil, category), bump its quantity instead of
+        // creating a duplicate row.
+        const foilKey = n.foil ? 1 : 0;
+        const sibling = await db.collection
+          .where('[scryfall_id+foil]')
+          .equals([n.scryfall_id, foilKey])
+          .and(e => e.category === (n.category || 'owned'))
+          .first();
+
+        if (sibling) {
+          await db.collection.update(sibling.id, {
+            quantity: (sibling.quantity || 0) + (n.quantity || 1),
+          });
+        } else {
+          await db.collection.add({
+            scryfall_id: n.scryfall_id,
+            quantity: n.quantity || 1,
+            foil: foilKey,
+            category: n.category || 'owned',
+            added_at: new Date().toISOString(),
+          });
+        }
+      }
+
       await this.loadEntries();
     },
 
