@@ -52,7 +52,7 @@ export function renderAddCardPanel() {
           const thisSearchId = ++this._searchId;
           this._debounce = setTimeout(async () => {
             try {
-              const cards = await window.__cf_searchCards(q, 8);
+              const cards = await window.__cf_searchCards(q, 24);
               if (thisSearchId !== this._searchId) return;
               this.searchResults = cards.map(c => ({
                 ...c,
@@ -221,7 +221,7 @@ export function renderAddCardPanel() {
 
         <!-- Search results dropdown -->
         <div x-show="searchResults.length > 0"
-             style="position: absolute; top: 100%; left: 0; right: 0; margin-top: 4px; background: var(--color-surface); border: 1px solid var(--color-border-ghost); max-height: 280px; overflow-y: auto; z-index: 10;">
+             style="position: absolute; top: 100%; left: 0; right: 0; margin-top: 4px; background: var(--color-surface); border: 1px solid var(--color-border-ghost); max-height: 540px; overflow-y: auto; z-index: 10;">
           <!-- Quick task 260514-uqc: inline affordance hint shown above the
                results when bulk data is still streaming. Layer 1's API fallback
                is serving these results; once \$store.bulkdata.status === 'ready'
