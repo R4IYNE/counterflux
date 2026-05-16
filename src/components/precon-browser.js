@@ -71,12 +71,13 @@ export function renderPreconBrowser() {
       for (let i = 0; i < missing.length; i += 75) {
         const batch = missing.slice(i, i + 75);
         try {
+          // 260517-cor: User-Agent is a forbidden request header in
+          // browser fetch — setting it is a no-op at best and can trigger
+          // a CORS preflight that Scryfall's /cards/collection endpoint
+          // doesn't accept. The browser sets a UA automatically.
           const response = await fetch('https://api.scryfall.com/cards/collection', {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'User-Agent': 'Counterflux/1.1 (MTG collection manager)',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ identifiers: batch.map((id) => ({ id })) }),
           });
           if (!response.ok) {
@@ -144,15 +145,17 @@ export function renderPreconBrowser() {
       for (let i = 0; i < missing.length; i += 75) {
         const batch = missing.slice(i, i + 75);
         try {
+          // 260517-cor: drop User-Agent (browser forbidden request header
+          // — see __cf_hydratePreconNamesFromApi above for the rationale).
           const response = await fetch('https://api.scryfall.com/cards/collection', {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'User-Agent': 'Counterflux/1.1 (MTG collection manager)',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ identifiers: batch.map((id) => ({ id })) }),
           });
-          if (!response.ok) continue;
+          if (!response.ok) {
+            console.warn('[commander-art] /cards/collection failed:', response.status);
+            continue;
+          }
           const data = await response.json();
           for (const card of (data.data || [])) {
             const art = card?.image_uris?.art_crop
