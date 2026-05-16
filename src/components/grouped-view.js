@@ -19,6 +19,29 @@ export function renderGroupedView() {
            (treasure-cruise.js) via $store.collection.sorted.length === 0,
            which fires for the grouped view too. -->
       <template x-if="groups.length > 0">
+        <div class="flex flex-col gap-[16px]">
+          <!-- 260516-gsr: in-view sort affordance — the filter-bar above
+               also has SORT, but a contextual one on the gallery itself
+               is much easier to spot when scanning the cards. -->
+          <div class="flex items-center justify-between" style="padding: 4px 0;">
+            <span class="font-mono uppercase text-[11px] tracking-[0.15em] text-text-muted"
+              x-text="groups.length + (groups.length === 1 ? ' UNIQUE CARD' : ' UNIQUE CARDS')"></span>
+            <div class="flex items-center gap-sm">
+              <span class="font-mono uppercase text-[10px] tracking-[0.1em] font-bold text-text-muted">SORT</span>
+              <select
+                x-model="$store.collection.sortBy"
+                class="font-mono text-[11px] uppercase tracking-[0.15em] cursor-pointer px-sm py-xs outline-none"
+                style="background: var(--color-background, #0B0C10); border: 1px solid var(--color-border-ghost, #2A2D3A); color: var(--color-text-primary, #E8E6E3); padding: 4px 8px;">
+                <option value="name-asc">NAME A-Z</option>
+                <option value="name-desc">NAME Z-A</option>
+                <option value="price-desc">PRICE HIGH-LOW</option>
+                <option value="price-asc">PRICE LOW-HIGH</option>
+                <option value="date-desc">DATE ADDED (NEW)</option>
+                <option value="date-asc">DATE ADDED (OLD)</option>
+                <option value="set-asc">SET RELEASE</option>
+              </select>
+            </div>
+          </div>
         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-[24px]">
           <template x-for="(g, idx) in groups" :key="g.key">
             <div class="card-tile-hover cursor-pointer flex flex-col"
@@ -38,11 +61,12 @@ export function renderGroupedView() {
                 <!-- Gradient overlay -->
                 <div class="absolute inset-x-0 bottom-0 h-[40%] bg-gradient-to-t from-[#14161C] to-transparent pointer-events-none"></div>
 
-                <!-- Owned-count badge (always visible in grouped view — the primary affordance).
-                     260516-grd: previous "N PRINTS" pill removed per user request;
-                     the printing count is still surfaced inside the flyout's
-                     IN YOUR COLLECTION breakdown when the user clicks in. -->
-                <span class="qty-badge" x-text="'x' + g.totalQty"></span>
+                <!-- Owned-count badge — 260516-qty: only rendered for x2+ so
+                     singletons read clean. Single copies are the common case;
+                     the badge is signal for "you have multiples" specifically. -->
+                <template x-if="g.totalQty >= 2">
+                  <span class="qty-badge" x-text="'x' + g.totalQty"></span>
+                </template>
               </div>
 
               <!-- Metadata -->
