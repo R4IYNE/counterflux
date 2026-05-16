@@ -65,11 +65,12 @@ describe('COLLECT-02: src/services/precons.js', () => {
     const { fetchPrecons } = await import('../src/services/precons.js');
     const precons = await fetchPrecons();
 
-    // D-09 + FOLLOWUP-4A (Phase 08.1): commander + duel_deck PLUS allowlist
-    // codes (cmm, clb, pca, arc, pltc) — 4 baseline + 5 allowlist = 9 rows.
+    // D-09 + FOLLOWUP-4A (Phase 08.1) + 260516-tkn fixture: commander +
+    // duel_deck PLUS allowlist codes (cmm, clb, pca, arc, pltc). Baseline
+    // 5 duel_deck/commander (woc, ltc, dd2, ddu, dd3) + 5 allowlist = 10.
     // Non-precons (expansion, core, starter) and mb2 (set_type masters but NOT
     // allowlisted) are still filtered out.
-    expect(precons).toHaveLength(9);
+    expect(precons).toHaveLength(10);
     const setTypes = new Set(precons.map((p) => p.set_type));
     expect(setTypes).toEqual(new Set(['commander', 'duel_deck', 'masters', 'draft_innovation', 'planechase', 'archenemy', 'promo']));
 
@@ -120,12 +121,12 @@ describe('COLLECT-02: src/services/precons.js', () => {
     });
     const { fetchPrecons } = await import('../src/services/precons.js');
     const first = await fetchPrecons();
-    expect(first).toHaveLength(9);
+    expect(first).toHaveLength(10);
 
     // Force a refresh that fails — must fall back to stale cache
     fetchMock.mockRejectedValueOnce(new Error('Network down'));
     const stale = await fetchPrecons({ forceRefresh: true });
-    expect(stale).toHaveLength(9);
+    expect(stale).toHaveLength(10);
     // Still sorted
     expect(stale[0].code).toBe('woc');
   });
@@ -159,6 +160,35 @@ describe('COLLECT-02: src/services/precons.js', () => {
     const nonCommander = decklist.find((e) => e.scryfall_id === 'woc-002');
     expect(nonCommander).toBeDefined();
     expect(nonCommander.is_commander).toBe(false);
+  });
+
+  it('Test 5b (260516-tkn) — fetchPreconDecklist filters out tokens, emblems, oversized, and promo cards', async () => {
+    // Prime cache so dd3 has a search_uri
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: async () => mockSetsResponse,
+    });
+    const { fetchPrecons, fetchPreconDecklist } = await import('../src/services/precons.js');
+    await fetchPrecons();
+
+    // dd3 fixture has 3 real deck cards + 5 ride-along entries (token by
+    // layout, token by type_line, emblem, oversized, promo). The filter
+    // should yield exactly 3 entries.
+    const dd3Pages = mockDecklistPages('dd3');
+    fetchMock.mockResolvedValueOnce({ ok: true, status: 200, json: async () => dd3Pages[0] });
+
+    const decklist = await fetchPreconDecklist('dd3');
+    expect(decklist).toHaveLength(3);
+    const ids = decklist.map((e) => e.scryfall_id);
+    expect(ids).toEqual(expect.arrayContaining(['dd3-001', 'dd3-002', 'dd3-003']));
+
+    // None of the filtered ride-alongs make it through.
+    expect(ids).not.toContain('dd3-101'); // layout:token
+    expect(ids).not.toContain('dd3-102'); // type_line starts with 'Token '
+    expect(ids).not.toContain('dd3-103'); // layout:emblem
+    expect(ids).not.toContain('dd3-104'); // oversized:true
+    expect(ids).not.toContain('dd3-105'); // promo:true
   });
 
   it('Test 6 — fetchPreconDecklist caches: second call within TTL skips fetch', async () => {
@@ -234,7 +264,7 @@ describe('FOLLOWUP-4A: PRECON_EXTRA_CODES allowlist (Phase 08.1)', () => {
     // After cmm reclassification: baseline = 4 (woc, ltc commander + dd2, ddu duel_deck)
     // Allowlist additions = 5 (cmm now via allowlist, plus clb, pca, arc, pltc)
     // Total = 9. mb2 (masters, not allowlisted) is correctly filtered out.
-    expect(precons).toHaveLength(9);
+    expect(precons).toHaveLength(10);
   });
 
   it('Test A5 — PRECON_EXTRA_CODES export shape', async () => {

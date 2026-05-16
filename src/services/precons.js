@@ -213,6 +213,33 @@ export async function fetchPreconDecklist(code) {
     for (const card of (page.data || [])) {
       // Paper-only (v1.1 milestone scope): skip MTGO/Arena-only printings
       if (card.games && !card.games.includes('paper')) continue;
+      // 260516-tkn: skip tokens, emblems, oversized cards (Planechase-style
+      // / oversized commanders), and Scryfall-flagged promos. Duel decks
+      // and commander products commonly bundle 1-2 token cards + the
+      // oversized commander promo; the user explicitly wants just the
+      // playable deck contents. The four guards below cover:
+      //   1. card.layout — 'token', 'double_faced_token', 'emblem',
+      //                    'art_series', 'host', 'augment', 'planar',
+      //                    'scheme', 'vanguard' (all non-deck product
+      //                    surfaces that ride along with precon SKUs).
+      //   2. card.oversized — Scryfall's flag for oversized Planechase /
+      //                       commander promo cards.
+      //   3. card.promo — Scryfall's generic promo flag (covers prerelease
+      //                   stamps, buy-a-box, etc. bundled with the precon).
+      //   4. card.type_line starts with 'Token' — last-resort safety net
+      //                     for token cards that escaped the layout check.
+      const layout = card.layout || '';
+      const nonDeckLayouts = new Set([
+        'token', 'double_faced_token', 'emblem',
+        'art_series', 'host', 'augment',
+        'planar', 'scheme', 'vanguard',
+      ]);
+      if (nonDeckLayouts.has(layout)) continue;
+      if (card.oversized === true) continue;
+      if (card.promo === true) continue;
+      const tl = card.type_line || '';
+      if (/^token\b/i.test(tl)) continue;
+
       cards.push({
         scryfall_id: card.id,
         quantity: 1, // unique=prints returns one row per printing; precon qty always 1

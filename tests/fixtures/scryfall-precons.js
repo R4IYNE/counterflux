@@ -65,6 +65,17 @@ export const mockSetsResponse = {
       icon_svg_uri: 'https://svgs.scryfall.io/sets/ddu.svg',
       search_uri: 'https://api.scryfall.com/cards/search?q=set%3Addu&unique=prints',
     },
+    // 260516-tkn fixture row — paired with mockDecklistPages('dd3') which
+    // includes tokens + emblems + oversized + promo rows that
+    // fetchPreconDecklist should filter out.
+    {
+      code: 'dd3',
+      name: 'Duel Decks Anthology: Elves vs. Goblins',
+      set_type: 'duel_deck',
+      released_at: '2014-12-05',
+      icon_svg_uri: 'https://svgs.scryfall.io/sets/dd3.svg',
+      search_uri: 'https://api.scryfall.com/cards/search?q=set%3Add3&unique=prints',
+    },
 
     // FOLLOWUP-4A (Phase 08.1) — allowlist coverage rows. Non-commander
     // set_types that SHOULD pass the allowlist filter (PRECON_EXTRA_CODES).
@@ -195,6 +206,31 @@ export function mockDecklistPages(setCode) {
             games: ['paper'],
             prices: { eur: '0.20' },
           },
+        ],
+        has_more: false,
+      },
+    ];
+  }
+  if (setCode === 'dd3') {
+    // 260516-tkn fixture — duel-deck product with token + oversized +
+    // promo ride-alongs. Real deck = 3 entries (dd3-001..003); the rest
+    // should be filtered out by fetchPreconDecklist.
+    return [
+      {
+        data: [
+          { id: 'dd3-001', name: 'Lightning Bolt',     type_line: 'Instant',  layout: 'normal', games: ['paper'], prices: { eur: '1.00' } },
+          { id: 'dd3-002', name: 'Forest',             type_line: 'Basic Land — Forest', layout: 'normal', games: ['paper'], prices: { eur: '0.10' } },
+          { id: 'dd3-003', name: 'Llanowar Elves',     type_line: 'Creature — Elf Druid', layout: 'normal', games: ['paper'], prices: { eur: '0.50' } },
+          // Token (layout=token) — should be filtered
+          { id: 'dd3-101', name: 'Elf Warrior',        type_line: 'Token Creature — Elf Warrior', layout: 'token', games: ['paper'], prices: {} },
+          // Token (type_line starts with 'Token') — defence-in-depth check
+          { id: 'dd3-102', name: 'Goblin',             type_line: 'Token Creature — Goblin', layout: 'normal', games: ['paper'], prices: {} },
+          // Emblem — should be filtered
+          { id: 'dd3-103', name: 'Garruk Emblem',      type_line: 'Emblem — Garruk', layout: 'emblem', games: ['paper'], prices: {} },
+          // Oversized commander — should be filtered
+          { id: 'dd3-104', name: 'Eldrazi Conscription', type_line: 'Tribal Enchantment — Eldrazi Aura', layout: 'normal', oversized: true, games: ['paper'], prices: {} },
+          // Promo — should be filtered
+          { id: 'dd3-105', name: 'Goblin Guide',       type_line: 'Creature — Goblin Scout', layout: 'normal', promo: true, games: ['paper'], prices: { eur: '15.00' } },
         ],
         has_more: false,
       },
