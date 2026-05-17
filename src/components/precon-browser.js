@@ -329,6 +329,19 @@ export function renderPreconBrowser() {
           // swap from keyrune to commander art.
           this._artBump++;
         },
+        async hydrateCommanderArtIds(ids) {
+          // 260517-vbc: shared art hydrator for VIEW B's manifest deck tiles
+          // (drilled-in bundle deck-picker). Reuses _artHydrationKickedFor so
+          // we don't double-fetch a commander that VIEW A already pulled.
+          if (!window.__cf_hydrateCommanderImages) return;
+          const fresh = (ids || [])
+            .filter(Boolean)
+            .filter(id => !this._artHydrationKickedFor.has(id));
+          if (fresh.length === 0) return;
+          for (const id of fresh) this._artHydrationKickedFor.add(id);
+          await window.__cf_hydrateCommanderImages(fresh);
+          this._artBump++;
+        },
         async hydrateNames(decklist) {
           if (!decklist || !decklist.length) return;
           // 260516-pnm: seed the in-memory map from the decklist's own .name
@@ -693,7 +706,9 @@ export function renderPreconBrowser() {
                    single deck; ADD ALL on the bundle product code is gated until
                    a deck is picked so the user can't accidentally dump 486 cards. -->
               <template x-if="!$store.collection.preconDecklistLoading && !$store.collection.preconDecklistError && hasManifest && !selectedDeck">
-                <div>
+                <div
+                  x-init="hydrateCommanderArtIds((manifestDecks || []).flatMap(d => (d.commanders || []).map(c => c.id)))"
+                >
                   <p style="font-family: 'Space Grotesk', sans-serif; font-size: 14px; line-height: 1.5; color: var(--color-text-muted); margin: 0 0 16px 0; max-width: 720px;">
                     Pick one of the <span x-text="manifestDecks.length"></span> decks in this product to preview its cards or add it to your collection. To import the whole boxed set instead, return to the precon list and use ADD ALL on a non-bundle product.
                   </p>
@@ -704,15 +719,30 @@ export function renderPreconBrowser() {
                         class="card-tile-hover"
                         style="width: 100%; aspect-ratio: 220 / 308; padding: 0; background: var(--color-surface); border: 1px solid var(--color-border-ghost); cursor: pointer; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end;"
                       >
+                        <!-- 260517-vbc: commander art background (first commander) -->
+                        <template x-if="deck.commanders?.[0]?.id && commanderArt(deck.commanders[0].id)">
+                          <img
+                            :src="commanderArt(deck.commanders[0].id)"
+                            :alt="deck.commanders[0].name || deck.name"
+                            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.85;"
+                            loading="lazy"
+                            onerror="this.style.display='none'"
+                          >
+                        </template>
+                        <!-- Keyrune fallback until art lands -->
+                        <template x-if="!deck.commanders?.[0]?.id || !commanderArt(deck.commanders[0].id)">
+                          <i class="ss ss-fallback" :class="'ss-' + precon.code"
+                             style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 96px; color: var(--color-text-dim); opacity: 0.4;"></i>
+                        </template>
                         <span
-                          style="position: absolute; top: 8px; left: 8px; padding: 2px 6px; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; color: var(--color-text-muted); background: var(--color-surface-hover); text-transform: uppercase;"
+                          style="position: absolute; top: 8px; left: 8px; padding: 2px 6px; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; color: var(--color-text-muted); background: rgba(20,22,28,0.85); text-transform: uppercase;"
                           x-text="deck.identityLabel"
                         ></span>
                         <span
-                          style="position: absolute; top: 8px; right: 8px; padding: 2px 6px; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; color: var(--color-text-muted); background: var(--color-surface-hover);"
+                          style="position: absolute; top: 8px; right: 8px; padding: 2px 6px; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; color: var(--color-text-primary); background: rgba(20,22,28,0.85);"
                           x-text="deck.total + ' CARDS'"
                         ></span>
-                        <div style="position: relative; z-index: 2; padding: 16px; background: linear-gradient(to top, var(--color-background), transparent); text-align: left;">
+                        <div style="position: relative; z-index: 2; padding: 16px; background: linear-gradient(to top, var(--color-background) 30%, transparent); text-align: left;">
                           <div
                             style="font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; color: var(--color-text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-transform: uppercase;"
                             x-text="deck.name"
