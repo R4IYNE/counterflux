@@ -178,6 +178,7 @@ export function renderPreconBrowser() {
     <div
       x-data="{
         preconSearch: '',
+        selectedSetCode: '',
         _missingNamesFetched: false,
         _membershipsReady: false,
         _artHydrationKickedFor: new Set(),
@@ -261,7 +262,13 @@ export function renderPreconBrowser() {
           // 260516-pcs: client-side fuzzy on precon name + code so the user
           // can type 'commander' / 'duel' / a year / a code like 'cmm' and
           // narrow down the tile grid quickly. Empty query = full list.
-          const list = $store.collection.precons || [];
+          // 260517-sst: also honour selectedSetCode (the set-filter dropdown).
+          // Both filters compose — typing in the search narrows within the
+          // selected set.
+          let list = $store.collection.precons || [];
+          if (this.selectedSetCode) {
+            list = list.filter(p => p.code === this.selectedSetCode);
+          }
           const q = (this.preconSearch || '').trim().toLowerCase();
           if (!q) return list;
           return list.filter(p =>
@@ -270,6 +277,20 @@ export function renderPreconBrowser() {
             (p.set_type || '').toLowerCase().includes(q) ||
             ((p.released_at || '').slice(0, 4)).includes(q)
           );
+        },
+        get setOptions() {
+          // 260517-sst: alphabetically-sorted list of precons for the
+          // set-filter dropdown. Deduplicates by code (Scryfall sometimes
+          // returns the same product under two release dates).
+          const seen = new Set();
+          const out = [];
+          for (const p of ($store.collection.precons || [])) {
+            if (!p?.code || seen.has(p.code)) continue;
+            seen.add(p.code);
+            out.push({ code: p.code, name: p.name || p.code, year: (p.released_at || '').slice(0, 4) });
+          }
+          out.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+          return out;
         },
         get flatDeckTiles() {
           // 260516-pcd: produce ONE tile per deck rather than one per bundle.
@@ -418,6 +439,28 @@ export function renderPreconBrowser() {
             >
               <span class="material-symbols-outlined" style="font-size: 16px;">close</span>
             </button>
+          </div>
+
+          <!-- 260517-sst: set-filter dropdown. 'Secrets of Strixhaven
+               Commander' becomes a selector that narrows the long view
+               to only that product's decks — rather than requiring the
+               user to drill in and out via the deck-picker. Composes with
+               the text search above. -->
+          <div style="position: relative; min-width: 220px; max-width: 320px;"
+            x-show="!$store.collection.selectedPreconCode">
+            <select
+              x-model="selectedSetCode"
+              aria-label="Filter precon decks by set"
+              style="width: 100%; box-sizing: border-box; background: var(--color-background); border: 1px solid var(--color-border-ghost); color: var(--color-text-primary); padding: 6px 28px 6px 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; outline: none; cursor: pointer; appearance: none; -webkit-appearance: none; -moz-appearance: none;"
+              onfocus="this.style.borderColor='var(--color-primary)'"
+              onblur="this.style.borderColor='var(--color-border-ghost)'"
+            >
+              <option value="">ALL SETS</option>
+              <template x-for="opt in setOptions" :key="opt.code">
+                <option :value="opt.code" x-text="opt.name + (opt.year ? ' · ' + opt.year : '')"></option>
+              </template>
+            </select>
+            <span class="material-symbols-outlined" style="position: absolute; right: 6px; top: 50%; transform: translateY(-50%); font-size: 18px; color: var(--color-text-dim); pointer-events: none;">expand_more</span>
           </div>
 
           <div style="display: flex; gap: 8px; align-items: center;">
@@ -688,11 +731,19 @@ export function renderPreconBrowser() {
             }">
               <!-- Preview header -->
               <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 16px;">
+                <!-- 260517-bts: BACK always returns to VIEW A (top-level
+                     long view). The deck-picker intermediate view is dead
+                     UX: every VIEW B entry path arrives directly on a
+                     specific deck (manifest tiles set pendingDeckKey;
+                     non-manifest precons have no manifest decks to pick).
+                     Hopping back through a deck-picker the user never asked
+                     for was the friction. selectedDeckKey clears as well so
+                     pendingDeckKey gets nulled out via the wrapper x-effect
+                     — fresh entry to a different precon starts clean. -->
                 <button
-                  @click="selectedDeckKey ? selectedDeckKey = null : $store.collection.selectedPreconCode = null"
+                  @click="selectedDeckKey = null; $store.collection.selectedPreconCode = null"
                   style="padding: 8px 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; color: var(--color-text-primary); background: var(--color-surface-hover); border: 1px solid var(--color-border-ghost); cursor: pointer; text-transform: uppercase;"
-                  x-text="selectedDeckKey ? '← BACK TO DECKS' : '← BACK TO PRECONS'"
-                ></button>
+                >← BACK TO PRECONS</button>
 
                 <h3
                   style="flex: 1; font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; color: var(--color-text-primary); margin: 0; text-transform: uppercase;"
