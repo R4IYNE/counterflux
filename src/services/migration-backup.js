@@ -67,6 +67,17 @@ export async function backupBeforeMigration(db) {
   const key = `${BACKUP_KEY_PREFIX}${isoTs}`;
   const json = JSON.stringify(snapshot);
 
+  // Per D-14 ("single localStorage key"): clear every prior backup before writing.
+  // The boot-time TTL sweep only removes >7-day-old keys; without this purge,
+  // each failed-migration reboot inside the window stacks a new key and burns
+  // through localStorage quota until even a small backup can't fit.
+  for (let i = localStorage.length - 1; i >= 0; i--) {
+    const existing = localStorage.key(i);
+    if (existing?.startsWith(BACKUP_KEY_PREFIX)) {
+      localStorage.removeItem(existing);
+    }
+  }
+
   // 2. Write — handle quota fallback (Pitfall D).
   try {
     localStorage.setItem(key, json);

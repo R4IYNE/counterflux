@@ -132,6 +132,30 @@ describe('migration backup (SCHEMA-03 / D-13..D-17b)', () => {
     expect(listBackups()).toHaveLength(1);
   });
 
+  it('purges prior backup keys before writing the new one (D-14 single-key invariant)', async () => {
+    const db = await openAtV5(TEST_DB);
+    await seed500Cards(db);
+
+    // Simulate accumulated backups from prior failed/repeated boots within the
+    // 7-day TTL window — these would otherwise eat localStorage quota.
+    const now = Date.now();
+    const staleKeys = [
+      `${BACKUP_KEY_PREFIX}${new Date(now - 6 * 3600 * 1000).toISOString()}`,
+      `${BACKUP_KEY_PREFIX}${new Date(now - 3 * 3600 * 1000).toISOString()}`,
+      `${BACKUP_KEY_PREFIX}${new Date(now - 1 * 3600 * 1000).toISOString()}`,
+    ];
+    for (const k of staleKeys) localStorage.setItem(k, '{"collection":[]}');
+    expect(listBackups()).toHaveLength(3);
+
+    const newKey = await backupBeforeMigration(db);
+
+    const remaining = listBackups();
+    expect(remaining).toHaveLength(1);
+    expect(remaining[0]).toBe(newKey);
+    for (const k of staleKeys) expect(localStorage.getItem(k)).toBeNull();
+    await db.close();
+  });
+
   it('on QuotaExceededError, throws MigrationBackupFailedError mentioning quota', async () => {
     const db = await openAtV5(TEST_DB);
     await seed500Cards(db);
