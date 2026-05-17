@@ -572,13 +572,21 @@ export function renderPreconBrowser() {
 
           <!-- VIEW B: Decklist preview -->
           <template x-if="$store.collection.selectedPreconCode">
-            <div x-data="{
+            <div
+              x-effect="$store.collection.pendingDeckKey = selectedDeckKey"
+              x-data="{
               selectedDeckKey: null,
               init() {
                 // 260516-pcd: if the outer tile click came from a per-deck
                 // tile, the store carries a pendingDeckKey — adopt it so
                 // VIEW B opens straight on the deck preview rather than
                 // the manifest deck-picker.
+                // 260517-rdk: also restores selectedDeckKey after REFRESH,
+                // which unmounts and remounts VIEW B. The x-effect on the
+                // wrapper mirrors selectedDeckKey → $store.collection.pendingDeckKey
+                // throughout VIEW B's lifetime, so a refresh-induced remount
+                // lands the user back on the same deck instead of bouncing
+                // them to the deck-picker.
                 if ($store.collection.pendingDeckKey) {
                   this.selectedDeckKey = $store.collection.pendingDeckKey;
                   $store.collection.pendingDeckKey = null;
@@ -738,10 +746,20 @@ export function renderPreconBrowser() {
                           <i class="ss ss-fallback" :class="'ss-' + precon.code"
                              style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 96px; color: var(--color-text-dim); opacity: 0.4;"></i>
                         </template>
+                        <!-- 260517-cid: mana-font glyphs for color identity
+                             (replaces letter-code 'RW' / 'BG' text). Empty
+                             identity → colorless 'C' symbol. -->
                         <span
-                          style="position: absolute; top: 8px; left: 8px; padding: 2px 6px; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; color: var(--color-text-muted); background: rgba(20,22,28,0.85); text-transform: uppercase;"
-                          x-text="deck.identityLabel"
-                        ></span>
+                          style="position: absolute; top: 8px; left: 8px; display: inline-flex; gap: 3px; align-items: center; padding: 4px 6px; background: rgba(20,22,28,0.85);"
+                          :aria-label="'Color identity: ' + deck.identityLabel"
+                        >
+                          <template x-if="!(deck.identity || []).length">
+                            <i class="ms ms-c ms-cost" style="font-size: 14px;"></i>
+                          </template>
+                          <template x-for="ci in (deck.identity || [])" :key="ci">
+                            <i class="ms ms-cost" :class="'ms-' + ci.toLowerCase()" style="font-size: 14px;"></i>
+                          </template>
+                        </span>
                         <span
                           style="position: absolute; top: 8px; right: 8px; padding: 2px 6px; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; color: var(--color-text-primary); background: rgba(20,22,28,0.85);"
                           x-text="deck.total + ' CARDS'"
