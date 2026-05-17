@@ -707,7 +707,7 @@ export function renderPreconBrowser() {
                    a deck is picked so the user can't accidentally dump 486 cards. -->
               <template x-if="!$store.collection.preconDecklistLoading && !$store.collection.preconDecklistError && hasManifest && !selectedDeck">
                 <div
-                  x-init="hydrateCommanderArtIds((manifestDecks || []).flatMap(d => (d.commanders || []).map(c => c.id)))"
+                  x-init="hydrateCommanderArtIds((manifestDecks || []).flatMap(d => (d.commanders || []).map(c => c.scryfall_id)))"
                 >
                   <p style="font-family: 'Space Grotesk', sans-serif; font-size: 14px; line-height: 1.5; color: var(--color-text-muted); margin: 0 0 16px 0; max-width: 720px;">
                     Pick one of the <span x-text="manifestDecks.length"></span> decks in this product to preview its cards or add it to your collection. To import the whole boxed set instead, return to the precon list and use ADD ALL on a non-bundle product.
@@ -719,10 +719,14 @@ export function renderPreconBrowser() {
                         class="card-tile-hover"
                         style="width: 100%; aspect-ratio: 220 / 308; padding: 0; background: var(--color-surface); border: 1px solid var(--color-border-ghost); cursor: pointer; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end;"
                       >
-                        <!-- 260517-vbc: commander art background (first commander) -->
-                        <template x-if="deck.commanders?.[0]?.id && commanderArt(deck.commanders[0].id)">
+                        <!-- 260517-vbc: commander art background (first commander).
+                             Manifest decks from splitPreconIntoDecks expose
+                             commanders as Scryfall card objects with .scryfall_id
+                             (NOT .id — that's the manifest-shape used by VIEW A's
+                             flatDeckTiles via getDeckManifestForPrecon). -->
+                        <template x-if="deck.commanders?.[0]?.scryfall_id && commanderArt(deck.commanders[0].scryfall_id)">
                           <img
-                            :src="commanderArt(deck.commanders[0].id)"
+                            :src="commanderArt(deck.commanders[0].scryfall_id)"
                             :alt="deck.commanders[0].name || deck.name"
                             style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.85;"
                             loading="lazy"
@@ -730,7 +734,7 @@ export function renderPreconBrowser() {
                           >
                         </template>
                         <!-- Keyrune fallback until art lands -->
-                        <template x-if="!deck.commanders?.[0]?.id || !commanderArt(deck.commanders[0].id)">
+                        <template x-if="!deck.commanders?.[0]?.scryfall_id || !commanderArt(deck.commanders[0].scryfall_id)">
                           <i class="ss ss-fallback" :class="'ss-' + precon.code"
                              style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 96px; color: var(--color-text-dim); opacity: 0.4;"></i>
                         </template>
