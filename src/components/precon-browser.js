@@ -153,6 +153,12 @@ export function renderPreconBrowser() {
         !(id in window.__cf_commanderArt) || window.__cf_commanderArt[id] === null
       ));
       if (!missing.length) return;
+      // 260518-art3: log so the user can see hydration actually firing.
+      // Helps diagnose 'still no art' reports — if these logs don't appear
+      // in the console, the function isn't being called; if they appear but
+      // 'received' counts are zero or much smaller than 'requesting', the
+      // Scryfall endpoint is the problem, not the cache plumbing.
+      console.info('[commander-art] requesting', missing.length, 'commanders from Scryfall');
       // Mark in-flight to suppress duplicate fetches on re-render.
       for (const id of missing) window.__cf_commanderArt[id] = null;
       const artOf = (card) => card?.image_uris?.art_crop
@@ -171,19 +177,23 @@ export function renderPreconBrowser() {
             body: JSON.stringify({ identifiers: batch.map((id) => ({ id })) }),
           });
           if (!response.ok) {
-            console.warn('[commander-art] /cards/collection failed:', response.status);
-            // 260518-art1: mark the batch as resolved-empty so the next
-            // re-render falls into the keyrune branch instead of staying
-            // null forever (null === in-flight in this cache; '' === tried).
+            console.warn('[commander-art] /cards/collection failed:', response.status, await response.text().catch(() => '<no body>'));
+            // 260518-art3: DELETE the in-flight sentinel on network/server
+            // failure (was '' before — but '' stayed in the cache forever and
+            // the dedup skipped these ids for the rest of the session,
+            // permanently grounding them on keyrune). Deleting lets the next
+            // kickArtHydration tick retry; combined with the REFRESH button
+            // clearing _artHydrationKickedFor (artR) the user can recover.
             for (const id of batch) {
               if (window.__cf_commanderArt[id] === null) {
-                window.__cf_commanderArt[id] = '';
+                delete window.__cf_commanderArt[id];
               }
             }
             continue;
           }
           const data = await response.json();
           const foundCards = data.data || [];
+          console.info('[commander-art] Scryfall returned', foundCards.length, 'cards;', (data.not_found || []).length, 'not_found of', batch.length, 'requested');
 
           // 260518-art1: cache art under BOTH the requested ID and the
           // response card's ID (when they differ). Cause: MTGJSON's manifest
@@ -229,9 +239,11 @@ export function renderPreconBrowser() {
           }
         } catch (err) {
           console.warn('[precon-browser] commander-art batch failed:', err);
+          // 260518-art3: same recovery semantics as the !response.ok branch —
+          // delete so retry is possible.
           for (const id of batch) {
             if (window.__cf_commanderArt[id] === null) {
-              window.__cf_commanderArt[id] = '';
+              delete window.__cf_commanderArt[id];
             }
           }
         }
@@ -529,8 +541,13 @@ export function renderPreconBrowser() {
           </div>
 
           <div style="display: flex; gap: 8px; align-items: center;">
+            <!-- 260518-art3: REFRESH also clears the commander-art cache +
+                 per-component dedup set so stuck '' / kicked entries from a
+                 prior failed Scryfall round get a fresh attempt. Without
+                 this, the only recovery from a transient API hiccup was a
+                 full page reload (which Vite HMR doesn't trigger). -->
             <button
-              @click="$store.collection.refreshPrecons()"
+              @click="if (window.__cf_commanderArt) { for (const k of Object.keys(window.__cf_commanderArt)) delete window.__cf_commanderArt[k]; } _artHydrationKickedFor = new Set(); $store.collection.refreshPrecons()"
               :disabled="$store.collection.preconsLoading"
               style="padding: 8px 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; color: var(--color-text-primary); background: var(--color-surface-hover); border: 1px solid var(--color-border-ghost); cursor: pointer; text-transform: uppercase;"
               x-text="$store.collection.preconsLoading ? 'REFRESHING…' : 'REFRESH'"
