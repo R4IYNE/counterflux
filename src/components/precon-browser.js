@@ -43,7 +43,7 @@ export function renderPreconBrowser() {
   // open the precon browser and DON'T see this line in the info console, the
   // dev server is still serving stale code: stop npm run dev, delete
   // node_modules/.vite/deps, restart, then hard-refresh.
-  console.info('[precon-browser] renderPreconBrowser() called — build 260518-art7');
+  console.info('[precon-browser] renderPreconBrowser() called — build 260518-art8');
 
   // Expose a name-lookup helper for the Alpine x-data template.
   // Uses an in-memory Map populated lazily — a single precon drill-in needs
@@ -151,6 +151,12 @@ export function renderPreconBrowser() {
   if (typeof window !== 'undefined' && !window.__cf_commanderArt) {
     window.__cf_commanderArt = {};
   }
+  // 260518-art8: color_identity cache, keyed by requested ID, populated by
+  // the same /cards/collection batches that fill __cf_commanderArt. Lets
+  // VIEW A tiles render mana glyphs without a second roundtrip.
+  if (typeof window !== 'undefined' && !window.__cf_commanderColors) {
+    window.__cf_commanderColors = {};
+  }
   if (typeof window !== 'undefined') {
     window.__cf_hydrateCommanderImages = async (scryfallIds) => {
       // 260518-art2: also treat `null` entries as missing — a previous attempt
@@ -222,6 +228,7 @@ export function renderPreconBrowser() {
             const card = responseByDirectId.get(requestedId);
             if (!card) continue;
             window.__cf_commanderArt[requestedId] = artOf(card);
+            window.__cf_commanderColors[requestedId] = card.color_identity || [];
             matched.add(requestedId);
             try { await db.cards.put(card); } catch {}
           }
@@ -232,8 +239,13 @@ export function renderPreconBrowser() {
             const requestedId = unmatchedBatch[k];
             const card = remappedCards[k];
             const art = artOf(card);
+            const ci = card.color_identity || [];
             window.__cf_commanderArt[requestedId] = art;
-            if (card.id) window.__cf_commanderArt[card.id] = art;
+            window.__cf_commanderColors[requestedId] = ci;
+            if (card.id) {
+              window.__cf_commanderArt[card.id] = art;
+              window.__cf_commanderColors[card.id] = ci;
+            }
             try { await db.cards.put(card); } catch {}
           }
           // Anything still null after both phases → not found by Scryfall.
@@ -289,6 +301,17 @@ export function renderPreconBrowser() {
           if (!id) return '';
           const cache = window.__cf_commanderArt || {};
           return cache[id] || '';
+        },
+        commanderColors(id) {
+          // 260518-art8: same reactive pattern as commanderArt — read
+          // _artBump so Alpine re-evaluates on hydration. Returns an array
+          // (possibly empty for colorless commanders, undefined for ids that
+          // never got hydrated). Callers should treat undefined as 'unknown
+          // yet' (keyrune fallback) and [] as 'colorless' (explicit C glyph).
+          this._artBump;
+          if (!id) return undefined;
+          const cache = window.__cf_commanderColors || {};
+          return cache[id];
         },
         representativeCommanderFor(code) {
           // Reads _commanderResolveBump so the getter that calls this
@@ -670,11 +693,30 @@ export function renderPreconBrowser() {
                        style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 96px; color: var(--color-text-dim); opacity: 0.4;"></i>
                   </template>
 
-                  <!-- Set-type badge (top-left) -->
-                  <span
-                    style="position: absolute; top: 8px; left: 8px; padding: 2px 6px; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; color: var(--color-text-muted); background: rgba(20,22,28,0.85); text-transform: uppercase;"
-                    x-text="tile.precon.set_type === 'commander' ? 'COMMANDER' : (tile.precon.set_type === 'duel_deck' ? 'DUEL DECK' : (tile.precon.set_type || '').toUpperCase())"
-                  ></span>
+                  <!-- Set-type badge + identity glyphs (stacked top-left).
+                       260518-art8: identity row sits BELOW set-type; only
+                       renders once the commander's color_identity has been
+                       hydrated (commanderColors returns undefined until then,
+                       so we don't flash a colorless 'C' for every loading
+                       tile). -->
+                  <div style="position: absolute; top: 8px; left: 8px; display: inline-flex; flex-direction: column; gap: 4px; align-items: flex-start;">
+                    <span
+                      style="padding: 2px 6px; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; color: var(--color-text-muted); background: rgba(20,22,28,0.85); text-transform: uppercase;"
+                      x-text="tile.precon.set_type === 'commander' ? 'COMMANDER' : (tile.precon.set_type === 'duel_deck' ? 'DUEL DECK' : (tile.precon.set_type || '').toUpperCase())"
+                    ></span>
+                    <template x-if="tile.commander?.id && Array.isArray(commanderColors(tile.commander.id))">
+                      <span style="display: inline-flex; gap: 3px; align-items: center; padding: 4px 6px; background: rgba(20,22,28,0.85);"
+                        :aria-label="'Color identity: ' + ((commanderColors(tile.commander.id) || []).join('') || 'C')"
+                      >
+                        <template x-if="(commanderColors(tile.commander.id) || []).length === 0">
+                          <i class="ms ms-c ms-cost" style="font-size: 14px;"></i>
+                        </template>
+                        <template x-for="ci in (commanderColors(tile.commander.id) || [])" :key="ci">
+                          <i class="ms ms-cost" :class="'ms-' + ci.toLowerCase()" style="font-size: 14px;"></i>
+                        </template>
+                      </span>
+                    </template>
+                  </div>
 
                   <!-- Deck-card count badge (top-right) — only when manifest
                        knows the total. Reads '100 CARDS' / '60 CARDS' etc. -->
