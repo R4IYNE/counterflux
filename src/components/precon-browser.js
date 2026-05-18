@@ -141,6 +141,10 @@ export function renderPreconBrowser() {
       if (!missing.length) return;
       // Mark in-flight to suppress duplicate fetches on re-render.
       for (const id of missing) window.__cf_commanderArt[id] = null;
+      const artOf = (card) => card?.image_uris?.art_crop
+        || card?.card_faces?.[0]?.image_uris?.art_crop
+        || card?.image_uris?.normal
+        || '';
       // Batch via /cards/collection (max 75 IDs per call).
       for (let i = 0; i < missing.length; i += 75) {
         const batch = missing.slice(i, i + 75);
@@ -154,21 +158,68 @@ export function renderPreconBrowser() {
           });
           if (!response.ok) {
             console.warn('[commander-art] /cards/collection failed:', response.status);
+            // 260518-art1: mark the batch as resolved-empty so the next
+            // re-render falls into the keyrune branch instead of staying
+            // null forever (null === in-flight in this cache; '' === tried).
+            for (const id of batch) {
+              if (window.__cf_commanderArt[id] === null) {
+                window.__cf_commanderArt[id] = '';
+              }
+            }
             continue;
           }
           const data = await response.json();
-          for (const card of (data.data || [])) {
-            const art = card?.image_uris?.art_crop
-              || card?.card_faces?.[0]?.image_uris?.art_crop
-              || card?.image_uris?.normal
-              || '';
-            if (card?.id) {
-              window.__cf_commanderArt[card.id] = art;
-              try { await db.cards.put(card); } catch {}
+          const foundCards = data.data || [];
+
+          // 260518-art1: cache art under BOTH the requested ID and the
+          // response card's ID (when they differ). Cause: MTGJSON's manifest
+          // sometimes lists an older printing's id while Scryfall has since
+          // remapped that id to a current canonical printing — the response
+          // arrives but its .id no longer matches what we asked for, so the
+          // tile's commanderArt(requestedId) lookup misses and the keyrune
+          // fallback stays. Two-phase match:
+          //   1. Direct id match — the common case
+          //   2. Position-based fallback for unmatched batch IDs ↔ response
+          //      cards whose id isn't in our batch (Scryfall returns data
+          //      in request order, excluding not_found entries)
+          const responseByDirectId = new Map();
+          for (const card of foundCards) {
+            if (card?.id) responseByDirectId.set(card.id, card);
+          }
+          const matched = new Set();
+          for (const requestedId of batch) {
+            const card = responseByDirectId.get(requestedId);
+            if (!card) continue;
+            window.__cf_commanderArt[requestedId] = artOf(card);
+            matched.add(requestedId);
+            try { await db.cards.put(card); } catch {}
+          }
+          const unmatchedBatch = batch.filter((id) => !matched.has(id));
+          const remappedCards = foundCards.filter((c) => c?.id && !batch.includes(c.id));
+          const pairCount = Math.min(unmatchedBatch.length, remappedCards.length);
+          for (let k = 0; k < pairCount; k++) {
+            const requestedId = unmatchedBatch[k];
+            const card = remappedCards[k];
+            const art = artOf(card);
+            window.__cf_commanderArt[requestedId] = art;
+            if (card.id) window.__cf_commanderArt[card.id] = art;
+            try { await db.cards.put(card); } catch {}
+          }
+          // Anything still null after both phases → not found by Scryfall.
+          // Resolve to '' so commanderArt() falls back to keyrune instead of
+          // sitting on the null in-flight sentinel forever.
+          for (const id of batch) {
+            if (window.__cf_commanderArt[id] === null) {
+              window.__cf_commanderArt[id] = '';
             }
           }
         } catch (err) {
           console.warn('[precon-browser] commander-art batch failed:', err);
+          for (const id of batch) {
+            if (window.__cf_commanderArt[id] === null) {
+              window.__cf_commanderArt[id] = '';
+            }
+          }
         }
       }
     };
