@@ -418,15 +418,19 @@ export function renderPreconBrowser() {
           return tiles;
         },
         async kickArtHydration() {
-          // Pull commander IDs from the current tile list and batch-fetch
-          // their image URLs. Idempotent via _artHydrationKickedFor — a
-          // search-query change only re-fires for any NEW commander ids
-          // that surface.
-          if (!window.__cf_hydrateCommanderImages) return;
+          // 260518-art5: probe every gate so we can tell which one is closing.
+          console.info('[kick] entry — fn?', !!window.__cf_hydrateCommanderImages,
+            'tiles=', this.flatDeckTiles.length,
+            'kicked=', this._artHydrationKickedFor.size);
+          if (!window.__cf_hydrateCommanderImages) {
+            console.info('[kick] aborted — no __cf_hydrateCommanderImages');
+            return;
+          }
           const ids = this.flatDeckTiles
             .map(t => t.commander?.id)
             .filter(Boolean);
           const fresh = ids.filter(id => !this._artHydrationKickedFor.has(id));
+          console.info('[kick] ids=', ids.length, 'fresh=', fresh.length);
           if (fresh.length === 0) return;
           for (const id of fresh) this._artHydrationKickedFor.add(id);
           await window.__cf_hydrateCommanderImages(fresh);
