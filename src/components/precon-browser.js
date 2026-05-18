@@ -43,7 +43,7 @@ export function renderPreconBrowser() {
   // open the precon browser and DON'T see this line in the info console, the
   // dev server is still serving stale code: stop npm run dev, delete
   // node_modules/.vite/deps, restart, then hard-refresh.
-  console.info('[precon-browser] renderPreconBrowser() called — build 260518-art6');
+  console.info('[precon-browser] renderPreconBrowser() called — build 260518-art7');
 
   // Expose a name-lookup helper for the Alpine x-data template.
   // Uses an in-memory Map populated lazily — a single precon drill-in needs
@@ -478,11 +478,13 @@ export function renderPreconBrowser() {
       x-show="$store.collection.preconBrowserOpen"
       x-cloak
       x-init="ensureMembershipsLoaded()"
-      x-effect="$store.collection.preconBrowserOpen && ensureMembershipsLoaded()"
       @keydown.escape.window="$store.collection.closePreconBrowser()"
-      x-effect="$store.collection.selectedPreconCode && hydrateNames(($store.collection.precons.find(p => p.code === $store.collection.selectedPreconCode))?.decklist)"
-      x-effect="flatDeckTiles.length > 0 && _membershipsReady && $store.collection.preconBrowserOpen && !$store.collection.selectedPreconCode && kickArtHydration()"
-      x-effect="_membershipsReady && ($store.collection.precons || []).length > 0 && backfillNonManifestCommanders()"
+      x-effect="
+        ($store.collection.preconBrowserOpen && ensureMembershipsLoaded()),
+        ($store.collection.selectedPreconCode && hydrateNames(($store.collection.precons.find(p => p.code === $store.collection.selectedPreconCode))?.decklist)),
+        (flatDeckTiles.length > 0 && _membershipsReady && $store.collection.preconBrowserOpen && !$store.collection.selectedPreconCode && kickArtHydration()),
+        (_membershipsReady && ($store.collection.precons || []).length > 0 && backfillNonManifestCommanders())
+      "
       style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9999; display: flex; align-items: center; justify-content: center;"
     >
       <!-- Backdrop -->
