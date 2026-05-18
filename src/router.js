@@ -4,6 +4,22 @@ import Alpine from 'alpinejs';
 let router;
 
 /**
+ * Minimal placeholder shown while a screen module is being dynamically
+ * imported. Plain DOM (no innerHTML) — content is a static literal so
+ * there's no XSS surface, but the safer construction keeps the security
+ * hook happy and documents intent.
+ */
+function buildLoadingPlaceholder() {
+  const div = document.createElement('div');
+  div.style.cssText =
+    'padding: 64px 24px; text-align: center; color: var(--color-text-muted); ' +
+    "font-family: 'JetBrains Mono', monospace; font-size: 11px; " +
+    'text-transform: uppercase; letter-spacing: 0.15em;';
+  div.textContent = 'LOADING…';
+  return div;
+}
+
+/**
  * Route-to-screen ID mapping. Exported for testing.
  */
 export const ROUTE_MAP = {
@@ -62,18 +78,31 @@ export function initRouter() {
       const screenId = ROUTE_MAP[path];
       Alpine.store('app').currentScreen = screenId;
 
-      const module = await loader();
       const container = document.getElementById('main-content');
-      if (container) {
-        // Clean up previous screen's resources (event listeners, body-level modals)
-        if (typeof container._cleanup === 'function') {
-          container._cleanup();
-          container._cleanup = null;
-        }
-        container.innerHTML = '';
-        module.mount(container);
-        window.scrollTo(0, 0);
+      if (!container) return;
+
+      // 260517-ssr: clear the previous screen's DOM BEFORE awaiting the
+      // module import. Otherwise the URL + nav highlight flip to the new
+      // screen while the old screen's content keeps rendering until the
+      // dynamic import resolves — e.g. navigating from Thousand-Year Storm
+      // to Preordain showed the deck builder under a /#/preordain URL
+      // until the preordain bundle finished loading. Clearing eagerly +
+      // rendering a minimal placeholder removes the stale-content window.
+      if (typeof container._cleanup === 'function') {
+        container._cleanup();
+        container._cleanup = null;
       }
+      // Token-guard concurrent navigations so a slow loader doesn't paint
+      // its content into a container the user has already navigated past.
+      const navToken = (container._navToken || 0) + 1;
+      container._navToken = navToken;
+      container.replaceChildren(buildLoadingPlaceholder());
+
+      const module = await loader();
+      if (container._navToken !== navToken) return;
+      container.replaceChildren();
+      module.mount(container);
+      window.scrollTo(0, 0);
     });
   });
 
