@@ -43,7 +43,7 @@ export function renderPreconBrowser() {
   // open the precon browser and DON'T see this line in the info console, the
   // dev server is still serving stale code: stop npm run dev, delete
   // node_modules/.vite/deps, restart, then hard-refresh.
-  console.info('[precon-browser] renderPreconBrowser() called — build 260518-art8');
+  console.info('[precon-browser] renderPreconBrowser() called — build 260518-fsm');
 
   // Expose a name-lookup helper for the Alpine x-data template.
   // Uses an in-memory Map populated lazily — a single precon drill-in needs
@@ -510,16 +510,13 @@ export function renderPreconBrowser() {
       "
       style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9999; display: flex; align-items: center; justify-content: center;"
     >
-      <!-- Backdrop -->
-      <div
-        @click="$store.collection.closePreconBrowser()"
-        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6);"
-      ></div>
-
-      <!-- Drawer panel -->
+      <!-- 260518-fsm: fullscreen drawer — replaces the previous 90vw / 1280px
+           centred-with-backdrop layout that left an awkward gap on wide
+           displays. No backdrop needed since the panel now covers the
+           viewport; close via the X button, ESC, or BACK TO PRECONS. -->
       <div
         @click.stop
-        style="position: relative; z-index: 10; background: var(--color-surface); border: 1px solid var(--color-border-ghost); width: 90vw; max-width: 1280px; height: 90vh; display: flex; flex-direction: column; padding: 24px; gap: 16px; overflow: hidden;"
+        style="position: relative; z-index: 10; background: var(--color-surface); width: 100vw; height: 100vh; display: flex; flex-direction: column; padding: 24px; gap: 16px; overflow: hidden;"
       >
         <!-- Header: title + search + REFRESH + close -->
         <div style="display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; gap: 16px; flex-wrap: wrap;">
@@ -991,6 +988,23 @@ export function renderPreconBrowser() {
                 <div style="padding: 24px; text-align: center;">
                   <h4 style="font-family: 'Syne', sans-serif; font-size: 20px; color: var(--color-secondary); text-transform: uppercase; margin: 0;">DECKLIST LOAD FAILED</h4>
                   <p style="font-family: 'Space Grotesk', sans-serif; font-size: 14px; color: var(--color-text-muted); margin: 16px 0;">Something went wrong fetching this decklist. Try another product or refresh.</p>
+                </div>
+              </template>
+
+              <!-- 260518-edl: empty-decklist state. Fires when the fetch
+                   succeeded but Scryfall returned 0 cards (typical for PROMO
+                   products like Tales of Middle-Earth Deluxe Commander Kit
+                   whose 'decklist' is just the box-topper card and isn't
+                   indexed as a searchable product). Without this, those
+                   precons opened to a completely blank modal — no rows, no
+                   banner, no signal that there's nothing to import. -->
+              <template x-if="!$store.collection.preconDecklistLoading && !$store.collection.preconDecklistError && !(hasManifest && !selectedDeck) && !isBundle && effectiveDecklist.length === 0">
+                <div style="padding: 48px; text-align: center; display: flex; flex-direction: column; gap: 12px; align-items: center;">
+                  <span class="material-symbols-outlined" style="color: var(--color-text-muted); font-size: 32px;">inventory_2</span>
+                  <h4 style="font-family: 'Syne', sans-serif; font-size: 18px; color: var(--color-text-primary); text-transform: uppercase; margin: 0;">No decklist available</h4>
+                  <p style="font-family: 'Space Grotesk', sans-serif; font-size: 14px; color: var(--color-text-muted); margin: 0; max-width: 540px;">
+                    Scryfall doesn't index importable cards for this product. Promo kits and certain commander accessories don't have a cards-collection endpoint.
+                  </p>
                 </div>
               </template>
 
