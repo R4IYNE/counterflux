@@ -43,7 +43,7 @@ export function renderPreconBrowser() {
   // open the precon browser and DON'T see this line in the info console, the
   // dev server is still serving stale code: stop npm run dev, delete
   // node_modules/.vite/deps, restart, then hard-refresh.
-  console.info('[precon-browser] renderPreconBrowser() called — build 260518-art4');
+  console.info('[precon-browser] renderPreconBrowser() called — build 260518-art6');
 
   // Expose a name-lookup helper for the Alpine x-data template.
   // Uses an in-memory Map populated lazily — a single precon drill-in needs
