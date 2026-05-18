@@ -134,10 +134,24 @@ export function renderPreconBrowser() {
   // 260516-pcd: commander art cache (scryfall_id → art_crop URL).
   // Filled by hydrateCommanderImages(); empty entries render the
   // keyrune fallback until they resolve.
+  // 260518-art2: cache object is initialised once per session so hydrated art
+  // survives screen navigations, but the hydrateCommanderImages function is
+  // assigned UNCONDITIONALLY every renderPreconBrowser() call. Without that,
+  // HMR-driven updates (and any subsequent in-session fixes) never replace the
+  // original closure — users keep running whatever function was installed on
+  // first precon-browser open until a hard page reload. This kept the
+  // 260518-art1 fix from actually executing for in-session HMR users.
   if (typeof window !== 'undefined' && !window.__cf_commanderArt) {
     window.__cf_commanderArt = {};
+  }
+  if (typeof window !== 'undefined') {
     window.__cf_hydrateCommanderImages = async (scryfallIds) => {
-      const missing = scryfallIds.filter((id) => id && !(id in window.__cf_commanderArt));
+      // 260518-art2: also treat `null` entries as missing — a previous attempt
+      // left them as the in-flight sentinel and never resolved (network error,
+      // 4xx, or the pre-fix code's silent miss). Re-fetch them now.
+      const missing = scryfallIds.filter((id) => id && (
+        !(id in window.__cf_commanderArt) || window.__cf_commanderArt[id] === null
+      ));
       if (!missing.length) return;
       // Mark in-flight to suppress duplicate fetches on re-render.
       for (const id of missing) window.__cf_commanderArt[id] = null;
