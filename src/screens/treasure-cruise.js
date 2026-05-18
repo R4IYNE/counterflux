@@ -230,6 +230,18 @@ export function mount(container) {
   `;
   document.body.appendChild(modalContainer);
 
+  // 260517-adr: register Alpine.data factories BEFORE initTree() walks the
+  // DOM. The Analytics panel template uses x-data="analyticsPanel()"; if
+  // initTree runs first, Alpine evaluates that expression while the factory
+  // is still unregistered and throws 'analyticsPanel is not defined'. Once
+  // registered globally the factory persists across mounts, so subsequent
+  // navigations to this screen worked fine — but the first-ever mount on a
+  // fresh page load (the dominant path for users landing on Collection)
+  // hit the race every time.
+  if (Alpine && typeof Alpine.data === 'function') {
+    Alpine.data('analyticsPanel', analyticsPanel);
+  }
+
   // Initialize Alpine on the inline panel too (it's now part of the screen
   // container, not #tc-modals). Without this, the <aside x-data=...> doesn't
   // bind and the panel never renders.
@@ -240,11 +252,6 @@ export function mount(container) {
   // Initialize Alpine on the newly appended modal elements
   if (Alpine?.initTree) {
     Alpine.initTree(modalContainer);
-  }
-
-  // Register Alpine component for analytics panel
-  if (Alpine && typeof Alpine.data === 'function') {
-    Alpine.data('analyticsPanel', analyticsPanel);
   }
 
   // Initialize context menu (imperative, attaches to DOM)
