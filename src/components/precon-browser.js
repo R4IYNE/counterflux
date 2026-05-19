@@ -43,7 +43,7 @@ export function renderPreconBrowser() {
   // open the precon browser and DON'T see this line in the info console, the
   // dev server is still serving stale code: stop npm run dev, delete
   // node_modules/.vite/deps, restart, then hard-refresh.
-  console.info('[precon-browser] renderPreconBrowser() called — build 260518-art9');
+  console.info('[precon-browser] renderPreconBrowser() called — build 260518-art10');
 
   // Expose a name-lookup helper for the Alpine x-data template.
   // Uses an in-memory Map populated lazily — a single precon drill-in needs
@@ -159,9 +159,22 @@ export function renderPreconBrowser() {
   }
   if (typeof window !== 'undefined') {
     window.__cf_hydrateCommanderImages = async (scryfallIds) => {
-      // 260518-art2: also treat `null` entries as missing — a previous attempt
-      // left them as the in-flight sentinel and never resolved (network error,
-      // 4xx, or the pre-fix code's silent miss). Re-fetch them now.
+      // 260518-art10: serialize concurrent kicks. The Alpine x-effect fires
+      // multiple times during initial precon-browser open (preconBrowserOpen
+      // flips, then _membershipsReady, then flatDeckTiles populates) and each
+      // tick calls kickArtHydration. With my earlier `treat null as missing`
+      // filter, two parallel calls each see the cache as fully unfilled and
+      // each issue the full 162-id fetch in 3 batches — six batches in a
+      // 50ms window. Scryfall's Cloudflare layer flags that as burst abuse
+      // and returns 429 WITHOUT CORS headers, which the browser surfaces as
+      // 'No Access-Control-Allow-Origin header is present' — looks like a
+      // CORS bug, is actually a rate-limit. Mutex queues subsequent kicks
+      // behind the in-flight one; by the time they run, the cache is full
+      // and missing.length === 0 so they no-op.
+      if (window.__cf_artHydrationInFlight) {
+        try { await window.__cf_artHydrationInFlight; } catch {}
+      }
+      const ourPromise = (async () => {
       const missing = scryfallIds.filter((id) => id && (
         !(id in window.__cf_commanderArt) || window.__cf_commanderArt[id] === null
       ));
@@ -181,6 +194,10 @@ export function renderPreconBrowser() {
       // Batch via /cards/collection (max 75 IDs per call).
       for (let i = 0; i < missing.length; i += 75) {
         const batch = missing.slice(i, i + 75);
+        // 260518-art10: 100ms inter-batch delay to respect Scryfall's
+        // documented 50-100ms rate limit. Three batches fired in immediate
+        // succession was the other half of the burst-abuse pattern.
+        if (i > 0) await new Promise(r => setTimeout(r, 100));
         try {
           // 260517-cor: drop User-Agent (browser forbidden request header
           // — see __cf_hydratePreconNamesFromApi above for the rationale).
@@ -265,6 +282,15 @@ export function renderPreconBrowser() {
               delete window.__cf_commanderArt[id];
             }
           }
+        }
+      }
+      })();  // close IIFE inside hydrateCommanderImages
+      window.__cf_artHydrationInFlight = ourPromise;
+      try {
+        await ourPromise;
+      } finally {
+        if (window.__cf_artHydrationInFlight === ourPromise) {
+          window.__cf_artHydrationInFlight = null;
         }
       }
     };
