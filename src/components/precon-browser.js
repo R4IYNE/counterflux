@@ -43,7 +43,7 @@ export function renderPreconBrowser() {
   // open the precon browser and DON'T see this line in the info console, the
   // dev server is still serving stale code: stop npm run dev, delete
   // node_modules/.vite/deps, restart, then hard-refresh.
-  console.info('[precon-browser] renderPreconBrowser() called — build 260518-fsm');
+  console.info('[precon-browser] renderPreconBrowser() called — build 260518-art9');
 
   // Expose a name-lookup helper for the Alpine x-data template.
   // Uses an in-memory Map populated lazily — a single precon drill-in needs
@@ -300,7 +300,16 @@ export function renderPreconBrowser() {
           this._artBump;
           if (!id) return '';
           const cache = window.__cf_commanderArt || {};
-          return cache[id] || '';
+          const hit = cache[id];
+          // 260518-art9: probe lookup-vs-cache. Logs the first 5 misses on
+          // each bump so we can see exactly which IDs aren't matching what
+          // /cards/collection returned. Avoid log spam by gating on bump.
+          if (!hit && !this._artLookupLoggedFor) this._artLookupLoggedFor = new Set();
+          if (!hit && this._artLookupLoggedFor && this._artLookupLoggedFor.size < 5 && !this._artLookupLoggedFor.has(id)) {
+            this._artLookupLoggedFor.add(id);
+            console.info('[art-lookup] MISS for', id, '— cache has', Object.keys(cache).length, 'keys; first key:', Object.keys(cache)[0]);
+          }
+          return hit || '';
         },
         commanderColors(id) {
           // 260518-art8: same reactive pattern as commanderArt — read
