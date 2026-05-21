@@ -207,10 +207,38 @@ export async function fetchPreconDecklist(code) {
   }
 
   const cards = [];
+  // 260519-pct: capture the FIRST card encountered, regardless of the
+  // promo/oversized/token filters below. Promo-style products (PLTC Tales of
+  // Middle-earth Deluxe Commander Kit, etc.) have every card flagged
+  // promo:true on Scryfall; the filters strip the list to empty and the
+  // tile has no source for a thumbnail. Stashing this unfiltered card
+  // lets the precon-browser fall back to an actual card image instead of
+  // the keyrune '?' placeholder when there's nothing else to show.
+  let representativeCard = null;
   let url = cached.search_uri;
   while (url) {
     const page = await queueScryfallRequest(url);
     for (const card of (page.data || [])) {
+      // 260519-pct: capture representative BEFORE filters. The first
+      // card with a usable image wins; double-faced cards expose images
+      // under card_faces[0].
+      if (!representativeCard && card?.id) {
+        const repImg = card.image_uris?.small
+          || card.card_faces?.[0]?.image_uris?.small
+          || '';
+        const repArt = card.image_uris?.art_crop
+          || card.card_faces?.[0]?.image_uris?.art_crop
+          || '';
+        representativeCard = {
+          scryfall_id: card.id,
+          name: card.name || '',
+          image_small: repImg,
+          image_normal: card.image_uris?.normal
+            || card.card_faces?.[0]?.image_uris?.normal
+            || '',
+          image_art_crop: repArt,
+        };
+      }
       // Paper-only (v1.1 milestone scope): skip MTGO/Arena-only printings
       if (card.games && !card.games.includes('paper')) continue;
       // 260516-tkn: skip tokens, emblems, oversized cards (Planechase-style
@@ -240,6 +268,20 @@ export async function fetchPreconDecklist(code) {
       const tl = card.type_line || '';
       if (/^token\b/i.test(tl)) continue;
 
+      // 260519-pct: capture small + normal image URLs so the precon-browser
+      // can render thumbnails next to each decklist row AND use the first
+      // card as a tile fallback when no commander is identified (PLTC promo,
+      // duel decks without a legendary creature). Two-face cards expose
+      // image_uris under card_faces[0]; the fallback chain mirrors the
+      // commander-art lookup in __cf_hydrateCommanderImages. Old cache
+      // entries without these fields render the placeholder until the 7-day
+      // TTL refreshes them.
+      const imgSmall = card.image_uris?.small
+        || card.card_faces?.[0]?.image_uris?.small
+        || '';
+      const imgNormal = card.image_uris?.normal
+        || card.card_faces?.[0]?.image_uris?.normal
+        || '';
       cards.push({
         scryfall_id: card.id,
         quantity: 1, // unique=prints returns one row per printing; precon qty always 1
@@ -253,13 +295,22 @@ export async function fetchPreconDecklist(code) {
         name: card.name || '',
         color_identity: Array.isArray(card.color_identity) ? card.color_identity : [],
         type_line: card.type_line || '',
+        image_small: imgSmall,
+        image_normal: imgNormal,
       });
     }
     url = page.has_more ? page.next_page : null;
   }
 
   const now = Date.now();
-  await db.precons_cache.update(code, { decklist: cards, updated_at: now });
+  await db.precons_cache.update(code, {
+    decklist: cards,
+    // 260519-pct: write the unfiltered first card alongside the decklist
+    // so the precon-browser backfill can render a thumbnail even when
+    // every card was filtered out as a promo (PLTC) or oversized box-topper.
+    representative_card: representativeCard,
+    updated_at: now,
+  });
   return cards;
 }
 

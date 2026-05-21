@@ -25,9 +25,13 @@ export function bootPerfMetrics() {
   // NOTE: each onX call gets a fresh opts literal because web-vitals v5 uses
   // the opts object identity as a WeakMap key in initUnique — sharing a single
   // reference between metrics collides their internal Manager instances.
-  onLCP(track, { reportAllChanges: true });
-  onINP(track, { reportAllChanges: true });
-  onCLS(track, { reportAllChanges: true });
-  onFCP(track, { reportAllChanges: true });
-  onTTFB(track, { reportAllChanges: true });
+  // 260519-pct: reportAllChanges dropped — was firing console.table on EVERY
+  // delta (5+ metrics × N updates × every route navigation = thousands of
+  // entries in DevTools per session). Now reports only the final value per
+  // metric per page load.
+  onLCP(track);
+  onINP(track);
+  onCLS(track);
+  onFCP(track);
+  onTTFB(track);
 }

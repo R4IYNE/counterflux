@@ -38,13 +38,6 @@ import {
  * @returns {string} HTML string
  */
 export function renderPreconBrowser() {
-  // 260518-art4: version probe — confirms the LATEST module is actually being
-  // executed when this function runs (not a Vite-cached older bundle). If you
-  // open the precon browser and DON'T see this line in the info console, the
-  // dev server is still serving stale code: stop npm run dev, delete
-  // node_modules/.vite/deps, restart, then hard-refresh.
-  console.info('[precon-browser] renderPreconBrowser() called — build 260518-art10');
-
   // Expose a name-lookup helper for the Alpine x-data template.
   // Uses an in-memory Map populated lazily — a single precon drill-in needs
   // ~100 card names; we batch-fetch from db.cards and cache in a module-level
@@ -77,6 +70,13 @@ export function renderPreconBrowser() {
       if (!missing.length) return;
       for (let i = 0; i < missing.length; i += 75) {
         const batch = missing.slice(i, i + 75);
+        // 260519-pct: same global 100ms spacing as commander-art hydrator
+        // (shares window.__cf_lastScryfallHit so the two hydrators don't
+        // burst-fire against each other).
+        const now = Date.now();
+        const wait = Math.max(0, 100 - (now - (window.__cf_lastScryfallHit || 0)));
+        if (wait > 0) await new Promise(r => setTimeout(r, wait));
+        window.__cf_lastScryfallHit = Date.now();
         try {
           // 260517-cor: User-Agent is a forbidden request header in
           // browser fetch — setting it is a no-op at best and can trigger
@@ -125,18 +125,47 @@ export function renderPreconBrowser() {
   // 260516-pcd2: representative-commander cache for non-manifest precons
   // (single-deck commander products, duel decks). Lazily filled by the
   // backfill loop in the precon-browser x-data — see backfillNonManifestCommanders.
-  // Value semantics: { id, name } when a commander was identified, null
-  // when the decklist had no legendary creature (most duel decks),
-  // undefined when not yet fetched.
+  // Value semantics: { id, name } when a commander was identified.
+  // 260519-pct: when the decklist has no legendary creature (PLTC promo,
+  // some duel decks), the backfill now records the FIRST decklist card so
+  // the tile can render a thumbnail in place of the keyrune '?' fallback.
+  // The tile renderer suppresses mana-identity glyphs for non-manifest
+  // tiles (isDeck === false) regardless of whether the id points at a real
+  // commander or a first-card fallback. Null = backfill ran and the
+  // decklist was empty; undefined = not yet fetched.
   if (typeof window !== 'undefined' && !window.__cf_preconRepresentativeCommander) {
     window.__cf_preconRepresentativeCommander = {};
+  }
+  // 260519-pct: total card count per non-manifest precon, captured during
+  // the backfill loop so VIEW A tiles can render the 'N CARDS' badge in
+  // the top-right corner. Manifest tiles get their count from
+  // getDeckManifestForPrecon (per-deck total); this cache fills the gap
+  // for everything else.
+  if (typeof window !== 'undefined' && !window.__cf_preconCardCount) {
+    window.__cf_preconCardCount = {};
   }
   // 260516-pcd2: expose fetchPreconDecklist for the backfill loop. Same
   // service entry the store uses inside selectPrecon — and it's already
   // cached in Dexie with a 7-day TTL, so repeated calls across sessions
   // are free after the first load.
-  if (typeof window !== 'undefined' && !window.__cf_fetchPreconDecklist) {
+  // 260519-pct: reassign on EVERY render so HMR-updated function bodies
+  // actually take effect — module-level imports get a fresh closure on each
+  // HMR pass; the old `!window.__cf_*` guard locked the FIRST one in
+  // forever. (Same rationale as the 260518-art2 fix for hydrateCommanderImages.)
+  if (typeof window !== 'undefined') {
     window.__cf_fetchPreconDecklist = fetchPreconDecklist;
+  }
+  // 260519-pct: Alpine x-data string templates evaluate in global scope, so
+  // module-level imports like `db` and `fetchPreconDecklist` are NOT
+  // available inside the template body. The backfillNonManifestCommanders
+  // method (defined in x-data) needs a Dexie cache-row reader to fall back
+  // to the unfiltered representative card when the filtered decklist comes
+  // back empty (PLTC etc.). Expose a thin helper rather than the whole db
+  // handle. Was: silently throwing ReferenceError for the entire backfill,
+  // caught only as console.warn — which is why FDC/PLTC tiles have ALWAYS
+  // shown '?' since the backfill was first added.
+  if (typeof window !== 'undefined') {
+    window.__cf_getPreconCacheRow = (code) => db.precons_cache.get(code);
   }
   // 260516-pcd: commander art cache (scryfall_id → art_crop URL).
   // Filled by hydrateCommanderImages(); empty entries render the
@@ -156,6 +185,17 @@ export function renderPreconBrowser() {
   // VIEW A tiles render mana glyphs without a second roundtrip.
   if (typeof window !== 'undefined' && !window.__cf_commanderColors) {
     window.__cf_commanderColors = {};
+  }
+  // 260519-pct: GLOBAL last-Scryfall-hit timestamp. Used by the new
+  // spacedFetch helper inside __cf_hydrateCommanderImages to enforce
+  // Scryfall's 50-100ms minimum spacing across ALL callers (kick + backfill
+  // + drilled-in view-B hydrator). The existing inter-batch delay only
+  // covered batches within ONE call, so 45 single-id backfill iterations
+  // back-to-back blew past the rate limit and Scryfall's Cloudflare layer
+  // started returning 429 without CORS headers (which the browser surfaces
+  // as a CORS error — see 260518-art10's comment block).
+  if (typeof window !== 'undefined' && !window.__cf_lastScryfallHit) {
+    window.__cf_lastScryfallHit = 0;
   }
   if (typeof window !== 'undefined') {
     window.__cf_hydrateCommanderImages = async (scryfallIds) => {
@@ -179,12 +219,6 @@ export function renderPreconBrowser() {
         !(id in window.__cf_commanderArt) || window.__cf_commanderArt[id] === null
       ));
       if (!missing.length) return;
-      // 260518-art3: log so the user can see hydration actually firing.
-      // Helps diagnose 'still no art' reports — if these logs don't appear
-      // in the console, the function isn't being called; if they appear but
-      // 'received' counts are zero or much smaller than 'requesting', the
-      // Scryfall endpoint is the problem, not the cache plumbing.
-      console.info('[commander-art] requesting', missing.length, 'commanders from Scryfall');
       // Mark in-flight to suppress duplicate fetches on re-render.
       for (const id of missing) window.__cf_commanderArt[id] = null;
       const artOf = (card) => card?.image_uris?.art_crop
@@ -194,10 +228,15 @@ export function renderPreconBrowser() {
       // Batch via /cards/collection (max 75 IDs per call).
       for (let i = 0; i < missing.length; i += 75) {
         const batch = missing.slice(i, i + 75);
-        // 260518-art10: 100ms inter-batch delay to respect Scryfall's
-        // documented 50-100ms rate limit. Three batches fired in immediate
-        // succession was the other half of the burst-abuse pattern.
-        if (i > 0) await new Promise(r => setTimeout(r, 100));
+        // 260519-pct: GLOBAL 100ms spacing — replaces the prior
+        // "inter-batch-only" delay. Computes wait against
+        // window.__cf_lastScryfallHit so two distinct callers (kick +
+        // backfill, or backfill iter N + iter N+1) get spaced from each
+        // other, not just batches within one call.
+        const now = Date.now();
+        const wait = Math.max(0, 100 - (now - (window.__cf_lastScryfallHit || 0)));
+        if (wait > 0) await new Promise(r => setTimeout(r, wait));
+        window.__cf_lastScryfallHit = Date.now();
         try {
           // 260517-cor: drop User-Agent (browser forbidden request header
           // — see __cf_hydratePreconNamesFromApi above for the rationale).
@@ -223,7 +262,6 @@ export function renderPreconBrowser() {
           }
           const data = await response.json();
           const foundCards = data.data || [];
-          console.info('[commander-art] Scryfall returned', foundCards.length, 'cards;', (data.not_found || []).length, 'not_found of', batch.length, 'requested');
 
           // 260518-art1: cache art under BOTH the requested ID and the
           // response card's ID (when they differ). Cause: MTGJSON's manifest
@@ -326,16 +364,7 @@ export function renderPreconBrowser() {
           this._artBump;
           if (!id) return '';
           const cache = window.__cf_commanderArt || {};
-          const hit = cache[id];
-          // 260518-art9: probe lookup-vs-cache. Logs the first 5 misses on
-          // each bump so we can see exactly which IDs aren't matching what
-          // /cards/collection returned. Avoid log spam by gating on bump.
-          if (!hit && !this._artLookupLoggedFor) this._artLookupLoggedFor = new Set();
-          if (!hit && this._artLookupLoggedFor && this._artLookupLoggedFor.size < 5 && !this._artLookupLoggedFor.has(id)) {
-            this._artLookupLoggedFor.add(id);
-            console.info('[art-lookup] MISS for', id, '— cache has', Object.keys(cache).length, 'keys; first key:', Object.keys(cache)[0]);
-          }
-          return hit || '';
+          return cache[id] || '';
         },
         commanderColors(id) {
           // 260518-art8: same reactive pattern as commanderArt — read
@@ -353,6 +382,12 @@ export function renderPreconBrowser() {
           // re-evaluates whenever the backfill resolves a new commander.
           return this._commanderResolveBump,
             (window.__cf_preconRepresentativeCommander?.[code]) || null;
+        },
+        preconCardCountFor(code) {
+          // 260519-pct: same reactive pattern — depends on _commanderResolveBump
+          // so the tile re-renders once the backfill records the decklist length.
+          return this._commanderResolveBump,
+            (window.__cf_preconCardCount?.[code]) || 0;
         },
         async backfillNonManifestCommanders() {
           if (this._backfillStarted) return;
@@ -375,22 +410,71 @@ export function renderPreconBrowser() {
             const decks = window.__cf_getDeckManifestForPrecon?.(p.code) || [];
             if (decks.length > 0) continue;
             try {
-              const decklist = await fetchPreconDecklist(p.code);
+              // 260519-pct: use the window-exposed helper — Alpine x-data
+              // templates run in global scope, so module-level imports of
+              // fetchPreconDecklist are NOT visible here. ReferenceError
+              // was being silently swallowed by the catch below, which is
+              // why FDC/PLTC/HOC/MSC tiles ALWAYS showed '?' since the
+              // backfill was first added.
+              const decklist = await window.__cf_fetchPreconDecklist(p.code);
+              window.__cf_preconCardCount[p.code] = (decklist || []).length;
               const cmdr = (decklist || []).find((e) => e.is_commander);
-              if (cmdr) {
+              const fallback = !cmdr && (decklist || []).length > 0 ? decklist[0] : null;
+              let repr = cmdr || fallback;
+              // 260519-pct: PLTC and similar all-promo products have every
+              // card flagged promo:true so fetchPreconDecklist returns []
+              // even though the SET genuinely has cards. fetchPreconDecklist
+              // also stashes a representative_card field (unfiltered first
+              // card) on the precons_cache row for exactly this case —
+              // pull it out via the __cf_getPreconCacheRow helper (db isn't
+              // visible inside the x-data template either).
+              let representativeFromCache = null;
+              if (!repr) {
+                try {
+                  const cacheRow = window.__cf_getPreconCacheRow
+                    ? await window.__cf_getPreconCacheRow(p.code)
+                    : null;
+                  if (cacheRow?.representative_card?.scryfall_id) {
+                    representativeFromCache = cacheRow.representative_card;
+                    repr = {
+                      scryfall_id: cacheRow.representative_card.scryfall_id,
+                      name: cacheRow.representative_card.name || '',
+                    };
+                  }
+                } catch (cacheErr) {
+                  console.warn('[precon-browser] representative_card lookup failed for', p.code, cacheErr);
+                }
+              }
+              if (repr) {
                 window.__cf_preconRepresentativeCommander[p.code] = {
-                  id: cmdr.scryfall_id,
-                  name: cmdr.name,
+                  id: repr.scryfall_id,
+                  name: repr.name,
                 };
-                // Hydrate the art and wait — bump _artBump after the
-                // fetch lands so the tile re-renders with the image.
+                // 260519-pct: if the representative came with art_crop
+                // (or normal as fallback) cached locally, prime
+                // __cf_commanderArt directly — saves a Scryfall round-trip
+                // and avoids the queue-and-batch latency.
+                if (representativeFromCache && window.__cf_commanderArt) {
+                  const localArt = representativeFromCache.image_art_crop
+                    || representativeFromCache.image_normal
+                    || '';
+                  if (localArt) {
+                    window.__cf_commanderArt[repr.scryfall_id] = localArt;
+                    this._artBump++;
+                  }
+                }
+                // Hydrate via Scryfall too (will short-circuit if cache hit).
+                // For first-card fallbacks this resolves art_crop so the
+                // tile looks consistent with commander tiles.
                 if (window.__cf_hydrateCommanderImages) {
-                  await window.__cf_hydrateCommanderImages([cmdr.scryfall_id]);
+                  await window.__cf_hydrateCommanderImages([repr.scryfall_id]);
                   this._artBump++;
                 }
               } else {
-                // Decklist had no legendary creature (most duel decks).
-                // Cache null so we don't re-fetch on every render.
+                // Decklist was empty AND no representative_card in cache
+                // (older cache entries pre-260519-pct). Keep null so we
+                // don't re-fetch on every render; user can REFRESH to
+                // re-populate with the new field.
                 window.__cf_preconRepresentativeCommander[p.code] = null;
               }
               this._commanderResolveBump++;
@@ -462,6 +546,10 @@ export function renderPreconBrowser() {
               // products, duel decks). Use the backfilled representative
               // commander when available; falls back to null until the
               // background fetch lands and bumps _commanderResolveBump.
+              // 260519-pct: non-manifest tiles now show 'N CARDS' (sourced
+              // from the cached decklist length). When no legendary creature
+              // exists, repr is the first decklist card so the tile renders
+              // its art instead of the keyrune '?' placeholder.
               const repr = this.representativeCommanderFor(p.code);
               tiles.push({
                 isDeck: false,
@@ -469,26 +557,18 @@ export function renderPreconBrowser() {
                 deckKey: null,
                 deckName: p.name,
                 commander: repr,
-                cardCount: 0,
+                cardCount: this.preconCardCountFor(p.code),
               });
             }
           }
           return tiles;
         },
         async kickArtHydration() {
-          // 260518-art5: probe every gate so we can tell which one is closing.
-          console.info('[kick] entry — fn?', !!window.__cf_hydrateCommanderImages,
-            'tiles=', this.flatDeckTiles.length,
-            'kicked=', this._artHydrationKickedFor.size);
-          if (!window.__cf_hydrateCommanderImages) {
-            console.info('[kick] aborted — no __cf_hydrateCommanderImages');
-            return;
-          }
+          if (!window.__cf_hydrateCommanderImages) return;
           const ids = this.flatDeckTiles
             .map(t => t.commander?.id)
             .filter(Boolean);
           const fresh = ids.filter(id => !this._artHydrationKickedFor.has(id));
-          console.info('[kick] ids=', ids.length, 'fresh=', fresh.length);
           if (fresh.length === 0) return;
           for (const id of fresh) this._artHydrationKickedFor.add(id);
           await window.__cf_hydrateCommanderImages(fresh);
@@ -613,9 +693,26 @@ export function renderPreconBrowser() {
                  per-component dedup set so stuck '' / kicked entries from a
                  prior failed Scryfall round get a fresh attempt. Without
                  this, the only recovery from a transient API hiccup was a
-                 full page reload (which Vite HMR doesn't trigger). -->
+                 full page reload (which Vite HMR doesn't trigger).
+                 260519-pct: ALSO clear the representative-commander +
+                 card-count caches and reset _backfillStarted so the
+                 non-manifest backfill re-runs after REFRESH. Previously the
+                 sticky flag meant REFRESH cleared the visible art but left
+                 the backfill cache poisoned with stale null sentinels —
+                 PLTC/FDC tiles kept showing '?' even with the new
+                 fallback-to-first-card logic in place. -->
             <button
-              @click="if (window.__cf_commanderArt) { for (const k of Object.keys(window.__cf_commanderArt)) delete window.__cf_commanderArt[k]; } _artHydrationKickedFor = new Set(); $store.collection.refreshPrecons()"
+              @click="
+                if (window.__cf_commanderArt) { for (const k of Object.keys(window.__cf_commanderArt)) delete window.__cf_commanderArt[k]; }
+                if (window.__cf_commanderColors) { for (const k of Object.keys(window.__cf_commanderColors)) delete window.__cf_commanderColors[k]; }
+                if (window.__cf_preconRepresentativeCommander) { for (const k of Object.keys(window.__cf_preconRepresentativeCommander)) delete window.__cf_preconRepresentativeCommander[k]; }
+                if (window.__cf_preconCardCount) { for (const k of Object.keys(window.__cf_preconCardCount)) delete window.__cf_preconCardCount[k]; }
+                _artHydrationKickedFor = new Set();
+                _backfillStarted = false;
+                _commanderResolveBump++;
+                _artBump++;
+                $store.collection.refreshPrecons()
+              "
               :disabled="$store.collection.preconsLoading"
               style="padding: 8px 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; color: var(--color-text-primary); background: var(--color-surface-hover); border: 1px solid var(--color-border-ghost); cursor: pointer; text-transform: uppercase;"
               x-text="$store.collection.preconsLoading ? 'REFRESHING…' : 'REFRESH'"
@@ -728,15 +825,17 @@ export function renderPreconBrowser() {
                   <!-- Set-type badge + identity glyphs (stacked top-left).
                        260518-art8: identity row sits BELOW set-type; only
                        renders once the commander's color_identity has been
-                       hydrated (commanderColors returns undefined until then,
-                       so we don't flash a colorless 'C' for every loading
-                       tile). -->
+                       hydrated.
+                       260519-pct: mana glyphs are now gated on tile.isDeck —
+                       only manifest-driven 100-card commander decks show
+                       color-identity glyphs. Non-manifest tiles (PLTC,
+                       duel decks, etc.) suppress them per UX spec. -->
                   <div style="position: absolute; top: 8px; left: 8px; display: inline-flex; flex-direction: column; gap: 4px; align-items: flex-start;">
                     <span
                       style="padding: 2px 6px; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; color: var(--color-text-muted); background: rgba(20,22,28,0.85); text-transform: uppercase;"
                       x-text="tile.precon.set_type === 'commander' ? 'COMMANDER' : (tile.precon.set_type === 'duel_deck' ? 'DUEL DECK' : (tile.precon.set_type || '').toUpperCase())"
                     ></span>
-                    <template x-if="tile.commander?.id && Array.isArray(commanderColors(tile.commander.id))">
+                    <template x-if="tile.isDeck && tile.commander?.id && Array.isArray(commanderColors(tile.commander.id))">
                       <span style="display: inline-flex; gap: 3px; align-items: center; padding: 4px 6px; background: rgba(20,22,28,0.85);"
                         :aria-label="'Color identity: ' + ((commanderColors(tile.commander.id) || []).join('') || 'C')"
                       >
@@ -750,9 +849,13 @@ export function renderPreconBrowser() {
                     </template>
                   </div>
 
-                  <!-- Deck-card count badge (top-right) — only when manifest
-                       knows the total. Reads '100 CARDS' / '60 CARDS' etc. -->
-                  <template x-if="tile.isDeck && tile.cardCount > 0">
+                  <!-- Deck-card count badge (top-right). 260519-pct: now
+                       renders for ANY tile with a known count — manifest
+                       decks (per-deck total from MTGJSON) and non-manifest
+                       precons (full decklist length from the backfill
+                       loop). Hides only while cardCount is still 0 (e.g.
+                       while the decklist is still being fetched). -->
+                  <template x-if="tile.cardCount > 0">
                     <span
                       style="position: absolute; top: 8px; right: 8px; padding: 2px 6px; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; color: var(--color-text-primary); background: rgba(20,22,28,0.85);"
                       x-text="tile.cardCount + ' CARDS'"
@@ -1049,17 +1152,35 @@ export function renderPreconBrowser() {
                    filter to that deck's cards via effectiveDecklist;
                    otherwise the full bundle (or non-bundle precon) renders.
                    Hidden on manifest-backed bundles when no deck is selected
-                   (the tile grid takes that slot). -->
+                   (the tile grid takes that slot).
+                   260519-pct: each row now leads with a small thumbnail
+                   (entry.image_small captured by fetchPreconDecklist).
+                   Older cache entries without image_small render a 40x56
+                   ghost-border placeholder until the 7-day TTL refreshes. -->
               <template x-if="effectiveDecklist.length && !$store.collection.preconDecklistLoading && !(hasManifest && !selectedDeck)">
                 <div style="display: flex; flex-direction: column;">
                   <template x-for="entry in sortedDecklist" :key="entry.scryfall_id">
                     <div
-                      style="display: flex; align-items: center; gap: 16px; padding: 8px 12px; min-height: 56px; border-bottom: 1px solid var(--color-border-ghost); transition: background 120ms ease-out, border-left 120ms ease-out;"
+                      style="display: flex; align-items: center; gap: 12px; padding: 6px 12px; min-height: 64px; border-bottom: 1px solid var(--color-border-ghost); transition: background 120ms ease-out, border-left 120ms ease-out;"
                       onmouseenter="this.style.background='var(--color-surface-hover)'; this.style.borderLeft='2px solid var(--color-primary)'"
                       onmouseleave="this.style.background='transparent'; this.style.borderLeft='none'"
                     >
+                      <template x-if="entry.image_small">
+                        <img
+                          :src="entry.image_small"
+                          :alt="cardName(entry)"
+                          loading="lazy"
+                          style="width: 40px; height: 56px; object-fit: cover; border: 1px solid var(--color-border-ghost); flex-shrink: 0; background: var(--color-background);"
+                          onerror="this.style.visibility='hidden'"
+                        >
+                      </template>
+                      <template x-if="!entry.image_small">
+                        <div style="width: 40px; height: 56px; border: 1px solid var(--color-border-ghost); background: var(--color-background); flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
+                          <span class="material-symbols-outlined" style="font-size: 18px; color: var(--color-text-dim); opacity: 0.4;">style</span>
+                        </div>
+                      </template>
                       <span
-                        style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--color-text-muted); min-width: 32px;"
+                        style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--color-text-muted); min-width: 28px;"
                         x-text="entry.quantity + '×'"
                       ></span>
                       <span
