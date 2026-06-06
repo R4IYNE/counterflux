@@ -23,11 +23,19 @@
  * Method, query, body, headers pass through transparently except UA replacement.
  */
 
+import { checkRequest } from './_origin-guard.js';
+
 const UPSTREAM_BASE = 'https://json.edhrec.com';
 const SOURCE = 'edhrec';
 const USER_AGENT = 'Counterflux/1.x (+https://counterflux.vercel.app)';
 
 export default async function handler(req, res) {
+  // 260530-sec: origin + body-size guard. Blocks anonymous abuse of this
+  // open proxy from anywhere other than our own frontend / preview URLs.
+  // Tests bypass via NODE_ENV === 'test'.
+  const guard = checkRequest(req);
+  if (!guard.ok) return res.status(guard.status).json(guard.body);
+
   try {
     // 1. Build upstream URL from `req.query.path` + remaining query params.
     //    Production: rewrite passes path as a single string with slashes

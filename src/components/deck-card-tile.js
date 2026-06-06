@@ -286,13 +286,21 @@ function renderListRow(entry, card, cardName, typeGroup) {
   row.addEventListener('mouseleave', () => { row.style.background = 'transparent'; });
 
   // Name cell with owned/missing indicator
+  // 260530-sec: build the indicator span imperatively and use textContent
+  // for cardName. Card names come from Scryfall (trusted) but defense-in-
+  // depth — a bulk-data parser bug or a future Scryfall change shouldn't
+  // become XSS.
   const nameCell = document.createElement('td');
   nameCell.style.cssText = `
     padding: 8px 16px; font-family: 'Space Grotesk', sans-serif; font-size: 14px; color: #EAECEE;
   `;
   const indicator = entry.owned ? '●' : '●';
   const indicatorColor = entry.owned ? '#2ECC71' : '#E23838';
-  nameCell.innerHTML = `<span style="color: ${indicatorColor}; margin-right: 6px; font-size: 8px;">${indicator}</span>${cardName}`;
+  const indicatorSpan = document.createElement('span');
+  indicatorSpan.style.cssText = `color: ${indicatorColor}; margin-right: 6px; font-size: 8px;`;
+  indicatorSpan.textContent = indicator;
+  nameCell.appendChild(indicatorSpan);
+  nameCell.appendChild(document.createTextNode(cardName));
   row.appendChild(nameCell);
 
   // Type cell

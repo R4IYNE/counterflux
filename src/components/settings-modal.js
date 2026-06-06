@@ -290,15 +290,26 @@ function _buildActionRow(profile, authed) {
 }
 
 function _renderAvatar(container, profile) {
+  // 260530-sec: build elements imperatively so user-controlled fields
+  // (avatar_url_override, profile name → initials) cannot break out of
+  // an HTML attribute. Previously the inline template let a malicious
+  // avatar URL like '" onerror="..."' inject JS — self-XSS in solo mode,
+  // cross-user XSS in household sharing where another member views your
+  // profile.
   const url = profile.effectiveAvatarUrl;
   if (url) {
-    container.innerHTML = `<img src="${url}" style="width:56px;height:56px;object-fit:cover;border:1px solid #2A2D3A;">`;
+    const img = document.createElement('img');
+    img.src = url;
+    img.style.cssText = 'width:56px;height:56px;object-fit:cover;border:1px solid #2A2D3A;';
+    container.replaceChildren(img);
   } else {
-    container.innerHTML = `
-      <div style="width:56px;height:56px;background:#1C1F28;border:1px solid #2A2D3A;display:flex;align-items:center;justify-content:center;">
-        <span style="font-family:'Syne',sans-serif;font-size:20px;font-weight:700;color:#7A8498;">${profile.initials}</span>
-      </div>
-    `;
+    const fallback = document.createElement('div');
+    fallback.style.cssText = 'width:56px;height:56px;background:#1C1F28;border:1px solid #2A2D3A;display:flex;align-items:center;justify-content:center;';
+    const initials = document.createElement('span');
+    initials.style.cssText = "font-family:'Syne',sans-serif;font-size:20px;font-weight:700;color:#7A8498;";
+    initials.textContent = profile.initials;
+    fallback.appendChild(initials);
+    container.replaceChildren(fallback);
   }
 }
 

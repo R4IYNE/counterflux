@@ -22,11 +22,17 @@
  * Dexie combo_cache table per src/stores/intelligence.js:148-149).
  */
 
+import { checkRequest } from './_origin-guard.js';
+
 const UPSTREAM_BASE = 'https://backend.commanderspellbook.com';
 const SOURCE = "spellbook";
 const USER_AGENT = 'Counterflux/1.x (+https://counterflux.vercel.app)';
 
 export default async function handler(req, res) {
+  // 260530-sec: origin + body-size guard. See api/edhrec.js for rationale.
+  const guard = checkRequest(req);
+  if (!guard.ok) return res.status(guard.status).json(guard.body);
+
   try {
     // 1. Build upstream URL from `req.query.path` + remaining query params.
     //    Production: rewrite passes path as a single string with slashes.
