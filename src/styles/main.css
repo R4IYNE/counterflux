@@ -116,7 +116,14 @@ body {
    image, 3px on a 64px thumbnail). Apply to every card-image render site
    so no dark surface shows through square corners. */
 .cf-card-img {
-  border-radius: 4.75%;
+  /* 260522-crn: split horizontal/vertical radius so the corner stays
+     circular on the 63:88 card aspect ratio. A single 4.75% value bent
+     vertically because percentages resolve against each axis separately
+     (4.75% of width vs 4.75% of height = oval). 4.75% of width matches
+     the real MTG card corner radius (3mm/63mm); 3.4% of height matches
+     the same physical curve on the taller axis. Masks the white JPEG
+     fringe Scryfall ships outside the rounded card edge. */
+  border-radius: 4.75% / 3.4%;
 }
 
 /* POLISH-08 (D-26): LIVE chip pulsing dot. Applied only when

@@ -26,11 +26,13 @@ export function renderGalleryView() {
                  @keydown.enter.prevent="(() => { const r = $event.currentTarget.getBoundingClientRect(); $dispatch('card-context-menu', { entry: entry, x: r.left + r.width/2, y: r.top + r.height/2 }); })()"
                  @keydown.space.prevent="(() => { const r = $event.currentTarget.getBoundingClientRect(); $dispatch('card-context-menu', { entry: entry, x: r.left + r.width/2, y: r.top + r.height/2 }); })()">
               <!-- Image area -->
+              <!-- 260522-img: source from .normal (488px); see grouped-view
+                   for the rationale. -->
               <div class="relative overflow-hidden" style="aspect-ratio: 63/88;">
                 <img
-                  :src="entry.card?._thumbnail || entry.card?.image_uris?.small || entry.card?.card_faces?.[0]?.image_uris?.small || ''"
+                  :src="entry.card?.image_uris?.normal || entry.card?.card_faces?.[0]?.image_uris?.normal || entry.card?._thumbnail || entry.card?.image_uris?.small || ''"
                   :alt="entry.card?.name || 'Card'"
-                  class="w-full h-full object-cover opacity-80 transition-all duration-500"
+                  class="cf-card-img w-full h-full object-cover opacity-80 transition-all duration-500"
                   loading="lazy"
                   onerror="this.style.display='none'"
                 >
@@ -66,6 +68,18 @@ export function renderGalleryView() {
                 <span class="font-mono text-[11px] tracking-[0.15em]"
                       style="color: #4A5064;"
                       x-text="(entry.card?.set_name || entry.card?.set || '').toUpperCase()"></span>
+                <!-- 260522-dad: date-added line (per-entry — gallery view
+                     is per-printing not per-oracle, so no aggregation
+                     needed). Hidden when added_at is missing on legacy rows. -->
+                <span class="font-mono text-[10px] tracking-[0.1em] uppercase"
+                      style="color: #4A5064;"
+                      x-text="(() => {
+                        if (!entry.added_at) return '';
+                        const d = new Date(entry.added_at);
+                        if (isNaN(d.getTime())) return '';
+                        const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+                        return 'ADDED ' + d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
+                      })()"></span>
               </div>
             </div>
           </template>
@@ -94,7 +108,8 @@ export function renderGalleryView() {
                 const entry = store.sorted[i];
                 if (!entry) return '';
                 const card = entry.card;
-                const imgSrc = card?._thumbnail || card?.image_uris?.small || card?.card_faces?.[0]?.image_uris?.small || '';
+                // 260522-img: prefer .normal for sharper rendering at tile size.
+                const imgSrc = card?.image_uris?.normal || card?.card_faces?.[0]?.image_uris?.normal || card?._thumbnail || card?.image_uris?.small || '';
                 const name = card?.name || 'Unknown';
                 const eurPrice = entry.foil ? card?.prices?.eur_foil : card?.prices?.eur;
                 const price = window.__cf_eurToGbp ? window.__cf_eurToGbp(eurPrice) : (eurPrice || '--');
@@ -103,9 +118,18 @@ export function renderGalleryView() {
                 const foilBadge = entry.foil ? '<span class=\"foil-badge absolute bottom-0 left-0 mb-[8px] ml-[8px]\">FOIL</span>' : '';
                 // FOLLOWUP-3: escape name for safe inclusion in HTML attribute values
                 const safeName = String(name).replace(/\"/g, '&quot;');
+                // 260522-dad: format added_at for display.
+                const monthNames = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+                let addedLine = '';
+                if (entry.added_at) {
+                  const d = new Date(entry.added_at);
+                  if (!isNaN(d.getTime())) {
+                    addedLine = '<span class=\"font-mono text-[10px] tracking-[0.1em] uppercase\" style=\"color: #4A5064;\">ADDED ' + d.getDate() + ' ' + monthNames[d.getMonth()] + ' ' + d.getFullYear() + '</span>';
+                  }
+                }
                 return '<div class=\"card-tile-hover cursor-pointer flex flex-col\" tabindex=\"0\" data-entry-id=\"' + (entry.id || '') + '\" style=\"background: #14161C; border: 1px solid #2A2D3A; position: relative;\">'
                   + '<div class=\"relative overflow-hidden\" style=\"aspect-ratio: 63/88;\">'
-                  + '<img src=\"' + imgSrc + '\" alt=\"' + safeName + '\" class=\"w-full h-full object-cover opacity-80 transition-all duration-500\" loading=\"lazy\" onerror=\"this.style.display=\'none\'\">'
+                  + '<img src=\"' + imgSrc + '\" alt=\"' + safeName + '\" class=\"cf-card-img w-full h-full object-cover opacity-80 transition-all duration-500\" loading=\"lazy\" onerror=\"this.style.display=\'none\'\">'
                   + '<div class=\"absolute inset-x-0 bottom-0 h-[40%] bg-gradient-to-t from-[#14161C] to-transparent pointer-events-none\"></div>'
                   + '<button type=\"button\" class=\"card-quick-actions-checkbox\" aria-label=\"Quick actions for ' + safeName + '\" title=\"Quick actions\"><span class=\"material-symbols-outlined\" style=\"font-size: 16px;\">more_vert</span></button>'
                   + qtyBadge + foilBadge
@@ -114,6 +138,7 @@ export function renderGalleryView() {
                   + '<span class=\"text-[14px] font-bold leading-[1.3] truncate\" style=\"font-family: Space Grotesk, sans-serif; color: #EAECEE;\">' + name + '</span>'
                   + '<span class=\"font-mono text-[11px] tracking-[0.15em]\" style=\"color: #0D52BD;\">' + price + '</span>'
                   + '<span class=\"font-mono text-[11px] tracking-[0.15em]\" style=\"color: #4A5064;\">' + setName + '</span>'
+                  + addedLine
                   + '</div></div>';
               }
             });

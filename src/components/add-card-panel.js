@@ -339,34 +339,28 @@ export function renderAddCardPanel() {
         </span>
       </label>
 
-      <!-- Category radio -->
-      <div style="display: flex; align-items: center; gap: 16px;">
-        <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; color: var(--color-text-muted);">
-          CATEGORY
-        </span>
-        <label style="display: flex; align-items: center; gap: 4px; cursor: pointer;">
-          <input type="radio" value="owned" x-model="category" class="accent-primary">
-          <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--color-text-primary);">OWNED</span>
-        </label>
-        <label style="display: flex; align-items: center; gap: 4px; cursor: pointer;">
-          <input type="radio" value="wishlist" x-model="category" class="accent-primary">
-          <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--color-text-primary);">WISHLIST</span>
-        </label>
-      </div>
+      <!-- 260522-cta: OWNED/WISHLIST radio toggle replaced with two
+           separate action buttons. The category property still drives the
+           toast wording in addToCollection() and the existing collection
+           store insert; each button just sets category before calling. -->
 
-      <!-- Action buttons -->
-      <div style="display: flex; gap: 8px; padding-top: 8px;">
+      <!-- Action buttons — split into Add to Collection / Add to Wishlist,
+           with the close button on its own row so neither primary action
+           steals visual weight. -->
+      <div style="display: flex; flex-direction: column; gap: 8px; padding-top: 8px;">
         <button
-          @click="addToCollection()"
+          @click="category = 'owned'; addToCollection()"
           :disabled="!selectedCard"
-          :style="selectedCard ? 'background: var(--color-primary); color: var(--color-text-primary); cursor: pointer;' : 'background: var(--color-surface-hover); color: var(--color-text-dim); cursor: not-allowed; opacity: 0.5;'"
-          style="flex: 1; padding: 8px 16px; font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; border: none;">
-          ADD CARD
+          :style="selectedCard ? 'background: var(--color-primary); color: var(--color-text-primary); cursor: pointer; border: 1px solid var(--color-primary);' : 'background: var(--color-surface-hover); color: var(--color-text-dim); cursor: not-allowed; opacity: 0.5; border: 1px solid var(--color-border-ghost);'"
+          style="width: 100%; padding: 10px 16px; font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700;">
+          ADD TO COLLECTION
         </button>
         <button
-          @click="$store.collection.togglePanel()"
-          style="flex: 1; padding: 8px 16px; font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; background: var(--color-surface-hover); color: var(--color-text-primary); border: 1px solid var(--color-border-ghost); cursor: pointer;">
-          CLOSE PANEL
+          @click="category = 'wishlist'; addToCollection()"
+          :disabled="!selectedCard"
+          :style="selectedCard ? 'background: transparent; color: var(--color-text-primary); cursor: pointer; border: 1px solid var(--color-primary);' : 'background: var(--color-surface-hover); color: var(--color-text-dim); cursor: not-allowed; opacity: 0.5; border: 1px solid var(--color-border-ghost);'"
+          style="width: 100%; padding: 10px 16px; font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700;">
+          ADD TO WISHLIST
         </button>
       </div>
       </div><!-- /.tc-panel-body -->

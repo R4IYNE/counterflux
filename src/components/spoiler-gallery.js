@@ -185,9 +185,9 @@ export function renderSpoilerGallery() {
                     <!-- Thumbnail image area -->
                     <div class="relative overflow-hidden" style="aspect-ratio: 63/88;">
                       <img
-                        :src="card.image_uris?.small || card.card_faces?.[0]?.image_uris?.small || ''"
+                        :src="card.image_uris?.normal || card.card_faces?.[0]?.image_uris?.normal || card.image_uris?.small || card.card_faces?.[0]?.image_uris?.small || ''"
                         :alt="card.name || 'Card'"
-                        class="w-full h-full object-cover opacity-80 transition-all duration-500"
+                        class="cf-card-img w-full h-full object-cover opacity-80 transition-all duration-500"
                         loading="lazy"
                         onerror="this.style.display='none'"
                       >
@@ -225,7 +225,7 @@ export function renderSpoilerGallery() {
                       <img
                         :src="card.image_uris?.normal || card.card_faces?.[0]?.image_uris?.normal || ''"
                         :alt="card.name"
-                        class="w-full"
+                        class="cf-card-img w-full"
                         style="aspect-ratio: 63/88; object-fit: cover; border: 1px solid #2A2D3A; box-shadow: 0 8px 24px rgba(0,0,0,0.6);"
                         onerror="this.style.display='none'"
                       >

@@ -282,6 +282,15 @@ export async function fetchPreconDecklist(code) {
       const imgNormal = card.image_uris?.normal
         || card.card_faces?.[0]?.image_uris?.normal
         || '';
+      // 260522-hyd: persist the full Scryfall card object to db.cards so
+      // collection rows added by addAllFromPrecon join correctly in
+      // loadEntries — without this, every card in a freshly-imported
+      // precon shows up as 'Unknown' / £0.00 because the oracle-cards
+      // bulk feed only carries the canonical printing per oracle_id, and
+      // precon printings are usually non-canonical (CMM, CMR, set-specific
+      // foils, etc.). Fire-and-forget; rendering doesn't block on this.
+      try { await db.cards.put(card); } catch {}
+
       cards.push({
         scryfall_id: card.id,
         quantity: 1, // unique=prints returns one row per printing; precon qty always 1

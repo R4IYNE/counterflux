@@ -260,6 +260,80 @@ export function initCollectionStore() {
         card: cardMap[entry.scryfall_id] || null,
       }));
       this.loading = false;
+
+      // 260522-hyd: recovery sweep for entries whose db.cards row is missing
+      // (typically precon imports done before fetchPreconDecklist started
+      // persisting full card objects to db.cards). Fire-and-forget — runs
+      // in the background, re-renders the gallery once cards land. Without
+      // this, an entire precon's worth of rows shows as 'Unknown' / £0.00
+      // until the user manually re-imports the precon. Skips ids already
+      // attempted in this session to prevent infinite refetch when an id
+      // is unrecoverable (404 from Scryfall — card was deleted/remapped).
+      if (!this._hydrateAttempted) this._hydrateAttempted = new Set();
+      const missing = [...new Set(
+        raw.filter((e) => e.scryfall_id
+                       && !cardMap[e.scryfall_id]
+                       && !this._hydrateAttempted.has(e.scryfall_id))
+          .map((e) => e.scryfall_id)
+      )];
+      if (missing.length > 0) {
+        for (const id of missing) this._hydrateAttempted.add(id);
+        this.hydrateMissingCards(missing).catch((err) => {
+          console.warn('[collection] background hydrate sweep failed:', err);
+        });
+      }
+    },
+
+    /**
+     * 260522-hyd: batch-fetch full Scryfall card objects for the given
+     * scryfall_ids and persist them to db.cards. Re-runs loadEntries after
+     * the writes land so the gallery picks up the new metadata. Uses
+     * /cards/collection (POST, up to 75 ids per request, 100ms-spaced
+     * via the shared __cf_lastScryfallHit timestamp the precon-browser
+     * hydrators also use).
+     */
+    async hydrateMissingCards(ids) {
+      if (!ids || !ids.length) return;
+      // Verify they're still missing — concurrent loadEntries calls or a
+      // recent direct fetch may have already filled some in.
+      const existing = await db.cards.where('id').anyOf(ids).toArray();
+      const haveIds = new Set(existing.map((c) => c.id));
+      const stillMissing = ids.filter((id) => !haveIds.has(id));
+      if (!stillMissing.length) return;
+
+      const lastHitKey = '__cf_lastScryfallHit';
+      let fetchedCount = 0;
+      for (let i = 0; i < stillMissing.length; i += 75) {
+        const batch = stillMissing.slice(i, i + 75);
+        const now = Date.now();
+        const wait = Math.max(0, 100 - (now - (window?.[lastHitKey] || 0)));
+        if (wait > 0) await new Promise((r) => setTimeout(r, wait));
+        if (typeof window !== 'undefined') window[lastHitKey] = Date.now();
+        try {
+          const response = await fetch('https://api.scryfall.com/cards/collection', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ identifiers: batch.map((id) => ({ id })) }),
+          });
+          if (!response.ok) {
+            console.warn('[collection] hydrateMissingCards batch failed:', response.status);
+            continue;
+          }
+          const data = await response.json();
+          for (const card of (data.data || [])) {
+            if (card?.id) {
+              try { await db.cards.put(card); fetchedCount++; } catch {}
+            }
+          }
+        } catch (err) {
+          console.warn('[collection] hydrateMissingCards batch threw:', err);
+        }
+      }
+      if (fetchedCount > 0) {
+        // Re-join so the gallery picks up the new metadata. Awaits its
+        // own missing-sweep but stillMissing will now be a subset (or 0).
+        await this.loadEntries();
+      }
     },
 
     async addCard(scryfallId, quantity, foil, category) {

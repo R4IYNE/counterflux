@@ -178,11 +178,14 @@ export function renderGroupedView() {
                 </button>
               </template>
               <!-- Image area -->
+              <!-- 260522-img: source from .normal (488px) instead of .small
+                   (146px). Gallery tiles render at ~240px wide on desktop;
+                   small-source was being upscaled and looked blurry. -->
               <div class="relative overflow-hidden" style="aspect-ratio: 63/88;">
                 <img
-                  :src="g.card?._thumbnail || g.card?.image_uris?.small || g.card?.card_faces?.[0]?.image_uris?.small || ''"
+                  :src="g.card?.image_uris?.normal || g.card?.card_faces?.[0]?.image_uris?.normal || g.card?._thumbnail || g.card?.image_uris?.small || ''"
                   :alt="g.card?.name || 'Card'"
-                  class="w-full h-full object-cover opacity-80 transition-all duration-500"
+                  class="cf-card-img w-full h-full object-cover opacity-80 transition-all duration-500"
                   loading="lazy"
                   onerror="this.style.display='none'"
                 >
@@ -218,6 +221,24 @@ export function renderGroupedView() {
                       x-text="window.__cf_eurToGbpValue
                         ? window.__cf_eurToGbpValue(g.estimatedValue).toFixed(2).replace(/^/, '£')
                         : ('€' + g.estimatedValue.toFixed(2))"></span>
+
+                <!-- 260522-dad: date-added line — earliest added_at across
+                     the group's entries (a group's date is when the FIRST
+                     printing landed, not the most-recent edit). Hidden when
+                     no entry has an added_at (legacy rows from before the
+                     field was captured). -->
+                <span class="font-mono text-[10px] tracking-[0.1em] uppercase"
+                      style="color: #4A5064;"
+                      x-text="(() => {
+                        const ts = (g.entries || []).reduce((m, e) => {
+                          const t = e.added_at ? Date.parse(e.added_at) : 0;
+                          return (t && (!m || t < m)) ? t : m;
+                        }, 0);
+                        if (!ts) return '';
+                        const d = new Date(ts);
+                        const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+                        return 'ADDED ' + d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
+                      })()"></span>
               </div>
             </div>
           </template>

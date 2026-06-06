@@ -12,7 +12,9 @@ export function renderCardTile(entry, index) {
   const card = entry.card;
   if (!card) return '';
 
-  const imgSrc = getCardThumbnail(card) || getCardImage(card, 0, 'normal') || '';
+  // 260522-img: prefer .normal (488px) for tile rendering at ~240px wide.
+  // Fall back to .small only if .normal is unavailable.
+  const imgSrc = getCardImage(card, 0, 'normal') || getCardThumbnail(card) || '';
   const name = getCardName(card) || 'Unknown';
   const eurPrice = entry.foil
     ? card.prices?.eur_foil

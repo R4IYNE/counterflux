@@ -55,8 +55,16 @@ export function mount(container) {
         <span>OPEN PANEL</span>
       </button>
 
-      <!-- Grid column: flex-1, reflows to fill remaining width after panel push -->
-      <section class="tc-grid-column" style="flex: 1; min-width: 0; padding: 24px; overflow-y: auto; transition: margin-left 200ms ease-out;">
+      <!-- Grid column: flex-1, reflows to fill remaining width after panel push.
+           260522-clp: reserve ~200px of left padding when the LHS panel is
+           closed so the absolutely-positioned OPEN PANEL button doesn't
+           clip the screen header ("Treasure Cruise") underneath. The
+           button is 48px tall × ~170px wide at top:16px left:16px; widening
+           left padding to 200px (only when closed) gives it clean space. -->
+      <section class="tc-grid-column"
+        :style="$store.collection.panelOpen
+          ? 'flex: 1; min-width: 0; padding: 24px; overflow-y: auto; transition: padding 200ms ease-out;'
+          : 'flex: 1; min-width: 0; padding: 24px 24px 24px 200px; overflow-y: auto; transition: padding 200ms ease-out;'">
         <div class="flex flex-col gap-[24px]">
 
       <!-- Screen header -->
