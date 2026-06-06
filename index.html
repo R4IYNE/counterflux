@@ -54,6 +54,17 @@
       margin: 0 0 8px 0;
       text-align: center;
     }
+    /* 260606-mila: loading-state video of Mila above the COUNTERFLUX
+       wordmark. Sized to match the migration-splash Mila (w-32). poster
+       attr is the existing PNG so the user sees a frame immediately —
+       the video paints on top once it streams in, so LCP is unaffected. */
+    #cf-auth-wall .cf-auth-wall-mila {
+      width: 160px;
+      height: 160px;
+      object-fit: contain;
+      margin-bottom: 16px;
+      background: transparent;
+    }
   </style>
 </head>
 <body x-data
@@ -81,6 +92,14 @@
        closeAuthWall() removes the whole wall (static + decoration) so post-
        auth the dashboard takes over cleanly. -->
   <div id="cf-auth-wall" role="dialog" aria-modal="true" aria-labelledby="cf-auth-wall-heading">
+    <video
+      class="cf-auth-wall-mila"
+      autoplay muted loop playsinline
+      poster="/assets/assetsmila-izzet.png"
+      aria-hidden="true"
+    >
+      <source src="/assets/mila-loading.mp4" type="video/mp4">
+    </video>
     <h1 class="cf-auth-wall-title">COUNTERFLUX</h1>
   </div>
 
@@ -104,8 +123,18 @@
           style="color: var(--color-text-primary, #EAECEE);">
         COUNTERFLUX
       </h1>
-      <img src="/assets/assetsmila-izzet.png" alt="Mila the Corgi, Izzet Engineer"
-        class="w-32 h-32 object-contain animate-pulse">
+      <!-- 260606-mila: video replaces the prior static animate-pulse image
+           — same Mila character (Higgsfield-generated idle loop, ~1.1 MB).
+           Poster falls back to the original PNG so the slot is never empty
+           and users on connections that strip <video> still see Mila. -->
+      <video
+        class="w-32 h-32 object-contain"
+        autoplay muted loop playsinline
+        poster="/assets/assetsmila-izzet.png"
+        aria-label="Mila the Corgi, Izzet Engineer"
+      >
+        <source src="/assets/mila-loading.mp4" type="video/mp4">
+      </video>
       <h2 class="syne-header text-[20px] font-bold leading-[1.2] tracking-[0.01em] text-center"
           style="color: var(--color-text-primary, #EAECEE);">
         Upgrading Aetheric Archive...
