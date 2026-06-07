@@ -119,6 +119,17 @@ function renderManaCurveChart(canvas, manaCurve, averageCmc) {
   const labels = ['0', '1', '2', '3', '4', '5', '6', '7+'];
   const data = labels.map(l => manaCurve[l] || 0);
 
+  // 260607-chart: the module-level chart singleton survives panel re-mounts
+  // (HMR, route changes inside the editor, anything that doesn't hit
+  // destroyDeckCharts on its way out). If the live canvas differs from the
+  // one the chart was constructed against, the chart is bound to a dead DOM
+  // node and `.update()` paints into the void — leaving the visible canvas
+  // permanently blank. Destroy and rebuild against the live canvas.
+  if (manaCurveChart && manaCurveChart.canvas !== canvas) {
+    manaCurveChart.destroy();
+    manaCurveChart = null;
+  }
+
   if (manaCurveChart) {
     manaCurveChart.data.datasets[0].data = data;
     manaCurveChart.update('none');
@@ -183,6 +194,14 @@ function renderColourPieChart(canvas, colourPie) {
   const data = activeColours.map(([k]) => colourPie[k] || 0);
   const bgColors = activeColours.map(([, v]) => v.hex);
   const total = data.reduce((s, v) => s + v, 0);
+
+  // 260607-chart: same canvas-mismatch guard as renderManaCurveChart — when
+  // the panel re-mounts, the old chart's canvas is dead and `.update()`
+  // paints nowhere.
+  if (colourPieChart && colourPieChart.canvas !== canvas) {
+    colourPieChart.destroy();
+    colourPieChart = null;
+  }
 
   if (colourPieChart) {
     colourPieChart.data.labels = labels;
