@@ -28,6 +28,7 @@ export function initDeckgenStore() {
     status: 'idle',                  // 'idle' | 'brewing' | 'reviewing' | 'committing' | 'error'
     error: null,                     // { code, message } when status === 'error'
     cacheHit: false,                 // true if last call returned a cached response
+    brewModalOpen: false,            // Phase 18 — modal visibility, separate from status so the modal can be open while idle
 
     // === Budget ===
     budgetRemaining: null,           // null until first call returns
@@ -221,6 +222,18 @@ export function initDeckgenStore() {
       this.mode = null;
       this.activeDeckId = null;
       this.activeCommanderId = null;
+      this.brewModalOpen = false;
+    },
+
+    openBrewModal() {
+      this.brewModalOpen = true;
+      this.status = 'idle';
+      this.error = null;
+      this.recommendations = [];
+    },
+
+    closeBrewModal() {
+      this.brewModalOpen = false;
     },
 
     closeError() {

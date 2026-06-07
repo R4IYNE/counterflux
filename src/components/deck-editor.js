@@ -2,6 +2,8 @@ import { renderDeckSearchPanel } from './deck-search-panel.js';
 import { renderDeckCentrePanel } from './deck-centre-panel.js';
 import { initDeckContextMenu } from './deck-context-menu.js';
 import { renderDeckAnalyticsPanel, destroyDeckCharts } from './deck-analytics-panel.js';
+import { renderDeckgenBrewModal } from './deckgen-brew-modal.js';
+import { renderDeckgenReviewScreen } from './deckgen-review-screen.js';
 
 /**
  * Three-panel deck editor layout.
@@ -43,6 +45,63 @@ export function renderDeckEditor(container) {
     letter-spacing: 0.15em; color: #4A5064;
   `;
   breadcrumb.appendChild(editingLabel);
+
+  // Phase 18 — "Brew with AI" button. Visible only when the deck has a
+  // commander set; clicking opens the Brew modal which calls the
+  // /api/deckgen endpoint via $store.deckgen.startBrew(). Spacer pushes it
+  // to the right of the breadcrumb.
+  const brewSpacer = document.createElement('div');
+  brewSpacer.style.cssText = 'flex: 1;';
+  breadcrumb.appendChild(brewSpacer);
+
+  const brewBtn = document.createElement('button');
+  brewBtn.style.cssText = `
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase;
+    letter-spacing: 0.15em; font-weight: 700; cursor: pointer; padding: 8px 16px;
+    background: rgba(13,82,189,0.12); color: #0D52BD; border: 1px solid rgba(13,82,189,0.6);
+    display: inline-flex; align-items: center; gap: 8px;
+    transition: background 120ms ease-out, border-color 120ms ease-out;
+  `;
+  // 260607-sec: build the icon + label via createElement instead of
+  // innerHTML — consistent with the 260530-sec audit cleanup that
+  // refactored similar inline icon+text patterns to safe DOM methods.
+  const brewBtnIcon = document.createElement('span');
+  brewBtnIcon.className = 'material-symbols-outlined';
+  brewBtnIcon.style.fontSize = '16px';
+  brewBtnIcon.textContent = 'auto_awesome';
+  brewBtn.appendChild(brewBtnIcon);
+  brewBtn.appendChild(document.createTextNode('BREW WITH AI'));
+  brewBtn.onmouseenter = () => {
+    brewBtn.style.background = 'rgba(13,82,189,0.25)';
+    brewBtn.style.borderColor = '#0D52BD';
+  };
+  brewBtn.onmouseleave = () => {
+    brewBtn.style.background = 'rgba(13,82,189,0.12)';
+    brewBtn.style.borderColor = 'rgba(13,82,189,0.6)';
+  };
+  function updateBrewVisibility() {
+    const hasCommander = !!(Alpine?.store('deck')?.activeDeck?.commander_id);
+    brewBtn.style.display = hasCommander ? 'inline-flex' : 'none';
+  }
+  brewBtn.addEventListener('click', () => {
+    if (!Alpine?.store('deck')?.activeDeck?.commander_id) return;
+    Alpine.store('deckgen')?.openBrewModal();
+  });
+  breadcrumb.appendChild(brewBtn);
+  // Re-evaluate visibility whenever the deck loads / changes.
+  let brewVisibilityEffect = null;
+  if (Alpine && typeof Alpine.effect === 'function') {
+    brewVisibilityEffect = Alpine.effect(() => {
+      // Touch the reactive properties so the effect retriggers on change.
+      // eslint-disable-next-line no-unused-vars
+      const _deck = Alpine.store('deck')?.activeDeck;
+      // eslint-disable-next-line no-unused-vars
+      const _cmdr = Alpine.store('deck')?.activeDeck?.commander_id;
+      updateBrewVisibility();
+    });
+  } else {
+    updateBrewVisibility();
+  }
 
   wrapper.appendChild(breadcrumb);
 
@@ -102,6 +161,17 @@ export function renderDeckEditor(container) {
   panelRow.appendChild(centrePanel);
   panelRow.appendChild(rightPanel);
   wrapper.appendChild(panelRow);
+
+  // Phase 18 — mount the deckgen Brew modal + review screen as siblings
+  // of the panel row. Both are position:fixed; they overlay everything
+  // when their Alpine x-show conditions evaluate true. Injecting via
+  // innerHTML is safe here — the rendered HTML is a pure static template
+  // (no user input is interpolated; all dynamic data comes from the
+  // Alpine store at runtime, which uses safe Alpine bindings).
+  const deckgenOverlay = document.createElement('div');
+  deckgenOverlay.innerHTML = renderDeckgenBrewModal() + renderDeckgenReviewScreen();
+  wrapper.appendChild(deckgenOverlay);
+
   container.appendChild(wrapper);
 
   // Responsive panel widths
@@ -132,5 +202,12 @@ export function renderDeckEditor(container) {
     centrePanel._centreCleanup?.();
     analyticsContainer._analyticsCleanup?.();
     destroyDeckCharts();
+    // Phase 18 — tear down the Brew-button visibility effect so we don't
+    // leak a reactive subscription after route navigation.
+    if (brewVisibilityEffect && typeof Alpine?.release === 'function') {
+      try { Alpine.release(brewVisibilityEffect); } catch {}
+    }
+    // Reset deckgen state when leaving the editor so a fresh open lands clean.
+    try { Alpine?.store('deckgen')?.reset(); } catch {}
   };
 }
