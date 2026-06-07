@@ -3,6 +3,7 @@ import { renderPreordainTabs } from '../components/preordain-tabs.js';
 import { renderSpoilerGallery } from '../components/spoiler-gallery.js';
 import { renderWatchlistPanel } from '../components/watchlist-panel.js';
 import { renderMoversPanel } from '../components/movers-panel.js';
+import { renderDeckgenUpgradeSection } from '../components/deckgen-upgrade-section.js';
 
 /**
  * Preordain -- Market Intel screen.
@@ -25,6 +26,12 @@ export function mount(container) {
       <!-- Screen overline -->
       <span class="font-mono uppercase text-[11px] tracking-[0.15em] font-bold mb-[16px]"
             style="color: #7A8498;">PREORDAIN // MARKET INTEL</span>
+
+      <!-- Phase 19 (v1.3) — Upgrade Available section. Self-collapsing
+           when no undismissed recommendations exist; otherwise sits just
+           above the release calendar so it's the first thing the user
+           sees on Preordain. -->
+      ${renderDeckgenUpgradeSection()}
 
       <!-- Release calendar (persistent, always visible above tabs) -->
       ${renderReleaseCalendar()}

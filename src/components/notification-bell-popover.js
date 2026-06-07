@@ -107,7 +107,47 @@ export function renderNotificationBellPopover() {
           </div>
         </div>
 
-        <!-- Empty state -- rendered when both sources are zero -->
+        <!-- MILA'S UPGRADES section (Phase 19, v1.3) — undismissed
+             upgrade recommendations from counterflux.deckgen_recommendations.
+             Lazy-loads on first popover open via x-effect. -->
+        <div
+          x-show="$store.deckgen?.recommendationCount > 0"
+          class="px-[16px] py-[12px]"
+          style="border-bottom: 1px solid var(--color-border-ghost);"
+        >
+          <span
+            class="font-mono uppercase text-[11px] tracking-[0.15em]"
+            style="color: #7A8498;"
+          >MILA'S UPGRADES</span>
+          <ul class="mt-[8px] flex flex-col gap-[8px]">
+            <template
+              x-for="rec in ($store.deckgen?.recommendations_pending || []).slice(0, 3)"
+              :key="rec.id"
+            >
+              <li class="flex flex-col gap-[2px]">
+                <span
+                  class="text-[14px]"
+                  style="color: var(--color-text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"
+                  x-text="rec.recommendations?.message || 'New cards available.'"
+                ></span>
+                <span
+                  class="font-mono text-[11px] tracking-[0.15em]"
+                  style="color: #7A8498;"
+                  x-text="(rec.recommendations?.trigger_sets || []).slice(0, 3).map(s => (s.code || '').toUpperCase()).join(' · ')"
+                ></span>
+              </li>
+            </template>
+          </ul>
+          <div class="mt-[12px] text-right">
+            <button
+              @click="open = false; window.__counterflux_router && window.__counterflux_router.navigate('/')"
+              class="font-mono uppercase text-[11px] tracking-[0.15em] cursor-pointer"
+              style="color: var(--color-primary); background: transparent; border: none;"
+            >GO TO DASHBOARD &rarr;</button>
+          </div>
+        </div>
+
+        <!-- Empty state -- rendered when all sources are zero -->
         <div
           x-show="$store.market.unifiedBadgeCount === 0"
           class="px-[16px] py-[32px] text-center"

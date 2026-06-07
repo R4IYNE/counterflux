@@ -60,6 +60,7 @@ export function mount(container) {
 
   renderPortfolioSummary(grid, cleanups);
   renderDeckLaunchGrid(grid, cleanups);
+  renderMilaUpgradesWidget(grid, cleanups);          // Phase 19 (v1.3)
   renderActivityTimeline(grid, cleanups);
   renderMilaInsight(grid, cleanups);
   renderPriceAlerts(grid, cleanups);
@@ -1079,5 +1080,132 @@ function renderUpcomingReleases(grid, cleanups) {
 
   loadReleases();
 
+  grid.appendChild(panel);
+}
+
+// ─── Panel: Mila's Upgrades (Phase 19, v1.3) ─────────────────────
+// Reads counterflux.deckgen_recommendations (populated by the daily
+// upgrade-scan cron). Each undismissed row is a deck where new cards
+// have been released since the deck's last edit. Clicking opens the
+// editor with the brew modal pre-loaded in upgrade mode so the user
+// can review and accept swaps.
+function renderMilaUpgradesWidget(grid, cleanups) {
+  const panel = document.createElement('div');
+  panel.className = 'bg-surface border border-border-ghost p-md';
+
+  const overline = document.createElement('div');
+  overline.className = 'font-mono text-primary mb-sm';
+  overline.style.cssText = 'font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.15em;';
+  overline.textContent = "MILA'S UPGRADES // NEW CARDS DETECTED";
+  panel.appendChild(overline);
+
+  const content = document.createElement('div');
+  panel.appendChild(content);
+
+  let recommendations = [];
+  let loading = true;
+
+  function render() {
+    content.replaceChildren();
+    if (loading) {
+      const skel = document.createElement('div');
+      skel.style.cssText = 'font-family: JetBrains Mono, monospace; font-size: 11px; letter-spacing: 0.15em; color: #4A5064; text-transform: uppercase;';
+      skel.textContent = 'CHECKING…';
+      content.appendChild(skel);
+      return;
+    }
+    if (recommendations.length === 0) {
+      const empty = document.createElement('p');
+      empty.style.cssText = "font-family: 'Space Grotesk', sans-serif; font-size: 13px; color: #7A8498; line-height: 1.45; margin: 0;";
+      empty.textContent = "Nothing new yet. Mila will flag upgrades when sets you care about drop.";
+      content.appendChild(empty);
+      return;
+    }
+
+    const list = document.createElement('div');
+    list.style.cssText = 'display: flex; flex-direction: column; gap: 12px;';
+    for (const rec of recommendations.slice(0, 4)) {
+      const row = document.createElement('div');
+      row.style.cssText = 'display: flex; gap: 12px; align-items: flex-start; padding: 8px 0; border-top: 1px solid #2A2D3A;';
+
+      const icon = document.createElement('span');
+      icon.className = 'material-symbols-outlined';
+      icon.style.cssText = 'color: #0D52BD; font-size: 18px; margin-top: 2px;';
+      icon.textContent = 'auto_awesome';
+      row.appendChild(icon);
+
+      const body = document.createElement('div');
+      body.style.cssText = 'flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px;';
+
+      const msg = document.createElement('div');
+      msg.style.cssText = "font-family: 'Space Grotesk', sans-serif; font-size: 13px; color: #EAECEE; line-height: 1.4;";
+      msg.textContent = rec.recommendations?.message || 'New cards available.';
+      body.appendChild(msg);
+
+      const triggerSets = Array.isArray(rec.recommendations?.trigger_sets) ? rec.recommendations.trigger_sets : [];
+      if (triggerSets.length > 0) {
+        const meta = document.createElement('div');
+        meta.style.cssText = "font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.15em; color: #7A8498; text-transform: uppercase;";
+        meta.textContent = triggerSets.slice(0, 3).map((s) => s.code?.toUpperCase()).join(' · ');
+        body.appendChild(meta);
+      }
+
+      const actions = document.createElement('div');
+      actions.style.cssText = 'display: flex; gap: 8px; margin-top: 4px;';
+
+      const reviewBtn = document.createElement('button');
+      reviewBtn.style.cssText = 'padding: 4px 10px; background: transparent; color: #0D52BD; border: 1px solid #0D52BD; cursor: pointer; font-family: JetBrains Mono, monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;';
+      reviewBtn.textContent = 'REVIEW';
+      reviewBtn.addEventListener('click', () => {
+        if (window.__counterflux_router) {
+          window.__counterflux_router.navigate('/thousand-year-storm');
+          // Phase 19 v1: navigate to deck archive; user opens deck → brew
+          // modal in upgrade mode. Direct-link to deck editor with mode
+          // pre-set is a v1.4 polish item.
+        }
+      });
+      actions.appendChild(reviewBtn);
+
+      const dismissBtn = document.createElement('button');
+      dismissBtn.style.cssText = 'padding: 4px 10px; background: transparent; color: #7A8498; border: 1px dashed #2A2D3A; cursor: pointer; font-family: JetBrains Mono, monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;';
+      dismissBtn.textContent = 'DISMISS';
+      dismissBtn.addEventListener('click', async () => {
+        const { dismissRecommendation } = await import('../services/deckgen-recommendations.js');
+        const ok = await dismissRecommendation(rec.id);
+        if (ok) {
+          recommendations = recommendations.filter((r) => r.id !== rec.id);
+          render();
+        }
+      });
+      actions.appendChild(dismissBtn);
+
+      body.appendChild(actions);
+      row.appendChild(body);
+      list.appendChild(row);
+    }
+    content.appendChild(list);
+
+    if (recommendations.length > 4) {
+      const more = document.createElement('div');
+      more.style.cssText = "font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.15em; color: #7A8498; text-transform: uppercase; margin-top: 12px;";
+      more.textContent = `+${recommendations.length - 4} MORE PENDING`;
+      content.appendChild(more);
+    }
+  }
+
+  async function load() {
+    loading = true;
+    render();
+    try {
+      const { fetchUndismissedRecommendations } = await import('../services/deckgen-recommendations.js');
+      recommendations = await fetchUndismissedRecommendations();
+    } catch {
+      recommendations = [];
+    }
+    loading = false;
+    render();
+  }
+
+  load();
   grid.appendChild(panel);
 }

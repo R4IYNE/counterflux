@@ -146,6 +146,22 @@ async function bootApp() {
     Alpine.store('auth').status;   // reactive subscription
     syncAuthWall();
   });
+
+  // Phase 19 (v1.3) — once the user is authed, load their pending
+  // deckgen upgrade recommendations so the bell badge + dashboard
+  // widget + Preordain section can hydrate. Lazy — only fires once
+  // per auth transition; subsequent loads happen on user dismissal.
+  let _deckgenRecsLoaded = false;
+  Alpine.effect(() => {
+    const status = Alpine.store('auth').status;
+    if (status === 'authed' && !_deckgenRecsLoaded) {
+      _deckgenRecsLoaded = true;
+      Alpine.store('deckgen')?.loadRecommendations();
+    }
+    if (status !== 'authed') {
+      _deckgenRecsLoaded = false;
+    }
+  });
   if (typeof window !== 'undefined') {
     window.addEventListener('hashchange', syncAuthWall);
   }

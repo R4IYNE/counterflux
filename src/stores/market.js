@@ -29,8 +29,15 @@ export function initMarketStore() {
     // Phase 12 Plan 01 (SYNC-08, D-02) — bell badge source of truth.
     // Sums sync errors + price alerts so the topbar bell surfaces a single
     // unified count. Downstream Plan 03 (bell popover) consumes this getter.
+    // Phase 19 (v1.3) — also includes deckgen upgrade recommendations.
+    // Read via window.Alpine to avoid a cross-store import cycle.
     get unifiedBadgeCount() {
-      return (this.syncErrorCount || 0) + (this.alertBadgeCount || 0);
+      let deckgenCount = 0;
+      try {
+        const A = (typeof window !== 'undefined') ? window.Alpine : null;
+        deckgenCount = A?.store?.('deckgen')?.recommendationCount || 0;
+      } catch {}
+      return (this.syncErrorCount || 0) + (this.alertBadgeCount || 0) + deckgenCount;
     },
 
     // Phase 12 Plan 01 (MARKET-02, D-07) — spoiler gallery data source.

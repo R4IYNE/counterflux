@@ -16,5 +16,11 @@
         { "key": "Cache-Control", "value": "no-cache" }
       ]
     }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/deckgen-upgrade-scan",
+      "schedule": "0 4 * * *"
+    }
   ]
 }

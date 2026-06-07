@@ -43,6 +43,36 @@ export function initDeckgenStore() {
     activeDeckId: null,
     activeCommanderId: null,
 
+    // === Phase 19 — recommendation feed ===
+    recommendations_pending: [],     // populated by loadRecommendations()
+    recommendationsLoaded: false,
+    get recommendationCount() {
+      return this.recommendations_pending.length;
+    },
+
+    async loadRecommendations() {
+      try {
+        const mod = await import('../services/deckgen-recommendations.js');
+        this.recommendations_pending = await mod.fetchUndismissedRecommendations();
+      } catch {
+        this.recommendations_pending = [];
+      }
+      this.recommendationsLoaded = true;
+    },
+
+    async dismissRecommendation(id) {
+      try {
+        const mod = await import('../services/deckgen-recommendations.js');
+        const ok = await mod.dismissRecommendation(id);
+        if (ok) {
+          this.recommendations_pending = this.recommendations_pending.filter(r => r.id !== id);
+        }
+        return ok;
+      } catch {
+        return false;
+      }
+    },
+
     // -------------------------------------------------------------------
     // Brew
     // -------------------------------------------------------------------
