@@ -344,22 +344,24 @@ export function renderAddCardPanel() {
            toast wording in addToCollection() and the existing collection
            store insert; each button just sets category before calling. -->
 
-      <!-- Action buttons — split into Add to Collection / Add to Wishlist,
-           with the close button on its own row so neither primary action
-           steals visual weight. -->
-      <div style="display: flex; flex-direction: column; gap: 8px; padding-top: 8px;">
+      <!-- Action buttons — Add to Collection (primary fill) and Add to
+           Wishlist (primary outline) sit side-by-side. Both share flex: 1
+           so they split the row evenly; padding tightened from 10px to 8px
+           and label letter-spacing softened from 0.15em to 0.1em so longer
+           labels still fit at 360px panel width without wrapping. -->
+      <div style="display: flex; flex-direction: row; gap: 8px; padding-top: 8px;">
         <button
           @click="category = 'owned'; addToCollection()"
           :disabled="!selectedCard"
           :style="selectedCard ? 'background: var(--color-primary); color: var(--color-text-primary); cursor: pointer; border: 1px solid var(--color-primary);' : 'background: var(--color-surface-hover); color: var(--color-text-dim); cursor: not-allowed; opacity: 0.5; border: 1px solid var(--color-border-ghost);'"
-          style="width: 100%; padding: 10px 16px; font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700;">
+          style="flex: 1; min-width: 0; padding: 8px 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; white-space: nowrap;">
           ADD TO COLLECTION
         </button>
         <button
           @click="category = 'wishlist'; addToCollection()"
           :disabled="!selectedCard"
           :style="selectedCard ? 'background: transparent; color: var(--color-text-primary); cursor: pointer; border: 1px solid var(--color-primary);' : 'background: var(--color-surface-hover); color: var(--color-text-dim); cursor: not-allowed; opacity: 0.5; border: 1px solid var(--color-border-ghost);'"
-          style="width: 100%; padding: 10px 16px; font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700;">
+          style="flex: 1; min-width: 0; padding: 8px 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; white-space: nowrap;">
           ADD TO WISHLIST
         </button>
       </div>

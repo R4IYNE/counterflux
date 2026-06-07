@@ -583,77 +583,127 @@ function renderDeckLaunchGrid(grid, cleanups) {
     deckGrid.className = 'grid grid-cols-3 gap-sm';
     content.appendChild(deckGrid);
 
+    // 260606-dst2: dashboard deck tiles follow the same refined layout as
+    // the Deck Archive — deck name in the top-left position (the literal
+    // 'COMMANDER' label was redundant noise that collided with the count
+    // badge anyway), mana glyphs underneath, count + last-edited folded
+    // into the bottom strip. Commander name only appears at the bottom
+    // when it differs from the deck name (no echo when they're identical).
     for (const deck of topDecks) {
-      const tile = document.createElement('div');
-      tile.className = 'bg-surface-hover border border-border-ghost p-sm cursor-pointer';
-      tile.style.cssText = 'transition: border-color 0.15s, box-shadow 0.15s;';
-      tile.addEventListener('mouseenter', () => {
-        tile.style.borderColor = '#0D52BD';
-        tile.style.boxShadow = '0 0 12px rgba(13, 82, 189, 0.3)';
-      });
-      tile.addEventListener('mouseleave', () => {
-        tile.style.borderColor = '';
-        tile.style.boxShadow = '';
-      });
-
-      // Commander art thumbnail
-      const artContainer = document.createElement('div');
-      artContainer.className = 'w-full overflow-hidden mb-xs';
-      artContainer.style.height = '80px';
-
-      // Task 5b: when bulkdata is still downloading, db.cards.get() returns
-      // undefined → artUrl is undefined → <img src="undefined"> renders as
-      // a broken image box (user smoke test). Skip the lookup entirely and
-      // fall through to the surface-hover gradient placeholder. The effect
-      // subscription at the bottom of this function re-runs updateDeckGrid
-      // once bulkdata flips to 'ready', so real art appears after download.
+      // Resolve commander card + art URL + card count BEFORE building the
+      // DOM so the overlay badges paint with real values.
+      // Task 5b sentinel — bulkdata-status guard kept on the
+      // deck.commander_id branch: skipping the db.cards.get() lookup until
+      // bulkdata is ready prevents an `<img src="undefined">` broken-box
+      // during initial download.
+      let card = null;
+      let artUrl = null;
       if (deck.commander_id && bulkReady) {
         try {
-          const card = await db.cards.get(deck.commander_id);
-          const artUrl = card?.image_uris?.art_crop || card?.card_faces?.[0]?.image_uris?.art_crop;
-          if (artUrl) {
-            const img = document.createElement('img');
-            img.src = artUrl;
-            img.alt = card.name || '';
-            img.className = 'w-full h-full object-cover';
-            img.style.transition = 'filter 0.15s';
-            tile.addEventListener('mouseenter', () => { img.style.filter = 'brightness(1.1)'; });
-            tile.addEventListener('mouseleave', () => { img.style.filter = ''; });
-            artContainer.appendChild(img);
-          } else {
-            artContainer.style.background = 'linear-gradient(135deg, #14161C, #1C1F28)';
-          }
-        } catch {
-          artContainer.style.background = 'linear-gradient(135deg, #14161C, #1C1F28)';
-        }
-      } else {
-        // No commander_id OR bulkdata still loading — show the gradient
-        // placeholder. Keeps the tile shape + spacing identical so there's
-        // no layout shift when art lands.
-        artContainer.style.background = 'linear-gradient(135deg, #14161C, #1C1F28)';
+          card = await db.cards.get(deck.commander_id);
+          artUrl = card?.image_uris?.art_crop || card?.card_faces?.[0]?.image_uris?.art_crop;
+        } catch { /* fall through to gradient */ }
       }
-      tile.appendChild(artContainer);
-
-      // Deck name
-      const nameEl = document.createElement('div');
-      nameEl.className = 'font-mono text-text-primary overflow-hidden text-ellipsis whitespace-nowrap';
-      nameEl.style.cssText = 'font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.15em; max-width: 100%;';
-      nameEl.textContent = deck.name?.slice(0, 24) || 'Untitled';
-      tile.appendChild(nameEl);
-
-      // Card count
-      const countEl = document.createElement('div');
-      countEl.className = 'font-mono text-text-muted';
-      countEl.style.cssText = 'font-size: 11px; font-weight: 400; letter-spacing: 0.15em;';
+      let cardCount = 0;
       try {
         const deckCards = await db.deck_cards.where('deck_id').equals(deck.id).toArray();
-        const cardCount = deckCards.reduce((sum, c) => sum + (c.quantity || 1), 0);
-        const deckSize = deck.deck_size || 99;
-        countEl.textContent = `${cardCount}/${deckSize}`;
-      } catch {
-        countEl.textContent = `0/${deck.deck_size || 99}`;
+        cardCount = deckCards.reduce((sum, c) => sum + (c.quantity || 1), 0);
+      } catch { /* leave at 0 */ }
+      const deckSize = deck.deck_size || 100;
+      const colorIdentity = Array.isArray(deck.color_identity) ? deck.color_identity : [];
+      const deckName = deck.name || 'Untitled';
+      const formatLabel = (deck.format || 'COMMANDER').toUpperCase();
+      const showCommanderName = card?.name
+        && card.name.toLowerCase() !== deckName.toLowerCase();
+
+      // Tile root — portrait card aspect, art-as-background, overlay layout
+      const tile = document.createElement('button');
+      tile.className = 'card-tile-hover';
+      tile.style.cssText = 'width: 100%; aspect-ratio: 240 / 336; padding: 0; background: #14161C; border: 1px solid #2A2D3A; cursor: pointer; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; text-align: left;';
+
+      // Background: commander art_crop, or gradient fallback while bulkdata
+      // loads / no commander assigned. (See Task 5b — show gradient until
+      // bulkdata flips to 'ready' to avoid a broken-img box.)
+      if (artUrl) {
+        const img = document.createElement('img');
+        img.src = artUrl;
+        img.alt = card?.name || '';
+        img.loading = 'lazy';
+        img.style.cssText = 'position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.85;';
+        img.onerror = () => { img.style.display = 'none'; };
+        tile.appendChild(img);
+      } else {
+        const bg = document.createElement('div');
+        bg.style.cssText = 'position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #14161C, #1C1F28);';
+        tile.appendChild(bg);
       }
-      tile.appendChild(countEl);
+
+      // Top-left: format badge + deck name + mana-glyph color identity
+      // stack. 260606-fmt: format chip restored so non-Commander decks are
+      // distinguishable at a glance. Container reserves the full tile width
+      // minus 16px so the name truncates cleanly instead of overflowing.
+      const topLeft = document.createElement('div');
+      topLeft.style.cssText = 'position: absolute; top: 8px; left: 8px; right: 8px; display: inline-flex; flex-direction: column; gap: 4px; align-items: flex-start; max-width: calc(100% - 16px);';
+      const formatBadge = document.createElement('span');
+      formatBadge.style.cssText = "padding: 2px 6px; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; color: #7A8498; background: rgba(20,22,28,0.85); text-transform: uppercase;";
+      formatBadge.textContent = formatLabel;
+      topLeft.appendChild(formatBadge);
+      const nameBadge = document.createElement('span');
+      nameBadge.style.cssText = "padding: 4px 8px; font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.01em; color: #EAECEE; background: rgba(20,22,28,0.85); text-transform: uppercase; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;";
+      nameBadge.textContent = deckName;
+      topLeft.appendChild(nameBadge);
+      const glyphRow = document.createElement('span');
+      glyphRow.style.cssText = 'display: inline-flex; gap: 3px; align-items: center; padding: 4px 6px; background: rgba(20,22,28,0.85);';
+      glyphRow.setAttribute('aria-label', 'Color identity: ' + (colorIdentity.join('') || 'C'));
+      if (colorIdentity.length === 0) {
+        const c = document.createElement('i');
+        c.className = 'ms ms-c ms-cost';
+        c.style.fontSize = '14px';
+        glyphRow.appendChild(c);
+      } else {
+        for (const ci of colorIdentity) {
+          const gi = document.createElement('i');
+          gi.className = 'ms ms-cost ms-' + ci.toLowerCase();
+          gi.style.fontSize = '14px';
+          glyphRow.appendChild(gi);
+        }
+      }
+      topLeft.appendChild(glyphRow);
+      tile.appendChild(topLeft);
+
+      // Bottom: gradient-fade with commander name (only when different) +
+      // a compact 'N/SIZE · LAST EDITED Xh AGO' mono line.
+      const bottomStrip = document.createElement('div');
+      bottomStrip.style.cssText = 'position: relative; z-index: 2; padding: 12px; background: linear-gradient(to top, #0B0C10 30%, transparent);';
+      if (showCommanderName) {
+        const cmdrEl = document.createElement('div');
+        cmdrEl.style.cssText = "font-family: 'Space Grotesk', sans-serif; font-size: 11px; font-weight: 400; color: #EAECEE; margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;";
+        cmdrEl.textContent = card.name;
+        bottomStrip.appendChild(cmdrEl);
+      }
+      const metaEl = document.createElement('div');
+      metaEl.style.cssText = "font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: #7A8498; text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;";
+      // Relative time — minimal copy of the deck-landing helper so the
+      // widget doesn't need to import an extra module.
+      let metaSuffix = '';
+      if (deck.updated_at) {
+        const diffMs = Date.now() - new Date(deck.updated_at).getTime();
+        if (!Number.isNaN(diffMs)) {
+          const mins = Math.floor(diffMs / 60000);
+          const hours = Math.floor(diffMs / 3600000);
+          const days = Math.floor(diffMs / 86400000);
+          let rel = 'JUST NOW';
+          if (mins >= 1 && mins < 60) rel = `${mins}M AGO`;
+          else if (hours < 24) rel = `${hours}H AGO`;
+          else if (days === 1) rel = 'YESTERDAY';
+          else if (days < 30) rel = `${days}D AGO`;
+          else rel = `${Math.floor(days / 30)}MO AGO`;
+          metaSuffix = ' · ' + rel;
+        }
+      }
+      metaEl.textContent = `${cardCount}/${deckSize}${metaSuffix}`;
+      bottomStrip.appendChild(metaEl);
+      tile.appendChild(bottomStrip);
 
       // Click to navigate
       tile.addEventListener('click', () => {
