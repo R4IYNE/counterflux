@@ -151,7 +151,21 @@ export function renderDeckLanding(container) {
           // re-enrichment when a deck had its commander_id set after initial load).
           if (deck.commander_id) {
             try {
-              const card = await db.cards.get(deck.commander_id);
+              let card = await db.cards.get(deck.commander_id);
+              // 260608-art: lazy-hydrate the commander printing if it's
+              // not in db.cards yet — typical when the user assigned a
+              // commander they don't own (e.g. Frodo, Sauron's Bane on a
+              // Ring deck without owning Frodo). Fetch from Scryfall and
+              // persist so subsequent renders hit cache.
+              if (!card) {
+                try {
+                  const res = await fetch(`https://api.scryfall.com/cards/${encodeURIComponent(deck.commander_id)}`);
+                  if (res.ok) {
+                    card = await res.json();
+                    try { await db.cards.put(card); } catch {}
+                  }
+                } catch { /* fall through */ }
+              }
               deck._commanderCard = card || null;
             } catch {
               deck._commanderCard = null;

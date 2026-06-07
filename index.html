@@ -181,9 +181,20 @@
     >
       <!-- Left group: brand + nav -->
       <div class="flex items-center gap-xl">
-        <!-- Brand block — transplanted from sidebar (cyclone icon + COUNTERFLUX wordmark) -->
+        <!-- Brand block — niv-mila icon (matches the favicon at /assets/
+             niv-mila.png) + COUNTERFLUX wordmark. 260608: replaced the
+             Material Symbols cyclone icon with the favicon so the
+             topbar brand mark and the browser-tab icon are visually
+             unified. -->
         <a href="#/" class="flex items-center gap-sm whitespace-nowrap" aria-label="Counterflux home">
-          <span class="material-symbols-outlined text-primary text-3xl">cyclone</span>
+          <img
+            src="/assets/niv-mila.png"
+            alt=""
+            aria-hidden="true"
+            width="32"
+            height="32"
+            style="width: 32px; height: 32px; object-fit: contain; flex-shrink: 0;"
+          >
           <span class="font-mono text-text-primary uppercase text-[11px] tracking-[0.3em] font-bold">COUNTERFLUX</span>
         </a>
 

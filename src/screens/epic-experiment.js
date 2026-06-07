@@ -269,12 +269,20 @@ async function _snapshotPortfolioHistory() {
   }
 }
 
+// 260608: minimum history points before we draw the sparkline. With 2-3
+// points the line is either a single segment or a 90° kink — neither
+// reads as "trend" to a user, just confusing visual noise. 5 points is
+// the floor where the line shape starts being informative. Below that
+// we render a "BUILDING HISTORY" placeholder so the empty space looks
+// intentional rather than broken.
+const SPARKLINE_MIN_POINTS = 5;
+
 async function _updateSparkline(container, badge, currentValue) {
   try {
     const record = await db.meta.get('portfolio_history');
     const history = record?.data || [];
 
-    if (history.length >= 2) {
+    if (history.length >= SPARKLINE_MIN_POINTS) {
       const values = history.map(h => h.value);
       const svg = renderSparkline(values, 200, 48);
       container.innerHTML = svg;
@@ -302,8 +310,26 @@ async function _updateSparkline(container, badge, currentValue) {
         badge.style.color = '#7A8498';
       }
     } else {
-      container.innerHTML = '';
-      badge.textContent = '';
+      // Sparse-history placeholder. Tells the user the chart is coming
+      // (rather than looking like a broken sparkline rendered at zero).
+      // Sized to the same dimensions as the chart slot so the panel
+      // layout doesn't shift when real data arrives. Built with safe
+      // DOM methods (no innerHTML interpolation) per the 260530-sec
+      // audit cleanup.
+      const placeholder = document.createElement('div');
+      placeholder.style.cssText = 'width: 200px; height: 48px; display: flex; align-items: center; justify-content: center; border: 1px dashed #2A2D3A;';
+      const placeholderLabel = document.createElement('span');
+      placeholderLabel.style.cssText = "font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.15em; color: #4A5064; text-transform: uppercase;";
+      placeholderLabel.textContent = 'BUILDING HISTORY';
+      placeholder.appendChild(placeholderLabel);
+      container.replaceChildren(placeholder);
+
+      const daysSoFar = history.length;
+      badge.textContent = daysSoFar > 0
+        ? `${daysSoFar}/${SPARKLINE_MIN_POINTS} DAYS`
+        : '';
+      badge.style.background = 'transparent';
+      badge.style.color = '#4A5064';
     }
   } catch {
     container.innerHTML = '';
@@ -602,6 +628,23 @@ function renderDeckLaunchGrid(grid, cleanups) {
       if (deck.commander_id && bulkReady) {
         try {
           card = await db.cards.get(deck.commander_id);
+          // 260608-art: if the commander printing isn't hydrated locally
+          // (common when the user assigned a commander that isn't in their
+          // collection — e.g. Frodo, Sauron's Bane for a Ring-themed deck
+          // when they don't own Frodo), fetch it from Scryfall and persist
+          // so the next render hits cache. Same fail-soft pattern as
+          // hydrateMissingCards in the collection store.
+          if (!card) {
+            try {
+              const res = await fetch(`https://api.scryfall.com/cards/${encodeURIComponent(deck.commander_id)}`);
+              if (res.ok) {
+                card = await res.json();
+                try { await db.cards.put(card); } catch {}
+              }
+            } catch {
+              /* network failure — fall through to gradient placeholder */
+            }
+          }
           artUrl = card?.image_uris?.art_crop || card?.card_faces?.[0]?.image_uris?.art_crop;
         } catch { /* fall through to gradient */ }
       }
