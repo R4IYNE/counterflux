@@ -456,6 +456,40 @@ db.version(10).stores({
 // reads filter WHERE deleted_at IS null/undefined (sync-engine soft-delete layer).
 
 // ============================================================
+// v11 — Phase 17 (v1.3 "Brew with the Familiar") deckgen cache.
+// ============================================================
+// Adds a single mirror table for the /api/deckgen response cache. Hash key is
+// the content-addressable digest of (commander_id, power, mode, archetype,
+// collection-hash); see api/deckgen.js for the canonical hash recipe and
+// supabase/migrations/20260607_counterflux_deckgen.sql for the cloud mirror.
+//
+// Cache lookups hit Dexie first (offline-friendly + faster). On miss the
+// client calls /api/deckgen, which returns the response and writes the same
+// row to the Supabase mirror — sync-engine picks it up on the next push.
+//
+// PURE ADDITIVE — no PK type change, no existing-row migration, all v10
+// tables re-declared verbatim per PITFALLS §1.
+// ============================================================
+db.version(11).stores({
+  collection: 'id, scryfall_id, category, foil, user_id, updated_at, synced_at, deleted_at, [scryfall_id+foil], [scryfall_id+category]',
+  decks: 'id, name, format, user_id, updated_at, synced_at, deleted_at',
+  deck_cards: 'id, deck_id, scryfall_id, user_id, updated_at, synced_at, deleted_at, [deck_id+scryfall_id]',
+  games: 'id, deck_id, user_id, started_at, ended_at, updated_at, synced_at, deleted_at',
+  watchlist: 'id, &scryfall_id, user_id, updated_at, synced_at, deleted_at',
+  cards: 'id, name, oracle_id, set, collector_number, cmc, color_identity, type_line, [set+collector_number]',
+  meta: 'key',
+  price_history: '++id, scryfall_id, date, updated_at, [scryfall_id+date]',
+  edhrec_cache: 'commander',
+  combo_cache: 'deck_id',
+  card_salt_cache: 'sanitized',
+  profile: 'id, user_id, updated_at',
+  sync_queue: '++id, table_name, user_id, created_at',
+  sync_conflicts: '++id, table_name, detected_at',
+  precons_cache: 'code, set_type, released_at, updated_at',
+  deckgen_cache: 'hash, user_id, fetched_at'
+});
+
+// ============================================================
 // UUID auto-assign hooks (v8 tables).
 //
 // v1.0 code inserts rows via db.collection.add({ scryfall_id: ... }) without

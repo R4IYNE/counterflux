@@ -15,6 +15,7 @@
     "perf:open": "lhci collect --config=lighthouserc.cjs && start ./lighthouse-report/report.html"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.102.0",
     "@fontsource-variable/crimson-pro": "^5.2.8",
     "@fontsource-variable/jetbrains-mono": "^5.2.8",
     "@fontsource-variable/space-grotesk": "^5.2.10",
