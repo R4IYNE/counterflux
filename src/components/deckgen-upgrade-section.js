@@ -68,7 +68,10 @@ export function renderDeckgenUpgradeSection() {
               ></div>
             </div>
             <button
-              @click="if (window.__counterflux_router) window.__counterflux_router.navigate('/thousand-year-storm')"
+              @click="
+                $store.deckgen?.queueAction({ deckId: rec.deck_id, action: 'upgrade' });
+                if (window.__counterflux_router) window.__counterflux_router.navigate('/thousand-year-storm');
+              "
               style="padding: 4px 10px; background: transparent; color: #0D52BD; border: 1px solid #0D52BD; cursor: pointer; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;"
             >REVIEW</button>
             <button

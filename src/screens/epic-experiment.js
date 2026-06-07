@@ -1157,11 +1157,12 @@ function renderMilaUpgradesWidget(grid, cleanups) {
       reviewBtn.style.cssText = 'padding: 4px 10px; background: transparent; color: #0D52BD; border: 1px solid #0D52BD; cursor: pointer; font-family: JetBrains Mono, monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;';
       reviewBtn.textContent = 'REVIEW';
       reviewBtn.addEventListener('click', () => {
+        // 260608: deep-link the deck editor with upgrade mode pre-loaded
+        // — sets pending state on the deckgen store, navigates, the
+        // editor consumes it on mount and auto-opens the modal.
+        Alpine.store('deckgen')?.queueAction({ deckId: rec.deck_id, action: 'upgrade' });
         if (window.__counterflux_router) {
           window.__counterflux_router.navigate('/thousand-year-storm');
-          // Phase 19 v1: navigate to deck archive; user opens deck → brew
-          // modal in upgrade mode. Direct-link to deck editor with mode
-          // pre-set is a v1.4 polish item.
         }
       });
       actions.appendChild(reviewBtn);

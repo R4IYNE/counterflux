@@ -52,6 +52,13 @@ const MODEL_SONNET = 'claude-sonnet-4-6';
 const ANTHROPIC_MAX_TOKENS = 8192;
 const EDHREC_TOP_N = 300;
 const ALLOWED_MODES = new Set(['build', 'fill', 'upgrade', 'retune']);
+// 260608: hard timeout on the Anthropic call. Opus p95 lands around 30s
+// for a 99-card brew; 60s gives meaningful headroom for tail-latency
+// outliers without letting a hung call drag past Vercel's default 300s
+// budget. Sonnet retune is much faster (single-digit seconds typical)
+// so the same cap is generous. AbortError converts to a clean 504 +
+// budget refund.
+const ANTHROPIC_TIMEOUT_MS = 60_000;
 
 // ---------------------------------------------------------------------------
 // Handler
@@ -182,6 +189,8 @@ export default async function handler(req, res) {
   const model = mode === 'retune' ? MODEL_SONNET : MODEL_OPUS;
 
   let parsed;
+  const abortController = new AbortController();
+  const abortTimer = setTimeout(() => abortController.abort(), ANTHROPIC_TIMEOUT_MS);
   try {
     const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
     const claudeResponse = await client.messages.create({
@@ -197,12 +206,24 @@ export default async function handler(req, res) {
       messages: [
         { role: 'user', content: userPrompt },
       ],
-    });
+    }, { signal: abortController.signal });
     parsed = parseClaudeResponse(claudeResponse);
   } catch (err) {
+    clearTimeout(abortTimer);
+    const isTimeout = err?.name === 'AbortError' || err?.message?.includes('aborted');
+    if (isTimeout) {
+      console.warn('[api/deckgen] Anthropic call exceeded ' + (ANTHROPIC_TIMEOUT_MS / 1000) + 's timeout');
+      await refundBudget(supabase, userId);
+      return res.status(504).json({
+        error: 'AI provider timeout',
+        detail: 'Mila took too long thinking. Try again — a retry usually resolves it.',
+      });
+    }
     console.error('[api/deckgen] Anthropic call failed:', err?.message || err);
     await refundBudget(supabase, userId);
     return res.status(502).json({ error: 'AI provider error', detail: err?.message || 'unknown' });
+  } finally {
+    clearTimeout(abortTimer);
   }
 
   // 9. Validate response — every scryfall_id must be in the candidate pool

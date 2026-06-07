@@ -173,6 +173,7 @@ function mapStatusToCode(status) {
     case 413: return 'payload_too_large';
     case 429: return 'budget_exhausted';
     case 502: return 'ai_provider_error';
+    case 504: return 'ai_provider_timeout';
     case 500:
     default:  return 'server_error';
   }
@@ -183,6 +184,7 @@ function friendlyMessage(status, body) {
   if (status === 401) return 'Sign in to use AI brewing.';
   if (status === 409) return body?.detail || 'Not enough candidate cards — try again in 24h or pick a more-played commander.';
   if (status === 502) return body?.detail || 'Mila got distracted — try again in a moment.';
+  if (status === 504) return body?.detail || 'Mila took too long — try again in a moment.';
   if (status === 400) return body?.error || 'Request was invalid.';
   return body?.error || 'Something went wrong.';
 }

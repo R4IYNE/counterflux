@@ -67,8 +67,20 @@ export function mount(container) {
   document.addEventListener('deck-back-to-landing', handleBackToLanding);
   cleanupFns.push(() => document.removeEventListener('deck-back-to-landing', handleBackToLanding));
 
-  // Initial render
-  renderLanding();
+  // 260608: deep-link from dashboard widget / Preordain section. If the
+  // deckgen store carries a pendingDeckId, open that deck immediately
+  // and the editor will consume pendingAction on mount to auto-open the
+  // brew modal in upgrade/retune mode.
+  const deckgen = Alpine?.store('deckgen');
+  if (deckgen?.pendingDeckId && store) {
+    const targetId = deckgen.pendingDeckId;
+    store.loadDeck(targetId).then(() => {
+      renderEditor(targetId);
+    });
+  } else {
+    // Initial render — landing grid
+    renderLanding();
+  }
 
   // Cleanup on unmount
   const prevCleanup = container._cleanup;

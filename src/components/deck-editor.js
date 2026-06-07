@@ -235,6 +235,26 @@ export function renderDeckEditor(container) {
   // Init context menu
   const ctxMenu = initDeckContextMenu(container);
 
+  // 260608: deep-link consumer. If the dashboard widget or Preordain
+  // section queued an action for the currently-loaded deck, auto-open
+  // the brew modal in the requested mode. consumePendingAction is
+  // idempotent — clears state on read so re-mounts don't repeat the
+  // modal-open.
+  const deckgen = Alpine?.store('deckgen');
+  const activeDeck = Alpine?.store('deck')?.activeDeck;
+  if (deckgen && activeDeck?.id) {
+    const action = deckgen.consumePendingAction(activeDeck.id);
+    if (action === 'upgrade' || action === 'retune' || action === 'brew') {
+      // Microtask defers until the editor + overlay HTML is in the
+      // DOM and Alpine has bound everything before the modal opens.
+      queueMicrotask(() => {
+        // 'brew' → modal 'build' (the default fresh-brew flow).
+        // 'retune' → Sonnet swap pairs. 'upgrade' → Opus swap pairs.
+        deckgen.openBrewModal(action === 'brew' ? 'build' : action);
+      });
+    }
+  }
+
   // Cleanup
   container._editorCleanup = () => {
     window.removeEventListener('resize', applyResponsiveWidths);

@@ -27,9 +27,17 @@ export function renderDeckgenReviewScreen() {
           // the precon-browser pattern from 260519-pct.
           const db = window.__cf_db;
           if (!db) return;
-          const ids = ($store.deckgen?.recommendations || [])
-            .map(r => r.scryfall_id)
-            .filter(id => !this.cardMetaCache[id]);
+          const recs = $store.deckgen?.recommendations || [];
+          // 260608-swp: hydrate BOTH the new card and its swap_out
+          // counterpart (when present in retune/upgrade modes) so the
+          // swap-pair row template can render real names + thumbnails
+          // on both sides of the arrow.
+          const wanted = new Set();
+          for (const r of recs) {
+            if (r.scryfall_id) wanted.add(r.scryfall_id);
+            if (r.swap_out) wanted.add(r.swap_out);
+          }
+          const ids = [...wanted].filter(id => !this.cardMetaCache[id]);
           if (ids.length === 0) return;
           try {
             const rows = await db.cards.where('id').anyOf(ids).toArray();
@@ -37,6 +45,27 @@ export function renderDeckgenReviewScreen() {
               this.cardMetaCache = { ...this.cardMetaCache, [r.id]: r };
             }
           } catch {}
+        },
+        get isSwapMode() {
+          // True iff every recommendation carries a swap_out — i.e.
+          // we're in retune or upgrade mode. Mixed responses fall back
+          // to the plain add-row template so swap rows aren't shown for
+          // cards that lack a swap_out target.
+          const recs = $store.deckgen?.recommendations || [];
+          if (recs.length === 0) return false;
+          return recs.every(r => !!r.swap_out);
+        },
+        get titleText() {
+          if (this.isSwapMode) {
+            return $store.deckgen?.mode === 'retune' ? "MILA'S RETUNE" : "MILA'S UPGRADE";
+          }
+          return "MILA'S BREW";
+        },
+        get commitButtonText() {
+          const count = this.approvedCount;
+          if ($store.deckgen?.status === 'committing') return 'WORKING…';
+          if (this.isSwapMode) return 'APPLY ' + count + ' SWAP' + (count === 1 ? '' : 'S');
+          return 'ADD ' + count + ' CARDS';
         },
         cardName(id) {
           const meta = this.cardMetaCache[id];
@@ -88,11 +117,12 @@ export function renderDeckgenReviewScreen() {
       <!-- Header -->
       <div style="flex-shrink: 0; padding: 24px 32px; border-bottom: 1px solid #2A2D3A; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
         <div style="display: flex; align-items: center; gap: 16px;">
-          <span class="material-symbols-outlined" style="color: #0D52BD; font-size: 28px;">auto_awesome</span>
+          <span class="material-symbols-outlined" style="color: #0D52BD; font-size: 28px;" x-text="isSwapMode ? 'tune' : 'auto_awesome'"></span>
           <div>
-            <h2 style="font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; color: #EAECEE; margin: 0; text-transform: uppercase; letter-spacing: 0.01em;">
-              MILA'S BREW
-            </h2>
+            <h2
+              style="font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; color: #EAECEE; margin: 0; text-transform: uppercase; letter-spacing: 0.01em;"
+              x-text="titleText"
+            ></h2>
             <div
               style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.15em; color: #7A8498; text-transform: uppercase; margin-top: 4px;"
               x-text="\`\${$store.deckgen?.recommendations?.length || 0} CARDS RECOMMENDED · \${approvedCount} APPROVED · \${rejectedCount} REJECTED\`"
@@ -129,7 +159,7 @@ export function renderDeckgenReviewScreen() {
             :style="approvedCount > 0 && $store.deckgen?.status !== 'committing'
               ? 'padding: 8px 16px; background: #0D52BD; color: #EAECEE; border: 1px solid #0D52BD; cursor: pointer; font-family: JetBrains Mono, monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase;'
               : 'padding: 8px 16px; background: #1C1F28; color: #4A5064; border: 1px solid #2A2D3A; cursor: not-allowed; opacity: 0.6; font-family: JetBrains Mono, monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase;'"
-            x-text="$store.deckgen?.status === 'committing' ? 'ADDING…' : ('ADD ' + approvedCount + ' CARDS')"
+            x-text="commitButtonText"
           ></button>
         </div>
       </div>
@@ -149,7 +179,96 @@ export function renderDeckgenReviewScreen() {
               ></span>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-[12px]">
+            <!-- 260608-swp: swap-pair row template (retune/upgrade modes)
+                 — shows the card being removed on the left, an arrow, the
+                 card being added on the right. Plain add-row template
+                 below is unchanged for plain brew mode. -->
+            <div class="grid grid-cols-1 gap-[12px]" x-show="isSwapMode">
+              <template x-for="rec in group.cards" :key="rec.scryfall_id">
+                <div
+                  :style="rec.approved
+                    ? 'display: flex; align-items: stretch; gap: 12px; padding: 12px; background: rgba(13,82,189,0.06); border: 1px solid rgba(13,82,189,0.4); cursor: pointer;'
+                    : 'display: flex; align-items: stretch; gap: 12px; padding: 12px; background: transparent; border: 1px solid #2A2D3A; cursor: pointer; opacity: 0.5;'"
+                  @click="$store.deckgen.toggleApproval(rec.scryfall_id)"
+                >
+                  <!-- Swap-out side (current card) -->
+                  <div style="display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0;">
+                    <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.15em; color: #E23838; text-transform: uppercase;">
+                      OUT
+                    </span>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                      <template x-if="cardImage(rec.swap_out)">
+                        <img
+                          :src="cardImage(rec.swap_out)"
+                          :alt="cardName(rec.swap_out)"
+                          class="cf-card-img"
+                          style="width: 36px; height: 50px; object-fit: cover; flex-shrink: 0; filter: grayscale(0.3) opacity(0.8);"
+                          loading="lazy"
+                          onerror="this.style.visibility='hidden'"
+                        />
+                      </template>
+                      <template x-if="!cardImage(rec.swap_out)">
+                        <div style="width: 36px; height: 50px; flex-shrink: 0; background: #1C1F28; border: 1px solid #2A2D3A;"></div>
+                      </template>
+                      <span
+                        style="flex: 1; min-width: 0; font-family: 'Space Grotesk', sans-serif; font-size: 13px; color: #EAECEE; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-decoration: line-through; text-decoration-color: #E23838; text-decoration-thickness: 1px;"
+                        x-text="cardName(rec.swap_out)"
+                      ></span>
+                    </div>
+                  </div>
+
+                  <!-- Arrow + role between the two cards -->
+                  <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; flex-shrink: 0; padding: 0 4px;">
+                    <span class="material-symbols-outlined" style="font-size: 20px; color: #0D52BD;">east</span>
+                    <span style="font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.1em; color: #4A5064; text-transform: uppercase;" x-text="(rec.role || '').replace(/_/g, ' ')"></span>
+                  </div>
+
+                  <!-- Swap-in side (new card) -->
+                  <div style="display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0;">
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                      <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.15em; color: #2ECC71; text-transform: uppercase;">
+                        IN
+                      </span>
+                      <span
+                        @click.stop="$store.deckgen.toggleApproval(rec.scryfall_id)"
+                        :style="rec.approved
+                          ? 'flex-shrink: 0; padding: 2px 6px; background: rgba(46,204,113,0.15); color: #2ECC71; border: 1px solid #2ECC71; font-family: JetBrains Mono, monospace; font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer;'
+                          : 'flex-shrink: 0; padding: 2px 6px; background: transparent; color: #7A8498; border: 1px solid #2A2D3A; font-family: JetBrains Mono, monospace; font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer;'"
+                        x-text="rec.approved ? 'APPROVED' : 'REJECTED'"
+                      ></span>
+                    </div>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                      <template x-if="cardImage(rec.scryfall_id)">
+                        <img
+                          :src="cardImage(rec.scryfall_id)"
+                          :alt="cardName(rec.scryfall_id)"
+                          class="cf-card-img"
+                          style="width: 36px; height: 50px; object-fit: cover; flex-shrink: 0;"
+                          loading="lazy"
+                          onerror="this.style.visibility='hidden'"
+                        />
+                      </template>
+                      <template x-if="!cardImage(rec.scryfall_id)">
+                        <div style="width: 36px; height: 50px; flex-shrink: 0; background: #1C1F28; border: 1px solid #2A2D3A; display: flex; align-items: center; justify-content: center;">
+                          <span class="material-symbols-outlined" style="font-size: 14px; color: #4A5064;">style</span>
+                        </div>
+                      </template>
+                      <span
+                        style="flex: 1; min-width: 0; font-family: 'Space Grotesk', sans-serif; font-size: 13px; font-weight: 700; color: #EAECEE; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"
+                        x-text="cardName(rec.scryfall_id)"
+                      ></span>
+                    </div>
+                    <span
+                      style="font-family: 'Space Grotesk', sans-serif; font-size: 12px; color: #7A8498; line-height: 1.45; margin-top: 4px;"
+                      x-text="rec.reasoning"
+                    ></span>
+                  </div>
+                </div>
+              </template>
+            </div>
+
+            <!-- Plain add-row template (brew + fill modes) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-[12px]" x-show="!isSwapMode">
               <template x-for="rec in group.cards" :key="rec.scryfall_id">
                 <div
                   :style="rec.approved

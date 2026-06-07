@@ -66,6 +66,40 @@ describe('deckgen store — initial state', () => {
   });
 });
 
+describe('deckgen store — deep-link queue', () => {
+  it('queueAction sets pendingDeckId and pendingAction', () => {
+    const s = storeRegistry.deckgen;
+    s.queueAction({ deckId: 'deck-1', action: 'upgrade' });
+    expect(s.pendingDeckId).toBe('deck-1');
+    expect(s.pendingAction).toBe('upgrade');
+  });
+
+  it('consumePendingAction returns the action and clears the queue', () => {
+    const s = storeRegistry.deckgen;
+    s.queueAction({ deckId: 'deck-1', action: 'retune' });
+    const result = s.consumePendingAction('deck-1');
+    expect(result).toBe('retune');
+    expect(s.pendingDeckId).toBeNull();
+    expect(s.pendingAction).toBeNull();
+  });
+
+  it('consumePendingAction returns null when the deck id does not match', () => {
+    const s = storeRegistry.deckgen;
+    s.queueAction({ deckId: 'deck-1', action: 'upgrade' });
+    const result = s.consumePendingAction('deck-2');
+    expect(result).toBeNull();
+    // Queue still set
+    expect(s.pendingDeckId).toBe('deck-1');
+    expect(s.pendingAction).toBe('upgrade');
+  });
+
+  it('consumePendingAction returns null when nothing is queued', () => {
+    const s = storeRegistry.deckgen;
+    const result = s.consumePendingAction('deck-1');
+    expect(result).toBeNull();
+  });
+});
+
 describe('deckgen store — modal lifecycle', () => {
   it('openBrewModal opens the modal and clears prior state', () => {
     const s = storeRegistry.deckgen;
@@ -98,6 +132,25 @@ describe('deckgen store — modal lifecycle', () => {
     expect(s.brewModalOpen).toBe(false);
     expect(s.recommendations).toEqual([]);
     expect(s.activeDeckId).toBeNull();
+  });
+
+  it('openBrewModal accepts retune mode', () => {
+    const s = storeRegistry.deckgen;
+    s.openBrewModal('retune');
+    expect(s.modalMode).toBe('retune');
+    expect(s.brewModalOpen).toBe(true);
+  });
+
+  it('openBrewModal accepts upgrade mode', () => {
+    const s = storeRegistry.deckgen;
+    s.openBrewModal('upgrade');
+    expect(s.modalMode).toBe('upgrade');
+  });
+
+  it('openBrewModal defaults to build mode for unknown values', () => {
+    const s = storeRegistry.deckgen;
+    s.openBrewModal('nonsense');
+    expect(s.modalMode).toBe('build');
   });
 });
 
@@ -336,5 +389,88 @@ describe('deckgen store — commitApproved', () => {
     const toast = storeRegistry.toast;
     expect(toast.success).toHaveBeenCalled();
     expect(toast.success.mock.calls[0][0]).toMatch(/Added 2 cards/i);
+  });
+});
+
+// 260608-swp — swap mode (retune / upgrade) commits
+describe('deckgen store — commitApproved swap mode', () => {
+  beforeEach(async () => {
+    // Pre-seed the deck with the cards that will be swapped OUT
+    await db.deck_cards.bulkAdd([
+      { deck_id: 'deck-1', scryfall_id: 'old-1', quantity: 1, tags: [], sort_order: 0 },
+      { deck_id: 'deck-1', scryfall_id: 'old-2', quantity: 1, tags: [], sort_order: 0 },
+    ]);
+
+    generateDeck.mockResolvedValue({
+      ok: true,
+      response: {
+        recommended: [
+          { scryfall_id: 'new-1', role: 'RAMP', reasoning: 'better mana rock', swap_out: 'old-1' },
+          { scryfall_id: 'new-2', role: 'DRAW', reasoning: 'better card draw', swap_out: 'old-2' },
+        ],
+      },
+    });
+    const s = storeRegistry.deckgen;
+    await s.startBrew({
+      deckId: 'deck-1', commanderId: 'cmdr-1', powerLevel: 5, mode: 'retune',
+      useCollectionOnly: false, archetypeHint: '', partialCardIds: [],
+    });
+  });
+
+  it('removes swap_out card AND adds new card in one transaction', async () => {
+    const s = storeRegistry.deckgen;
+    const result = await s.commitApproved();
+    expect(result.ok).toBe(true);
+    expect(result.swappedCount).toBe(2);
+
+    // Old cards gone
+    const oldRows = await db.deck_cards.where('scryfall_id').anyOf(['old-1', 'old-2']).toArray();
+    expect(oldRows).toHaveLength(0);
+
+    // New cards added
+    const newRows = await db.deck_cards.where('scryfall_id').anyOf(['new-1', 'new-2']).toArray();
+    expect(newRows).toHaveLength(2);
+  });
+
+  it('rejected swaps leave the original card in place', async () => {
+    const s = storeRegistry.deckgen;
+    s.toggleApproval('new-2'); // reject the second swap
+
+    const result = await s.commitApproved();
+    expect(result.ok).toBe(true);
+    expect(result.swappedCount).toBe(1);
+
+    // old-1 swapped out, old-2 remains
+    const old1 = await db.deck_cards.where('scryfall_id').equals('old-1').toArray();
+    const old2 = await db.deck_cards.where('scryfall_id').equals('old-2').toArray();
+    expect(old1).toHaveLength(0);
+    expect(old2).toHaveLength(1);
+
+    // new-1 added, new-2 not
+    const new1 = await db.deck_cards.where('scryfall_id').equals('new-1').toArray();
+    const new2 = await db.deck_cards.where('scryfall_id').equals('new-2').toArray();
+    expect(new1).toHaveLength(1);
+    expect(new2).toHaveLength(0);
+  });
+
+  it('handles swap_out card not in deck gracefully (idempotent)', async () => {
+    // Manually delete one of the cards before commit — simulate a
+    // user who edited the deck after the recommendations were generated.
+    await db.deck_cards.where('scryfall_id').equals('old-1').delete();
+
+    const s = storeRegistry.deckgen;
+    const result = await s.commitApproved();
+    expect(result.ok).toBe(true);
+
+    // new-1 still added even though old-1 was already gone
+    const new1 = await db.deck_cards.where('scryfall_id').equals('new-1').toArray();
+    expect(new1).toHaveLength(1);
+  });
+
+  it('toast message reflects swap count', async () => {
+    const s = storeRegistry.deckgen;
+    await s.commitApproved();
+    const toast = storeRegistry.toast;
+    expect(toast.success.mock.calls[0][0]).toMatch(/Swapped 2 cards/i);
   });
 });

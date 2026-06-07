@@ -51,6 +51,34 @@ export function initDeckgenStore() {
       return this.recommendations_pending.length;
     },
 
+    // === 260608 — deep-link from dashboard / Preordain to deck editor ===
+    // Set by the recommendation surfaces before navigating. Consumed by
+    // the deck-editor mount: if pendingDeckId matches the loaded deck,
+    // open the brew modal in pendingAction mode and clear the fields.
+    pendingDeckId: null,
+    pendingAction: null,             // 'upgrade' | 'retune' | 'brew' | null
+
+    /**
+     * Set the pending action + deck for the deck-editor to consume on
+     * its next mount. Used by the dashboard widget and Preordain section.
+     */
+    queueAction({ deckId, action }) {
+      this.pendingDeckId = deckId || null;
+      this.pendingAction = action || null;
+    },
+
+    /**
+     * Read + clear the pending action. The deck-editor calls this once
+     * after the deck loads so re-mounts don't repeatedly fire the modal.
+     */
+    consumePendingAction(deckId) {
+      if (!this.pendingDeckId || this.pendingDeckId !== deckId) return null;
+      const action = this.pendingAction;
+      this.pendingDeckId = null;
+      this.pendingAction = null;
+      return action;
+    },
+
     async loadRecommendations() {
       try {
         const mod = await import('../services/deckgen-recommendations.js');
@@ -187,6 +215,12 @@ export function initDeckgenStore() {
      * transaction, single undo entry — mirrors the existing
      * addAllFromPrecon pattern in the collection store.
      *
+     * In retune/upgrade modes, each approved recommendation may carry
+     * a `swap_out` scryfall_id. The commit removes the swap_out card
+     * from the deck in the same transaction so the user gets a true
+     * SWAP rather than just an add. Counts in the success toast reflect
+     * swaps vs additions so the user sees what happened.
+     *
      * Returns { ok: true } on success or { ok: false, message } on failure.
      */
     async commitApproved() {
@@ -200,11 +234,30 @@ export function initDeckgenStore() {
 
       this.status = 'committing';
 
+      let addedCount = 0;
+      let swappedCount = 0;
+
       try {
         await db.transaction('rw', db.deck_cards, async () => {
           const nowIso = new Date().toISOString();
           for (const rec of approved) {
-            // Skip if already in deck (singleton format guard)
+            // If this is a swap (retune/upgrade mode), remove the
+            // swap_out card first. Look it up by [deck_id+scryfall_id]
+            // composite — same index addCard uses.
+            if (rec.swap_out) {
+              const oldRow = await db.deck_cards
+                .where('[deck_id+scryfall_id]')
+                .equals([this.activeDeckId, rec.swap_out])
+                .first();
+              if (oldRow) {
+                await db.deck_cards.delete(oldRow.id);
+                swappedCount++;
+              }
+            }
+
+            // Skip add if already in deck (singleton format guard or a
+            // self-swap where the LLM hallucinated the same card on
+            // both sides — already-out, now adding back).
             const existing = await db.deck_cards
               .where('[deck_id+scryfall_id]')
               .equals([this.activeDeckId, rec.scryfall_id])
@@ -220,6 +273,7 @@ export function initDeckgenStore() {
               updated_at: nowIso,
               synced_at: null,
             });
+            if (!rec.swap_out) addedCount++;
           }
         });
 
@@ -230,9 +284,12 @@ export function initDeckgenStore() {
           // Non-fatal
         }
 
-        Alpine.store('toast')?.success(`Added ${approved.length} card${approved.length === 1 ? '' : 's'} to your deck.`);
+        const toastMsg = swappedCount > 0
+          ? `Swapped ${swappedCount} card${swappedCount === 1 ? '' : 's'}${addedCount > 0 ? ` + added ${addedCount}` : ''}.`
+          : `Added ${addedCount} card${addedCount === 1 ? '' : 's'} to your deck.`;
+        Alpine.store('toast')?.success(toastMsg);
         this.reset();
-        return { ok: true };
+        return { ok: true, addedCount, swappedCount };
       } catch (err) {
         this.status = 'error';
         this.error = { code: 'commit_failed', message: err?.message || 'Failed to add cards.' };
@@ -258,7 +315,14 @@ export function initDeckgenStore() {
 
     openBrewModal(mode) {
       this.brewModalOpen = true;
-      this.modalMode = (mode === 'retune') ? 'retune' : 'build';
+      // 'retune' and 'upgrade' are both swap-pair modes from the UI's
+      // perspective; the API uses different models (Sonnet vs Opus) so
+      // we preserve the distinction in modalMode.
+      if (mode === 'retune' || mode === 'upgrade') {
+        this.modalMode = mode;
+      } else {
+        this.modalMode = 'build';
+      }
       this.status = 'idle';
       this.error = null;
       this.recommendations = [];
