@@ -43,6 +43,12 @@ export function renderDeckgenBrewModal() {
         useCollectionOnly: false,
         mode: 'build',
         archetypeHint: '',
+        get isRetune() {
+          return $store.deckgen?.modalMode === 'retune';
+        },
+        get effectiveMode() {
+          return this.isRetune ? 'retune' : this.mode;
+        },
         get powerLabel() {
           if (this.powerLevel <= 3) return 'CASUAL';
           if (this.powerLevel <= 6) return 'FOCUSED';
@@ -66,14 +72,18 @@ export function renderDeckgenBrewModal() {
           const partial = ($store.deck?.activeCards || [])
             .filter(c => c.scryfall_id !== deck.commander_id)
             .map(c => c.scryfall_id);
+          // Retune always sends the full current deck. Fill sends the
+          // existing card list so Claude doesn't duplicate. Build sends
+          // nothing.
+          const sendPartial = this.effectiveMode === 'retune' || this.effectiveMode === 'fill';
           await $store.deckgen.startBrew({
             deckId: deck.id,
             commanderId: deck.commander_id,
             powerLevel: this.powerLevel,
-            mode: this.mode,
-            useCollectionOnly: this.useCollectionOnly,
+            mode: this.effectiveMode,
+            useCollectionOnly: this.isRetune ? false : this.useCollectionOnly,
             archetypeHint: this.archetypeHint.trim(),
-            partialCardIds: this.mode === 'fill' ? partial : [],
+            partialCardIds: sendPartial ? partial : [],
           });
         }
       }"
@@ -96,10 +106,11 @@ export function renderDeckgenBrewModal() {
         <!-- Header -->
         <div style="display: flex; align-items: center; justify-content: space-between;">
           <div style="display: flex; align-items: center; gap: 12px;">
-            <span class="material-symbols-outlined" style="color: #0D52BD; font-size: 24px;">auto_awesome</span>
-            <h2 style="font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; color: #EAECEE; margin: 0; text-transform: uppercase; letter-spacing: 0.01em;">
-              BREW WITH MILA
-            </h2>
+            <span class="material-symbols-outlined" style="color: #0D52BD; font-size: 24px;" x-text="isRetune ? 'tune' : 'auto_awesome'"></span>
+            <h2
+              style="font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; color: #EAECEE; margin: 0; text-transform: uppercase; letter-spacing: 0.01em;"
+              x-text="isRetune ? 'RETUNE WITH MILA' : 'BREW WITH MILA'"
+            ></h2>
           </div>
           <button
             @click="$store.deckgen.brewModalOpen = false"
@@ -154,8 +165,9 @@ export function renderDeckgenBrewModal() {
           </div>
         </div>
 
-        <!-- Mode -->
-        <div style="display: flex; flex-direction: column; gap: 8px;">
+        <!-- Mode (build/fill only; hidden in retune mode — retune always
+             operates on the current full deck list) -->
+        <div x-show="!isRetune" style="display: flex; flex-direction: column; gap: 8px;">
           <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; font-weight: 700; color: #7A8498;">
             MODE
           </span>
@@ -189,8 +201,20 @@ export function renderDeckgenBrewModal() {
           </div>
         </div>
 
-        <!-- Collection toggle -->
-        <label style="display: flex; align-items: flex-start; gap: 12px; cursor: pointer;">
+        <!-- Retune-only explainer (replaces mode + collection sections) -->
+        <div x-show="isRetune" style="display: flex; flex-direction: column; gap: 8px; padding: 12px 16px; background: rgba(13,82,189,0.06); border: 1px solid rgba(13,82,189,0.3);">
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; font-weight: 700; color: #0D52BD;">
+            RETUNE MODE
+          </div>
+          <div style="font-family: 'Space Grotesk', sans-serif; font-size: 13px; color: #EAECEE; line-height: 1.5;">
+            Mila reads your current deck and suggests 5–15 surgical swaps to move it toward the target power level. Use this when you want to take an Optimized deck to a Casual pod or vice versa.
+          </div>
+        </div>
+
+        <!-- Collection toggle (hidden in retune mode — retune ignores
+             the collection filter since it's working with cards already
+             in the deck) -->
+        <label x-show="!isRetune" style="display: flex; align-items: flex-start; gap: 12px; cursor: pointer;">
           <input
             type="checkbox"
             x-model="useCollectionOnly"
@@ -233,7 +257,7 @@ export function renderDeckgenBrewModal() {
               ? 'flex: 1; padding: 12px; background: #0D52BD; color: #EAECEE; border: 1px solid #0D52BD; cursor: pointer; font-family: JetBrains Mono, monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase;'
               : 'flex: 1; padding: 12px; background: #1C1F28; color: #4A5064; border: 1px solid #2A2D3A; cursor: not-allowed; font-family: JetBrains Mono, monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; opacity: 0.6;'"
           >
-            <span x-show="$store.deckgen?.status !== 'brewing'">BREW IT</span>
+            <span x-show="$store.deckgen?.status !== 'brewing'" x-text="isRetune ? 'RETUNE IT' : 'BREW IT'"></span>
             <span x-show="$store.deckgen?.status === 'brewing'">MILA IS THINKING…</span>
           </button>
           <button

@@ -82,12 +82,52 @@ export function renderDeckEditor(container) {
   function updateBrewVisibility() {
     const hasCommander = !!(Alpine?.store('deck')?.activeDeck?.commander_id);
     brewBtn.style.display = hasCommander ? 'inline-flex' : 'none';
+    // Phase 20 — retune button shares the same gate. We also require
+    // the deck to have at least 10 cards beyond the commander, since
+    // there's nothing to retune in an empty/near-empty deck.
+    const cardCount = (Alpine?.store('deck')?.activeCards || []).length;
+    const hasEnoughForRetune = hasCommander && cardCount > 10;
+    if (typeof retuneBtn !== 'undefined') {
+      retuneBtn.style.display = hasEnoughForRetune ? 'inline-flex' : 'none';
+    }
   }
   brewBtn.addEventListener('click', () => {
     if (!Alpine?.store('deck')?.activeDeck?.commander_id) return;
-    Alpine.store('deckgen')?.openBrewModal();
+    Alpine.store('deckgen')?.openBrewModal('build');
   });
   breadcrumb.appendChild(brewBtn);
+
+  // Phase 20 — "RETUNE" button. Same visibility gate as the BREW
+  // button (commander required) but opens the modal pre-set to
+  // retune mode so the user gets surgical swap recommendations
+  // toward a target power level rather than a fresh brew.
+  const retuneBtn = document.createElement('button');
+  retuneBtn.style.cssText = `
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase;
+    letter-spacing: 0.15em; font-weight: 700; cursor: pointer; padding: 8px 16px;
+    background: transparent; color: #7A8498; border: 1px solid #2A2D3A;
+    display: inline-flex; align-items: center; gap: 8px; margin-left: 8px;
+    transition: color 120ms ease-out, border-color 120ms ease-out;
+  `;
+  const retuneBtnIcon = document.createElement('span');
+  retuneBtnIcon.className = 'material-symbols-outlined';
+  retuneBtnIcon.style.fontSize = '16px';
+  retuneBtnIcon.textContent = 'tune';
+  retuneBtn.appendChild(retuneBtnIcon);
+  retuneBtn.appendChild(document.createTextNode('RETUNE'));
+  retuneBtn.onmouseenter = () => {
+    retuneBtn.style.color = '#EAECEE';
+    retuneBtn.style.borderColor = '#0D52BD';
+  };
+  retuneBtn.onmouseleave = () => {
+    retuneBtn.style.color = '#7A8498';
+    retuneBtn.style.borderColor = '#2A2D3A';
+  };
+  retuneBtn.addEventListener('click', () => {
+    if (!Alpine?.store('deck')?.activeDeck?.commander_id) return;
+    Alpine.store('deckgen')?.openBrewModal('retune');
+  });
+  breadcrumb.appendChild(retuneBtn);
   // Re-evaluate visibility whenever the deck loads / changes.
   let brewVisibilityEffect = null;
   if (Alpine && typeof Alpine.effect === 'function') {

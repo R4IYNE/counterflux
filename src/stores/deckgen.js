@@ -28,7 +28,8 @@ export function initDeckgenStore() {
     status: 'idle',                  // 'idle' | 'brewing' | 'reviewing' | 'committing' | 'error'
     error: null,                     // { code, message } when status === 'error'
     cacheHit: false,                 // true if last call returned a cached response
-    brewModalOpen: false,            // Phase 18 — modal visibility, separate from status so the modal can be open while idle
+    brewModalOpen: false,             // Phase 18 — modal visibility, separate from status so the modal can be open while idle
+    modalMode: 'build',               // Phase 20 — 'build' (brew from scratch) or 'retune' (power-level retune). Used by the modal to swap copy + hide irrelevant fields.
 
     // === Budget ===
     budgetRemaining: null,           // null until first call returns
@@ -255,8 +256,9 @@ export function initDeckgenStore() {
       this.brewModalOpen = false;
     },
 
-    openBrewModal() {
+    openBrewModal(mode) {
       this.brewModalOpen = true;
+      this.modalMode = (mode === 'retune') ? 'retune' : 'build';
       this.status = 'idle';
       this.error = null;
       this.recommendations = [];
