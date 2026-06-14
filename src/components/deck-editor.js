@@ -90,6 +90,11 @@ export function renderDeckEditor(container) {
     if (typeof retuneBtn !== 'undefined') {
       retuneBtn.style.display = hasEnoughForRetune ? 'inline-flex' : 'none';
     }
+    // v1.3.x — CHAT WITH MILA shares the commander gate (chat can brew from
+    // a near-empty deck, so it only needs a commander, like the brew button).
+    if (typeof chatBtn !== 'undefined') {
+      chatBtn.style.display = hasCommander ? 'inline-flex' : 'none';
+    }
   }
   brewBtn.addEventListener('click', () => {
     if (!Alpine?.store('deck')?.activeDeck?.commander_id) return;
@@ -128,6 +133,47 @@ export function renderDeckEditor(container) {
     Alpine.store('deckgen')?.openBrewModal('retune');
   });
   breadcrumb.appendChild(retuneBtn);
+
+  // v1.3.x — "CHAT WITH MILA" button. Opens the conversational brew drawer.
+  // Same commander gate as BREW; gated behind sign-in at click time because
+  // the /api/deckgen-chat endpoint requires a Supabase JWT.
+  const chatBtn = document.createElement('button');
+  chatBtn.style.cssText = `
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase;
+    letter-spacing: 0.15em; font-weight: 700; cursor: pointer; padding: 8px 16px;
+    background: transparent; color: #7A8498; border: 1px solid #2A2D3A;
+    display: inline-flex; align-items: center; gap: 8px; margin-left: 8px;
+    transition: color 120ms ease-out, border-color 120ms ease-out;
+  `;
+  const chatBtnIcon = document.createElement('span');
+  chatBtnIcon.className = 'material-symbols-outlined';
+  chatBtnIcon.style.fontSize = '16px';
+  chatBtnIcon.textContent = 'forum';
+  chatBtn.appendChild(chatBtnIcon);
+  chatBtn.appendChild(document.createTextNode('CHAT WITH MILA'));
+  chatBtn.onmouseenter = () => {
+    chatBtn.style.color = '#EAECEE';
+    chatBtn.style.borderColor = '#0D52BD';
+  };
+  chatBtn.onmouseleave = () => {
+    chatBtn.style.color = '#7A8498';
+    chatBtn.style.borderColor = '#2A2D3A';
+  };
+  chatBtn.addEventListener('click', () => {
+    const deck = Alpine?.store('deck')?.activeDeck;
+    if (!deck?.commander_id) return;
+    if (!Alpine?.store('auth')?.session) {
+      Alpine?.store('toast')?.error?.('Sign in to chat with Mila.');
+      return;
+    }
+    const power = typeof deck.power_level === 'number' ? deck.power_level : 5;
+    Alpine.store('deckgenChat')?.openChat({
+      deckId: deck.id,
+      commanderId: deck.commander_id,
+      powerLevel: power,
+    });
+  });
+  breadcrumb.appendChild(chatBtn);
   // Re-evaluate visibility whenever the deck loads / changes.
   let brewVisibilityEffect = null;
   if (Alpine && typeof Alpine.effect === 'function') {
@@ -212,6 +258,19 @@ export function renderDeckEditor(container) {
   deckgenOverlay.innerHTML = renderDeckgenBrewModal() + renderDeckgenReviewScreen();
   wrapper.appendChild(deckgenOverlay);
 
+  // v1.3.x — lazy-load the Mila Brew Chat panel so it lands in its own chunk
+  // (keeps the thousand-year screen bundle under its 40 KB budget). Alpine's
+  // MutationObserver binds the injected subtree once it's appended, so the
+  // CHAT WITH MILA button's x-show reacts as soon as this resolves (ms after
+  // mount, well before any click).
+  import('./deckgen-chat-panel.js')
+    .then(({ renderDeckgenChatPanel }) => {
+      const chatMount = document.createElement('div');
+      chatMount.innerHTML = renderDeckgenChatPanel();
+      deckgenOverlay.appendChild(chatMount);
+    })
+    .catch(() => { /* non-fatal — chat just won't be available this mount */ });
+
   container.appendChild(wrapper);
 
   // Responsive panel widths
@@ -269,5 +328,7 @@ export function renderDeckEditor(container) {
     }
     // Reset deckgen state when leaving the editor so a fresh open lands clean.
     try { Alpine?.store('deckgen')?.reset(); } catch {}
+    // v1.3.x — same for the Mila Brew Chat drawer.
+    try { Alpine?.store('deckgenChat')?.reset(); } catch {}
   };
 }

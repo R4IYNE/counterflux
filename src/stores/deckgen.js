@@ -21,6 +21,8 @@ import Alpine from 'alpinejs';
 import { db } from '../db/schema.js';
 import { generateDeck } from '../services/deckgen.js';
 import { hashCollection } from '../services/deckgen-candidates.js';
+import { detectGapsRAG } from '../utils/gap-detection.js';
+import { buildDeckDiagnostics } from '../services/deck-diagnostics.js';
 
 export function initDeckgenStore() {
   Alpine.store('deckgen', {
@@ -145,6 +147,24 @@ export function initDeckgenStore() {
         }
       }
 
+      // v1.3.x (audit fix #6): for non-build modes, attach the deck's own
+      // analytics + RAG gap report so Claude targets the deck's real
+      // weaknesses instead of re-deriving them from the bare card list.
+      let deckDiagnostics = '';
+      if (this.mode && this.mode !== 'build') {
+        try {
+          const deckStore = Alpine.store('deck');
+          const analytics = deckStore?.analytics;
+          if (analytics) {
+            const deckTags = deckStore?.activeDeck?.tags || [];
+            const gaps = detectGapsRAG(analytics, undefined, deckTags);
+            deckDiagnostics = buildDeckDiagnostics({ analytics, gaps });
+          }
+        } catch {
+          // Non-fatal — brew proceeds without the digest.
+        }
+      }
+
       const result = await generateDeck({
         commanderId: input.commanderId,
         powerLevel: input.powerLevel,
@@ -153,6 +173,7 @@ export function initDeckgenStore() {
         archetypeHint: input.archetypeHint,
         partialCardIds: input.partialCardIds,
         collectionHash,
+        deckDiagnostics,
         getAccessToken: async () => {
           // Pulled from the auth store at call time so we always have a
           // fresh token. Lazy import avoids a circular dep at module load.

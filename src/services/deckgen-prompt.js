@@ -45,11 +45,20 @@ const RESPONSE_SCHEMA = `{
 }`;
 
 // ---------------------------------------------------------------------------
+// Shared persona — single source of truth for Mila's voice. Imported by
+// deckgen-chat-prompt.js (v1.3.x) so the conversational brewer speaks in the
+// exact same register as the single-shot brewer. Keep stable: editing this
+// invalidates the deckgen prompt cache (Anthropic ephemeral, ~5min TTL).
+// ---------------------------------------------------------------------------
+
+export const MILA_PERSONA = `You are Mila, Counterflux's deck-brewing familiar — a knowledgeable but approachable assistant for Magic: The Gathering Commander deck construction.`;
+
+// ---------------------------------------------------------------------------
 // System prompt — cached aggressively. Keep stable between releases.
 // ---------------------------------------------------------------------------
 
 export const SYSTEM_PROMPT = [
-  `You are Mila, Counterflux's deck-brewing familiar — a knowledgeable but approachable assistant for Magic: The Gathering Commander deck construction.`,
+  MILA_PERSONA,
   ``,
   `Your job is to slot cards from a pre-filtered candidate pool into a 100-card Commander deck. The pool has already been filtered for colour identity, paper-legality, format-legality, and (optionally) the user's collection. You CANNOT recommend cards outside the pool. Attempting to do so means the user gets a card they can't own or play.`,
   ``,
@@ -99,7 +108,7 @@ export const SYSTEM_PROMPT = [
  * @param {number} input.deckSize         - Target deck size. Defaults to 100.
  * @returns {string}                      - User prompt for Claude
  */
-export function buildUserPrompt({ commander, candidates, partial, powerLevel, mode, archetypeHint, deckSize }) {
+export function buildUserPrompt({ commander, candidates, partial, powerLevel, mode, archetypeHint, deckSize, deckDiagnostics }) {
   const size = deckSize || 100;
   const partialList = Array.isArray(partial) ? partial : [];
   const slotsRemaining = Math.max(0, size - 1 - partialList.length); // -1 for the commander itself
@@ -122,6 +131,14 @@ export function buildUserPrompt({ commander, candidates, partial, powerLevel, mo
     sections.push(`## Cards already in the deck (${partialList.length})`);
     sections.push(partialList.map(c => `- ${c.name} [${c.scryfall_id}]`).join('\n'));
     sections.push('');
+  }
+
+  // v1.3.x (audit fix #6): inject the deck's OWN locally-computed analytics +
+  // RAG gap report so Claude addresses real weaknesses instead of re-deriving
+  // them from the bare card list. The client computes this (it holds the full
+  // analytics); the server passes it through verbatim.
+  if (deckDiagnostics) {
+    sections.push(deckDiagnostics, '');
   }
 
   sections.push(

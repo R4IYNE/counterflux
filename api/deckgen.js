@@ -29,7 +29,6 @@
  */
 
 import Anthropic from '@anthropic-ai/sdk';
-import { createClient } from '@supabase/supabase-js';
 import { checkRequest } from './_origin-guard.js';
 import {
   buildCandidatePool,
@@ -40,12 +39,24 @@ import {
   SYSTEM_PROMPT,
   buildUserPrompt,
 } from '../src/services/deckgen-prompt.js';
+// v1.3.x — JWT/budget/lookup helpers moved to a shared module so
+// /api/deckgen and /api/deckgen-chat share one implementation.
+import {
+  DAILY_BUDGET,
+  verifyJWT,
+  assertAndIncrementBudget,
+  refundBudget,
+  fetchEdhrecSynergyNames,
+  fetchCardsByNames,
+  fetchCommanderCard,
+  fetchOwnedScryfallIds,
+} from './_deckgen-shared.js';
 
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
 
-const DAILY_BUDGET = 20;
+// DAILY_BUDGET imported from ./_deckgen-shared.js (shared across deckgen modes)
 const CACHE_TTL_DAYS = 7;
 const MODEL_OPUS = 'claude-opus-4-8';
 const MODEL_SONNET = 'claude-sonnet-4-6';
@@ -86,7 +97,7 @@ export default async function handler(req, res) {
 
   // 3. Validate request body
   const body = req.body || {};
-  const { commanderId, partialCardIds = [], powerLevel = 5, useCollectionOnly = false, mode = 'build', archetypeHint = '', deckSize = 100 } = body;
+  const { commanderId, partialCardIds = [], powerLevel = 5, useCollectionOnly = false, mode = 'build', archetypeHint = '', deckSize = 100, deckDiagnostics = '' } = body;
 
   if (!commanderId || typeof commanderId !== 'string') {
     return res.status(400).json({ error: 'commanderId required' });
@@ -127,7 +138,7 @@ export default async function handler(req, res) {
   let candidatePool;
   let commander;
   try {
-    commander = await fetchCommanderCard(supabase, commanderId);
+    commander = await fetchCommanderCard(commanderId);
     if (!commander) {
       await refundBudget(supabase, userId);
       return res.status(404).json({ error: 'commander not found' });
@@ -184,6 +195,7 @@ export default async function handler(req, res) {
     mode,
     archetypeHint,
     deckSize,
+    deckDiagnostics: typeof deckDiagnostics === 'string' ? deckDiagnostics : '',
   });
 
   const model = mode === 'retune' ? MODEL_SONNET : MODEL_OPUS;
@@ -262,146 +274,6 @@ export default async function handler(req, res) {
 }
 
 // ---------------------------------------------------------------------------
-// JWT verification — uses Supabase to validate the bearer token.
-// ---------------------------------------------------------------------------
-
-async function verifyJWT(req) {
-  const header = req.headers?.authorization || req.headers?.Authorization;
-  if (!header || !header.startsWith('Bearer ')) {
-    return { ok: false, status: 401, body: { error: 'missing bearer token' } };
-  }
-  const token = header.slice('Bearer '.length).trim();
-  if (!token) {
-    return { ok: false, status: 401, body: { error: 'empty bearer token' } };
-  }
-
-  const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
-  const supabaseAnon = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
-  if (!supabaseUrl || !supabaseAnon) {
-    console.error('[api/deckgen] Supabase env vars missing');
-    return { ok: false, status: 500, body: { error: 'server misconfigured' } };
-  }
-
-  // User-scoped client — every query through this respects the user's JWT
-  // and RLS. The Authorization header is set globally on the client so
-  // PostgREST receives it on every request.
-  const supabase = createClient(supabaseUrl, supabaseAnon, {
-    db: { schema: 'counterflux' },
-    global: { headers: { Authorization: `Bearer ${token}` } },
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
-
-  // Signature-validating call. Returns the user object on a real token,
-  // a 401-style error on a forged/expired one.
-  const { data, error } = await supabase.auth.getUser(token);
-  if (error || !data?.user?.id) {
-    return { ok: false, status: 401, body: { error: 'invalid token' } };
-  }
-
-  return { ok: true, userId: data.user.id, supabase };
-}
-
-// ---------------------------------------------------------------------------
-// Budget — atomic lazy-reset increment.
-// ---------------------------------------------------------------------------
-
-async function assertAndIncrementBudget(supabase, userId) {
-  const today = utcDateOnly(new Date());
-
-  // Fetch current state
-  const { data: profile, error: profErr } = await supabase
-    .from('profile')
-    .select('deckgen_generations_today, deckgen_last_reset')
-    .eq('user_id', userId)
-    .maybeSingle();
-
-  if (profErr) {
-    console.error('[api/deckgen] profile read failed:', profErr.message);
-    return { ok: false, status: 500, body: { error: 'profile read failed' } };
-  }
-
-  const lastReset = profile?.deckgen_last_reset || null;
-  const currentCount = profile?.deckgen_generations_today || 0;
-
-  let usedBefore = currentCount;
-  if (!lastReset || lastReset < today) {
-    usedBefore = 0;
-  }
-
-  if (usedBefore >= DAILY_BUDGET) {
-    return {
-      ok: false,
-      status: 429,
-      body: {
-        error: 'daily limit reached',
-        detail: `Mila needs a break — brewing limit (${DAILY_BUDGET}/day) resets at midnight UTC.`,
-        budget_remaining: 0,
-      },
-    };
-  }
-
-  const usedAfter = usedBefore + 1;
-
-  // Upsert profile row (in case it doesn't exist yet — first deckgen call)
-  if (!profile) {
-    const { error: insErr } = await supabase
-      .from('profile')
-      .upsert({
-        user_id: userId,
-        deckgen_generations_today: usedAfter,
-        deckgen_last_reset: today,
-        updated_at: new Date().toISOString(),
-      });
-    if (insErr) {
-      console.error('[api/deckgen] profile insert failed:', insErr.message);
-      return { ok: false, status: 500, body: { error: 'profile insert failed' } };
-    }
-  } else {
-    const { error: updErr } = await supabase
-      .from('profile')
-      .update({
-        deckgen_generations_today: usedAfter,
-        deckgen_last_reset: today,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('user_id', userId);
-    if (updErr) {
-      console.error('[api/deckgen] profile update failed:', updErr.message);
-      return { ok: false, status: 500, body: { error: 'profile update failed' } };
-    }
-  }
-
-  return { ok: true, usedBefore, usedAfter };
-}
-
-/**
- * Decrement the daily counter when a call fails after we've already
- * incremented it (e.g. cache-hit, Claude error, candidate-pool failure).
- * Best-effort — logs but doesn't fail the request on errors.
- */
-async function refundBudget(supabase, userId) {
-  try {
-    const { data } = await supabase
-      .from('profile')
-      .select('deckgen_generations_today')
-      .eq('user_id', userId)
-      .maybeSingle();
-    const current = data?.deckgen_generations_today || 0;
-    if (current === 0) return;
-    await supabase
-      .from('profile')
-      .update({ deckgen_generations_today: current - 1 })
-      .eq('user_id', userId);
-  } catch (err) {
-    console.warn('[api/deckgen] refund failed (non-fatal):', err?.message || err);
-  }
-}
-
-function utcDateOnly(d) {
-  return d.toISOString().slice(0, 10);
-}
-
-// ---------------------------------------------------------------------------
 // Cache reads + writes
 // ---------------------------------------------------------------------------
 
@@ -429,105 +301,8 @@ async function writeCache(supabase, { hash, userId, response }) {
 }
 
 // ---------------------------------------------------------------------------
-// EDHREC + Supabase card lookups
+// Scryfall card lookups (deckgen-only — chat doesn't resolve partial decks)
 // ---------------------------------------------------------------------------
-
-/**
- * Fetches EDHREC top synergy card NAMES for a commander. Server-side this
- * goes direct to json.edhrec.com (no CORS issue, no proxy needed). The
- * 200ms client-side rate limit doesn't apply here either — production
- * usage hits this < 20×/day per user, well inside EDHREC's polite limits.
- *
- * EDHREC keys commander pages by slugified name. We pull from THREE
- * cardlist categories — 'highsynergycards' is the strongest signal but
- * smaller decks need the broader 'topcards' too. Order is preserved so
- * the caller can use list-position as a synergy score.
- *
- * @returns {Promise<Array<string>>} ordered list of card names
- */
-async function fetchEdhrecSynergyNames(commanderName) {
-  const slug = sanitizeName(commanderName);
-  const url = `https://json.edhrec.com/pages/commanders/${slug}.json`;
-  let data;
-  try {
-    const res = await fetch(url);
-    if (!res.ok) {
-      console.warn('[api/deckgen] EDHREC fetch returned', res.status, 'for', slug);
-      return [];
-    }
-    data = await res.json();
-  } catch (err) {
-    console.warn('[api/deckgen] EDHREC fetch failed:', err?.message || err);
-    return [];
-  }
-
-  const cardlists = data?.container?.json_dict?.cardlists || [];
-  const wanted = new Set(['highsynergycards', 'topcards', 'newcards']);
-  const names = [];
-  const seen = new Set();
-  for (const list of cardlists) {
-    if (!wanted.has(list?.tag)) continue;
-    for (const cv of (list.cardviews || [])) {
-      const name = cv?.name;
-      if (!name) continue;
-      const key = String(name).toLowerCase();
-      if (seen.has(key)) continue;
-      seen.add(key);
-      names.push(name);
-    }
-  }
-  return names;
-}
-
-function sanitizeName(name) {
-  return String(name || '')
-    .toLowerCase()
-    .replace(/[',]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/-+$/, '')
-    .replace(/^-+/, '');
-}
-
-/**
- * Resolves a list of card NAMES to full Scryfall card objects via the
- * /cards/collection POST endpoint (max 75 names per call, no auth needed).
- * Names that don't resolve to a printing are silently dropped.
- */
-async function fetchCardsByNames(names) {
-  if (!names.length) return [];
-  const out = [];
-  for (let i = 0; i < names.length; i += 75) {
-    const batch = names.slice(i, i + 75);
-    try {
-      const res = await fetch('https://api.scryfall.com/cards/collection', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ identifiers: batch.map((name) => ({ name })) }),
-      });
-      if (!res.ok) continue;
-      const data = await res.json();
-      for (const c of (data.data || [])) out.push(c);
-    } catch (err) {
-      console.warn('[api/deckgen] cards/collection by-name batch failed:', err?.message || err);
-    }
-  }
-  return out;
-}
-
-async function fetchCommanderCard(supabase, commanderId) {
-  // Commander cards live in db.cards on the client and `cards` is NOT a
-  // synced table — so the server doesn't have a cards table to query. Use
-  // Scryfall directly for the metadata (paid Scryfall is free, no rate limit
-  // issues for single-card lookups).
-  try {
-    const res = await fetch(`https://api.scryfall.com/cards/${encodeURIComponent(commanderId)}`);
-    if (!res.ok) return null;
-    return await res.json();
-  } catch (err) {
-    console.warn('[api/deckgen] commander fetch failed:', err?.message || err);
-    return null;
-  }
-}
 
 async function fetchCardsByIds(supabase, scryfallIds) {
   // Same situation as fetchCommanderCard — cards isn't synced. Use Scryfall's
@@ -550,18 +325,6 @@ async function fetchCardsByIds(supabase, scryfallIds) {
     }
   }
   return out;
-}
-
-async function fetchOwnedScryfallIds(supabase) {
-  const { data, error } = await supabase
-    .from('collection')
-    .select('scryfall_id')
-    .eq('category', 'owned');
-  if (error) {
-    console.warn('[api/deckgen] collection fetch failed:', error.message);
-    return [];
-  }
-  return (data || []).map((r) => r.scryfall_id).filter(Boolean);
 }
 
 async function resolvePartialCards(supabase, partialIds) {

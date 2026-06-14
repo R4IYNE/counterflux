@@ -18,6 +18,7 @@ import { initProfileStore } from './stores/profile.js';
 import { initAuthStore } from './stores/auth.js';
 import { initSyncStore } from './stores/sync.js';
 import { initDeckgenStore } from './stores/deckgen.js';
+import { initDeckgenChatStore } from './stores/deckgen-chat.js';
 import { openSettingsModal } from './components/settings-modal.js';
 import { openAuthModal } from './components/auth-modal.js';
 import { openAuthWall, closeAuthWall } from './components/auth-wall.js';
@@ -85,6 +86,7 @@ async function bootApp() {
   initMarketStore();
   initGameStore();
   initDeckgenStore();            // Phase 17 (v1.3) — AI deckgen client state; mounts dormant, Phase 18 wires UI
+  initDeckgenChatStore();        // v1.3.x — Mila Brew Chat conversational store; wired by deck-editor
 
   // Expose renderManaCost globally for Alpine template usage
   window.renderManaCost = renderManaCost;
@@ -216,6 +218,12 @@ async function bootApp() {
           if (game && typeof game.loadHistory === 'function') {
             await game.loadHistory();
           }
+          // Audit fix #7 — evaluate price alerts on boot so they surface in the
+          // notification bell without the user first opening Preordain.
+          const market = Alpine.store('market');
+          if (market && typeof market.primeAlerts === 'function') {
+            await market.primeAlerts();
+          }
         } catch (refreshErr) {
           console.warn('[Counterflux] post-auth store refresh failed:', refreshErr);
         }
@@ -236,7 +244,12 @@ async function bootApp() {
   });
 
   // Start the bulk data pipeline (runs after Alpine is ready)
-  startBulkDataPipeline().catch((err) => {
+  startBulkDataPipeline().then(() => {
+    // Audit fix #7 — re-evaluate price alerts once the catalog/prices are
+    // available, covering the first-boot case where the post-auth refresh ran
+    // before card prices had streamed in. Idempotent (deduped per day).
+    Alpine.store('market')?.primeAlerts?.();
+  }).catch((err) => {
     console.error('[Counterflux] Bulk data pipeline failed to start:', err);
     const store = Alpine.store('bulkdata');
     if (store) {

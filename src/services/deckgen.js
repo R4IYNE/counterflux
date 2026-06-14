@@ -46,6 +46,7 @@ export async function generateDeck(input) {
     archetypeHint = '',
     partialCardIds = [],
     collectionHash = 'no-collection',
+    deckDiagnostics = '',
     getAccessToken,
   } = input;
 
@@ -97,6 +98,7 @@ export async function generateDeck(input) {
         useCollectionOnly,
         archetypeHint,
         partialCardIds,
+        deckDiagnostics,
       }),
     });
   } catch (err) {
