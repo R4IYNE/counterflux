@@ -37,6 +37,7 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
+import { SCRYFALL_HEADERS } from '../_deckgen-shared.js';
 
 const NEW_CARDS_WINDOW_DAYS = 30;
 
@@ -166,7 +167,7 @@ export default async function handler(req, res) {
  */
 async function fetchRecentSetCodes(days) {
   try {
-    const res = await fetch('https://api.scryfall.com/sets');
+    const res = await fetch('https://api.scryfall.com/sets', { headers: SCRYFALL_HEADERS });
     if (!res.ok) return [];
     const data = await res.json();
     const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;

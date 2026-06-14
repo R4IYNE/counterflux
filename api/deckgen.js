@@ -43,6 +43,7 @@ import {
 // /api/deckgen and /api/deckgen-chat share one implementation.
 import {
   DAILY_BUDGET,
+  SCRYFALL_HEADERS,
   verifyJWT,
   assertAndIncrementBudget,
   refundBudget,
@@ -314,7 +315,7 @@ async function fetchCardsByIds(supabase, scryfallIds) {
     try {
       const res = await fetch('https://api.scryfall.com/cards/collection', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...SCRYFALL_HEADERS },
         body: JSON.stringify({ identifiers: batch.map((id) => ({ id })) }),
       });
       if (!res.ok) continue;

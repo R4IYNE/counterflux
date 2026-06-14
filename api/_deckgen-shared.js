@@ -13,6 +13,18 @@
 
 import { createClient } from '@supabase/supabase-js';
 
+// Scryfall now returns HTTP 400 for requests without a descriptive User-Agent
+// (verified 2026-06-14). The CLIENT drops User-Agent on purpose (browsers
+// forbid setting it + it tripped a CORS preflight — commit 9cba4e7), but these
+// are SERVER-SIDE (Node/undici) fetches with no CORS constraint, so they MUST
+// send one — otherwise fetchCommanderCard / fetchCardsByNames 400 and the whole
+// brew/chat pipeline fails ("commander not found"). Accept is sent too per
+// Scryfall's API guidance.
+export const SCRYFALL_HEADERS = {
+  'User-Agent': 'Counterflux/1.0 (+https://counterflux.vercel.app)',
+  Accept: 'application/json',
+};
+
 export const DAILY_BUDGET = 20;
 // Audit fix #5: conversational refinement is cheap (Sonnet) and inherently
 // multi-turn, so chat gets its own, more generous daily counter rather than
@@ -226,7 +238,7 @@ export async function fetchCardsByNames(names) {
     try {
       const res = await fetch('https://api.scryfall.com/cards/collection', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...SCRYFALL_HEADERS },
         body: JSON.stringify({ identifiers: batch.map((name) => ({ name })) }),
       });
       if (!res.ok) continue;
@@ -245,7 +257,9 @@ export async function fetchCommanderCard(commanderId) {
   // Scryfall directly for the metadata (free, no rate-limit issue for a
   // single-card lookup).
   try {
-    const res = await fetch(`https://api.scryfall.com/cards/${encodeURIComponent(commanderId)}`);
+    const res = await fetch(`https://api.scryfall.com/cards/${encodeURIComponent(commanderId)}`, {
+      headers: SCRYFALL_HEADERS,
+    });
     if (!res.ok) return null;
     return await res.json();
   } catch (err) {
