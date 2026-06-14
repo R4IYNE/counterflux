@@ -5,6 +5,7 @@ import { generateDailyInsight } from '../utils/insight-engine.js';
 import { fetchSets, getCachedSets } from '../services/sets.js';
 import { getActivity, logActivity } from '../services/activity.js';
 import { renderEmptyState } from '../components/empty-state.js';
+import { tsToMs } from '../utils/timestamps.js';
 import { db } from '../db/schema.js';
 
 /**
@@ -602,7 +603,10 @@ function renderDeckLaunchGrid(grid, cleanups) {
     }
 
     const topDecks = [...allDecks]
-      .sort((a, b) => (b.updated_at || '').localeCompare(a.updated_at || ''))
+      // tsToMs tolerates number / numeric-string / ISO updated_at — a number
+      // here previously threw "localeCompare is not a function" and crashed the
+      // dashboard + deck-builder + brew nav.
+      .sort((a, b) => tsToMs(b.updated_at) - tsToMs(a.updated_at))
       .slice(0, 6);
 
     content.innerHTML = '';

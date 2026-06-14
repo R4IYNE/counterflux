@@ -3,6 +3,7 @@ import { db } from '../db/schema.js';
 import { snapshotWatchlistPrices, computeMovers, computeTrend } from '../services/price-history.js';
 import { fetchSets } from '../services/sets.js';
 import { eurToGbpValue } from '../services/currency.js';
+import { tsToMs } from '../utils/timestamps.js';
 
 // Audit fix #7: the % alert window. Previously change_pct compared the earliest
 // vs latest snapshot across the WHOLE 90-day history with Math.abs (so it never
@@ -152,7 +153,7 @@ export function initMarketStore() {
           async () => { await db.watchlist.delete(entry.id); },
           () => {
             this.watchlist = [...this.watchlist, entry]
-              .sort((a, b) => (a.added_at || '').localeCompare(b.added_at || ''));
+              .sort((a, b) => tsToMs(a.added_at) - tsToMs(b.added_at));
           }
         );
       } else {

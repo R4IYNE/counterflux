@@ -3,6 +3,7 @@ import { db } from '../db/schema.js';
 import { logActivity } from '../services/activity.js';
 import { queueScryfallRequest } from '../services/scryfall-queue.js';
 import { fetchPrecons, fetchPreconDecklist, invalidatePreconsCache } from '../services/precons.js';
+import { tsToMs } from '../utils/timestamps.js';
 
 /**
  * Sort collection entries by the given sort key.
@@ -31,7 +32,8 @@ function sortEntries(items, sortBy) {
       case 'set':
         return mul * (a.card?.released_at || '').localeCompare(b.card?.released_at || '');
       case 'date':
-        return mul * (a.added_at || '').localeCompare(b.added_at || '');
+        // added_at can be a number (legacy) or ISO string — compare numerically.
+        return mul * (tsToMs(a.added_at) - tsToMs(b.added_at));
       default:
         return 0;
     }

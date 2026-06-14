@@ -33,6 +33,7 @@
 //     segregates). Plan 11-05 extends with Realtime unsubscribe.
 
 import { db } from '../db/schema.js';
+import { toIsoTimestamp } from '../utils/timestamps.js';
 
 // ---------------------------------------------------------------------------
 // Module state
@@ -387,10 +388,11 @@ function _isoStampTimestamps(rows) {
   for (const row of rows) {
     if (!row) continue;
     for (const col of TIMESTAMPTZ_COLUMNS) {
-      const v = row[col];
-      if (typeof v === 'number' && Number.isFinite(v)) {
-        row[col] = new Date(v).toISOString();
-      }
+      // toIsoTimestamp handles literal numbers AND epoch-ms numeric STRINGS
+      // ("1777662820234"); genuine ISO strings / null pass through unchanged.
+      // (The previous typeof === 'number' check let numeric strings slip past
+      // to Postgres → SQLSTATE 22008, which is what dead-lettered ~1.6k ops.)
+      if (col in row) row[col] = toIsoTimestamp(row[col]);
     }
   }
   return rows;
