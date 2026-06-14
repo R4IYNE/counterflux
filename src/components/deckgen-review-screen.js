@@ -56,12 +56,11 @@ export function renderDeckgenReviewScreen() {
           return recs.every(r => !!r.swap_out);
         },
         get titleText() {
-          // NOTE: this whole object is the value of a double-quoted x-data="..."
-          // attribute, so these strings MUST be single-quoted. They use a
-          // typographic apostrophe (’, U+2019) rather than ASCII ' so the
-          // single-quoted JS string isn't terminated mid-word — and crucially
-          // never ASCII double-quotes, which would truncate the attribute and
-          // dump the rest of the x-data onto the screen as raw text.
+          // Single-quoted strings only. This whole object is the value of a
+          // double-quoted x-data attribute, so ANY ASCII double-quote in here
+          // (even inside a comment) truncates the attribute and breaks the
+          // component. The apostrophe below is U+2019 so the single-quoted
+          // string is not cut mid-word. (Guarded by deckgen-review-screen.test.js.)
           if (this.isSwapMode) {
             return $store.deckgen?.mode === 'retune' ? 'MILA’S RETUNE' : 'MILA’S UPGRADE';
           }
