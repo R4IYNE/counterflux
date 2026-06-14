@@ -28,8 +28,12 @@ let _client = null;
 export function getSupabase() {
   if (_client) return _client;
 
-  const url = import.meta.env.VITE_SUPABASE_URL;
-  const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
+  // .trim() is load-bearing: a trailing newline in the Vercel env var (common
+  // copy-paste artifact) gets baked into the bundle and then URL-encoded into
+  // the Realtime socket URL as %0A, which the server rejects (WS connect storm),
+  // and sent as an invalid `apikey`/Authorization header on REST/auth calls.
+  const url = import.meta.env.VITE_SUPABASE_URL?.trim();
+  const key = import.meta.env.VITE_SUPABASE_ANON_KEY?.trim();
 
   if (!url || !key) {
     console.warn('[Counterflux] Supabase env vars missing — auth will fail on first network call. See .planning/phases/10-supabase-auth-foundation/10-AUTH-PREFLIGHT.md');

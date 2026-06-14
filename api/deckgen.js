@@ -205,7 +205,7 @@ export default async function handler(req, res) {
   const abortController = new AbortController();
   const abortTimer = setTimeout(() => abortController.abort(), ANTHROPIC_TIMEOUT_MS);
   try {
-    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY?.trim() });
     const claudeResponse = await client.messages.create({
       model,
       max_tokens: ANTHROPIC_MAX_TOKENS,

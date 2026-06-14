@@ -57,8 +57,8 @@ export default async function handler(req, res) {
   }
 
   // 2. Service-role Supabase client — bypasses RLS, scans every user.
-  const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const supabaseUrl = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL)?.trim();
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
   if (!supabaseUrl || !serviceKey) {
     console.error('[cron/upgrade-scan] Supabase service-role env vars missing');
     return res.status(500).json({ error: 'server misconfigured' });

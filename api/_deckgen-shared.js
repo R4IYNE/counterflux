@@ -50,8 +50,10 @@ export async function verifyJWT(req) {
     return { ok: false, status: 401, body: { error: 'empty bearer token' } };
   }
 
-  const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
-  const supabaseAnon = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
+  // .trim() guards against a trailing newline in the Vercel env var (a common
+  // copy-paste artifact) producing an invalid apikey/Authorization header.
+  const supabaseUrl = (process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL)?.trim();
+  const supabaseAnon = (process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY)?.trim();
   if (!supabaseUrl || !supabaseAnon) {
     console.error('[api/deckgen] Supabase env vars missing');
     return { ok: false, status: 500, body: { error: 'server misconfigured' } };
