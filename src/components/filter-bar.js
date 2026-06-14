@@ -63,6 +63,21 @@ export function renderFilterBar() {
         >WISHLIST</button>
       </div>
 
+      <!-- Active set filter chip (audit fix #8) — shown when a set is selected
+           from the SETS completion view; click to clear. -->
+      <template x-if="$store.collection.filters.set">
+        <button
+          @click="$store.collection.clearSetFilter()"
+          class="flex items-center gap-[6px] font-mono text-[11px] uppercase tracking-[0.15em] font-bold cursor-pointer px-[10px] py-[4px]"
+          style="background: rgba(13,82,189,0.15); color: #0D52BD; border: 1px solid #0D52BD;"
+          title="Clear set filter"
+        >
+          <i class="ss" :class="'ss-' + $store.collection.filters.set"></i>
+          <span x-text="$store.collection.filters.setName || $store.collection.filters.set"></span>
+          <span class="material-symbols-outlined" style="font-size: 14px;">close</span>
+        </button>
+      </template>
+
       <!-- Spacer -->
       <div class="flex-1"></div>
 

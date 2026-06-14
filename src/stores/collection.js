@@ -57,6 +57,10 @@ export function initCollectionStore() {
       colours: [],
       category: 'all',
       search: '',
+      // Audit fix #8: active set filter (set code) + its display name. Set by
+      // clicking a set in the SETS completion view; previously a dead no-op.
+      set: null,
+      setName: '',
     },
     analyticsOpen: false,
     loading: false,
@@ -113,6 +117,9 @@ export function initCollectionStore() {
       if (this.filters.search) {
         const term = this.filters.search.toLowerCase();
         items = items.filter(e => e.card?.name?.toLowerCase().includes(term));
+      }
+      if (this.filters.set) {
+        items = items.filter(e => e.card?.set === this.filters.set);
       }
       return items;
     },
@@ -694,18 +701,96 @@ export function initCollectionStore() {
       );
     },
 
-    async addBatch(entries) {
-      let added = 0;
-      for (const entry of entries) {
-        await this.addCard(
-          entry.scryfallId,
-          entry.quantity || 1,
-          entry.foil || false,
-          entry.category || 'owned'
-        );
-        added++;
+    /**
+     * Audit fix #9 — atomic batch add for mass-entry + CSV import.
+     *
+     * Previously this looped addCard(), and EACH addCard ran its own indexed
+     * lookup AND a full loadEntries() (re-read the whole collection + re-join
+     * cards + kick background hydration). On a 300-row import that's an
+     * O(N×collection) cliff and N redundant re-renders. Now: one transaction,
+     * one trailing loadEntries, and one undo entry covering the whole batch
+     * (mirrors the addCardsFromIds / addAllFromPrecon precon pattern, which was
+     * already fixed — mass-entry + CSV were the stragglers).
+     *
+     * @param {Array<{scryfallId, quantity, foil, category}>} entries
+     * @param {{ label?: string }} [options]
+     * @returns {{ added: number }} number of entries processed
+     */
+    async addBatch(entries, { label } = {}) {
+      const list = (entries || []).filter(e => e && e.scryfallId);
+      if (list.length === 0) return { added: 0 };
+
+      const nowIso = new Date().toISOString();
+      const addedIds = [];
+      const updated = [];
+
+      await db.transaction('rw', db.collection, async () => {
+        for (const entry of list) {
+          const foilNum = entry.foil ? 1 : 0;
+          const category = entry.category || 'owned';
+          const qty = entry.quantity || 1;
+
+          const existing = await db.collection
+            .where('[scryfall_id+foil]')
+            .equals([entry.scryfallId, foilNum])
+            .and(e => e.category === category)
+            .first();
+
+          if (existing) {
+            updated.push({ id: existing.id, prevQuantity: existing.quantity });
+            await db.collection.update(existing.id, {
+              quantity: existing.quantity + qty,
+              updated_at: nowIso,
+              synced_at: null,
+            });
+          } else {
+            const newId = await db.collection.add({
+              scryfall_id: entry.scryfallId,
+              quantity: qty,
+              foil: foilNum,
+              category,
+              added_at: nowIso,
+              updated_at: nowIso,
+              synced_at: null,
+              user_id: null,
+            });
+            addedIds.push(newId);
+          }
+        }
+      });
+
+      await this.loadEntries();
+
+      const total = list.length;
+      const sourceLabel = label || 'import';
+
+      const undoStore = (typeof window !== 'undefined') ? window.Alpine?.store?.('undo') : null;
+      if (undoStore?.push) {
+        const message = `Added ${total} card${total === 1 ? '' : 's'} from ${sourceLabel}.`;
+        const invert = async () => {
+          await db.transaction('rw', db.collection, async () => {
+            if (addedIds.length) await db.collection.bulkDelete(addedIds);
+            for (const { id, prevQuantity } of updated) {
+              const row = await db.collection.get(id);
+              if (row) {
+                await db.collection.update(id, {
+                  quantity: prevQuantity,
+                  updated_at: new Date().toISOString(),
+                  synced_at: null,
+                });
+              }
+            }
+          });
+          await this.loadEntries();
+        };
+        undoStore.push('collection_add_batch', { added: addedIds, updated, source: 'add_batch' }, message, async () => {}, invert);
       }
-      return { added };
+
+      try {
+        logActivity('card_added', `Added ${total} cards from ${sourceLabel}`);
+      } catch { /* decorative */ }
+
+      return { added: total };
     },
 
     setViewMode(mode) {
@@ -727,6 +812,22 @@ export function initCollectionStore() {
 
     setCategory(category) {
       this.filters.category = category;
+    },
+
+    /**
+     * Audit fix #8 — filter the collection to a single set and jump to the
+     * gallery so the result is visible. Called from the SETS completion view.
+     */
+    filterBySet(setCode, setName = '') {
+      this.filters.set = setCode || null;
+      this.filters.setName = setName || setCode || '';
+      this.filters.search = '';
+      this.setViewMode('gallery');
+    },
+
+    clearSetFilter() {
+      this.filters.set = null;
+      this.filters.setName = '';
     },
 
     /**

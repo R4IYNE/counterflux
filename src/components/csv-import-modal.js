@@ -1,6 +1,33 @@
 import { parseCSV, resolveImportEntries } from '../services/csv-import.js';
 
 /**
+ * Build + download a CSV of the rows that couldn't be resolved (audit fix #10).
+ *
+ * MUST live at module scope, NOT inline in the x-data attribute: the CSV
+ * quote-escaping (`.replace(/"/g, '""')`) contains literal double-quote chars,
+ * which would prematurely terminate the double-quoted `x-data="..."` HTML
+ * attribute when the modal template is injected as innerHTML — breaking the
+ * whole modal. Exposed on window like the other modal helpers.
+ *
+ * @param {Array<{name?: string, quantity?: number, foil?: boolean}>} rows
+ */
+function downloadUnresolvedCSV(rows) {
+  if (!rows || !rows.length) return;
+  const lines = ['Name,Quantity,Foil'];
+  for (const r of rows) {
+    const name = String(r.name || '').replace(/"/g, '""');
+    lines.push('"' + name + '",' + (r.quantity || 1) + ',' + (r.foil ? 'foil' : ''));
+  }
+  const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'counterflux-unresolved-import.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+/**
  * Render the CSV Import modal HTML.
  * Uses Alpine.js x-data for local state management.
  * @returns {string} HTML string
@@ -9,6 +36,7 @@ export function renderCSVImportModal() {
   // Expose functions on window so Alpine x-data templates can access them
   window.__cf_parseCSV = parseCSV;
   window.__cf_resolveImportEntries = resolveImportEntries;
+  window.__cf_downloadUnresolvedCSV = downloadUnresolvedCSV;
 
   return `
     <div
@@ -34,6 +62,7 @@ export function renderCSVImportModal() {
           imported: false,
           importCount: 0,
           unresolvedCount: 0,
+          unresolvedRows: [],
           columnMap: { name: '', quantity: '' },
 
           async handleFile(event) {
@@ -66,18 +95,25 @@ export function renderCSVImportModal() {
               const toImport = resolved.filter(e => e.resolved && e.card);
               const unresolved = resolved.filter(e => !e.resolved);
 
+              // Audit fix #9: one atomic batch instead of N addCard() calls
+              // (each of which re-read + re-rendered the whole collection).
               const store = Alpine.store('collection');
-              for (const entry of toImport) {
-                await store.addCard(
-                  entry.card.id,
-                  entry.quantity || 1,
-                  entry.foil || false,
-                  'owned'
-                );
-              }
+              await store.addBatch(
+                toImport.map(entry => ({
+                  scryfallId: entry.card.id,
+                  quantity: entry.quantity || 1,
+                  foil: entry.foil || false,
+                  category: 'owned',
+                })),
+                { label: (this.format || 'CSV').toUpperCase() }
+              );
 
               this.importCount = toImport.length;
               this.unresolvedCount = unresolved.length;
+              // Audit fix #10: keep the actual unresolved ROWS (not just a
+              // count) so the user can see WHICH cards were dropped and export
+              // them to fix + re-import, instead of silent data loss.
+              this.unresolvedRows = unresolved;
               this.imported = true;
 
               const formatLabel = (this.format || 'CSV').toUpperCase();
@@ -93,6 +129,15 @@ export function renderCSVImportModal() {
             }
           },
 
+          downloadUnresolved() {
+            // Audit fix #10: export the unmatched rows so the user can correct
+            // names/sets and re-import. The actual CSV build lives in a
+            // module-level helper (window.__cf_downloadUnresolvedCSV) because
+            // its quote-escaping can't be inlined into this double-quoted
+            // x-data attribute without breaking it.
+            window.__cf_downloadUnresolvedCSV(this.unresolvedRows);
+          },
+
           close() {
             $store.collection.importOpen = false;
             this.file = null;
@@ -104,6 +149,7 @@ export function renderCSVImportModal() {
             this.imported = false;
             this.importCount = 0;
             this.unresolvedCount = 0;
+            this.unresolvedRows = [];
           }
         }"
         @click.stop
@@ -163,6 +209,22 @@ export function renderCSVImportModal() {
           </div>
         </template>
 
+        <!-- Parse errors (audit fix #10) — Papa parse errors were captured but
+             never shown; surface them so a malformed file isn't silently half-read. -->
+        <template x-if="errors.length > 0">
+          <div style="padding: 12px 16px; background: rgba(243,156,18,0.08); border: 1px solid rgba(243,156,18,0.4);">
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; color: #F39C12;">
+              <span x-text="errors.length"></span> ROW(S) COULD NOT BE PARSED
+            </span>
+            <ul style="margin: 8px 0 0; padding-left: 16px; max-height: 96px; overflow-y: auto;">
+              <template x-for="(e, i) in errors.slice(0, 20)" :key="i">
+                <li style="font-family: 'Space Grotesk', sans-serif; font-size: 12px; color: #7A8498;"
+                    x-text="(e.row != null ? ('Row ' + (e.row + 1) + ': ') : '') + (e.message || 'parse error')"></li>
+              </template>
+            </ul>
+          </div>
+        </template>
+
         <!-- Preview table -->
         <template x-if="preview.length > 0">
           <div style="display: flex; flex-direction: column; gap: 8px;">
@@ -199,12 +261,35 @@ export function renderCSVImportModal() {
 
         <!-- Import result -->
         <template x-if="imported">
-          <div style="padding: 16px; background: #1C1F28; border: 1px solid #2A2D3A;">
-            <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #2ECC71;"
-                  x-text="importCount + ' cards imported.'"></span>
-            <template x-if="unresolvedCount > 0">
-              <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #F39C12; margin-left: 8px;"
-                    x-text="unresolvedCount + ' unresolved.'"></span>
+          <div style="padding: 16px; background: #1C1F28; border: 1px solid #2A2D3A; display: flex; flex-direction: column; gap: 10px;">
+            <div>
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #2ECC71;"
+                    x-text="importCount + ' cards imported.'"></span>
+              <template x-if="unresolvedCount > 0">
+                <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #F39C12; margin-left: 8px;"
+                      x-text="unresolvedCount + ' unresolved.'"></span>
+              </template>
+            </div>
+
+            <!-- Audit fix #10: show WHICH rows couldn't be matched + let the
+                 user export them to correct and re-import. -->
+            <template x-if="unresolvedRows.length > 0">
+              <div style="display: flex; flex-direction: column; gap: 6px;">
+                <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; color: #7A8498;">
+                  COULDN'T MATCH — CHECK SPELLING / SET CODE:
+                </span>
+                <ul style="margin: 0; padding-left: 16px; max-height: 120px; overflow-y: auto;">
+                  <template x-for="(r, i) in unresolvedRows.slice(0, 50)" :key="i">
+                    <li style="font-family: 'Space Grotesk', sans-serif; font-size: 12px; color: #EAECEE;"
+                        x-text="(r.quantity || 1) + 'x ' + (r.name || '(blank name)')"></li>
+                  </template>
+                </ul>
+                <button
+                  @click="downloadUnresolved()"
+                  style="align-self: flex-start; padding: 6px 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; color: #EAECEE; background: #1C1F28; border: 1px solid #2A2D3A; cursor: pointer;">
+                  DOWNLOAD UNRESOLVED CSV
+                </button>
+              </div>
             </template>
           </div>
         </template>

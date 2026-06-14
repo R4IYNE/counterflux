@@ -82,7 +82,7 @@ export function renderNotificationBellPopover() {
           <ul class="mt-[8px] flex flex-col gap-[8px]">
             <template
               x-for="alert in $store.market.pendingAlerts"
-              :key="alert.card_name + alert.threshold_eur"
+              :key="alert.card_name + alert.alert_type + alert.alert_threshold"
             >
               <li class="flex flex-col gap-[2px]">
                 <span
@@ -90,14 +90,23 @@ export function renderNotificationBellPopover() {
                   style="color: var(--color-text-primary);"
                   x-text="alert.card_name"
                 ></span>
+                <!-- Audit fix #7: render against the real alert shape
+                     (current_price_gbp / alert_threshold / alert_type) — the
+                     old template referenced non-existent €current_eur fields —
+                     and surface the signed direction for % moves. -->
                 <span
                   class="font-mono text-[11px] tracking-[0.15em]"
                   style="color: #7A8498;"
-                  x-text="\`dropped to €\${alert.current_eur} — below €\${alert.threshold_eur}\`"
+                  x-text="alert.alert_type === 'change_pct'
+                    ? \`\${alert.direction === 'down' ? '▼' : '▲'} \${Math.abs(alert.change_pct || 0).toFixed(0)}% in 7d — now £\${(alert.current_price_gbp || 0).toFixed(2)}\`
+                    : (alert.alert_type === 'above'
+                      ? \`rose to £\${(alert.current_price_gbp || 0).toFixed(2)} — above your £\${alert.alert_threshold} alert\`
+                      : \`dropped to £\${(alert.current_price_gbp || 0).toFixed(2)} — below your £\${alert.alert_threshold} alert\`)"
                 ></span>
               </li>
             </template>
           </ul>
+          <span class="block mt-[8px] font-mono text-[10px] tracking-[0.1em]" style="color: #4A5064;">Evaluated when you open Counterflux</span>
           <div class="mt-[12px] text-right">
             <button
               @click="open = false; window.__counterflux_router && window.__counterflux_router.navigate('/preordain'); $store.market.setTab('watchlist')"

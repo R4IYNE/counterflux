@@ -18,6 +18,36 @@ function debounce(fn, delay) {
 }
 
 /**
+ * Resolve a deck's commander + partner NAMES from its stored ids.
+ *
+ * Decks persist commander_id / partner_id (Scryfall ids), but a logged game
+ * wants the NAMES so the stats layer can group by commander. Returns nulls on
+ * any miss so the caller falls back to manual entry cleanly.
+ *
+ * @param {string} deckId
+ * @returns {Promise<{commander: string|null, partner: string|null}>}
+ */
+export async function resolveDeckIdentity(deckId) {
+  const result = { commander: null, partner: null };
+  if (!deckId) return result;
+  try {
+    const deck = await db.decks.get(deckId);
+    if (!deck) return result;
+    if (deck.commander_id) {
+      const c = await db.cards.get(deck.commander_id);
+      if (c?.name) result.commander = c.name;
+    }
+    if (deck.partner_id) {
+      const p = await db.cards.get(deck.partner_id);
+      if (p?.name) result.partner = p.name;
+    }
+  } catch {
+    // Dexie miss / closed mid-migration — fall back to nulls.
+  }
+  return result;
+}
+
+/**
  * Initialize the Alpine game store for the Vandalblast (Game Tracker) screen.
  * Manages game setup, active game state, and history/stats.
  *
@@ -109,12 +139,22 @@ export function initGameStore() {
       // Build players array
       const players = [];
 
-      // Player 0 = you
-      const yourCommander = this.manualCommander.trim() || null;
+      // Player 0 = you. Prefer a manually-typed commander; otherwise resolve
+      // the SELECTED DECK's commander (and partner) so deck-based games log the
+      // real commander instead of null. Without this, every deck-based game
+      // recorded commander=null → win-rate-by-commander, most-played, and
+      // best-deck stats all silently bucketed under "Unknown".
+      let yourCommander = this.manualCommander.trim() || null;
+      let yourPartner = null;
+      if (!yourCommander && this.selectedDeckId) {
+        const identity = await resolveDeckIdentity(this.selectedDeckId);
+        yourCommander = identity.commander;
+        yourPartner = identity.partner;
+      }
       players.push({
         name: 'You',
         commander: yourCommander,
-        partner: null,
+        partner: yourPartner,
         color_index: 0,
         life: this.startingLife,
         life_history: [this.startingLife],

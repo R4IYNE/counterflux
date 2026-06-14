@@ -1,5 +1,8 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { db } from '../src/db/schema.js';
+import { computeTrend } from '../src/services/price-history.js';
+
+const ALERT_WINDOW_DAYS = 7;
 
 const CARD_BOLT = {
   id: 'bolt-001',
@@ -41,23 +44,20 @@ async function checkAlerts() {
 
     const priceGbp = eurToGbpValue(priceEur);
     let triggered = false;
+    let changePct = null;
+    let direction = null;
 
     if (entry.alert_type === 'below' && priceGbp < entry.alert_threshold) {
       triggered = true;
     } else if (entry.alert_type === 'above' && priceGbp > entry.alert_threshold) {
       triggered = true;
     } else if (entry.alert_type === 'change_pct') {
-      const history = await db.price_history
-        .where('scryfall_id')
-        .equals(entry.scryfall_id)
-        .sortBy('date');
-      if (history.length >= 2) {
-        const earliest = history[0].price_eur;
-        const latest = history[history.length - 1].price_eur;
-        const pctChange = earliest !== 0 ? Math.abs((latest - earliest) / earliest) * 100 : 0;
-        if (pctChange >= entry.alert_threshold) {
-          triggered = true;
-        }
+      // Mirrors the real store (audit fix #7): windowed + directional.
+      const trend = await computeTrend(entry.scryfall_id, ALERT_WINDOW_DAYS);
+      if (Math.abs(trend.changePct) >= entry.alert_threshold) {
+        triggered = true;
+        changePct = trend.changePct;
+        direction = trend.direction;
       }
     }
 
@@ -66,6 +66,8 @@ async function checkAlerts() {
         scryfall_id: entry.scryfall_id,
         alert_type: entry.alert_type,
         current_price_gbp: priceGbp,
+        change_pct: changePct,
+        direction,
       });
       await db.watchlist.update(entry.id, {
         last_alerted_at: new Date().toISOString(),
@@ -135,6 +137,33 @@ describe('price alerts', () => {
     const alerts = await checkAlerts();
     expect(alerts).toHaveLength(1);
     expect(alerts[0].alert_type).toBe('change_pct');
+    // Audit fix #7: signed + directional rather than abs-only.
+    expect(alerts[0].direction).toBe('up');
+    expect(alerts[0].change_pct).toBeCloseTo(50, 0);
+  });
+
+  it('triggers change_pct on a DROP and reports a downward direction', async () => {
+    const today = new Date();
+    const weekAgo = new Date(today);
+    weekAgo.setDate(weekAgo.getDate() - 7);
+
+    await db.price_history.bulkAdd([
+      { scryfall_id: 'bolt-001', date: weekAgo.toISOString().slice(0, 10), price_eur: 1.50 },
+      { scryfall_id: 'bolt-001', date: today.toISOString().slice(0, 10), price_eur: 0.75 },
+    ]);
+
+    await db.watchlist.add({
+      scryfall_id: 'bolt-001',
+      added_at: new Date().toISOString(),
+      alert_type: 'change_pct',
+      alert_threshold: 40, // 40% threshold; actual change is -50%
+      last_alerted_at: null,
+    });
+
+    const alerts = await checkAlerts();
+    expect(alerts).toHaveLength(1);
+    expect(alerts[0].direction).toBe('down');
+    expect(alerts[0].change_pct).toBeCloseTo(-50, 0);
   });
 
   it('does not trigger when condition is not met', async () => {

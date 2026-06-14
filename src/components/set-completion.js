@@ -115,10 +115,9 @@ export function renderSetCompletionView() {
         this.loading = false;
       },
 
-      filterToSet(setCode) {
-        $store.collection.filters.search = '';
-        $store.collection.setViewMode('gallery');
-        // Will need set filter in future; for now use search
+      filterToSet(setCode, setName) {
+        // Audit fix #8: real set filter (was a no-op that only cleared search).
+        $store.collection.filterBySet(setCode, setName);
       }
     }">
 
@@ -148,7 +147,7 @@ export function renderSetCompletionView() {
           <template x-for="setData in completionData" :key="setData.set">
             <div class="flex flex-col gap-[4px] p-[16px] cursor-pointer transition-colors duration-150 hover:bg-[#1C1F28]"
                  style="border-bottom: 1px solid #2A2D3A;"
-                 @click="filterToSet(setData.set)">
+                 @click="filterToSet(setData.set, setData.setName)">
               <!-- Set header row -->
               <div class="flex items-center gap-[8px]">
                 <i class="ss" :class="'ss-' + setData.set" style="font-size: 16px; color: #7A8498;"></i>

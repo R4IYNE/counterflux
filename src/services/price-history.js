@@ -99,12 +99,15 @@ export async function computeTrend(scryfallId, days) {
 
 /**
  * Compute market movers over a period.
- * @param {string} period - '7d' or '30d'
+ * @param {string} period - '24h' (today vs yesterday), '7d', or '30d'
  * @param {number} limit - Max results per category
  * @returns {{ gainers: Array, losers: Array }}
  */
 export async function computeMovers(period, limit = 10) {
-  const days = period === '30d' ? 30 : 7;
+  // Audit fix #2: the movers toggle offers 24h/7d/30d but '24h' previously
+  // fell through to the 7d branch and silently returned week-old data.
+  // Snapshots are once-daily, so a 1-day window = today vs yesterday.
+  const days = period === '30d' ? 30 : period === '24h' ? 1 : 7;
   const cutoff = new Date();
   cutoff.setDate(cutoff.getDate() - days);
   const cutoffStr = cutoff.toISOString().slice(0, 10);

@@ -7,7 +7,14 @@
 const CACHE_KEY = 'counterflux_eur_gbp_rate';
 const CACHE_EXPIRY_MS = 24 * 60 * 60 * 1000; // 24 hours
 
+// Audit fix #4: single source of truth for the static EUR→GBP fallback,
+// previously duplicated as a `0.86` literal across four call sites (drift risk).
+export const FALLBACK_EUR_GBP_RATE = 0.86;
+
 let _rate = null;
+// True once we've had to fall back to the static rate (live fetch failed).
+// Lets callers mark prices as approximate ("~£") when on the fallback.
+let _usingFallback = false;
 
 /**
  * Get the current EUR→GBP exchange rate.
@@ -31,17 +38,21 @@ export async function getEurToGbpRate() {
     const res = await fetch('https://open.er-api.com/v6/latest/EUR');
     if (res.ok) {
       const data = await res.json();
-      _rate = data.rates?.GBP || 0.86;
-      localStorage.setItem(CACHE_KEY, JSON.stringify({
-        rate: _rate,
-        timestamp: Date.now(),
-      }));
-      return _rate;
+      if (data.rates?.GBP) {
+        _rate = data.rates.GBP;
+        _usingFallback = false;
+        localStorage.setItem(CACHE_KEY, JSON.stringify({
+          rate: _rate,
+          timestamp: Date.now(),
+        }));
+        return _rate;
+      }
     }
   } catch { /* network error — use fallback */ }
 
   // Static fallback
-  _rate = 0.86;
+  _rate = FALLBACK_EUR_GBP_RATE;
+  _usingFallback = true;
   return _rate;
 }
 
@@ -54,7 +65,7 @@ export function eurToGbp(eurPrice) {
   if (eurPrice == null || eurPrice === '') return '--';
   const num = typeof eurPrice === 'string' ? parseFloat(eurPrice) : eurPrice;
   if (isNaN(num) || num === 0) return '--';
-  const gbp = num * (_rate || 0.86);
+  const gbp = num * (_rate || FALLBACK_EUR_GBP_RATE);
   return '£' + gbp.toFixed(2);
 }
 
@@ -65,7 +76,7 @@ export function eurToGbp(eurPrice) {
  */
 export function eurToGbpValue(eurValue) {
   if (!eurValue || isNaN(eurValue)) return 0;
-  return eurValue * (_rate || 0.86);
+  return eurValue * (_rate || FALLBACK_EUR_GBP_RATE);
 }
 
 /**
@@ -74,4 +85,14 @@ export function eurToGbpValue(eurValue) {
  */
 export function getCurrentRate() {
   return _rate;
+}
+
+/**
+ * True when the live rate fetch failed and we're using the static fallback —
+ * lets price surfaces mark figures as approximate ("~£") rather than implying
+ * a live-rate precision they don't have.
+ * @returns {boolean}
+ */
+export function isRateFallback() {
+  return _usingFallback;
 }

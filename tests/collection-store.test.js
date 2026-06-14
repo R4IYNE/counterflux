@@ -67,7 +67,7 @@ function createCollectionStore() {
     entries: [],
     viewMode: 'gallery',
     sortBy: 'name-asc',
-    filters: { colours: [], category: 'all', search: '' },
+    filters: { colours: [], category: 'all', search: '', set: null, setName: '' },
     loading: false,
 
     get filtered() {
@@ -84,7 +84,22 @@ function createCollectionStore() {
         const term = this.filters.search.toLowerCase();
         items = items.filter(e => e.card?.name?.toLowerCase().includes(term));
       }
+      if (this.filters.set) {
+        items = items.filter(e => e.card?.set === this.filters.set);
+      }
       return items;
+    },
+
+    filterBySet(setCode, setName = '') {
+      this.filters.set = setCode || null;
+      this.filters.setName = setName || setCode || '';
+      this.filters.search = '';
+      this.viewMode = 'gallery';
+    },
+
+    clearSetFilter() {
+      this.filters.set = null;
+      this.filters.setName = '';
     },
 
     get sorted() {
@@ -290,6 +305,40 @@ describe('Collection Store', () => {
       const result = store.filtered;
       expect(result).toHaveLength(1);
       expect(result[0].card.name).toBe('Lightning Bolt');
+    });
+  });
+
+  describe('filter by set (audit fix #8)', () => {
+    beforeEach(async () => {
+      await store.addCard('bolt-001', 1, false, 'owned');    // set 2xm
+      await store.addCard('sol-001', 1, false, 'owned');      // set c21
+      await store.addCard('counter-001', 1, false, 'owned');  // set mh2
+    });
+
+    it('filterBySet narrows entries to that set and switches to gallery', () => {
+      store.filterBySet('c21', 'Commander 2021');
+      expect(store.filters.set).toBe('c21');
+      expect(store.filters.setName).toBe('Commander 2021');
+      expect(store.viewMode).toBe('gallery');
+      const result = store.filtered;
+      expect(result).toHaveLength(1);
+      expect(result[0].card.name).toBe('Sol Ring');
+    });
+
+    it('clearSetFilter restores the full collection', () => {
+      store.filterBySet('c21', 'Commander 2021');
+      store.clearSetFilter();
+      expect(store.filters.set).toBeNull();
+      expect(store.filtered).toHaveLength(3);
+    });
+
+    it('filterBySet clears any active search term', () => {
+      store.filters.search = 'bolt';
+      store.filterBySet('mh2', 'Modern Horizons 2');
+      expect(store.filters.search).toBe('');
+      const result = store.filtered;
+      expect(result).toHaveLength(1);
+      expect(result[0].card.name).toBe('Counterspell');
     });
   });
 

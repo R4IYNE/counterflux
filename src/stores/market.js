@@ -1,8 +1,14 @@
 import Alpine from 'alpinejs';
 import { db } from '../db/schema.js';
-import { snapshotWatchlistPrices, computeMovers } from '../services/price-history.js';
+import { snapshotWatchlistPrices, computeMovers, computeTrend } from '../services/price-history.js';
 import { fetchSets } from '../services/sets.js';
 import { eurToGbpValue } from '../services/currency.js';
+
+// Audit fix #7: the % alert window. Previously change_pct compared the earliest
+// vs latest snapshot across the WHOLE 90-day history with Math.abs (so it never
+// expired and hid the direction). We now evaluate a signed change over a recent
+// window via computeTrend.
+const ALERT_WINDOW_DAYS = 7;
 
 /**
  * Initialise the Alpine market store (Preordain screen).
@@ -125,8 +131,34 @@ export function initMarketStore() {
     },
 
     async removeFromWatchlist(scryfallId) {
-      await db.watchlist.where('scryfall_id').equals(scryfallId).delete();
-      this.watchlist = await db.watchlist.toArray();
+      const entry = await db.watchlist.where('scryfall_id').equals(scryfallId).first();
+      if (!entry) return;
+      const card = await db.cards.get(scryfallId);
+      const cardName = card?.name || 'card';
+
+      // Optimistic UI removal.
+      this.watchlist = this.watchlist.filter(w => w.scryfall_id !== scryfallId);
+
+      // Audit fix #3: defer the actual delete via the undo system so the alert
+      // config (type + threshold + last_alerted_at) is recoverable for 10s,
+      // instead of a hard delete behind a bare info toast. Mirrors the
+      // collection.deleteEntry pattern (optimistic UI removal + deferred commit).
+      const undo = Alpine.store('undo');
+      if (undo?.push) {
+        undo.push(
+          'watchlist_remove',
+          entry,
+          `Removed ${cardName} from watchlist.`,
+          async () => { await db.watchlist.delete(entry.id); },
+          () => {
+            this.watchlist = [...this.watchlist, entry]
+              .sort((a, b) => (a.added_at || '').localeCompare(b.added_at || ''));
+          }
+        );
+      } else {
+        await db.watchlist.delete(entry.id);
+        Alpine.store('toast')?.info?.(`Removed ${cardName} from watchlist.`);
+      }
     },
 
     async updateAlert(scryfallId, alertType, alertThreshold) {
@@ -137,6 +169,26 @@ export function initMarketStore() {
         alert_threshold: alertThreshold,
       });
       this.watchlist = await db.watchlist.toArray();
+    },
+
+    /**
+     * Audit fix #7: evaluate price alerts at app boot (and post-bulk-refresh),
+     * not only when the user opens Preordain. Loads the watchlist if it isn't
+     * already in memory, snapshots today's prices, then runs checkAlerts.
+     * Idempotent — checkAlerts dedupes per day via last_alerted_at, so calling
+     * this multiple times in a session is safe.
+     */
+    async primeAlerts() {
+      try {
+        if (!this.watchlist || this.watchlist.length === 0) {
+          this.watchlist = await db.watchlist.toArray();
+        }
+        if (!this.watchlist.length) return;
+        await snapshotWatchlistPrices();
+        await this.checkAlerts();
+      } catch (err) {
+        console.error('[Market] primeAlerts error:', err);
+      }
     },
 
     async checkAlerts() {
@@ -157,24 +209,23 @@ export function initMarketStore() {
 
         const priceGbp = eurToGbpValue(priceEur);
         let triggered = false;
+        let changePct = null;
+        let direction = null;
 
         if (entry.alert_type === 'below' && priceGbp < entry.alert_threshold) {
           triggered = true;
         } else if (entry.alert_type === 'above' && priceGbp > entry.alert_threshold) {
           triggered = true;
         } else if (entry.alert_type === 'change_pct') {
-          // Check percentage change from price history
-          const history = await db.price_history
-            .where('scryfall_id')
-            .equals(entry.scryfall_id)
-            .sortBy('date');
-          if (history.length >= 2) {
-            const earliest = history[0].price_eur;
-            const latest = history[history.length - 1].price_eur;
-            const pctChange = earliest !== 0 ? Math.abs((latest - earliest) / earliest) * 100 : 0;
-            if (pctChange >= entry.alert_threshold) {
-              triggered = true;
-            }
+          // Audit fix #7: windowed + directional. computeTrend returns the
+          // SIGNED % change over the last ALERT_WINDOW_DAYS plus a direction.
+          // Fire on a move of >= threshold in EITHER direction, but record the
+          // sign + direction so the user sees whether it rose or fell.
+          const trend = await computeTrend(entry.scryfall_id, ALERT_WINDOW_DAYS);
+          if (Math.abs(trend.changePct) >= entry.alert_threshold) {
+            triggered = true;
+            changePct = trend.changePct;
+            direction = trend.direction;
           }
         }
 
@@ -185,6 +236,8 @@ export function initMarketStore() {
             alert_threshold: entry.alert_threshold,
             current_price_gbp: eurToGbpValue(priceEur),
             card_name: card.name,
+            change_pct: changePct,
+            direction,
           });
           await db.watchlist.update(entry.id, {
             last_alerted_at: new Date().toISOString(),
