@@ -83,7 +83,7 @@ export const SYSTEM_PROMPT = [
   `## Rules`,
   ``,
   `1. Every recommended scryfall_id MUST appear in the candidate pool you receive. If you're tempted to recommend a card that isn't there, pick the closest available substitute.`,
-  `2. Reasoning is ONE short sentence (~20 words max) in the user's voice ("you", not "the player"), referencing the commander/power level. Keep it tight — this runs for ~99 cards, so brevity keeps the brew fast.`,
+  `2. Reasoning length depends on the MODE (see the Mode line below): for 'build'/'fill' set "reasoning" to an empty string "" (the list is long — speed matters); for 'upgrade'/'retune' use ONE short sentence. When you do write it, use the user's voice ("you", not "the player").`,
   `3. Hit the role-bucket targets — under-rampers and over-creature-y decks are the most common AI failure mode. Count as you go.`,
   `4. Aim for the right CARD COUNT for the mode the user requested. 'build' = 99 cards. 'fill' = exactly the number requested. 'upgrade' / 'retune' = swap pairs.`,
   `5. Never recommend the commander itself.`,
@@ -151,17 +151,25 @@ export function buildUserPrompt({ commander, candidates, partial, powerLevel, mo
   return sections.filter(Boolean).join('\n');
 }
 
+// 260615: build/fill emit a LOT of cards (up to 99). Per-card reasoning there
+// blows the output past the request timeout (~6-8K tokens). So those modes set
+// reasoning to "" — the user reviews the list + role buckets, not 99 essays, and
+// can ask Mila Chat about any specific pick. upgrade/retune are a handful of
+// swaps, so they KEEP reasoning (it's the whole point of a swap suggestion).
+const OMIT_REASONING = `For EVERY card set "reasoning" to an empty string "" — do NOT write per-card explanations. This list is long and the response must stay fast; the role label is enough context.`;
+const KEEP_REASONING = `For each swap, "reasoning" is ONE short sentence (~20 words) on why the swap helps.`;
+
 function modeDescription(mode, slotsRemaining) {
   switch (mode) {
     case 'fill':
-      return `'fill' — recommend exactly ${slotsRemaining} cards to complete the deck. The user has already chosen the cards in the partial list; do not duplicate them.`;
+      return `'fill' — recommend exactly ${slotsRemaining} cards to complete the deck. The user has already chosen the cards in the partial list; do not duplicate them. ${OMIT_REASONING}`;
     case 'upgrade':
-      return `'upgrade' — recommend swaps. For each recommendation, set 'swap_out' to the scryfall_id of the card being replaced (must be in the partial-deck list). Aim for 5-15 surgical swaps that improve the deck without overhauling it.`;
+      return `'upgrade' — recommend swaps. For each recommendation, set 'swap_out' to the scryfall_id of the card being replaced (must be in the partial-deck list). Aim for 5-15 surgical swaps that improve the deck without overhauling it. ${KEEP_REASONING}`;
     case 'retune':
-      return `'retune' — same swap format as 'upgrade'. The goal is to shift the deck's power level toward the target. Cap at 15 swaps; the user wants surgical moves, not a rebuild.`;
+      return `'retune' — same swap format as 'upgrade'. The goal is to shift the deck's power level toward the target. Cap at 15 swaps; the user wants surgical moves, not a rebuild. ${KEEP_REASONING}`;
     case 'build':
     default:
-      return `'build' — recommend a full 99-card list (the commander is already chosen and not part of the 99). Hit the role-bucket targets.`;
+      return `'build' — recommend a full 99-card list (the commander is already chosen and not part of the 99). Hit the role-bucket targets. ${OMIT_REASONING}`;
   }
 }
 
