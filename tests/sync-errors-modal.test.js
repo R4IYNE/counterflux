@@ -131,7 +131,7 @@ describe('sync-errors modal — empty state', () => {
     await new Promise(r => setTimeout(r, 10));
 
     expect(document.body.textContent).toContain('ALL CAUGHT UP');
-    expect(document.body.textContent).toContain("Mila hasn't found any sync errors to review.");
+    expect(document.body.textContent).toContain('No sync errors to review.');
   });
 });
 

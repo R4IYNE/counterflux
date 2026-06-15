@@ -176,7 +176,7 @@ export async function openSyncErrorsModal() {
           color: var(--color-text-muted);
           text-align: center;
           max-width: 360px;
-        ">Mila hasn't found any sync errors to review.</div>
+        ">No sync errors to review.</div>
       </div>
       <button
         type="button"

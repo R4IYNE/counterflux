@@ -64,7 +64,7 @@ describe('auth-callback-overlay', () => {
     const overlay = document.querySelector('#cf-auth-callback-overlay');
     expect(overlay).toBeTruthy();
     expect(overlay.textContent).toContain('COMPLETING SIGN-IN');
-    expect(overlay.textContent).toContain("Mila's recalibrating the sigils");
+    expect(overlay.textContent).toContain('Recalibrating. One second.');
   });
 
   test('session appears → 200ms flash + navigate to captured pre-auth route', async () => {

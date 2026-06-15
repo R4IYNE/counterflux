@@ -101,7 +101,7 @@ export function openReconciliationModal({ localCounts, cloudCounts, onChoice }) 
         line-height: 1.5;
         margin: 0 0 24px;
         color: var(--color-text-primary);
-      ">Mila found data on both sides. Which should she keep?</p>
+      ">There's data on both sides. Which should we keep?</p>
 
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
         <section aria-labelledby="reconciliation-local-heading">

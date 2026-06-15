@@ -86,7 +86,7 @@ export function renderDeckgenChatPanel() {
             <div style="margin: auto 0; text-align: center; padding: 24px 8px;">
               <span class="material-symbols-outlined" style="font-size: 40px; color: #2A2D3A;">pets</span>
               <p style="font-family: 'Space Grotesk', sans-serif; font-size: 14px; color: #7A8498; line-height: 1.5; margin: 12px 0 0;">
-                Tell Mila what you want. Try <em>"more removal"</em>, <em>"cut the slow ramp"</em>, <em>"lean spellslinger"</em>, or ask <em>"why Sol Ring?"</em>. She proposes changes you approve before they touch the deck.
+                Tell us what you want. Try <em>"more removal"</em>, <em>"cut the slow ramp"</em>, <em>"lean spellslinger"</em>, or ask <em>"why Sol Ring?"</em>. Proposed changes are yours to approve before they touch the deck.
               </p>
             </div>
           </template>
@@ -206,7 +206,7 @@ export function renderDeckgenChatPanel() {
             @keydown="onKey($event)"
             :disabled="$store.deckgenChat?.status === 'thinking' || $store.deckgenChat?.budgetExhausted"
             rows="2"
-            placeholder="Ask Mila to tweak your deck…"
+            placeholder="Ask to tweak your deck…"
             style="flex: 1; resize: none; background: #0B0C10; border: 1px solid #2A2D3A; color: #EAECEE; padding: 10px 12px; font-family: 'Space Grotesk', sans-serif; font-size: 14px; line-height: 1.4; outline: none;"
             onfocus="this.style.borderColor='#0D52BD'"
             onblur="this.style.borderColor='#2A2D3A'"

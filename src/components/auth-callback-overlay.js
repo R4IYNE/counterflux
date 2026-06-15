@@ -82,7 +82,7 @@ function renderPending() {
   overlayEl.innerHTML = `
     <span class="material-symbols-outlined cf-auth-spin" style="font-size:48px;color:#0D52BD;margin-bottom:24px;">progress_activity</span>
     <h2 style="font-family:'Syne',sans-serif;font-size:20px;font-weight:700;letter-spacing:0.01em;text-transform:uppercase;margin:0 0 16px 0;color:#EAECEE;">COMPLETING SIGN-IN…</h2>
-    <p style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:400;color:#7A8498;margin:0;">Mila's recalibrating the sigils. One second.</p>
+    <p style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:400;color:#7A8498;margin:0;">Recalibrating. One second.</p>
   `;
 }
 

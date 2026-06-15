@@ -34,10 +34,10 @@
 const MOUNT_ROOT_ID = 'cf-sync-pull-splash-root';
 
 const TAGLINES = [
-  "Mila's pulling every shelf off the rack.",
+  'Pulling every shelf off the rack.',
   'Dusting off your household archive.',
   'Reuniting cards, decks, and games.',
-  'Mila prefers things in their rightful place.',
+  'Putting things in their rightful place.',
   'Almost there — the last pages are coming in.',
 ];
 

@@ -92,7 +92,7 @@ export function mount(container) {
       <div style="display: flex; align-items: center; gap: 16px; margin-top: 16px;">
         <img src="/assets/assetsmila-izzet.png" alt="Mila -- Izzet Familiar" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover; filter: saturate(0.8);">
         <p class="font-body text-text-dim" style="font-size: 14px; line-height: 1.5; max-width: 400px; font-style: italic;">
-          Mila here! Type a card name or press <kbd style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--color-primary, #0D52BD); background: var(--color-surface, #14161C); padding: 2px 6px; border: 1px solid var(--color-border-ghost, #2A2D3A);">/</kbd> to start searching.
+          Type a card name or press <kbd style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--color-primary, #0D52BD); background: var(--color-surface, #14161C); padding: 2px 6px; border: 1px solid var(--color-border-ghost, #2A2D3A);">/</kbd> to start searching.
         </p>
       </div>
     </div>

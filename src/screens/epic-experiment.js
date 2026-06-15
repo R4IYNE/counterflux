@@ -83,8 +83,8 @@ function _renderFullWelcome(container) {
   const welcome = document.createElement('div');
   welcome.className = 'bg-surface border border-border-ghost p-lg mb-md';
 
-  const readyCopy = 'Mila here! Your command centre is ready. Start by adding cards to your collection or building your first deck. Each panel will light up as your Archive grows.';
-  const loadingCopy = 'Mila here! The archive is still loading. Your collection, decks, and market intel will come online as soon as the archive finishes indexing.';
+  const readyCopy = 'Your command centre is ready. Start by adding cards to your collection or building your first deck. Each panel will light up as your Archive grows.';
+  const loadingCopy = 'The archive is still loading. Your collection, decks, and market intel will come online as soon as the archive finishes indexing.';
 
   function render() {
     const copy = _isBulkDataReady() ? readyCopy : loadingCopy;
@@ -753,8 +753,12 @@ function renderDeckLaunchGrid(grid, cleanups) {
       bottomStrip.appendChild(metaEl);
       tile.appendChild(bottomStrip);
 
-      // Click to navigate
+      // Click opens THIS deck directly in the editor (260615-#3). queueAction
+      // with a null action sets pendingDeckId so the thousand-year screen mounts
+      // straight into the editor (consumePendingAction returns null → no brew
+      // modal). The "VIEW ALL DECKS" link below still goes to the landing grid.
       tile.addEventListener('click', () => {
+        window.Alpine?.store('deckgen')?.queueAction({ deckId: deck.id, action: null });
         if (window.__counterflux_router) {
           window.__counterflux_router.navigate('/thousand-year-storm');
         }
@@ -913,7 +917,7 @@ function renderMilaInsight(grid, cleanups) {
   const overline = document.createElement('div');
   overline.className = 'font-mono text-primary mb-sm';
   overline.style.cssText = 'font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.15em;';
-  overline.textContent = "MILA'S INSIGHT // DAILY";
+  overline.textContent = "DAILY INSIGHT";
   panel.appendChild(overline);
 
   const content = document.createElement('div');
@@ -932,7 +936,7 @@ function renderMilaInsight(grid, cleanups) {
       if (!insight) {
         content.innerHTML = `
           <p class="font-body text-text-muted" style="font-size: 14px; line-height: 1.5;">
-            Mila is still gathering data. Add some cards or build a deck to unlock daily insights.
+            Still gathering data. Add some cards or build a deck to unlock daily insights.
           </p>
         `;
         return;
@@ -956,7 +960,7 @@ function renderMilaInsight(grid, cleanups) {
     } catch {
       content.innerHTML = `
         <p class="font-body text-text-muted" style="font-size: 14px; line-height: 1.5;">
-          Mila is still gathering data. Add some cards or build a deck to unlock daily insights.
+          Still gathering data. Add some cards or build a deck to unlock daily insights.
         </p>
       `;
     }
@@ -1143,7 +1147,7 @@ function renderMilaUpgradesWidget(grid, cleanups) {
   const overline = document.createElement('div');
   overline.className = 'font-mono text-primary mb-sm';
   overline.style.cssText = 'font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.15em;';
-  overline.textContent = "MILA'S UPGRADES // NEW CARDS DETECTED";
+  overline.textContent = "UPGRADES // NEW CARDS DETECTED";
   panel.appendChild(overline);
 
   const content = document.createElement('div');
@@ -1164,7 +1168,7 @@ function renderMilaUpgradesWidget(grid, cleanups) {
     if (recommendations.length === 0) {
       const empty = document.createElement('p');
       empty.style.cssText = "font-family: 'Space Grotesk', sans-serif; font-size: 13px; color: #7A8498; line-height: 1.45; margin: 0;";
-      empty.textContent = "Nothing new yet. Mila will flag upgrades when sets you care about drop.";
+      empty.textContent = "Nothing new yet. We'll flag upgrades when sets you care about drop.";
       content.appendChild(empty);
       return;
     }

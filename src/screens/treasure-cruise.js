@@ -95,14 +95,14 @@ export function mount(container) {
           <!-- Ready-branch body: original actionable copy -->
           <template x-if="!$store.bulkdata || $store.bulkdata.status === 'ready'">
             <p style="font-family: 'Space Grotesk', sans-serif; font-size: 14px; line-height: 1.5; color: #7A8498; max-width: 28rem; width: 100%; margin: 0;">
-              Mila here! Your collection is empty. Add cards one at a time, paste a batch into the Mass Entry Terminal, or import a CSV from Deckbox, Moxfield, or Archidekt.
+              Your collection is empty. Add cards one at a time, paste a batch into the Mass Entry Terminal, or import a CSV from Deckbox, Moxfield, or Archidekt.
             </p>
           </template>
 
           <!-- Loading-branch body: honest 'archive still loading' copy -->
           <template x-if="$store.bulkdata && $store.bulkdata.status !== 'ready'">
             <p style="font-family: 'Space Grotesk', sans-serif; font-size: 14px; line-height: 1.5; color: #7A8498; max-width: 28rem; width: 100%; margin: 0;">
-              Mila here! The archive is still loading. Card entry tools (Mass Entry, CSV import) will unlock when the archive finishes indexing.
+              The archive is still loading. Card entry tools (Mass Entry, CSV import) will unlock when the archive finishes indexing.
             </p>
           </template>
 

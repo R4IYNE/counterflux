@@ -63,7 +63,7 @@ export function renderWatchlistPanel() {
           <p
             class="text-text-muted mx-auto max-w-[320px]"
             style="font-family: 'Space Grotesk', sans-serif; font-size: 14px; line-height: 1.5;"
-          >Right-click any card and select "Watch Price" to track its value here. Mila will alert you when prices cross your thresholds.</p>
+          >Right-click any card and select "Watch Price" to track its value here. You'll be alerted when prices cross your thresholds.</p>
         </div>
       </template>
 

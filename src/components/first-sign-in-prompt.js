@@ -141,7 +141,7 @@ function _mountPrompt() {
 
     <button id="first-signin-fresh" style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;background:#1C1F28;color:#EAECEE;border:1px solid #2A2D3A;width:100%;height:40px;cursor:pointer;margin-bottom:24px;">START FRESH</button>
 
-    <p style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:400;letter-spacing:0.15em;text-transform:uppercase;color:#7A8498;margin:0;line-height:1.3;">Mila will keep your local profile either way — you can still sign out and revert.</p>
+    <p style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:400;letter-spacing:0.15em;text-transform:uppercase;color:#7A8498;margin:0;line-height:1.3;">Your local profile is kept either way — you can still sign out and revert.</p>
   `;
 
   promptEl.appendChild(card);

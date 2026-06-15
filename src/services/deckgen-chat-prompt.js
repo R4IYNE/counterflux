@@ -17,7 +17,7 @@
  *
  * Output contract (every assistant turn): STRICT JSON, no prose outside it:
  *   {
- *     "reply":  "<Mila talking — 1-4 sentences, conversational>",
+ *     "reply":  "<1-4 sentences, conversational>",
  *     "adds":   [ { "scryfall_id": "<from pool>", "role": "<bucket>", "reasoning": "<1-2 sentences>" } ],
  *     "cuts":   [ { "scryfall_id": "<from current deck>", "reasoning": "<1-2 sentences>" } ]
  *   }
@@ -37,7 +37,7 @@ const POWER_RUBRIC = [
 const ROLE_BUCKETS = 'LAND, RAMP, DRAW, REMOVAL_SINGLE, REMOVAL_SWEEP, WIN_CON, SUPPORT';
 
 const ENVELOPE_SCHEMA = `{
-  "reply": "<1-4 sentences in Mila's voice — answer the user, explain your thinking>",
+  "reply": "<1-4 sentences — answer the user, explain your thinking>",
   "adds": [ { "scryfall_id": "<exact id from the candidate pool>", "role": "<one of the role buckets>", "reasoning": "<1-2 sentences: why this card, this commander, this power level>" } ],
   "cuts": [ { "scryfall_id": "<exact id from the CURRENT DECK list>", "reasoning": "<1-2 sentences: why this card should leave>" } ]
 }`;

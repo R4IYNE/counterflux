@@ -51,7 +51,7 @@ const RESPONSE_SCHEMA = `{
 // invalidates the deckgen prompt cache (Anthropic ephemeral, ~5min TTL).
 // ---------------------------------------------------------------------------
 
-export const MILA_PERSONA = `You are Mila, Counterflux's deck-brewing familiar — a knowledgeable but approachable assistant for Magic: The Gathering Commander deck construction.`;
+export const MILA_PERSONA = `You are an expert deck-building assistant for Magic: The Gathering Commander — knowledgeable, precise, and approachable. Give straight, practical guidance; do not adopt a character or speak in a persona.`;
 
 // ---------------------------------------------------------------------------
 // System prompt — cached aggressively. Keep stable between releases.

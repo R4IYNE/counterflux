@@ -106,7 +106,7 @@ export async function generateDeck(input) {
     return {
       ok: false,
       code: 'network_error',
-      message: 'Mila couldn\'t reach the AI — check your connection.',
+      message: 'Couldn\'t reach the AI — check your connection.',
       detail: err?.message,
     };
   }
@@ -131,7 +131,7 @@ export async function generateDeck(input) {
     return { ok: false, code: parsed.error.code || 'server_error', message: parsed.error.message || 'Brew failed.' };
   }
   if (!parsed.done) {
-    return { ok: false, code: 'server_error', message: 'Mila sent no result — try again.' };
+    return { ok: false, code: 'server_error', message: 'No result came back — try again.' };
   }
 
   // Strip the protocol field; cache + return the result body.
@@ -202,7 +202,7 @@ export async function readNdjsonStream(res, onProgress) {
     handleLine(buffer); // trailing line with no final newline
   } catch {
     if (!result.done && !result.error) {
-      result.error = { code: 'network_error', message: 'Lost the connection to Mila mid-brew — try again.' };
+      result.error = { code: 'network_error', message: 'Lost the connection mid-brew — try again.' };
     }
   }
   return result;
@@ -257,8 +257,8 @@ function friendlyMessage(status, body) {
   if (status === 429) return body?.detail || 'Daily brewing limit reached — resets at midnight UTC.';
   if (status === 401) return 'Sign in to use AI brewing.';
   if (status === 409) return body?.detail || 'Not enough candidate cards — try again in 24h or pick a more-played commander.';
-  if (status === 502) return body?.detail || 'Mila got distracted — try again in a moment.';
-  if (status === 504) return body?.detail || 'Mila took too long — try again in a moment.';
+  if (status === 502) return body?.detail || 'The AI got distracted — try again in a moment.';
+  if (status === 504) return body?.detail || 'The AI took too long — try again in a moment.';
   if (status === 400) return body?.error || 'Request was invalid.';
   return body?.error || 'Something went wrong.';
 }

@@ -78,7 +78,7 @@ describe('auth-wall — scaffolding', () => {
     expect(wall.textContent).toContain('SIGN IN WITH GOOGLE');
     expect(wall.textContent).toContain('EMAIL');
     expect(wall.textContent).toContain('PASSWORD');
-    expect(wall.textContent).toContain('Mila only lets members through the gate');
+    expect(wall.textContent).toContain('Members only — sign in to enter.');
 
     // Non-dismissible: no X close button
     expect(document.querySelector('#cf-auth-close')).toBeNull();

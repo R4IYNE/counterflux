@@ -12,8 +12,8 @@ import {
 } from '../src/services/deckgen-prompt.js';
 
 describe('SYSTEM_PROMPT', () => {
-  it('introduces Mila as the persona', () => {
-    expect(SYSTEM_PROMPT).toMatch(/\bMila\b/);
+  it('opens with the deck-building assistant persona', () => {
+    expect(SYSTEM_PROMPT).toMatch(/deck-building assistant/i);
   });
 
   it('includes the power-level rubric', () => {

@@ -80,7 +80,7 @@ describe('first-sign-in prompt — trigger conditions', () => {
     expect(prompt.textContent).toContain('KEEP LOCAL PROFILE');
     expect(prompt.textContent).toContain('START FRESH');
     expect(prompt.textContent).toContain('You had a local profile before signing in');
-    expect(prompt.textContent).toContain('Mila will keep your local profile either way');
+    expect(prompt.textContent).toContain('Your local profile is kept either way');
   });
 
   test('Test 2 (D-20): no local profile → no prompt; silent upsert fires profile.update', async () => {

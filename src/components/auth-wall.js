@@ -172,7 +172,7 @@ export function openAuthWall() {
   // Mila caption below the card (brand voice anchor)
   const mila = document.createElement('p');
   mila.style.cssText = "font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:400;letter-spacing:0.05em;color:#7A8498;margin:24px 0 0 0;text-align:center;";
-  mila.textContent = 'Mila only lets members through the gate.';
+  mila.textContent = 'Members only — sign in to enter.';
   wallEl.appendChild(mila);
 
   // Only attach if not already in the DOM. When the static markup from

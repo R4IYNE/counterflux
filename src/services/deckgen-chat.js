@@ -51,7 +51,7 @@ export async function sendChatMessage(input) {
     token = null;
   }
   if (!token) {
-    return { ok: false, code: 'unauthenticated', message: 'Sign in to chat with Mila.' };
+    return { ok: false, code: 'unauthenticated', message: 'Sign in to use Brew Chat.' };
   }
 
   let res;
@@ -68,7 +68,7 @@ export async function sendChatMessage(input) {
     return {
       ok: false,
       code: 'network_error',
-      message: 'Mila couldn\'t reach the AI — check your connection.',
+      message: 'Couldn\'t reach the AI — check your connection.',
       detail: err?.message,
     };
   }
@@ -116,10 +116,10 @@ function mapStatusToCode(status) {
 
 function friendlyMessage(status, body) {
   if (status === 429) return body?.detail || 'Daily brewing limit reached — resets at midnight UTC.';
-  if (status === 401) return 'Sign in to chat with Mila.';
+  if (status === 401) return 'Sign in to use Brew Chat.';
   if (status === 404) return body?.error || 'Couldn\'t find that commander.';
-  if (status === 502) return body?.detail || 'Mila got distracted — try again in a moment.';
-  if (status === 504) return body?.detail || 'Mila took too long — try again in a moment.';
+  if (status === 502) return body?.detail || 'The AI got distracted — try again in a moment.';
+  if (status === 504) return body?.detail || 'The AI took too long — try again in a moment.';
   if (status === 400) return body?.error || 'Request was invalid.';
   return body?.error || 'Something went wrong.';
 }

@@ -163,7 +163,7 @@ export function renderDeckEditor(container) {
     const deck = Alpine?.store('deck')?.activeDeck;
     if (!deck?.commander_id) return;
     if (!Alpine?.store('auth')?.session) {
-      Alpine?.store('toast')?.error?.('Sign in to chat with Mila.');
+      Alpine?.store('toast')?.error?.('Sign in to use Brew Chat.');
       return;
     }
     const power = typeof deck.power_level === 'number' ? deck.power_level : 5;

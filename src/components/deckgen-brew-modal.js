@@ -27,8 +27,8 @@ const POWER_PRESETS = [
 ];
 
 const MODES = [
-  { value: 'build', label: 'BUILD ALL 99', description: 'Empty deck — Mila drafts the whole list from scratch.' },
-  { value: 'fill', label: 'FILL REMAINING', description: 'Keep what you have, Mila picks the rest.' },
+  { value: 'build', label: 'BUILD ALL 99', description: 'Empty deck — drafts the whole list from scratch.' },
+  { value: 'fill', label: 'FILL REMAINING', description: 'Keep what you have; fills in the rest.' },
 ];
 
 /**
@@ -153,9 +153,9 @@ export function renderDeckgenBrewModal() {
           style="display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 32px 24px; text-align: center;"
         >
           <span class="material-symbols-outlined" style="font-size: 44px; color: #0D52BD;">auto_awesome</span>
-          <div style="font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; color: #EAECEE;">MILA IS THINKING…</div>
+          <div style="font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; color: #EAECEE;">BREWING…</div>
           <div style="font-family: 'Space Grotesk', sans-serif; font-size: 14px; color: #7A8498; line-height: 1.5; max-width: 360px;">
-            Reading EDHREC and slotting your deck. Cards stream in as Mila picks them — a full brew usually takes 30–90 seconds.
+            Reading EDHREC and slotting your deck. Cards stream in as they're picked — a full brew usually takes 30–90 seconds.
           </div>
           <div
             style="font-family: 'JetBrains Mono', monospace; font-size: 13px; letter-spacing: 0.15em; color: #0D52BD;"
@@ -227,7 +227,7 @@ export function renderDeckgenBrewModal() {
                 BUILD ALL 99
               </div>
               <div style="font-family: 'Space Grotesk', sans-serif; font-size: 12px; color: #7A8498; line-height: 1.4;">
-                Empty deck — Mila drafts the whole list.
+                Empty deck — drafts the whole list.
               </div>
             </button>
             <button
@@ -240,7 +240,7 @@ export function renderDeckgenBrewModal() {
                 FILL REMAINING
               </div>
               <div style="font-family: 'Space Grotesk', sans-serif; font-size: 12px; color: #7A8498; line-height: 1.4;">
-                Keep what you have, Mila picks the rest.
+                Keep what you have; fills in the rest.
               </div>
             </button>
           </div>
@@ -257,8 +257,8 @@ export function renderDeckgenBrewModal() {
           <div
             style="font-family: 'Space Grotesk', sans-serif; font-size: 13px; color: #EAECEE; line-height: 1.5;"
             x-text="isRetune
-              ? 'Mila reads your current deck and suggests 5–15 surgical swaps to move it toward the target power level. Use this when you want to take an Optimized deck to a Casual pod or vice versa.'
-              : 'Mila looks at the new cards released since this deck was last edited and suggests swap pairs — out with the weaker card, in with the upgrade. Aim for tight, defensible swaps.'"
+              ? 'Reads your current deck and suggests 5–15 surgical swaps to move it toward the target power level. Use this when you want to take an Optimized deck to a Casual pod or vice versa.'
+              : 'Looks at the new cards released since this deck was last edited and suggests swap pairs — out with the weaker card, in with the upgrade. Aim for tight, defensible swaps.'"
           ></div>
         </div>
 
@@ -276,7 +276,7 @@ export function renderDeckgenBrewModal() {
               USE ONLY MY COLLECTION
             </div>
             <div style="font-family: 'Space Grotesk', sans-serif; font-size: 12px; color: #7A8498; line-height: 1.4;">
-              Mila only suggests cards you already own. Best for budget-conscious brewing or when you can't get to the LGS this week.
+              Only suggests cards you already own. Best for budget-conscious brewing or when you can't get to the LGS this week.
             </div>
           </div>
         </label>
@@ -295,7 +295,7 @@ export function renderDeckgenBrewModal() {
             onblur="this.style.borderColor='#2A2D3A'"
           />
           <span style="font-family: 'Space Grotesk', sans-serif; font-size: 12px; color: #4A5064;">
-            Helps Mila lean the deck in a specific direction without overriding the commander's natural identity.
+            Helps lean the deck in a specific direction without overriding the commander's natural identity.
           </span>
         </div>
 

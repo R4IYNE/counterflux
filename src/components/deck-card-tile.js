@@ -58,15 +58,6 @@ function renderGridTile(entry, card, cardName, typeGroup) {
   gradient.className = 'absolute inset-x-0 bottom-0 h-[40%] bg-gradient-to-t from-[#14161C] to-transparent pointer-events-none';
   imgWrap.appendChild(gradient);
 
-  // Owned/missing dot
-  const dot = document.createElement('div');
-  if (entry.owned) {
-    dot.className = 'owned-dot';
-  } else {
-    dot.className = 'missing-dot';
-  }
-  imgWrap.appendChild(dot);
-
   // Quantity badge
   if (entry.quantity > 1) {
     const qtyBadge = document.createElement('span');
@@ -171,8 +162,20 @@ function renderGridTile(entry, card, cardName, typeGroup) {
   nameEl.style.cssText = `
     font-family: 'Space Grotesk', sans-serif; font-size: 14px; font-weight: 700;
     color: #EAECEE; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    flex: 1; min-width: 0;
   `;
-  meta.appendChild(nameEl);
+  // Owned/missing indicator (260615-#5): softened + moved off the top-right
+  // corner into the bottom meta row. Owned = subtle green check; missing =
+  // muted grey dot — calmer than the old alarm-red corner dot.
+  const ownIndicator = document.createElement('span');
+  ownIndicator.textContent = entry.owned ? '✓' : '●';
+  ownIndicator.title = entry.owned ? 'In your collection' : 'Not owned';
+  ownIndicator.style.cssText = `flex-shrink: 0; font-size: 10px; line-height: 1; color: ${entry.owned ? '#2ECC71' : '#4A5064'};`;
+  const nameRow = document.createElement('div');
+  nameRow.style.cssText = 'display: flex; align-items: center; gap: 6px; min-width: 0;';
+  nameRow.appendChild(ownIndicator);
+  nameRow.appendChild(nameEl);
+  meta.appendChild(nameRow);
 
   // Set code
   if (card?.set) {
@@ -294,10 +297,11 @@ function renderListRow(entry, card, cardName, typeGroup) {
   nameCell.style.cssText = `
     padding: 8px 16px; font-family: 'Space Grotesk', sans-serif; font-size: 14px; color: #EAECEE;
   `;
-  const indicator = entry.owned ? '●' : '●';
-  const indicatorColor = entry.owned ? '#2ECC71' : '#E23838';
+  const indicator = entry.owned ? '✓' : '●';
+  const indicatorColor = entry.owned ? '#2ECC71' : '#4A5064';
   const indicatorSpan = document.createElement('span');
-  indicatorSpan.style.cssText = `color: ${indicatorColor}; margin-right: 6px; font-size: 8px;`;
+  indicatorSpan.title = entry.owned ? 'In your collection' : 'Not owned';
+  indicatorSpan.style.cssText = `color: ${indicatorColor}; margin-right: 6px; font-size: 10px;`;
   indicatorSpan.textContent = indicator;
   nameCell.appendChild(indicatorSpan);
   nameCell.appendChild(document.createTextNode(cardName));

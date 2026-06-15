@@ -40,7 +40,7 @@ describe('reconciliation modal — structure + copy', () => {
 
     const heading = document.body.textContent;
     expect(heading).toContain('DATA ON BOTH SIDES');
-    expect(heading).toContain('Mila found data on both sides. Which should she keep?');
+    expect(heading).toContain("There's data on both sides. Which should we keep?");
   });
 
   test('Test 2: renders count-comparison grid (4 rows per column) — cards/decks/games/watchlist', () => {

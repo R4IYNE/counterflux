@@ -150,7 +150,7 @@ export function renderGameHistoryView() {
           >No Games Recorded</h3>
           <p
             style="font-family: 'Space Grotesk', sans-serif; font-size: 14px; color: #7A8498; max-width: 400px; text-align: center;"
-          >Start a game from the Active Game view. Mila will keep track of your victories and defeats.</p>
+          >Start a game from the Active Game view. Your victories and defeats will be tracked here.</p>
         </div>
       </template>
     </div>
