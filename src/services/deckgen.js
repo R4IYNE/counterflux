@@ -49,6 +49,7 @@ export async function generateDeck(input) {
     deckDiagnostics = '',
     getAccessToken,
     onProgress,
+    onCard,
   } = input;
 
   if (!commanderId) {
@@ -126,7 +127,7 @@ export async function generateDeck(input) {
     };
   }
 
-  const parsed = await readNdjsonStream(res, onProgress);
+  const parsed = await readNdjsonStream(res, onProgress, onCard);
   if (parsed.error) {
     return { ok: false, code: parsed.error.code || 'server_error', message: parsed.error.message || 'Brew failed.' };
   }
@@ -159,9 +160,10 @@ export async function generateDeck(input) {
  *
  * @param {Response} res
  * @param {(cards:number)=>void} [onProgress]
+ * @param {(card:object)=>void} [onCard]
  * @returns {Promise<{done: object|null, error: object|null}>}
  */
-export async function readNdjsonStream(res, onProgress) {
+export async function readNdjsonStream(res, onProgress, onCard) {
   const result = { done: null, error: null };
   const handleLine = (line) => {
     const t = (line || '').trim();
@@ -170,6 +172,8 @@ export async function readNdjsonStream(res, onProgress) {
     try { evt = JSON.parse(t); } catch { return; }
     if (evt.type === 'progress') {
       if (typeof onProgress === 'function') { try { onProgress(evt.cards || 0); } catch { /* ignore */ } }
+    } else if (evt.type === 'card') {
+      if (typeof onCard === 'function' && evt.card) { try { onCard(evt.card); } catch { /* ignore */ } }
     } else if (evt.type === 'done') {
       result.done = evt;
     } else if (evt.type === 'error') {

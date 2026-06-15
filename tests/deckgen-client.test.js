@@ -9,7 +9,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import 'fake-indexeddb/auto';
 import { db } from '../src/db/schema.js';
-import { generateDeck } from '../src/services/deckgen.js';
+import { generateDeck, readNdjsonStream } from '../src/services/deckgen.js';
 
 function mockFetch(impl) {
   globalThis.fetch = vi.fn(impl);
@@ -321,5 +321,22 @@ describe('generateDeck — input validation', () => {
     expect(result.ok).toBe(false);
     expect(result.code).toBe('invalid_input');
     expect(globalThis.fetch).not.toHaveBeenCalled();
+  });
+});
+
+describe('readNdjsonStream — card events', () => {
+  it('invokes onCard for each {type:card} line and onProgress for counts', async () => {
+    const res = streamRes([
+      JSON.stringify({ type: 'progress', cards: 1 }),
+      JSON.stringify({ type: 'card', card: { scryfall_id: 'a1', role: 'RAMP', reasoning: 'r' } }),
+      JSON.stringify({ type: 'card', card: { scryfall_id: 'b2', role: 'DRAW' } }),
+      JSON.stringify({ type: 'done', recommended: [{ scryfall_id: 'a1' }, { scryfall_id: 'b2' }] }),
+    ]);
+    const cards = [];
+    const counts = [];
+    const result = await readNdjsonStream(res, (n) => counts.push(n), (c) => cards.push(c));
+    expect(cards.map(c => c.scryfall_id)).toEqual(['a1', 'b2']);
+    expect(counts).toContain(1);
+    expect(result.done.recommended).toHaveLength(2);
   });
 });
