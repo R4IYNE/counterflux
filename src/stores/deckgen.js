@@ -41,6 +41,7 @@ export function initDeckgenStore() {
     // === Last response ===
     lastResponse: null,              // raw response from /api/deckgen
     recommendations: [],             // [{ scryfall_id, role, reasoning, swap_out, approved }]
+    streamComplete: false,           // true once the final result has been reconciled into recommendations
     mode: null,                      // 'build' | 'fill' | 'upgrade' | 'retune'
 
     // === Current brew context ===
@@ -128,6 +129,7 @@ export function initDeckgenStore() {
       this.cacheHit = false;
       this.brewProgress = 0;
       this.recommendations = [];
+      this.streamComplete = false;
       this.activeDeckId = input.deckId;
       this.activeCommanderId = input.commanderId;
       this.mode = input.mode || 'build';
@@ -177,6 +179,13 @@ export function initDeckgenStore() {
         collectionHash,
         deckDiagnostics,
         onProgress: (cards) => { this.brewProgress = cards; },
+        onCard: (card) => {
+          if (this.recommendations.some((r) => r.scryfall_id === card.scryfall_id)) return;
+          this.recommendations.push({ ...card, approved: true });
+          if (this.status === 'brewing' && this.recommendations.length === 1) {
+            this.status = 'reviewing'; // first card — review surface takes over
+          }
+        },
         getAccessToken: async () => {
           // Pulled from the auth store at call time so we always have a
           // fresh token. Lazy import avoids a circular dep at module load.
@@ -187,6 +196,7 @@ export function initDeckgenStore() {
 
       if (!result.ok) {
         this.status = 'error';
+        this.streamComplete = false;
         this.error = { code: result.code, message: result.message };
         if (result.code === 'budget_exhausted') {
           this.budgetExhausted = true;
@@ -201,10 +211,15 @@ export function initDeckgenStore() {
       this.budgetRemaining = typeof result.response?.budget_remaining === 'number'
         ? result.response.budget_remaining
         : this.budgetRemaining;
-      this.recommendations = (result.response?.recommended || []).map((r) => ({
-        ...r,
-        approved: true, // default-approve per PRD Open Question #1
-      }));
+      // Reconcile: keep cards already streamed in via onCard, append any
+      // that only arrived in the final result (e.g. when streaming was
+      // unavailable or a card slipped through). Default-approve per PRD
+      // Open Question #1.
+      const seen = new Set(this.recommendations.map((r) => r.scryfall_id));
+      for (const r of (result.response?.recommended || [])) {
+        if (!seen.has(r.scryfall_id)) this.recommendations.push({ ...r, approved: true });
+      }
+      this.streamComplete = true;
       this.status = 'reviewing';
     },
 
@@ -339,6 +354,7 @@ export function initDeckgenStore() {
       this.error = null;
       this.cacheHit = false;
       this.recommendations = [];
+      this.streamComplete = false;
       this.lastResponse = null;
       this.mode = null;
       this.activeDeckId = null;

@@ -218,6 +218,38 @@ describe('deckgen store — startBrew success path', () => {
   });
 });
 
+describe('deckgen store — startBrew streaming', () => {
+  it('appends streamed cards live, dedupes, and flips review on first card', async () => {
+    const s = storeRegistry.deckgen;
+    // Fire onCard synchronously before resolving so the live-append path runs.
+    generateDeck.mockImplementation(async ({ onCard }) => {
+      onCard({ scryfall_id: 'a1', role: 'RAMP', reasoning: 'r1' });
+      onCard({ scryfall_id: 'a1', role: 'RAMP', reasoning: 'r1' }); // duplicate
+      onCard({ scryfall_id: 'b2', role: 'DRAW' });
+      return {
+        ok: true,
+        response: {
+          recommended: [
+            { scryfall_id: 'a1', role: 'RAMP' },
+            { scryfall_id: 'b2', role: 'DRAW' },
+            { scryfall_id: 'c3', role: 'WIN_CON' }, // only in the final result
+          ],
+        },
+      };
+    });
+
+    await s.startBrew({
+      deckId: 'd1', commanderId: 'cmdr', powerLevel: 5, mode: 'build',
+      useCollectionOnly: false, archetypeHint: '', partialCardIds: [],
+    });
+
+    const ids = s.recommendations.map(r => r.scryfall_id);
+    expect(ids).toEqual(['a1', 'b2', 'c3']); // deduped live + reconciled from done
+    expect(s.streamComplete).toBe(true);
+    expect(s.recommendations.every(r => r.approved)).toBe(true);
+  });
+});
+
 describe('deckgen store — startBrew error path', () => {
   it('flips to error on budget exhaustion', async () => {
     generateDeck.mockResolvedValue({
