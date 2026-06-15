@@ -4,6 +4,8 @@
  * Includes combo name (produces), pieces list, steps, and prerequisites.
  */
 
+import { hydrateCardImg } from '../utils/card-image.js';
+
 const LABEL_700 = "font: 700 11px/1.3 'JetBrains Mono', monospace; letter-spacing: 0.15em; text-transform: uppercase;";
 const LABEL_400 = "font: 400 11px/1.3 'JetBrains Mono', monospace; letter-spacing: 0.15em; text-transform: uppercase;";
 const BODY_14 = "font: 400 14px/1.5 'Space Grotesk', sans-serif; color: #EAECEE;";
@@ -61,9 +63,25 @@ export function showComboPopover(anchorEl, combos) {
       popover.appendChild(piecesLabel);
 
       for (const piece of combo.pieces) {
+        const pieceName = piece.name || piece;
+
         const pieceEl = document.createElement('div');
-        pieceEl.style.cssText = `${LABEL_400} color: #7A8498; margin-left: 8px;`;
-        pieceEl.textContent = piece.name || piece;
+        pieceEl.style.cssText = 'display: flex; align-items: center; gap: 8px; margin-left: 8px; margin-bottom: 4px;';
+
+        // Card art thumbnail, hydrated by name from the local catalog.
+        const thumb = document.createElement('img');
+        thumb.alt = '';
+        thumb.loading = 'lazy';
+        thumb.style.cssText = 'width: 44px; height: 32px; object-fit: cover; border-radius: 3px; flex-shrink: 0; background: #1C1F28; border: 1px solid #2A2D3A;';
+        thumb.addEventListener('error', () => { thumb.style.visibility = 'hidden'; });
+        pieceEl.appendChild(thumb);
+        hydrateCardImg(thumb, pieceName);
+
+        const labelEl = document.createElement('span');
+        labelEl.style.cssText = `${LABEL_400} color: #7A8498;`;
+        labelEl.textContent = pieceName;
+        pieceEl.appendChild(labelEl);
+
         popover.appendChild(pieceEl);
       }
     }
