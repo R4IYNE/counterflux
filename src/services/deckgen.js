@@ -48,6 +48,7 @@ export async function generateDeck(input) {
     collectionHash = 'no-collection',
     deckDiagnostics = '',
     getAccessToken,
+    onProgress,
   } = input;
 
   if (!commanderId) {
@@ -110,14 +111,13 @@ export async function generateDeck(input) {
     };
   }
 
-  let body = null;
-  try {
-    body = await res.json();
-  } catch {
-    body = { error: 'invalid response' };
-  }
-
+  // 4. Pre-stream errors (auth / budget / pool / commander) come back as a
+  //    normal JSON body with a non-2xx status. A 200 is an NDJSON STREAM:
+  //    {type:'progress',cards} lines while Mila generates, then a final
+  //    {type:'done',...} (or {type:'error',code,message} on mid-stream failure).
   if (!res.ok) {
+    let body = null;
+    try { body = await res.json(); } catch { body = { error: 'invalid response' }; }
     return {
       ok: false,
       code: mapStatusToCode(res.status),
@@ -126,14 +126,86 @@ export async function generateDeck(input) {
     };
   }
 
-  // 4. Mirror to local Dexie cache for offline read on the next call
+  const parsed = await readNdjsonStream(res, onProgress);
+  if (parsed.error) {
+    return { ok: false, code: parsed.error.code || 'server_error', message: parsed.error.message || 'Brew failed.' };
+  }
+  if (!parsed.done) {
+    return { ok: false, code: 'server_error', message: 'Mila sent no result — try again.' };
+  }
+
+  // Strip the protocol field; cache + return the result body.
+  const { type, ...response } = parsed.done;
+  void type;
   try {
-    await writeLocalCache(cacheKey, body);
+    await writeLocalCache(cacheKey, response);
   } catch {
     // Non-fatal — cache writes failing just means slower next-call
   }
 
-  return { ok: true, response: body, cacheHit: !!body?.cache_hit };
+  return { ok: true, response, cacheHit: !!response.cache_hit };
+}
+
+// ---------------------------------------------------------------------------
+// NDJSON stream reader
+// ---------------------------------------------------------------------------
+
+/**
+ * Read a 200 /api/deckgen NDJSON stream. Invokes onProgress(cards) for
+ * {type:'progress'} events and returns { done, error } where `done` is the
+ * final result body and `error` is a mid-stream failure event (if any).
+ * Resilient to chunk boundaries; falls back to a buffered parse when the
+ * response has no streamable body (older browsers / jsdom tests).
+ *
+ * @param {Response} res
+ * @param {(cards:number)=>void} [onProgress]
+ * @returns {Promise<{done: object|null, error: object|null}>}
+ */
+export async function readNdjsonStream(res, onProgress) {
+  const result = { done: null, error: null };
+  const handleLine = (line) => {
+    const t = (line || '').trim();
+    if (!t) return;
+    let evt;
+    try { evt = JSON.parse(t); } catch { return; }
+    if (evt.type === 'progress') {
+      if (typeof onProgress === 'function') { try { onProgress(evt.cards || 0); } catch { /* ignore */ } }
+    } else if (evt.type === 'done') {
+      result.done = evt;
+    } else if (evt.type === 'error') {
+      result.error = evt;
+    }
+  };
+
+  if (!res.body || typeof res.body.getReader !== 'function') {
+    try {
+      const text = await res.text();
+      for (const line of text.split('\n')) handleLine(line);
+    } catch { /* leave result empty → caller treats as no-result */ }
+    return result;
+  }
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      let nl;
+      while ((nl = buffer.indexOf('\n')) >= 0) {
+        handleLine(buffer.slice(0, nl));
+        buffer = buffer.slice(nl + 1);
+      }
+    }
+    handleLine(buffer); // trailing line with no final newline
+  } catch {
+    if (!result.done && !result.error) {
+      result.error = { code: 'network_error', message: 'Lost the connection to Mila mid-brew — try again.' };
+    }
+  }
+  return result;
 }
 
 // ---------------------------------------------------------------------------

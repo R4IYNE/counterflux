@@ -15,6 +15,22 @@ function mockFetch(impl) {
   globalThis.fetch = vi.fn(impl);
 }
 
+// Build a mock 200 response whose body streams the given NDJSON lines, so the
+// stream-reading path (readNdjsonStream) is exercised the same way as prod.
+function streamRes(lines) {
+  const chunks = lines.map((l) => new TextEncoder().encode(l + '\n'));
+  let i = 0;
+  return {
+    ok: true,
+    body: {
+      getReader: () => ({
+        read: async () =>
+          i < chunks.length ? { done: false, value: chunks[i++] } : { done: true, value: undefined },
+      }),
+    },
+  };
+}
+
 beforeEach(async () => {
   await db.deckgen_cache.clear();
   delete globalThis.fetch;
@@ -71,10 +87,9 @@ describe('generateDeck — local cache', () => {
       fetched_at: Date.now() - 8 * 24 * 60 * 60 * 1000, // 8 days ago
     });
 
-    mockFetch(async () => ({
-      ok: true,
-      json: async () => ({ recommended: [], cache_hit: false }),
-    }));
+    mockFetch(async () => streamRes([
+      JSON.stringify({ type: 'done', recommended: [], cache_hit: false }),
+    ]));
 
     const result = await generateDeck({
       commanderId: 'cmdr-1',
@@ -118,10 +133,9 @@ describe('generateDeck — authentication', () => {
   });
 
   it('sends the token in the Authorization header', async () => {
-    mockFetch(async () => ({
-      ok: true,
-      json: async () => ({ recommended: [] }),
-    }));
+    mockFetch(async () => streamRes([
+      JSON.stringify({ type: 'done', recommended: [] }),
+    ]));
     await generateDeck({
       commanderId: 'cmdr-1',
       powerLevel: 5,
@@ -217,10 +231,9 @@ describe('generateDeck — error mapping', () => {
 describe('generateDeck — happy path cache mirror', () => {
   it('writes the response to local cache on a successful fetch', async () => {
     const response = { recommended: [{ scryfall_id: 'c1' }], cache_hit: false };
-    mockFetch(async () => ({
-      ok: true,
-      json: async () => response,
-    }));
+    mockFetch(async () => streamRes([
+      JSON.stringify({ type: 'done', ...response }),
+    ]));
 
     await generateDeck({
       commanderId: 'cmdr-1',
@@ -241,6 +254,58 @@ describe('generateDeck — happy path cache mirror', () => {
     const stored = await db.deckgen_cache.get(hash);
     expect(stored).toBeDefined();
     expect(stored.response).toEqual(response);
+  });
+});
+
+describe('generateDeck — streaming protocol', () => {
+  it('reports progress events and resolves on the done event', async () => {
+    const onProgress = vi.fn();
+    mockFetch(async () => streamRes([
+      JSON.stringify({ type: 'progress', cards: 12 }),
+      JSON.stringify({ type: 'progress', cards: 60 }),
+      JSON.stringify({ type: 'done', recommended: [{ scryfall_id: 'c1', role: 'RAMP' }], cache_hit: false }),
+    ]));
+    const result = await generateDeck({
+      commanderId: 'cmdr-1', powerLevel: 5, mode: 'build', collectionHash: 'no-collection',
+      getAccessToken: async () => 'token', onProgress,
+    });
+    expect(result.ok).toBe(true);
+    expect(result.response.recommended).toHaveLength(1);
+    expect(onProgress).toHaveBeenCalledWith(12);
+    expect(onProgress).toHaveBeenCalledWith(60);
+    // protocol field stripped from the returned/cached body
+    expect(result.response.type).toBeUndefined();
+  });
+
+  it('maps a mid-stream error event to a typed failure', async () => {
+    mockFetch(async () => streamRes([
+      JSON.stringify({ type: 'progress', cards: 5 }),
+      JSON.stringify({ type: 'error', code: 'ai_provider_timeout', message: 'Mila took too long.' }),
+    ]));
+    const result = await generateDeck({
+      commanderId: 'cmdr-1', powerLevel: 5, mode: 'build', collectionHash: 'no-collection',
+      getAccessToken: async () => 'token',
+    });
+    expect(result.ok).toBe(false);
+    expect(result.code).toBe('ai_provider_timeout');
+  });
+
+  it('handles a done event split across chunk boundaries', async () => {
+    const doneLine = JSON.stringify({ type: 'done', recommended: [{ scryfall_id: 'x' }], cache_hit: false }) + '\n';
+    const mid = Math.floor(doneLine.length / 2);
+    const enc = new TextEncoder();
+    const chunks = [enc.encode(doneLine.slice(0, mid)), enc.encode(doneLine.slice(mid))];
+    let i = 0;
+    mockFetch(async () => ({
+      ok: true,
+      body: { getReader: () => ({ read: async () => i < chunks.length ? { done: false, value: chunks[i++] } : { done: true } }) },
+    }));
+    const result = await generateDeck({
+      commanderId: 'cmdr-1', powerLevel: 5, mode: 'build', collectionHash: 'no-collection',
+      getAccessToken: async () => 'token',
+    });
+    expect(result.ok).toBe(true);
+    expect(result.response.recommended).toHaveLength(1);
   });
 });
 

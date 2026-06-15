@@ -155,11 +155,11 @@ export function renderDeckgenBrewModal() {
           <span class="material-symbols-outlined" style="font-size: 44px; color: #0D52BD;">auto_awesome</span>
           <div style="font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; color: #EAECEE;">MILA IS THINKING…</div>
           <div style="font-family: 'Space Grotesk', sans-serif; font-size: 14px; color: #7A8498; line-height: 1.5; max-width: 360px;">
-            Reading EDHREC, slotting the deck, and writing each card's reasoning. A full brew usually takes 20–40 seconds.
+            Reading EDHREC and slotting your deck. Cards stream in as Mila picks them — a full brew usually takes 30–90 seconds.
           </div>
           <div
             style="font-family: 'JetBrains Mono', monospace; font-size: 13px; letter-spacing: 0.15em; color: #0D52BD;"
-            x-text="brewSeconds + 'S ELAPSED'"
+            x-text="(($store.deckgen?.brewProgress || 0) > 0 ? ($store.deckgen.brewProgress + ' CARDS · ') : '') + brewSeconds + 'S'"
           ></div>
         </div>
 

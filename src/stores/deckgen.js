@@ -30,6 +30,7 @@ export function initDeckgenStore() {
     status: 'idle',                  // 'idle' | 'brewing' | 'reviewing' | 'committing' | 'error'
     error: null,                     // { code, message } when status === 'error'
     cacheHit: false,                 // true if last call returned a cached response
+    brewProgress: 0,                 // cards streamed so far this brew (live progress for the thinking panel)
     brewModalOpen: false,             // Phase 18 — modal visibility, separate from status so the modal can be open while idle
     modalMode: 'build',               // Phase 20 — 'build' (brew from scratch) or 'retune' (power-level retune). Used by the modal to swap copy + hide irrelevant fields.
 
@@ -125,6 +126,7 @@ export function initDeckgenStore() {
       this.status = 'brewing';
       this.error = null;
       this.cacheHit = false;
+      this.brewProgress = 0;
       this.recommendations = [];
       this.activeDeckId = input.deckId;
       this.activeCommanderId = input.commanderId;
@@ -174,6 +176,7 @@ export function initDeckgenStore() {
         partialCardIds: input.partialCardIds,
         collectionHash,
         deckDiagnostics,
+        onProgress: (cards) => { this.brewProgress = cards; },
         getAccessToken: async () => {
           // Pulled from the auth store at call time so we always have a
           // fresh token. Lazy import avoids a circular dep at module load.

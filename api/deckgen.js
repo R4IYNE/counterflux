@@ -71,7 +71,10 @@ const ALLOWED_MODES = new Set(['build', 'fill', 'upgrade', 'retune']);
 // curated-pool task in roughly a third of Opus's time, comfortably inside 90s.
 // 90s + maxDuration=120 leaves tail-latency headroom; AbortError -> clean 504 +
 // budget refund.
-const ANTHROPIC_TIMEOUT_MS = 90_000;
+// 260615: streamed responses keep the connection alive (deltas flow), so this
+// is now a generous safety net just under maxDuration rather than the thing that
+// was prematurely killing 90-100s builds. Abort -> a clean 'error' stream event.
+const ANTHROPIC_TIMEOUT_MS = 110_000;
 
 // Vercel per-function cap. Default is generous now, but pin it explicitly so a
 // slow tail brew (Anthropic ~90s + EDHREC/Scryfall lookups) can never be cut off
@@ -132,11 +135,16 @@ export default async function handler(req, res) {
   if (cached) {
     // Cache hits don't burn budget — refund the increment.
     await refundBudget(supabase, userId);
-    return res.status(200).json({
+    // Uniform protocol: every 200 response is an NDJSON stream. A cache hit is
+    // just a single 'done' line (no generation to stream).
+    startStream(res);
+    writeEvent(res, {
       ...cached,
+      type: 'done',
       cache_hit: true,
       budget_remaining: DAILY_BUDGET - (budget.usedAfter - 1),
     });
+    return res.end();
   }
 
   // 6. Fetch commander metadata FIRST so we have the name for EDHREC's
@@ -214,56 +222,79 @@ export default async function handler(req, res) {
   const model = MODEL_SONNET;
   void MODEL_OPUS;
 
+  // 8b. STREAM the generation. Everything above returned normal JSON on error
+  // (origin/JWT/budget/commander/pool). From here the response is a 200 NDJSON
+  // stream: the Anthropic deltas keep the connection alive (no idle timeout on
+  // a 40-110s build) and the client renders a live progress count. Errors after
+  // this point are 'error' stream events, not HTTP status codes.
+  startStream(res);
+
   let parsed;
+  let accumulated = '';
+  let lastCardCount = -1;
+  const emitProgress = () => {
+    const cards = (accumulated.match(/"scryfall_id"/g) || []).length;
+    if (cards !== lastCardCount) {
+      lastCardCount = cards;
+      writeEvent(res, { type: 'progress', cards });
+    }
+  };
+
   const abortController = new AbortController();
   const abortTimer = setTimeout(() => abortController.abort(), ANTHROPIC_TIMEOUT_MS);
   try {
-    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY?.trim() });
-    const claudeResponse = await client.messages.create({
+    // maxRetries:1 (default 2) — a second retry can stack 30s+ of backoff onto a
+    // slow call; one retry covers a transient blip without blowing the budget.
+    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY?.trim(), maxRetries: 1 });
+    const stream = client.messages.stream({
       model,
       max_tokens: ANTHROPIC_MAX_TOKENS,
       system: [
-        {
-          type: 'text',
-          text: SYSTEM_PROMPT,
-          cache_control: { type: 'ephemeral' },
-        },
+        { type: 'text', text: SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } },
       ],
       messages: [
         { role: 'user', content: userPrompt },
       ],
     }, { signal: abortController.signal });
-    parsed = parseClaudeResponse(claudeResponse);
+
+    stream.on('text', (delta) => { accumulated += delta; emitProgress(); });
+    const finalMessage = await stream.finalMessage();
+    clearTimeout(abortTimer);
+    parsed = parseClaudeResponse(finalMessage);
   } catch (err) {
     clearTimeout(abortTimer);
     const isTimeout = err?.name === 'AbortError' || err?.message?.includes('aborted');
     if (isTimeout) {
-      console.warn('[api/deckgen] Anthropic call exceeded ' + (ANTHROPIC_TIMEOUT_MS / 1000) + 's timeout');
-      await refundBudget(supabase, userId);
-      return res.status(504).json({
-        error: 'AI provider timeout',
-        detail: 'Mila took too long thinking. Try again — a retry usually resolves it.',
-      });
+      console.warn('[api/deckgen] Anthropic stream exceeded ' + (ANTHROPIC_TIMEOUT_MS / 1000) + 's');
+    } else {
+      console.error('[api/deckgen] Anthropic stream failed:', err?.message || err);
     }
-    console.error('[api/deckgen] Anthropic call failed:', err?.message || err);
     await refundBudget(supabase, userId);
-    return res.status(502).json({ error: 'AI provider error', detail: err?.message || 'unknown' });
+    writeEvent(res, {
+      type: 'error',
+      code: isTimeout ? 'ai_provider_timeout' : 'ai_provider_error',
+      message: isTimeout
+        ? 'Mila took too long thinking — try again, a retry usually resolves it.'
+        : 'Mila hit an error mid-brew — try again in a moment.',
+    });
+    return res.end();
   } finally {
     clearTimeout(abortTimer);
   }
 
-  // 9. Validate response — every scryfall_id must be in the candidate pool
+  // 9. Validate — every scryfall_id must be in the candidate pool.
   const poolIds = new Set(candidatePool.map((c) => c.scryfall_id));
   const validated = parsed.recommended.filter((r) => poolIds.has(r.scryfall_id));
   const dropped = parsed.recommended.length - validated.length;
   if (validated.length < 10) {
-    // Claude hallucinated >90% — treat as a failed call.
     console.warn('[api/deckgen] response validation salvaged only', validated.length, 'of', parsed.recommended.length);
     await refundBudget(supabase, userId);
-    return res.status(502).json({
-      error: 'AI response did not match candidate pool',
-      detail: 'Claude returned scryfall_ids outside the provided pool. Try again.',
+    writeEvent(res, {
+      type: 'error',
+      code: 'ai_provider_error',
+      message: 'Mila returned cards outside the candidate pool — try again.',
     });
+    return res.end();
   }
   if (dropped > 0) {
     console.info('[api/deckgen] dropped', dropped, 'hallucinated cards from response');
@@ -284,7 +315,31 @@ export default async function handler(req, res) {
     console.warn('[api/deckgen] cache write failed (non-fatal):', err?.message || err);
   }
 
-  return res.status(200).json(responseBody);
+  writeEvent(res, { type: 'done', ...responseBody });
+  return res.end();
+}
+
+// ---------------------------------------------------------------------------
+// NDJSON streaming helpers
+// ---------------------------------------------------------------------------
+
+/** Flush streaming headers (200) once, before the first event is written. */
+function startStream(res) {
+  if (res.headersSent) return;
+  res.statusCode = 200;
+  res.setHeader('Content-Type', 'application/x-ndjson; charset=utf-8');
+  res.setHeader('Cache-Control', 'no-cache, no-transform');
+  res.setHeader('X-Accel-Buffering', 'no'); // disable proxy buffering so events flush live
+  if (typeof res.flushHeaders === 'function') res.flushHeaders();
+}
+
+/** Write one newline-delimited JSON event. Best-effort — never throws. */
+function writeEvent(res, obj) {
+  try {
+    res.write(JSON.stringify(obj) + '\n');
+  } catch (err) {
+    console.warn('[api/deckgen] stream write failed:', err?.message || err);
+  }
 }
 
 // ---------------------------------------------------------------------------
