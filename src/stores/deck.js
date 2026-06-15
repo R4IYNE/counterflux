@@ -3,6 +3,7 @@ import { db } from '../db/schema.js';
 import { classifyType, TYPE_ORDER } from '../utils/type-classifier.js';
 import { suggestTags, DEFAULT_TAGS } from '../utils/tag-heuristics.js';
 import { computeDeckAnalytics } from '../utils/deck-analytics.js';
+import { matchesDeckFilter } from '../utils/deck-filter.js';
 import { logActivity } from '../services/activity.js';
 
 // Re-export for backward compatibility
@@ -19,6 +20,11 @@ export function initDeckStore() {
     activeCards: [],
     viewMode: 'grid',
     loading: false,
+    deckFilter: { type: 'All', cmc: 'All', owned: 'All', colours: null },
+
+    setDeckFilter(patch) {
+      this.deckFilter = { ...this.deckFilter, ...patch };
+    },
 
     get cardCount() {
       return this.activeCards.reduce((sum, c) => sum + c.quantity, 0);
@@ -31,6 +37,7 @@ export function initDeckStore() {
     get groupedByType() {
       const groups = {};
       for (const entry of this.activeCards) {
+        if (!matchesDeckFilter(entry, this.deckFilter)) continue;
         const type = classifyType(entry.card?.type_line);
         if (!groups[type]) groups[type] = [];
         groups[type].push(entry);
