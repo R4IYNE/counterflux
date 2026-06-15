@@ -201,12 +201,34 @@ export async function fetchEdhrecSynergyNames(commanderName) {
   }
 
   const cardlists = data?.container?.json_dict?.cardlists || [];
-  const wanted = new Set(['highsynergycards', 'topcards', 'newcards']);
+
+  // Harvest in PRIORITY order, not EDHREC's response order. The previous code
+  // only pulled highsynergycards + topcards + newcards (~25 names, and crucially
+  // ZERO lands or ramp) — which after dedup + colour/legality filtering fell
+  // below the 30-card floor → 409 "insufficient candidates", and produced an
+  // unbuildable deck even when it squeaked past. The category lists
+  // (creatures/instants/.../lands) hold the other ~250 recommended cards.
+  //
+  // Order front-loads the synergy signal (used as a score by buildCandidatePool)
+  // and the structural essentials (ramp + lands) so they survive the pool cap,
+  // then creatures and the spell categories. 'gamechangers' is intentionally
+  // excluded so casual brews aren't seeded with cEDH staples — the power-level
+  // dial drives competitiveness instead.
+  const WANTED_LISTS = [
+    'highsynergycards', 'topcards', 'newcards',
+    'manaartifacts', 'lands', 'utilitylands',
+    'creatures', 'instants', 'sorceries',
+    'enchantments', 'planeswalkers', 'utilityartifacts',
+  ];
+  const byTag = new Map();
+  for (const list of cardlists) {
+    if (list?.tag) byTag.set(list.tag, list.cardviews || []);
+  }
+
   const names = [];
   const seen = new Set();
-  for (const list of cardlists) {
-    if (!wanted.has(list?.tag)) continue;
-    for (const cv of (list.cardviews || [])) {
+  for (const tag of WANTED_LISTS) {
+    for (const cv of (byTag.get(tag) || [])) {
       const name = cv?.name;
       if (!name) continue;
       const key = String(name).toLowerCase();

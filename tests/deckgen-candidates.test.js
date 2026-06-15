@@ -122,14 +122,14 @@ describe('buildCandidatePool', () => {
     expect(out).toHaveLength(1);
   });
 
-  it('caps output at 200 candidates', () => {
+  it('caps output at 250 candidates', () => {
     const commander = card({ id: 'cmdr', color_identity: ['U'] });
-    const synergies = Array.from({ length: 300 }, (_, i) => ({ scryfall_id: 'c' + i }));
+    const synergies = Array.from({ length: 400 }, (_, i) => ({ scryfall_id: 'c' + i }));
     const cards = synergies.map((s) => card({ id: s.scryfall_id }));
     const out = buildCandidatePool({
       synergies, cards, ownedIds: null, colorIdentity: ['U'], commander,
     });
-    expect(out).toHaveLength(200);
+    expect(out).toHaveLength(250);
   });
 
   it('preserves synergy_score on output', () => {

@@ -18,7 +18,11 @@
  * synthetic synergy + collection arrays.
  */
 
-const MAX_CANDIDATES = 200;
+// 260615: raised 200 → 250 so the widened EDHREC harvest (synergy + ramp +
+// lands + creatures + removal spells) fits with full category coverage. Below
+// ~250 the structural categories (lands/ramp) or the removal spells get starved
+// by the cap. Still well within the prompt token budget.
+const MAX_CANDIDATES = 250;
 const COMMANDER_FORMAT = 'commander';
 
 /**
