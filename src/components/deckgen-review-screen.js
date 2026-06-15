@@ -16,6 +16,7 @@
  */
 
 import { renderBrewReviewList } from './brew-review-list.js';
+import { renderBrewReviewStack } from './brew-review-stack.js';
 
 export function renderDeckgenReviewScreen() {
   return `
@@ -186,105 +187,12 @@ export function renderDeckgenReviewScreen() {
       </div>
 
       <!-- Body -->
-      <div style="flex: 1; min-height: 0; overflow-y: auto; padding: 24px 32px;">
-        <template x-for="group in groupedByRole" :key="group.role">
-          <div style="margin-bottom: 32px;" x-show="isSwapMode">
-            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
-              <span
-                style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.15em; font-weight: 700; color: #0D52BD; text-transform: uppercase;"
-                x-text="group.role.replace(/_/g, ' ')"
-              ></span>
-              <span
-                style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.15em; color: #7A8498;"
-                x-text="\`(\${group.cards.length})\`"
-              ></span>
-            </div>
-
-            <!-- 260608-swp: swap-pair row template (retune/upgrade modes)
-                 — shows the card being removed on the left, an arrow, the
-                 card being added on the right. Plain add-row template
-                 below is unchanged for plain brew mode. -->
-            <div class="grid grid-cols-1 gap-[12px]" x-show="isSwapMode">
-              <template x-for="rec in group.cards" :key="rec.scryfall_id">
-                <div
-                  :style="rec.approved
-                    ? 'display: flex; align-items: stretch; gap: 12px; padding: 12px; background: rgba(13,82,189,0.06); border: 1px solid rgba(13,82,189,0.4);'
-                    : 'display: flex; align-items: stretch; gap: 12px; padding: 12px; background: transparent; border: 1px solid #2A2D3A; opacity: 0.55;'"
-                >
-                  <!-- Swap-out side (current card) -->
-                  <div style="display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0;">
-                    <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.15em; color: #E23838; text-transform: uppercase;">
-                      OUT
-                    </span>
-                    <div style="display: flex; gap: 8px; align-items: center;">
-                      <template x-if="cardImage(rec.swap_out)">
-                        <img
-                          :src="cardImage(rec.swap_out)"
-                          :alt="cardName(rec.swap_out)"
-                          class="cf-card-img"
-                          style="width: 36px; height: 50px; object-fit: cover; flex-shrink: 0; filter: grayscale(0.3) opacity(0.8);"
-                          loading="lazy"
-                          onerror="this.style.visibility='hidden'"
-                        />
-                      </template>
-                      <template x-if="!cardImage(rec.swap_out)">
-                        <div style="width: 36px; height: 50px; flex-shrink: 0; background: #1C1F28; border: 1px solid #2A2D3A;"></div>
-                      </template>
-                      <span
-                        style="flex: 1; min-width: 0; font-family: 'Space Grotesk', sans-serif; font-size: 13px; color: #EAECEE; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-decoration: line-through; text-decoration-color: #E23838; text-decoration-thickness: 1px;"
-                        x-text="cardName(rec.swap_out)"
-                      ></span>
-                    </div>
-                  </div>
-
-                  <!-- Arrow + role between the two cards -->
-                  <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; flex-shrink: 0; padding: 0 4px;">
-                    <span class="material-symbols-outlined" style="font-size: 20px; color: #0D52BD;">east</span>
-                    <span style="font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.1em; color: #4A5064; text-transform: uppercase;" x-text="(rec.role || '').replace(/_/g, ' ')"></span>
-                  </div>
-
-                  <!-- Swap-in side (new card) -->
-                  <div style="display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0;">
-                    <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.15em; color: #2ECC71; text-transform: uppercase;">
-                      IN
-                    </span>
-                    <div style="display: flex; gap: 8px; align-items: center;">
-                      <template x-if="cardImage(rec.scryfall_id)">
-                        <img
-                          :src="cardImage(rec.scryfall_id)"
-                          :alt="cardName(rec.scryfall_id)"
-                          class="cf-card-img"
-                          style="width: 36px; height: 50px; object-fit: cover; flex-shrink: 0;"
-                          loading="lazy"
-                          onerror="this.style.visibility='hidden'"
-                        />
-                      </template>
-                      <template x-if="!cardImage(rec.scryfall_id)">
-                        <div style="width: 36px; height: 50px; flex-shrink: 0; background: #1C1F28; border: 1px solid #2A2D3A; display: flex; align-items: center; justify-content: center;">
-                          <span class="material-symbols-outlined" style="font-size: 14px; color: #4A5064;">style</span>
-                        </div>
-                      </template>
-                      <span
-                        style="flex: 1; min-width: 0; font-family: 'Space Grotesk', sans-serif; font-size: 13px; font-weight: 700; color: #EAECEE; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"
-                        x-text="cardName(rec.scryfall_id)"
-                      ></span>
-                    </div>
-                    <span
-                      x-show="rec.reasoning"
-                      style="font-family: 'Space Grotesk', sans-serif; font-size: 12px; color: #7A8498; line-height: 1.45; margin-top: 4px;"
-                      x-text="rec.reasoning"
-                    ></span>
-                    <!-- Explicit APPLY / SKIP — replaces the old click-to-toggle card -->
-                    <div style="display: flex; gap: 6px; margin-top: 8px;">
-                      <button type="button" @click="$store.deckgen.setApproval(rec.scryfall_id, true)" :style="btnAdd(rec.approved)">✓ Apply</button>
-                      <button type="button" @click="$store.deckgen.setApproval(rec.scryfall_id, false)" :style="btnSkip(rec.approved)">✕ Skip</button>
-                    </div>
-                  </div>
-                </div>
-              </template>
-            </div>
-          </div>
-        </template>
+      <div style="flex: 1; min-height: 0; overflow-y: auto; padding: 24px 32px; display: flex; flex-direction: column;">
+        <!-- Swap mode (retune/upgrade) — one-card-at-a-time card stack.
+             Self-contained component with its OWN x-data (owns local idx). -->
+        <div x-show="isSwapMode" style="flex: 1; min-height: 0; display: flex; flex-direction: column;">
+          ${renderBrewReviewStack()}
+        </div>
 
         <!-- Plain (non-swap) streaming list — extracted component, runs in this
              same x-data scope so it can call cardName/cardImage/btnAdd/etc. -->
