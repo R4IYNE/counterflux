@@ -53,6 +53,45 @@ import {
   fetchOwnedScryfallIds,
 } from './_deckgen-shared.js';
 
+// Inlined from src/services/deckgen-stream-parse.js (api/ can't import src/).
+// Keep identical to that file; its unit tests guard the logic.
+function extractRecommendedCards(buffer) {
+  const out = [];
+  if (!buffer) return out;
+  const arrStart = buffer.indexOf('"recommended"');
+  if (arrStart === -1) return out;
+  const bracket = buffer.indexOf('[', arrStart);
+  if (bracket === -1) return out;
+  let i = bracket + 1;
+  const n = buffer.length;
+  while (i < n) {
+    while (i < n && buffer[i] !== '{') {
+      if (buffer[i] === ']') return out;
+      i++;
+    }
+    if (i >= n) break;
+    let depth = 0, inStr = false, esc = false, end = -1;
+    for (let j = i; j < n; j++) {
+      const ch = buffer[j];
+      if (esc) { esc = false; continue; }
+      if (ch === '\\') { esc = true; continue; }
+      if (ch === '"') { inStr = !inStr; continue; }
+      if (inStr) continue;
+      if (ch === '{') depth++;
+      else if (ch === '}') { depth--; if (depth === 0) { end = j; break; } }
+    }
+    if (end === -1) break;
+    try {
+      const obj = JSON.parse(buffer.slice(i, end + 1));
+      if (obj && obj.scryfall_id) {
+        out.push({ scryfall_id: obj.scryfall_id, role: obj.role, reasoning: obj.reasoning });
+      }
+    } catch { break; }
+    i = end + 1;
+  }
+  return out;
+}
+
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
@@ -232,7 +271,13 @@ export default async function handler(req, res) {
   let parsed;
   let accumulated = '';
   let lastCardCount = -1;
+  let emittedCards = 0;               // how many card events already sent
   const emitProgress = () => {
+    const complete = extractRecommendedCards(accumulated);
+    for (let k = emittedCards; k < complete.length; k++) {
+      writeEvent(res, { type: 'card', card: complete[k] });
+    }
+    emittedCards = complete.length;
     const cards = (accumulated.match(/"scryfall_id"/g) || []).length;
     if (cards !== lastCardCount) {
       lastCardCount = cards;
