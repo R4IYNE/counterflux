@@ -16,7 +16,7 @@
  *   MAX_MAIN_BUNDLE    = 300 KB gz  (critical-path JS + CSS on first paint)
  *   MAX_MANA_FONT      = 120 KB gz  (99 KB mana-font + overhead)
  *   MAX_KEYRUNE        =  50 KB gz  (keyrune set icons — lighter than mana)
- *   MAX_SCREEN_CHUNK   =  40 KB gz  (per-screen module, lazy-loaded)
+ *   MAX_SCREEN_CHUNK   =  42 KB gz  (per-screen module, lazy-loaded)
  *   MAX_VENDOR_CHUNK   = 100 KB gz  (any other vendor split, e.g. chart.js, supabase)
  *   DEFAULT            = 500 KB gz  (fail loud if something unexpectedly huge ships)
  */
@@ -31,7 +31,10 @@ const DIST_ASSETS = 'dist/assets';
 const MAX_MAIN_BUNDLE = 300;
 const MAX_MANA_FONT = 120;
 const MAX_KEYRUNE = 50;
-const MAX_SCREEN_CHUNK = 40;
+// 260615: 40 -> 42. The thousand-year (deck builder) chunk grew with the v1.3
+// AI surfaces (card-art on synergy/combos, retune swap-pair review, brew
+// thinking panel). Still a tight lazy-chunk ceiling, well under the vendor cap.
+const MAX_SCREEN_CHUNK = 42;
 const MAX_VENDOR_CHUNK = 100;
 const DEFAULT_BUDGET = 500;
 
@@ -41,7 +44,7 @@ const BUDGETS = {
   main: 300,
   'mana-font': 120,
   keyrune: 50,
-  screen: 40,
+  screen: 42,
   vendor: 100,
   worker: 100,
   // Modal/panel/service code-split chunks can be as large as a screen

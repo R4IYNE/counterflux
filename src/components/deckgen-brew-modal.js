@@ -43,6 +43,8 @@ export function renderDeckgenBrewModal() {
         useCollectionOnly: false,
         mode: 'build',
         archetypeHint: '',
+        brewSeconds: 0,
+        _brewTimer: null,
         get isRetune() {
           return $store.deckgen?.modalMode === 'retune';
         },
@@ -88,20 +90,30 @@ export function renderDeckgenBrewModal() {
           const sendPartial = this.effectiveMode === 'retune'
             || this.effectiveMode === 'upgrade'
             || this.effectiveMode === 'fill';
-          await $store.deckgen.startBrew({
-            deckId: deck.id,
-            commanderId: deck.commander_id,
-            powerLevel: this.powerLevel,
-            mode: this.effectiveMode,
-            useCollectionOnly: this.isSwapMode ? false : this.useCollectionOnly,
-            archetypeHint: this.archetypeHint.trim(),
-            partialCardIds: sendPartial ? partial : [],
-          });
+          // Live elapsed counter so the thinking panel proves it's working
+          // during the 20-40s generation (no streaming yet).
+          this.brewSeconds = 0;
+          if (this._brewTimer) clearInterval(this._brewTimer);
+          this._brewTimer = setInterval(() => { this.brewSeconds++; }, 1000);
+          try {
+            await $store.deckgen.startBrew({
+              deckId: deck.id,
+              commanderId: deck.commander_id,
+              powerLevel: this.powerLevel,
+              mode: this.effectiveMode,
+              useCollectionOnly: this.isSwapMode ? false : this.useCollectionOnly,
+              archetypeHint: this.archetypeHint.trim(),
+              partialCardIds: sendPartial ? partial : [],
+            });
+          } finally {
+            clearInterval(this._brewTimer);
+            this._brewTimer = null;
+          }
         }
       }"
-      x-show="$store.deckgen?.status === 'idle' && $store.deckgen?.brewModalOpen"
+      x-show="($store.deckgen?.status === 'idle' || $store.deckgen?.status === 'brewing') && $store.deckgen?.brewModalOpen"
       x-cloak
-      @keydown.escape.window="$store.deckgen.brewModalOpen = false"
+      @keydown.escape.window="if ($store.deckgen?.status !== 'brewing') $store.deckgen.brewModalOpen = false"
       style="position: fixed; inset: 0; z-index: 9000; display: flex; align-items: center; justify-content: center;"
     >
       <!-- Backdrop -->
@@ -132,6 +144,27 @@ export function renderDeckgenBrewModal() {
             <span class="material-symbols-outlined" style="font-size: 20px;">close</span>
           </button>
         </div>
+
+        <!-- Thinking panel — shown while generation is in flight. The modal now
+             stays mounted during 'brewing' (form hidden) so the user gets live
+             feedback (ticking counter) instead of a vanished modal + silent wait. -->
+        <div
+          x-show="$store.deckgen?.status === 'brewing'"
+          style="display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 32px 24px; text-align: center;"
+        >
+          <span class="material-symbols-outlined" style="font-size: 44px; color: #0D52BD;">auto_awesome</span>
+          <div style="font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; color: #EAECEE;">MILA IS THINKING…</div>
+          <div style="font-family: 'Space Grotesk', sans-serif; font-size: 14px; color: #7A8498; line-height: 1.5; max-width: 360px;">
+            Reading EDHREC, slotting the deck, and writing each card's reasoning. A full brew usually takes 20–40 seconds.
+          </div>
+          <div
+            style="font-family: 'JetBrains Mono', monospace; font-size: 13px; letter-spacing: 0.15em; color: #0D52BD;"
+            x-text="brewSeconds + 'S ELAPSED'"
+          ></div>
+        </div>
+
+        <!-- Form body (hidden once brewing starts) -->
+        <div x-show="$store.deckgen?.status === 'idle'" style="display: flex; flex-direction: column; gap: 24px;">
 
         <!-- Budget chip (only when we know it) -->
         <template x-if="$store.deckgen?.budgetRemaining !== null">
@@ -285,6 +318,8 @@ export function renderDeckgenBrewModal() {
             CANCEL
           </button>
         </div>
+
+        </div><!-- /form body -->
       </div>
     </div>
   `;

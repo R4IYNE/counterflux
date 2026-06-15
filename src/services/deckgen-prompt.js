@@ -39,7 +39,7 @@ const RESPONSE_SCHEMA = `{
     {
       "scryfall_id": "<exact id from the candidate pool>",
       "role": "LAND|RAMP|DRAW|REMOVAL_SINGLE|REMOVAL_SWEEP|WIN_CON|SUPPORT",
-      "reasoning": "<2-3 sentences explaining why this card fits THIS commander at THIS power level>"
+      "reasoning": "<ONE short sentence (~20 words max) on why this card fits THIS commander at THIS power level>"
     }
   ]
 }`;
@@ -83,7 +83,7 @@ export const SYSTEM_PROMPT = [
   `## Rules`,
   ``,
   `1. Every recommended scryfall_id MUST appear in the candidate pool you receive. If you're tempted to recommend a card that isn't there, pick the closest available substitute.`,
-  `2. Reasoning paragraphs are 2-3 sentences. Speak in the user's voice ("you", not "the player"). Reference the commander and power level specifically.`,
+  `2. Reasoning is ONE short sentence (~20 words max) in the user's voice ("you", not "the player"), referencing the commander/power level. Keep it tight — this runs for ~99 cards, so brevity keeps the brew fast.`,
   `3. Hit the role-bucket targets — under-rampers and over-creature-y decks are the most common AI failure mode. Count as you go.`,
   `4. Aim for the right CARD COUNT for the mode the user requested. 'build' = 99 cards. 'fill' = exactly the number requested. 'upgrade' / 'retune' = swap pairs.`,
   `5. Never recommend the commander itself.`,
