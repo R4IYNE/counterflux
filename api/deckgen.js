@@ -64,13 +64,19 @@ const MODEL_SONNET = 'claude-sonnet-4-6';
 const ANTHROPIC_MAX_TOKENS = 8192;
 const EDHREC_TOP_N = 300;
 const ALLOWED_MODES = new Set(['build', 'fill', 'upgrade', 'retune']);
-// 260608: hard timeout on the Anthropic call. Opus p95 lands around 30s
-// for a 99-card brew; 60s gives meaningful headroom for tail-latency
-// outliers without letting a hung call drag past Vercel's default 300s
-// budget. Sonnet retune is much faster (single-digit seconds typical)
-// so the same cap is generous. AbortError converts to a clean 504 +
+// 260615: hard timeout on the Anthropic call. A real full 99-card build emits
+// ~6-7K output tokens (id+role+reasoning per card); the original 60s cap (sized
+// for the pre-fix STARVED ~25-card pool) was killing genuine builds at 60s ->
+// 504. Sonnet 4.6 (see model dispatch below) does this constrained slot-from-a-
+// curated-pool task in roughly a third of Opus's time, comfortably inside 90s.
+// 90s + maxDuration=120 leaves tail-latency headroom; AbortError -> clean 504 +
 // budget refund.
-const ANTHROPIC_TIMEOUT_MS = 60_000;
+const ANTHROPIC_TIMEOUT_MS = 90_000;
+
+// Vercel per-function cap. Default is generous now, but pin it explicitly so a
+// slow tail brew (Anthropic ~90s + EDHREC/Scryfall lookups) can never be cut off
+// by a platform default below our AbortController budget.
+export const maxDuration = 120;
 
 // ---------------------------------------------------------------------------
 // Handler
@@ -199,7 +205,14 @@ export default async function handler(req, res) {
     deckDiagnostics: typeof deckDiagnostics === 'string' ? deckDiagnostics : '',
   });
 
-  const model = mode === 'retune' ? MODEL_SONNET : MODEL_OPUS;
+  // 260615: all modes use Sonnet 4.6. Opus was killing full 99-card builds at
+  // the 60s timeout (~6-7K output tokens at Opus's slower throughput -> >60s ->
+  // 504 + ERR_CONNECTION_CLOSED). The candidate pool is already EDHREC-curated,
+  // so the model's job is slotting + brief reasoning, which Sonnet handles well
+  // and ~3x faster — making the feature actually usable. MODEL_OPUS retained
+  // for an easy revert if a future mode wants max-reasoning depth + a longer cap.
+  const model = MODEL_SONNET;
+  void MODEL_OPUS;
 
   let parsed;
   const abortController = new AbortController();
