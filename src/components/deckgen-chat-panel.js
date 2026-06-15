@@ -62,7 +62,7 @@ export function renderDeckgenChatPanel() {
           <div style="display: flex; align-items: center; gap: 12px; min-width: 0;">
             <span class="material-symbols-outlined" style="color: #0D52BD; font-size: 24px;">forum</span>
             <div style="min-width: 0;">
-              <h2 style="font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; color: #EAECEE; margin: 0; text-transform: uppercase; letter-spacing: 0.01em;">BREW WITH MILA</h2>
+              <h2 style="font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; color: #EAECEE; margin: 0; text-transform: uppercase; letter-spacing: 0.01em;">BREW CHAT</h2>
               <div
                 style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.15em; color: #7A8498; text-transform: uppercase; margin-top: 2px;"
                 x-text="$store.deckgenChat?.budgetRemaining !== null ? ($store.deckgenChat.budgetRemaining + ' CHATS LEFT TODAY') : 'CONVERSATIONAL DECKBUILDING'"
@@ -189,7 +189,7 @@ export function renderDeckgenChatPanel() {
           <!-- Thinking indicator -->
           <template x-if="$store.deckgenChat?.status === 'thinking'">
             <div style="display: flex; align-items: center; gap: 8px; color: #7A8498; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;">
-              <span class="material-symbols-outlined" style="font-size: 16px; color: #0D52BD;">pets</span> MILA IS THINKING…
+              <span class="material-symbols-outlined" style="font-size: 16px; color: #0D52BD;">pets</span> THINKING…
             </div>
           </template>
         </div>

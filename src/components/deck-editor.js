@@ -150,7 +150,7 @@ export function renderDeckEditor(container) {
   chatBtnIcon.style.fontSize = '16px';
   chatBtnIcon.textContent = 'forum';
   chatBtn.appendChild(chatBtnIcon);
-  chatBtn.appendChild(document.createTextNode('CHAT WITH MILA'));
+  chatBtn.appendChild(document.createTextNode('BREW CHAT'));
   chatBtn.onmouseenter = () => {
     chatBtn.style.color = '#EAECEE';
     chatBtn.style.borderColor = '#0D52BD';

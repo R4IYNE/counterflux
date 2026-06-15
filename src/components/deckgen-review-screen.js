@@ -62,9 +62,9 @@ export function renderDeckgenReviewScreen() {
           // component. The apostrophe below is U+2019 so the single-quoted
           // string is not cut mid-word. (Guarded by deckgen-review-screen.test.js.)
           if (this.isSwapMode) {
-            return $store.deckgen?.mode === 'retune' ? 'MILA’S RETUNE' : 'MILA’S UPGRADE';
+            return $store.deckgen?.mode === 'retune' ? 'YOUR RETUNE' : 'YOUR UPGRADE';
           }
-          return 'MILA’S BREW';
+          return 'YOUR BREW';
         },
         get commitButtonText() {
           const count = this.approvedCount;

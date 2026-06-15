@@ -127,7 +127,7 @@ export function renderNotificationBellPopover() {
           <span
             class="font-mono uppercase text-[11px] tracking-[0.15em]"
             style="color: #7A8498;"
-          >MILA'S UPGRADES</span>
+          >UPGRADES</span>
           <ul class="mt-[8px] flex flex-col gap-[8px]">
             <template
               x-for="rec in ($store.deckgen?.recommendations_pending || []).slice(0, 3)"

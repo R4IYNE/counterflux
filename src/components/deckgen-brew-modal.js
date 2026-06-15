@@ -133,7 +133,7 @@ export function renderDeckgenBrewModal() {
             <span class="material-symbols-outlined" style="color: #0D52BD; font-size: 24px;" x-text="isSwapMode ? 'tune' : 'auto_awesome'"></span>
             <h2
               style="font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; color: #EAECEE; margin: 0; text-transform: uppercase; letter-spacing: 0.01em;"
-              x-text="isRetune ? 'RETUNE WITH MILA' : (isUpgrade ? 'UPGRADE WITH MILA' : 'BREW WITH MILA')"
+              x-text="isRetune ? 'RETUNE' : (isUpgrade ? 'UPGRADE' : 'BREW')"
             ></h2>
           </div>
           <button
@@ -309,7 +309,7 @@ export function renderDeckgenBrewModal() {
               : 'flex: 1; padding: 12px; background: #1C1F28; color: #4A5064; border: 1px solid #2A2D3A; cursor: not-allowed; font-family: JetBrains Mono, monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; opacity: 0.6;'"
           >
             <span x-show="$store.deckgen?.status !== 'brewing'" x-text="isRetune ? 'RETUNE IT' : (isUpgrade ? 'UPGRADE IT' : 'BREW IT')"></span>
-            <span x-show="$store.deckgen?.status === 'brewing'">MILA IS THINKING…</span>
+            <span x-show="$store.deckgen?.status === 'brewing'">BREWING…</span>
           </button>
           <button
             @click="$store.deckgen.brewModalOpen = false"
