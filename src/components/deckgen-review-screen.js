@@ -50,13 +50,8 @@ export function renderDeckgenReviewScreen() {
           } catch {}
         },
         get isSwapMode() {
-          // True iff every recommendation carries a swap_out — i.e.
-          // we're in retune or upgrade mode. Mixed responses fall back
-          // to the plain add-row template so swap rows aren't shown for
-          // cards that lack a swap_out target.
-          const recs = $store.deckgen?.recommendations || [];
-          if (recs.length === 0) return false;
-          return recs.every(r => !!r.swap_out);
+          const mode = $store.deckgen?.mode;
+          return mode === 'retune' || mode === 'upgrade';
         },
         get titleText() {
           // Single-quoted strings only. This whole object is the value of a
@@ -102,7 +97,8 @@ export function renderDeckgenReviewScreen() {
             : base + ' background: transparent; color: #4A5064; border-color: #2A2D3A;';
         },
         get groupedByRole() {
-          const recs = $store.deckgen?.recommendations || [];
+          // Enrichment extras (source set) render only in the ALSO WORTH IT section.
+          const recs = ($store.deckgen?.recommendations || []).filter(r => !r.source);
           const groups = {};
           for (const r of recs) {
             const role = r.role || 'SUPPORT';
@@ -178,7 +174,7 @@ export function renderDeckgenReviewScreen() {
           <button
             @click="commit()"
             :disabled="approvedCount === 0 || $store.deckgen?.status === 'committing' || !$store.deckgen?.streamComplete"
-            :style="approvedCount > 0 && $store.deckgen?.status !== 'committing'
+            :style="approvedCount > 0 && $store.deckgen?.status !== 'committing' && $store.deckgen?.streamComplete
               ? 'padding: 8px 16px; background: #0D52BD; color: #EAECEE; border: 1px solid #0D52BD; cursor: pointer; font-family: JetBrains Mono, monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase;'
               : 'padding: 8px 16px; background: #1C1F28; color: #4A5064; border: 1px solid #2A2D3A; cursor: not-allowed; opacity: 0.6; font-family: JetBrains Mono, monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase;'"
             x-text="commitButtonText"

@@ -39,7 +39,7 @@ export function extractRecommendedCards(buffer) {
     try {
       const obj = JSON.parse(buffer.slice(i, end + 1));
       if (obj && obj.scryfall_id) {
-        out.push({ scryfall_id: obj.scryfall_id, role: obj.role, reasoning: obj.reasoning });
+        out.push({ scryfall_id: obj.scryfall_id, role: obj.role, reasoning: obj.reasoning, swap_out: obj.swap_out || null });
       }
     } catch { /* malformed slice — stop, wait for more */ break; }
     i = end + 1;

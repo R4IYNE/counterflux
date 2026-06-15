@@ -25,6 +25,7 @@ vi.mock('../src/services/deckgen.js', () => ({
 
 // --- Imports under test (after mocks) -------------------------------------
 
+import Alpine from 'alpinejs';
 import { db } from '../src/db/schema.js';
 import { initDeckgenStore } from '../src/stores/deckgen.js';
 import { generateDeck } from '../src/services/deckgen.js';
@@ -247,6 +248,17 @@ describe('deckgen store — startBrew streaming', () => {
     expect(ids).toEqual(['a1', 'b2', 'c3']); // deduped live + reconciled from done
     expect(s.streamComplete).toBe(true);
     expect(s.recommendations.every(r => r.approved)).toBe(true);
+  });
+
+  it('retains swap_out on a streamed retune card', async () => {
+    const store = Alpine.store('deckgen');
+    generateDeck.mockImplementation(async ({ onCard }) => {
+      onCard({ scryfall_id: 'new1', role: 'RAMP', swap_out: 'old1' });
+      return { ok: true, response: { recommended: [{ scryfall_id: 'new1', role: 'RAMP', swap_out: 'old1' }] } };
+    });
+    await store.startBrew({ commanderId: 'c', powerLevel: 5, mode: 'retune', deckId: 'd1' });
+    const rec = store.recommendations.find(r => r.scryfall_id === 'new1');
+    expect(rec.swap_out).toBe('old1');
   });
 });
 
