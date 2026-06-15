@@ -2,6 +2,7 @@ import { searchCards, browseCards } from '../db/search.js';
 import { getCardImage, getCardName, getCardManaCost } from '../db/card-accessor.js';
 import Sortable from 'sortablejs';
 import { DEFAULT_TAGS, suggestTags } from '../utils/tag-heuristics.js';
+import { createFilterDropdown } from './deck-filter-controls.js';
 
 /**
  * Deck editor search panel.
@@ -201,7 +202,16 @@ export function renderDeckSearchPanel(container) {
   // Insert before resultsEl so the affordance sits at the top of the results region.
   container.insertBefore(bulkLoadingPlaceholder, resultsEl);
 
+  // #6: transient "searching…" affordance shown while executeSearch() awaits
+  // the async browse/search call. Toggled on at the start of executeSearch()
+  // and off at the end of renderResults().
+  const searchingEl = document.createElement('div');
+  searchingEl.style.cssText = "display: none; align-items: center; gap: 6px; padding: 6px 12px; color: #7A8498; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase;";
+  searchingEl.innerHTML = '<span class="material-symbols-outlined cf-auth-spin" style="font-size: 14px;">progress_activity</span> Searching…';
+  container.insertBefore(searchingEl, resultsEl);
+
   async function executeSearch() {
+    searchingEl.style.display = 'flex';
     const query = searchInput.value.trim();
     const deckColorIdentity = deckStore?.activeDeck?.color_identity || [];
 
@@ -283,6 +293,7 @@ export function renderDeckSearchPanel(container) {
   }
 
   function renderResults() {
+    searchingEl.style.display = 'none';
     resultsEl.innerHTML = '';
     // Quick task 260514-uqc: affordance hint visible when bulkdata is still
     // streaming AND we have results to show (i.e. the Scryfall API fallback
@@ -472,37 +483,4 @@ function applyToggleStyle(btn, active) {
     btn.style.color = 'var(--color-text-muted, #7A8498)';
     btn.style.border = '1px solid var(--color-border-ghost, #2A2D3A)';
   }
-}
-
-/**
- * Create a labelled filter dropdown.
- */
-function createFilterDropdown(label, options, onChange) {
-  const wrap = document.createElement('div');
-  wrap.style.cssText = 'display: flex; flex-direction: column; gap: 4px;';
-
-  const labelEl = document.createElement('span');
-  labelEl.textContent = label;
-  labelEl.style.cssText = `
-    font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase;
-    letter-spacing: 0.15em; font-weight: 700; color: #7A8498;
-  `;
-  wrap.appendChild(labelEl);
-
-  const select = document.createElement('select');
-  select.style.cssText = `
-    padding: 6px 8px; font-family: 'JetBrains Mono', monospace; font-size: 11px;
-    text-transform: uppercase; letter-spacing: 0.15em; background: #0B0C10;
-    border: 1px solid #2A2D3A; color: #EAECEE; cursor: pointer;
-  `;
-  for (const opt of options) {
-    const optEl = document.createElement('option');
-    optEl.value = opt;
-    optEl.textContent = opt.toUpperCase();
-    select.appendChild(optEl);
-  }
-  select.addEventListener('change', () => onChange(select.value));
-  wrap.appendChild(select);
-
-  return wrap;
 }

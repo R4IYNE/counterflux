@@ -3,6 +3,8 @@ import { TYPE_ORDER } from '../utils/type-classifier.js';
 import Sortable from 'sortablejs';
 import { openDeckImportModal } from './deck-import-modal.js';
 import { openDeckExportModal } from './deck-export-modal.js';
+import { createFilterDropdown, createColourPips } from './deck-filter-controls.js';
+import { EMPTY_DECK_FILTER } from '../utils/deck-filter.js';
 
 /**
  * Resolve the Commander card for the active deck.
@@ -104,6 +106,9 @@ export function renderDeckCentrePanel(container) {
   const Alpine = window.Alpine;
   const store = Alpine?.store('deck');
 
+  // Reset the in-deck filter so each deck opens unfiltered.
+  if (store) store.deckFilter = { ...EMPTY_DECK_FILTER, colours: null };
+
   let sortableInstances = [];
   let collapsedGroups = {};
 
@@ -186,6 +191,31 @@ export function renderDeckCentrePanel(container) {
   controls.appendChild(exportBtn);
 
   header.appendChild(controls);
+
+  // Filter row: Type / Mana / Owned / Colour — mirrors the add panel's style.
+  // Wires each control to the store's deckFilter then refreshes; the
+  // groupedByType getter (part A) applies the matcher.
+  const filterRow = document.createElement('div');
+  filterRow.style.cssText = 'display: flex; align-items: flex-end; gap: 8px; flex-wrap: wrap; flex-shrink: 0;';
+
+  let colourSet = new Set();
+  const typeSel = createFilterDropdown('TYPE', ['All','Creature','Instant','Sorcery','Enchantment','Artifact','Planeswalker','Land'], (v) => { store?.setDeckFilter({ type: v }); refresh(); });
+  const cmcSel  = createFilterDropdown('MANA', ['All','0','1','2','3','4','5','6','7+'], (v) => { store?.setDeckFilter({ cmc: v }); refresh(); });
+  const ownSel  = createFilterDropdown('OWNED', ['All','Owned','Missing'], (v) => { store?.setDeckFilter({ owned: v }); refresh(); });
+  const colourPips = createColourPips(colourSet, (next) => { colourSet = next; store?.setDeckFilter({ colours: next.size ? next : null }); refresh(); });
+
+  filterRow.appendChild(typeSel);
+  filterRow.appendChild(cmcSel);
+  filterRow.appendChild(ownSel);
+  const pipWrap = document.createElement('div');
+  pipWrap.style.cssText = 'display: flex; flex-direction: column; gap: 4px;';
+  const pipLabel = document.createElement('span');
+  pipLabel.textContent = 'COLOUR';
+  pipLabel.style.cssText = "font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; color: #7A8498;";
+  pipWrap.appendChild(pipLabel);
+  pipWrap.appendChild(colourPips);
+  filterRow.appendChild(pipWrap);
+  header.appendChild(filterRow);
 
   // Card groups area
   const groupsArea = document.createElement('div');
