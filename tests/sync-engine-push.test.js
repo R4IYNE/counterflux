@@ -218,6 +218,16 @@ describe('sync-engine push: classifyError matrix (D-10)', () => {
     expect(classifyError({ code: '23505', message: 'unique violation' })).toBe('permanent');
   });
 
+  test('classifyError: SQLSTATE 23503 (foreign_key_violation) → transient', () => {
+    // A child row (deck_cards) can reach the push seam before its parent
+    // (decks) has landed in the cloud — separate flushes, the 200-row limit, or
+    // a brew streaming cards in while the deck push is still in flight. The
+    // missing-parent FK resolves once the deck syncs, so this is RETRYABLE.
+    // Classifying it permanent dead-letters recoverable rows (the "97 ops
+    // failed" bug). Sibling 23xxx codes stay permanent (asserted above).
+    expect(classifyError({ code: '23503', message: 'insert or update on table "deck_cards" violates foreign key constraint "deck_cards_deck_id_fkey"' })).toBe('transient');
+  });
+
   test('classifyError: unknown code → permanent (fail-fast default)', () => {
     expect(classifyError({ code: 'ZZZ999', message: 'mystery' })).toBe('permanent');
   });

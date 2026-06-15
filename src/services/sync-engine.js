@@ -325,7 +325,15 @@ export function classifyError(err) {
   // Postgres SQLSTATE codes
   if (code === '42501') return 'permanent';           // RLS insufficient_privilege
   if (/^22\d{3}$/.test(code)) return 'permanent';     // data_exception
-  if (/^23\d{3}$/.test(code)) return 'permanent';     // integrity_constraint_violation
+  // 23503 foreign_key_violation is TRANSIENT in an offline-sync model: a child
+  // row (deck_cards) can reach this seam before its parent (decks) has landed
+  // in the cloud — separate flushes, the 200-row limit, or a brew streaming
+  // cards in while the deck push is still in flight. Retrying lets the parent
+  // land first; a genuinely orphaned row still dead-letters once the
+  // MAX_ATTEMPTS budget is spent. All OTHER 23xxx (23502 not-null, 23505
+  // unique, 23514 check) stay permanent — those are real bad-data rejections.
+  if (code === '23503') return 'transient';           // foreign_key_violation — parent not synced yet
+  if (/^23\d{3}$/.test(code)) return 'permanent';     // other integrity_constraint_violation
 
   // HTTP-adjacent — transient first (5xx / 429)
   if (code === '429') return 'transient';
