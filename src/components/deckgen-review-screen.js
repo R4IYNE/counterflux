@@ -15,6 +15,8 @@
  * badge as a placeholder when no print metadata exists locally.
  */
 
+import { renderBrewReviewList } from './brew-review-list.js';
+
 export function renderDeckgenReviewScreen() {
   return `
     <div
@@ -174,7 +176,7 @@ export function renderDeckgenReviewScreen() {
           >DISCARD</button>
           <button
             @click="commit()"
-            :disabled="approvedCount === 0 || $store.deckgen?.status === 'committing'"
+            :disabled="approvedCount === 0 || $store.deckgen?.status === 'committing' || !$store.deckgen?.streamComplete"
             :style="approvedCount > 0 && $store.deckgen?.status !== 'committing'
               ? 'padding: 8px 16px; background: #0D52BD; color: #EAECEE; border: 1px solid #0D52BD; cursor: pointer; font-family: JetBrains Mono, monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase;'
               : 'padding: 8px 16px; background: #1C1F28; color: #4A5064; border: 1px solid #2A2D3A; cursor: not-allowed; opacity: 0.6; font-family: JetBrains Mono, monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase;'"
@@ -186,7 +188,7 @@ export function renderDeckgenReviewScreen() {
       <!-- Body -->
       <div style="flex: 1; min-height: 0; overflow-y: auto; padding: 24px 32px;">
         <template x-for="group in groupedByRole" :key="group.role">
-          <div style="margin-bottom: 32px;">
+          <div style="margin-bottom: 32px;" x-show="isSwapMode">
             <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
               <span
                 style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.15em; font-weight: 700; color: #0D52BD; text-transform: uppercase;"
@@ -281,54 +283,20 @@ export function renderDeckgenReviewScreen() {
                 </div>
               </template>
             </div>
-
-            <!-- Plain add-row template (brew + fill modes) -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-[12px]" x-show="!isSwapMode">
-              <template x-for="rec in group.cards" :key="rec.scryfall_id">
-                <div
-                  :style="rec.approved
-                    ? 'display: flex; gap: 12px; padding: 12px; background: rgba(13,82,189,0.06); border: 1px solid rgba(13,82,189,0.4);'
-                    : 'display: flex; gap: 12px; padding: 12px; background: transparent; border: 1px solid #2A2D3A; opacity: 0.55;'"
-                >
-                  <!-- Thumbnail -->
-                  <template x-if="cardImage(rec.scryfall_id)">
-                    <img
-                      :src="cardImage(rec.scryfall_id)"
-                      :alt="cardName(rec.scryfall_id)"
-                      class="cf-card-img"
-                      style="width: 48px; height: 67px; object-fit: cover; flex-shrink: 0;"
-                      loading="lazy"
-                      onerror="this.style.visibility='hidden'"
-                    />
-                  </template>
-                  <template x-if="!cardImage(rec.scryfall_id)">
-                    <div style="width: 48px; height: 67px; flex-shrink: 0; background: #1C1F28; border: 1px solid #2A2D3A; display: flex; align-items: center; justify-content: center;">
-                      <span class="material-symbols-outlined" style="font-size: 20px; color: #4A5064;">style</span>
-                    </div>
-                  </template>
-
-                  <!-- Text body -->
-                  <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px;">
-                    <span
-                      style="font-family: 'Space Grotesk', sans-serif; font-size: 13px; font-weight: 700; color: #EAECEE; overflow: hidden; text-overflow: ellipsis;"
-                      x-text="cardName(rec.scryfall_id)"
-                    ></span>
-                    <span
-                      x-show="rec.reasoning"
-                      style="font-family: 'Space Grotesk', sans-serif; font-size: 12px; color: #7A8498; line-height: 1.45;"
-                      x-text="rec.reasoning"
-                    ></span>
-                    <!-- Explicit ADD / SKIP — replaces the old click-to-toggle card -->
-                    <div style="display: flex; gap: 6px; margin-top: auto; padding-top: 4px;">
-                      <button type="button" @click="$store.deckgen.setApproval(rec.scryfall_id, true)" :style="btnAdd(rec.approved)">✓ Add</button>
-                      <button type="button" @click="$store.deckgen.setApproval(rec.scryfall_id, false)" :style="btnSkip(rec.approved)">✕ Skip</button>
-                    </div>
-                  </div>
-                </div>
-              </template>
-            </div>
           </div>
         </template>
+
+        <!-- Plain (non-swap) streaming list — extracted component, runs in this
+             same x-data scope so it can call cardName/cardImage/btnAdd/etc. -->
+        <div x-show="!isSwapMode">
+          ${renderBrewReviewList()}
+        </div>
+
+        <!-- Brewing footer — shown until the recommendation stream completes. -->
+        <div
+          x-show="!$store.deckgen?.streamComplete"
+          style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; color: #7A8498; text-transform: uppercase; padding: 8px 0 4px;"
+        >Brewing… <span x-text="$store.deckgen?.recommendations?.length || 0"></span> so far</div>
       </div>
     </div>
   `;
