@@ -202,7 +202,7 @@ export function renderDeckCentrePanel(container) {
   const typeSel = createFilterDropdown('TYPE', ['All','Creature','Instant','Sorcery','Enchantment','Artifact','Planeswalker','Land'], (v) => { store?.setDeckFilter({ type: v }); refresh(); });
   const cmcSel  = createFilterDropdown('MANA', ['All','0','1','2','3','4','5','6','7+'], (v) => { store?.setDeckFilter({ cmc: v }); refresh(); });
   const ownSel  = createFilterDropdown('OWNED', ['All','Owned','Missing'], (v) => { store?.setDeckFilter({ owned: v }); refresh(); });
-  const colourPips = createColourPips(colourSet, (next) => { colourSet = next; store?.setDeckFilter({ colours: next.size ? next : null }); refresh(); });
+  const colourPips = createColourPips(() => colourSet, (next) => { colourSet = next; store?.setDeckFilter({ colours: next.size ? next : null }); refresh(); });
 
   filterRow.appendChild(typeSel);
   filterRow.appendChild(cmcSel);

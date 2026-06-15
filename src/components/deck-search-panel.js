@@ -212,6 +212,7 @@ export function renderDeckSearchPanel(container) {
 
   async function executeSearch() {
     searchingEl.style.display = 'flex';
+    try {
     const query = searchInput.value.trim();
     const deckColorIdentity = deckStore?.activeDeck?.color_identity || [];
 
@@ -290,6 +291,9 @@ export function renderDeckSearchPanel(container) {
     // directly to toggle the affordance hint visibility.
     results = raw.slice(0, 20);
     renderResults();
+    } finally {
+      searchingEl.style.display = 'none';
+    }
   }
 
   function renderResults() {

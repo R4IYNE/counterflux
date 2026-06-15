@@ -35,10 +35,11 @@ export function createFilterDropdown(label, options, onChange) {
   return wrap;
 }
 
-// Compact WUBRG+C multi-select pip row. `active` is a Set; toggling mutates a
-// COPY passed to onChange (caller owns state). `allowed` optionally restricts
-// which colours render (e.g. deck colour identity + 'C').
-export function createColourPips(active, onChange, allowed = null) {
+// Compact WUBRG+C multi-select pip row. `getActive` is a getter (or Set) that
+// returns the CURRENT active Set; toggling reads it live and passes a COPY to
+// onChange (caller owns state). `allowed` optionally restricts which colours
+// render (e.g. deck colour identity + 'C').
+export function createColourPips(getActive, onChange, allowed = null) {
   const WUBRG = [
     { key: 'W', icon: 'ms ms-w ms-cost' }, { key: 'U', icon: 'ms ms-u ms-cost' },
     { key: 'B', icon: 'ms ms-b ms-cost' }, { key: 'R', icon: 'ms ms-r ms-cost' },
@@ -49,12 +50,13 @@ export function createColourPips(active, onChange, allowed = null) {
   for (const colour of WUBRG) {
     if (allowed && colour.key !== 'C' && !allowed.includes(colour.key)) continue;
     const btn = document.createElement('button');
-    const on = active.has(colour.key);
+    const cur = (typeof getActive === 'function' ? getActive() : getActive) || new Set();
+    const on = cur.has(colour.key);
     btn.type = 'button';
     btn.style.cssText = `width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 2px solid ${on ? '#0D52BD' : 'transparent'}; background: transparent; border-radius: 50%; opacity: ${on ? '1' : '0.4'}; transition: border-color 150ms, opacity 150ms;`;
     btn.innerHTML = `<i class="${colour.icon}" style="font-size: 18px;"></i>`;
     btn.addEventListener('click', () => {
-      const next = new Set(active);
+      const next = new Set((typeof getActive === 'function' ? getActive() : getActive) || []);
       if (next.has(colour.key)) next.delete(colour.key); else next.add(colour.key);
       onChange(next);
     });
