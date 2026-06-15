@@ -84,6 +84,20 @@ export function renderDeckgenReviewScreen() {
           const meta = this.cardMetaCache[id];
           return meta?.mana_cost || '';
         },
+        // Per-card ADD / SKIP button styling. The active choice is filled,
+        // the other is a muted outline — so the current state is unambiguous.
+        btnAdd(approved) {
+          const base = 'flex: 1; padding: 6px 10px; font-family: JetBrains Mono, monospace; font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; border: 1px solid;';
+          return approved
+            ? base + ' background: rgba(46,204,113,0.18); color: #2ECC71; border-color: #2ECC71;'
+            : base + ' background: transparent; color: #4A5064; border-color: #2A2D3A;';
+        },
+        btnSkip(approved) {
+          const base = 'flex: 1; padding: 6px 10px; font-family: JetBrains Mono, monospace; font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; border: 1px solid;';
+          return !approved
+            ? base + ' background: rgba(226,56,56,0.15); color: #E23838; border-color: #E23838;'
+            : base + ' background: transparent; color: #4A5064; border-color: #2A2D3A;';
+        },
         get groupedByRole() {
           const recs = $store.deckgen?.recommendations || [];
           const groups = {};
@@ -192,9 +206,8 @@ export function renderDeckgenReviewScreen() {
               <template x-for="rec in group.cards" :key="rec.scryfall_id">
                 <div
                   :style="rec.approved
-                    ? 'display: flex; align-items: stretch; gap: 12px; padding: 12px; background: rgba(13,82,189,0.06); border: 1px solid rgba(13,82,189,0.4); cursor: pointer;'
-                    : 'display: flex; align-items: stretch; gap: 12px; padding: 12px; background: transparent; border: 1px solid #2A2D3A; cursor: pointer; opacity: 0.5;'"
-                  @click="$store.deckgen.toggleApproval(rec.scryfall_id)"
+                    ? 'display: flex; align-items: stretch; gap: 12px; padding: 12px; background: rgba(13,82,189,0.06); border: 1px solid rgba(13,82,189,0.4);'
+                    : 'display: flex; align-items: stretch; gap: 12px; padding: 12px; background: transparent; border: 1px solid #2A2D3A; opacity: 0.55;'"
                 >
                   <!-- Swap-out side (current card) -->
                   <div style="display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0;">
@@ -230,18 +243,9 @@ export function renderDeckgenReviewScreen() {
 
                   <!-- Swap-in side (new card) -->
                   <div style="display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0;">
-                    <div style="display: flex; align-items: center; justify-content: space-between;">
-                      <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.15em; color: #2ECC71; text-transform: uppercase;">
-                        IN
-                      </span>
-                      <span
-                        @click.stop="$store.deckgen.toggleApproval(rec.scryfall_id)"
-                        :style="rec.approved
-                          ? 'flex-shrink: 0; padding: 2px 6px; background: rgba(46,204,113,0.15); color: #2ECC71; border: 1px solid #2ECC71; font-family: JetBrains Mono, monospace; font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer;'
-                          : 'flex-shrink: 0; padding: 2px 6px; background: transparent; color: #7A8498; border: 1px solid #2A2D3A; font-family: JetBrains Mono, monospace; font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer;'"
-                        x-text="rec.approved ? 'APPROVED' : 'REJECTED'"
-                      ></span>
-                    </div>
+                    <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.15em; color: #2ECC71; text-transform: uppercase;">
+                      IN
+                    </span>
                     <div style="display: flex; gap: 8px; align-items: center;">
                       <template x-if="cardImage(rec.scryfall_id)">
                         <img
@@ -264,9 +268,15 @@ export function renderDeckgenReviewScreen() {
                       ></span>
                     </div>
                     <span
+                      x-show="rec.reasoning"
                       style="font-family: 'Space Grotesk', sans-serif; font-size: 12px; color: #7A8498; line-height: 1.45; margin-top: 4px;"
                       x-text="rec.reasoning"
                     ></span>
+                    <!-- Explicit APPLY / SKIP — replaces the old click-to-toggle card -->
+                    <div style="display: flex; gap: 6px; margin-top: 8px;">
+                      <button type="button" @click="$store.deckgen.setApproval(rec.scryfall_id, true)" :style="btnAdd(rec.approved)">✓ Apply</button>
+                      <button type="button" @click="$store.deckgen.setApproval(rec.scryfall_id, false)" :style="btnSkip(rec.approved)">✕ Skip</button>
+                    </div>
                   </div>
                 </div>
               </template>
@@ -277,9 +287,8 @@ export function renderDeckgenReviewScreen() {
               <template x-for="rec in group.cards" :key="rec.scryfall_id">
                 <div
                   :style="rec.approved
-                    ? 'display: flex; gap: 12px; padding: 12px; background: rgba(13,82,189,0.06); border: 1px solid rgba(13,82,189,0.4); cursor: pointer;'
-                    : 'display: flex; gap: 12px; padding: 12px; background: transparent; border: 1px solid #2A2D3A; cursor: pointer; opacity: 0.5;'"
-                  @click="$store.deckgen.toggleApproval(rec.scryfall_id)"
+                    ? 'display: flex; gap: 12px; padding: 12px; background: rgba(13,82,189,0.06); border: 1px solid rgba(13,82,189,0.4);'
+                    : 'display: flex; gap: 12px; padding: 12px; background: transparent; border: 1px solid #2A2D3A; opacity: 0.55;'"
                 >
                   <!-- Thumbnail -->
                   <template x-if="cardImage(rec.scryfall_id)">
@@ -299,24 +308,21 @@ export function renderDeckgenReviewScreen() {
                   </template>
 
                   <!-- Text body -->
-                  <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px;">
-                    <div style="display: flex; align-items: flex-start; gap: 8px;">
-                      <span
-                        style="flex: 1; font-family: 'Space Grotesk', sans-serif; font-size: 13px; font-weight: 700; color: #EAECEE; overflow: hidden; text-overflow: ellipsis;"
-                        x-text="cardName(rec.scryfall_id)"
-                      ></span>
-                      <span
-                        @click.stop="$store.deckgen.toggleApproval(rec.scryfall_id)"
-                        :style="rec.approved
-                          ? 'flex-shrink: 0; padding: 2px 6px; background: rgba(46,204,113,0.15); color: #2ECC71; border: 1px solid #2ECC71; font-family: JetBrains Mono, monospace; font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer;'
-                          : 'flex-shrink: 0; padding: 2px 6px; background: transparent; color: #7A8498; border: 1px solid #2A2D3A; font-family: JetBrains Mono, monospace; font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer;'"
-                        x-text="rec.approved ? 'APPROVED' : 'REJECTED'"
-                      ></span>
-                    </div>
+                  <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px;">
                     <span
+                      style="font-family: 'Space Grotesk', sans-serif; font-size: 13px; font-weight: 700; color: #EAECEE; overflow: hidden; text-overflow: ellipsis;"
+                      x-text="cardName(rec.scryfall_id)"
+                    ></span>
+                    <span
+                      x-show="rec.reasoning"
                       style="font-family: 'Space Grotesk', sans-serif; font-size: 12px; color: #7A8498; line-height: 1.45;"
                       x-text="rec.reasoning"
                     ></span>
+                    <!-- Explicit ADD / SKIP — replaces the old click-to-toggle card -->
+                    <div style="display: flex; gap: 6px; margin-top: auto; padding-top: 4px;">
+                      <button type="button" @click="$store.deckgen.setApproval(rec.scryfall_id, true)" :style="btnAdd(rec.approved)">✓ Add</button>
+                      <button type="button" @click="$store.deckgen.setApproval(rec.scryfall_id, false)" :style="btnSkip(rec.approved)">✕ Skip</button>
+                    </div>
                   </div>
                 </div>
               </template>

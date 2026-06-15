@@ -218,6 +218,15 @@ export function initDeckgenStore() {
       );
     },
 
+    // Explicit set (for the per-card ADD / SKIP buttons) — clearer than a
+    // whole-card toggle, which read as "click to reject" since cards default
+    // to approved.
+    setApproval(scryfallId, approved) {
+      this.recommendations = this.recommendations.map((r) =>
+        r.scryfall_id === scryfallId ? { ...r, approved: !!approved } : r
+      );
+    },
+
     approveAll() {
       this.recommendations = this.recommendations.map((r) => ({ ...r, approved: true }));
     },
