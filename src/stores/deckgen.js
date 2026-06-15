@@ -220,6 +220,18 @@ export function initDeckgenStore() {
         if (!seen.has(r.scryfall_id)) this.recommendations.push({ ...r, approved: true });
       }
       this.streamComplete = true;
+      try {
+        const intel = Alpine.store('intelligence');
+        const deckCards = Alpine.store('deck')?.activeCards || [];
+        const deckIds = new Set(deckCards.map(c => c.scryfall_id));
+        const { enrichWithIntelligence } = await import('../services/deckgen-enrich.js');
+        this.recommendations = enrichWithIntelligence({
+          recommendations: this.recommendations,
+          synergies: intel?.synergies || [],
+          combos: intel?.combos || {},
+          deckScryfallIds: deckIds,
+        });
+      } catch { /* intelligence cold — brew works without enrichment */ }
       this.status = 'reviewing';
     },
 
