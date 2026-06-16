@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { splashScreen, FLAVOUR_TEXTS } from '../src/components/splash-screen.js';
 
@@ -47,5 +47,47 @@ describe('splash screen (POLISH-01, D-17a)', () => {
   it('source references migrationProgress (D-17a hook present in file)', () => {
     const src = readFileSync('src/components/splash-screen.js', 'utf-8');
     expect(src).toMatch(/migrationProgress/);
+  });
+});
+
+describe('splashScreen boot loading', () => {
+  beforeEach(() => vi.useFakeTimers());
+  afterEach(() => vi.useRealTimers());
+
+  function make(store) {
+    const o = splashScreen();
+    o.$store = store;
+    o.$watch = () => {}; // no reactive watcher in the test harness
+    return o;
+  }
+  it('is visible on boot and hides after the ~2.5s minimum once data is ready', () => {
+    const o = make({ bulkdata: { status: 'ready', migrationProgress: null } });
+    o.init();
+    expect(o.isVisible).toBe(true);
+    vi.advanceTimersByTime(2500);          // min elapses; ready was set at init
+    // _maybeFinish schedules the fade 350ms later
+    vi.advanceTimersByTime(400);
+    expect(o.fadingOut).toBe(true);
+    expect(o.isVisible).toBe(false);
+    expect(o.displayProgress).toBe(100);
+    o.destroy();
+  });
+  it('stays visible while data is not ready, then the 8s safety forces it down', () => {
+    const o = make({ bulkdata: { status: 'downloading', migrationProgress: null } });
+    o.init();
+    vi.advanceTimersByTime(2500);
+    expect(o.fadingOut).toBe(false);       // not ready yet → still visible
+    vi.advanceTimersByTime(6000);          // hit the 8s safety
+    vi.advanceTimersByTime(400);
+    expect(o.fadingOut).toBe(true);
+    o.destroy();
+  });
+  it('uses migration copy when a migration is mid-flight', () => {
+    const o = make({ bulkdata: { status: 'idle', migrationProgress: 40 } });
+    o.init();
+    expect(o.isMigrationView).toBe(true);
+    expect(o.headingText).toMatch(/Upgrading/);
+    expect(o.barProgress).toBe(40);
+    o.destroy();
   });
 });

@@ -48,29 +48,87 @@ export function splashScreen() {
   return {
     flavourIndex: Math.floor(Math.random() * FLAVOUR_TEXTS.length),
     fadingOut: false,
+    displayProgress: 0,
+    _minElapsed: false,
+    _ready: false,
     _interval: null,
+    _progressTimer: null,
+    _minTimer: null,
+    _maxTimer: null,
 
     init() {
-      // Rotate flavour text every 8 seconds (kept — visible during migration)
+      // Rotate flavour text every 8 seconds (kept — visible on boot + migration)
       this._interval = setInterval(() => {
         this.flavourIndex = (this.flavourIndex + 1) % FLAVOUR_TEXTS.length;
       }, 8000);
 
-      // D-04 repurpose: watch migrationProgress instead of bulkdata.status.
-      // Fade out when migration completes (progress === 100).
+      // If bulk data is already loaded when the splash mounts, mark ready now.
+      if (this.$store?.bulkdata?.status === 'ready') {
+        this._ready = true;
+      }
+
       if (typeof this.$watch === 'function') {
-        this.$watch('$store.bulkdata.migrationProgress', (progress) => {
-          if (progress !== null && progress >= 100) {
-            setTimeout(() => {
-              this.fadingOut = true;
-            }, 500);
+        // Boot path: fade once the bulk-data store reports ready.
+        this.$watch('$store.bulkdata.status', (s) => {
+          if (s === 'ready') {
+            this._ready = true;
+            this._maybeFinish();
+          }
+        });
+        // Migration path: fade once a real migration completes.
+        this.$watch('$store.bulkdata.migrationProgress', (p) => {
+          if (p !== null && p >= 100) {
+            this._ready = true;
+            this._maybeFinish();
           }
         });
       }
+
+      // Minimum on-screen duration so the branded splash never flickers.
+      this._minTimer = setTimeout(() => {
+        this._minElapsed = true;
+        this._maybeFinish();
+      }, 2500);
+
+      // Tween the 0→100 bar. During a real migration the bar tracks the
+      // actual migration progress; otherwise it eases up to 92% and only
+      // snaps to 100 once both ready + min-elapsed are satisfied.
+      this._progressTimer = setInterval(() => {
+        if (this._isMigration()) {
+          this.displayProgress = this.migrationProgress || 0;
+        } else if (this._ready && this._minElapsed) {
+          this.displayProgress = 100;
+        } else if (this.displayProgress < 92) {
+          this.displayProgress = Math.min(92, this.displayProgress + 4);
+        }
+      }, 80);
+
+      // Safety net: a stuck/errored bulk-data load can never trap the user.
+      this._maxTimer = setTimeout(() => {
+        this._ready = true;
+        this._minElapsed = true;
+        this._maybeFinish();
+      }, 8000);
+    },
+
+    _maybeFinish() {
+      if (this._minElapsed && this._ready && !this.fadingOut) {
+        this.displayProgress = 100;
+        setTimeout(() => {
+          this.fadingOut = true;
+        }, 350);
+      }
+    },
+
+    _isMigration() {
+      return this.migrationProgress !== null && this.migrationProgress < 100;
     },
 
     destroy() {
       if (this._interval) clearInterval(this._interval);
+      if (this._progressTimer) clearInterval(this._progressTimer);
+      if (this._minTimer) clearTimeout(this._minTimer);
+      if (this._maxTimer) clearTimeout(this._maxTimer);
     },
 
     get flavourText() {
@@ -78,12 +136,15 @@ export function splashScreen() {
     },
 
     /**
-     * D-17a hook: Plan 3 will populate `$store.bulkdata.migrationProgress`
-     * as the v5→v6 migration runs. For now this safely returns null when
-     * the store or field is absent, so the template `x-show` stays hidden.
+     * D-17a hook: `$store.bulkdata.migrationProgress` is populated as the
+     * v5→v8 migration runs. Reads `this.$store` first (so the component is
+     * testable as a plain object) and falls back to the global Alpine
+     * lookup. Returns null when the store or field is absent.
      */
     get migrationProgress() {
       try {
+        const fromStore = this.$store?.bulkdata?.migrationProgress;
+        if (fromStore !== undefined) return fromStore;
         const alpine = globalThis.Alpine || (typeof window !== 'undefined' ? window.Alpine : null);
         const store = alpine?.store ? alpine.store('bulkdata') : null;
         const val = store?.migrationProgress;
@@ -94,21 +155,28 @@ export function splashScreen() {
     },
 
     /**
-     * D-04 repurpose (Phase 13 Plan 3): splash overlay now renders ONLY
-     * while the v5→v8 migration is in flight. Bulk-data progress moved
-     * to the topbar pill (D-06) so the app shell can render immediately
-     * after Alpine.start().
-     *
-     * The `fadingOut` flag is retained so an in-progress migration can
-     * still fade the overlay out gracefully when migrationProgress hits
-     * 100. Historical `$store.bulkdata.status !== 'ready'` coupling has
-     * been removed.
+     * Boot splash now shows from mount until the fade flips on (after the
+     * ~2.5s minimum AND data ready, or the 8s safety). During a real
+     * migration the same overlay tracks migration progress instead.
      */
     get isVisible() {
-      const progress = this.migrationProgress;
-      if (progress === null) return false;
-      if (this.fadingOut) return false;
-      return progress > 0 && progress < 100;
+      return !this.fadingOut;
+    },
+
+    get barProgress() {
+      return this._isMigration() ? (this.migrationProgress || 0) : this.displayProgress;
+    },
+
+    get isMigrationView() {
+      return this._isMigration();
+    },
+
+    get headingText() {
+      return this._isMigration() ? 'Upgrading Aetheric Archive…' : 'Loading the Archive…';
+    },
+
+    get progressLabel() {
+      return (this._isMigration() ? 'Migrating your archive — ' : 'Loading — ') + Math.round(this.barProgress) + '%';
     },
 
     get statusLabel() {

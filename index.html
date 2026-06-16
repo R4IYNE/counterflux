@@ -64,6 +64,7 @@
       object-fit: contain;
       margin-bottom: 16px;
       background: transparent;
+      mix-blend-mode: screen;
     }
   </style>
 </head>
@@ -132,22 +133,22 @@
         autoplay muted loop playsinline
         poster="/assets/assetsmila-izzet.png"
         aria-label="Mila the Corgi, Izzet Engineer"
+        style="mix-blend-mode: screen;"
       >
         <source src="/assets/mila-loading.mp4" type="video/mp4">
       </video>
       <h2 class="syne-header text-[20px] font-bold leading-[1.2] tracking-[0.01em] text-center"
-          style="color: var(--color-text-primary, #EAECEE);">
-        Upgrading Aetheric Archive...
+          style="color: var(--color-text-primary, #EAECEE);"
+          x-text="headingText">
       </h2>
-      <!-- Migration progress bar (D-17a) — the only progress signal the splash now carries. -->
+      <!-- Progress bar — boot loading tween (Izzet blue), or live migration progress (warning orange). -->
       <div class="w-full h-1 ghost-border" style="background-color: var(--color-border-ghost, #2A2D3A);">
-        <div class="h-full transition-all duration-300" style="background-color: var(--color-warning, #F39C12);"
-          :style="{ width: (migrationProgress || 0) + '%' }"></div>
+        <div class="h-full transition-all duration-300"
+          :style="{ width: barProgress + '%', backgroundColor: isMigrationView ? '#F39C12' : '#0D52BD' }"></div>
       </div>
-      <div x-show="migrationProgress !== null"
-        class="mono-data text-[11px] uppercase tracking-[0.15em] text-center"
-        style="font-family: 'JetBrains Mono', monospace; color: var(--color-warning, #F39C12);"
-        x-text="'Migrating your archive \u2014 ' + (migrationProgress || 0) + '%'"></div>
+      <div class="mono-data text-[11px] uppercase tracking-[0.15em] text-center"
+        style="font-family: 'JetBrains Mono', monospace; color: var(--color-text-muted, #7A8498);"
+        x-text="progressLabel"></div>
       <!-- Flavour rotation retained — provides warmth during the migration window. -->
       <div class="text-center leading-[1.5] max-w-[400px]"
         style="color: var(--color-text-muted, #7A8498); font-family: 'Space Grotesk', sans-serif;">
