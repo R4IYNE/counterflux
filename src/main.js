@@ -41,6 +41,15 @@ import { db } from './db/schema.js';
 // opens the Dexie singleton — triggering the v6 + v7 upgrade callbacks.
 // If migration fails, the blocking modal stays up and Alpine never starts.
 async function bootApp() {
+  // Boot watchdog handshake — tell the inline recovery script (index.html) the
+  // entry bundle actually executed, so it won't force a cache-busting reload.
+  // Also strip the ?cf= marker a recovery reload may have appended.
+  window.__cf_booted = true;
+  window.dispatchEvent(new Event('cf:booted'));
+  if (typeof location !== 'undefined' && location.search.indexOf('cf=') !== -1) {
+    try { history.replaceState(null, '', location.pathname + location.hash); } catch { /* non-fatal */ }
+  }
+
   // Bulk data store must be initialised BEFORE migration runs so the
   // v6 upgrade's progress events have an Alpine.store('bulkdata') to write
   // migrationProgress into. The other stores remain gated on migration success.

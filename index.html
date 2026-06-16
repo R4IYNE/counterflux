@@ -17,6 +17,28 @@
   <link rel="icon" type="image/png" sizes="192x192" href="/assets/niv-mila.png">
   <link rel="apple-touch-icon" href="/assets/niv-mila.png">
   <style>[x-cloak] { display: none !important; }</style>
+  <!-- Boot watchdog (deploy-staleness recovery). If the app's entry bundle never
+       executes — typically a stale index.html cached from a previous deploy whose
+       chunk hashes now 404 — nothing clears the static loading screen below. After
+       15s with no boot handshake from main.js, force ONE fresh fetch via a
+       cache-busting URL (a plain reload can be re-served the same stale HTML from
+       disk cache). Guarded by sessionStorage so it can never loop; cleared once
+       the app boots so a later stale deploy in the same session can recover too. -->
+  <script>
+    (function () {
+      var KEY = '__cf_boot_recover';
+      var t = setTimeout(function () {
+        if (!window.__cf_booted && !sessionStorage.getItem(KEY)) {
+          try { sessionStorage.setItem(KEY, '1'); } catch (e) {}
+          location.replace(location.pathname + '?cf=' + Date.now() + location.hash);
+        }
+      }, 15000);
+      window.addEventListener('cf:booted', function () {
+        clearTimeout(t);
+        try { sessionStorage.removeItem(KEY); } catch (e) {}
+      });
+    })();
+  </script>
   <!-- Phase 13 Plan 5 Task 6 — structural LCP fix.
        The auth-wall <h1> ("COUNTERFLUX") is the LCP element. Plan 5 Tasks 1-5
        (font preload + manualChunks split + font-display:swap) left LCP at
