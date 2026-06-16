@@ -26,7 +26,9 @@ describe('ritual modal copy (POLISH-06)', () => {
   });
 
   it('deck-landing triggers use "Brew a new storm" button copy', () => {
-    expect(landing).toMatch(/>Brew a new storm</);
+    // The CTA label is now bound via x-text (with an OPENING… loading state),
+    // so it lives in the source as a quoted string rather than tag-wrapped text.
+    expect(landing).toMatch(/'Brew a new storm'/);
     expect(landing).not.toMatch(/>Initialize Ritual</);
     expect(landing).not.toMatch(/Initiate ritual/);
   });

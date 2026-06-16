@@ -69,7 +69,17 @@ export function openDeleteDeckModal(deckId, deckName, options = {}) {
   // Wire event handlers
   overlay.querySelector('#delete-deck-backdrop').addEventListener('click', closeModal);
   overlay.querySelector('#delete-deck-cancel').addEventListener('click', closeModal);
-  overlay.querySelector('#delete-deck-confirm').addEventListener('click', async () => {
+  overlay.querySelector('#delete-deck-confirm').addEventListener('click', async (e) => {
+    // Immediate in-flight feedback — if the DB is busy (e.g. a sync or
+    // migration is in flight) deleteDeck can take a beat; show the click
+    // registered and block a double-fire instead of looking frozen.
+    const btn = e.currentTarget;
+    if (btn.disabled) return;
+    btn.disabled = true;
+    btn.textContent = 'DELETING…';
+    btn.style.opacity = '0.7';
+    btn.style.cursor = 'wait';
+
     // deleteDeck removes the deck optimistically and shows its own undo toast
     // (10s window) — no extra success toast here, that would double up.
     if (store) {

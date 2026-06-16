@@ -3,6 +3,10 @@
  * Listens for 'deck-landing-context-menu' custom events and renders
  * a positioned menu with deck management actions.
  */
+// Static import — the delete modal is a core action, so it ships in this chunk
+// and opens instantly. (It used to be a dynamic import(), which added a
+// chunk-fetch round-trip on click — felt like a hang under main-thread load.)
+import { openDeleteDeckModal } from './delete-deck-modal.js';
 
 /**
  * Initialize the deck landing context menu handler.
@@ -111,8 +115,7 @@ export function initDeckLandingContextMenu(container) {
 
     // Delete Deck (destructive)
     menuEl.appendChild(
-      createMenuItem('Delete Deck', async () => {
-        const { openDeleteDeckModal } = await import('./delete-deck-modal.js');
+      createMenuItem('Delete Deck', () => {
         openDeleteDeckModal(deck.id, deck.name);
       }, true)
     );

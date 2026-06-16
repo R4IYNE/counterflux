@@ -23,8 +23,11 @@ export function renderDeckLanding(container) {
         </div>
         <button
           @click="openRitual()"
+          :disabled="ritualLoading"
+          :style="ritualLoading ? 'opacity: 0.7; cursor: wait;' : ''"
           style="font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; cursor: pointer; padding: 8px 16px; background: #0D52BD; color: #EAECEE; border: none;"
-        >Brew a new storm</button>
+          x-text="ritualLoading ? 'OPENING…' : 'Brew a new storm'"
+        ></button>
       </div>
 
       <!-- Empty state -->
@@ -43,8 +46,11 @@ export function renderDeckLanding(container) {
           </p>
           <button
             @click="openRitual()"
+            :disabled="ritualLoading"
+            :style="ritualLoading ? 'opacity: 0.7; cursor: wait;' : ''"
             style="font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; cursor: pointer; padding: 8px 16px; background: #0D52BD; color: #EAECEE; border: none;"
-          >Brew a new storm</button>
+            x-text="ritualLoading ? 'OPENING…' : 'Brew a new storm'"
+          ></button>
         </div>
       </template>
 
@@ -152,12 +158,19 @@ export function renderDeckLanding(container) {
   const Alpine = window.Alpine;
   if (Alpine && typeof Alpine.data === 'function') {
     Alpine.data('deckLandingData', () => ({
+      ritualLoading: false,
+
       async init() {
         // Enrich decks with commander card data and card counts
         await this.enrichDecks();
 
         // Watch for deck list changes
         this.$watch('$store.deck.decks', () => this.enrichDecks());
+
+        // Warm the brew/ritual modal chunk in the background so the primary
+        // "Brew a new storm" CTA (and the context menu's Change Commander)
+        // open instantly instead of fetching a 17 KB chunk on click.
+        import('./ritual-modal.js').catch(() => {});
       },
 
       async enrichDecks() {
@@ -259,8 +272,19 @@ export function renderDeckLanding(container) {
       },
 
       async openRitual() {
-        const { openRitualModal } = await import('./ritual-modal.js');
-        openRitualModal();
+        if (this.ritualLoading) return;
+        // Usually the chunk is already warm (prefetched in init), so this
+        // resolves instantly. The loading flag covers the cold-cache case so
+        // the button shows progress instead of looking dead.
+        this.ritualLoading = true;
+        try {
+          const { openRitualModal } = await import('./ritual-modal.js');
+          openRitualModal();
+        } catch {
+          this.$store.toast?.error?.('Could not open the brew. Try again.');
+        } finally {
+          this.ritualLoading = false;
+        }
       },
     }));
   }

@@ -4,6 +4,7 @@ import { initDeckContextMenu } from './deck-context-menu.js';
 import { renderDeckAnalyticsPanel, destroyDeckCharts } from './deck-analytics-panel.js';
 import { renderDeckgenBrewModal } from './deckgen-brew-modal.js';
 import { renderDeckgenReviewScreen } from './deckgen-review-screen.js';
+import { openDeleteDeckModal } from './delete-deck-modal.js';
 
 /**
  * Three-panel deck editor layout.
@@ -62,10 +63,9 @@ export function renderDeckEditor(container) {
   `;
   deleteBtn.onmouseenter = () => { deleteBtn.style.color = '#E23838'; deleteBtn.style.borderColor = '#E23838'; };
   deleteBtn.onmouseleave = () => { deleteBtn.style.color = '#7A8498'; deleteBtn.style.borderColor = '#2A2D3A'; };
-  deleteBtn.addEventListener('click', async () => {
+  deleteBtn.addEventListener('click', () => {
     const deck = store?.activeDeck;
     if (!deck) return;
-    const { openDeleteDeckModal } = await import('./delete-deck-modal.js');
     openDeleteDeckModal(deck.id, deck.name, {
       afterDelete: () => document.dispatchEvent(new CustomEvent('deck-back-to-landing')),
     });
