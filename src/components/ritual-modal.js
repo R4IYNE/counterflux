@@ -92,19 +92,19 @@ export function openRitualModal(options = {}) {
         <label style="font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; color: #EAECEE; display: block; margin-bottom: 8px;">
           SELECT COMPANION
         </label>
-        <div style="position: relative;">
-          <input
-            id="ritual-companion-search"
-            type="text"
-            placeholder="SEARCH COMPANION..."
-            autocomplete="off"
-            style="width: 100%; box-sizing: border-box; background: #0B0C10; border: 1px solid #2A2D3A; color: #EAECEE; padding: 8px 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; outline: none;"
-            onfocus="this.style.borderColor='#0D52BD'"
-            onblur="setTimeout(() => this.style.borderColor='#2A2D3A', 200)"
-          >
-          <div id="ritual-companion-results" style="display: none; position: absolute; top: 100%; left: 0; right: 0; margin-top: 4px; background: #14161C; border: 1px solid #2A2D3A; max-height: 240px; overflow-y: auto; z-index: 20;"></div>
-        </div>
-        <div id="ritual-companion-selected" style="display: none; margin-top: 8px;"></div>
+        <select id="ritual-companion-select" style="width: 100%; box-sizing: border-box; background: #0B0C10; border: 1px solid #2A2D3A; color: #EAECEE; padding: 8px 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; outline: none; cursor: pointer;">
+          <option value="">— NONE —</option>
+          <option value="Gyruda, Doom of Depths">Gyruda, Doom of Depths</option>
+          <option value="Jegantha, the Wellspring">Jegantha, the Wellspring</option>
+          <option value="Kaheera, the Orphanguard">Kaheera, the Orphanguard</option>
+          <option value="Keruga, the Macrosage">Keruga, the Macrosage</option>
+          <option value="Lurrus of the Dream-Den">Lurrus of the Dream-Den</option>
+          <option value="Lutri, the Spellchaser">Lutri, the Spellchaser</option>
+          <option value="Obosh, the Preypiercer">Obosh, the Preypiercer</option>
+          <option value="Umori, the Collector">Umori, the Collector</option>
+          <option value="Yorion, Sky Nomad">Yorion, Sky Nomad</option>
+          <option value="Zirda, the Dawnwaker">Zirda, the Dawnwaker</option>
+        </select>
       </div>
 
       <!-- Step 4: NAME YOUR DECK -->
@@ -191,9 +191,7 @@ export function openRitualModal(options = {}) {
   const partnerResults = overlay.querySelector('#ritual-partner-results');
   const partnerSelected = overlay.querySelector('#ritual-partner-selected');
   const companionSection = overlay.querySelector('#ritual-companion-section');
-  const companionSearch = overlay.querySelector('#ritual-companion-search');
-  const companionResults = overlay.querySelector('#ritual-companion-results');
-  const companionSelected = overlay.querySelector('#ritual-companion-selected');
+  const companionSelect = overlay.querySelector('#ritual-companion-select');
   const deckNameInput = overlay.querySelector('#ritual-deck-name');
   const formatSelect = overlay.querySelector('#ritual-format');
   const colorIdentityDisplay = overlay.querySelector('#ritual-color-identity');
@@ -297,9 +295,7 @@ export function openRitualModal(options = {}) {
         partnerWithTarget = null;
         companionSection.style.display = 'none';
         selectedCompanion = null;
-        companionSearch.value = '';
-        companionSearch.style.display = 'block';
-        companionSelected.style.display = 'none';
+        companionSelect.value = '';
         if (deckNameInput) deckNameInput.value = '';
       } else if (containerId === 'ritual-partner-selected') {
         selectedPartner = null;
@@ -309,11 +305,6 @@ export function openRitualModal(options = {}) {
         if (deckNameInput && selectedCommander) {
           deckNameInput.value = selectedCommander.name;
         }
-      } else if (containerId === 'ritual-companion-selected') {
-        selectedCompanion = null;
-        companionSearch.value = '';
-        companionSearch.style.display = 'block';
-        container.style.display = 'none';
       }
       updateColorIdentityDisplay();
       updateConfirmButton();
@@ -416,9 +407,7 @@ export function openRitualModal(options = {}) {
       } else {
         companionSection.style.display = 'none';
         selectedCompanion = null;
-        companionSearch.value = '';
-        companionSearch.style.display = 'block';
-        companionSelected.style.display = 'none';
+        companionSelect.value = '';
       }
 
       updateColorIdentityDisplay();
@@ -460,17 +449,15 @@ export function openRitualModal(options = {}) {
     }
   );
 
-  // ---- Companion autocomplete ----
-  setupAutocomplete(
-    companionSearch,
-    companionResults,
-    (card) => isCompanion(card),
-    (card) => {
-      selectedCompanion = card;
-      companionSearch.style.display = 'none';
-      renderSelectedCard(card, 'ritual-companion-selected');
-    }
-  );
+  // ---- Companion dropdown ----
+  companionSelect.addEventListener('change', async () => {
+    const name = companionSelect.value;
+    if (!name) { selectedCompanion = null; return; }
+    try {
+      const matches = await searchCards(name, 5);
+      selectedCompanion = matches.find(c => c.name === name) || matches[0] || null;
+    } catch { selectedCompanion = null; }
+  });
 
   // ---- Confirm ----
   confirmBtn.addEventListener('click', async () => {
