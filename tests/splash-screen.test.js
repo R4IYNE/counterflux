@@ -99,6 +99,31 @@ describe('splashScreen boot loading', () => {
     o.destroy();
   });
 
+  it('stall safety: a check stuck at 0% (no bytes ever) still releases after ~40s', () => {
+    // Regression — the escape used to require realProgress > 0, so a connection
+    // stuck in "checking" at 0% hung the splash forever (permanent loading).
+    const o = make({ bulkdata: { status: 'checking', progress: 0, migrationProgress: null } });
+    o.init();
+    vi.advanceTimersByTime(2500);
+    expect(o.fadingOut).toBe(false);       // within the stall window
+    vi.advanceTimersByTime(41000);         // 40s+ at a flat 0%
+    vi.advanceTimersByTime(400);
+    expect(o.fadingOut).toBe(true);        // released — no longer trapped
+    o.destroy();
+  });
+
+  it('stall safety does NOT force through an in-flight migration', () => {
+    // A real migration legitimately sits at 0 download progress while it runs;
+    // it must finish, so the 0-progress escape is excluded during migration.
+    const o = make({ bulkdata: { status: 'idle', progress: 0, migrationProgress: 40 } });
+    o.init();
+    vi.advanceTimersByTime(2500);
+    vi.advanceTimersByTime(41000);         // well past the stall window
+    vi.advanceTimersByTime(400);
+    expect(o.fadingOut).toBe(false);       // migration still running → stay up
+    o.destroy();
+  });
+
   it('error does not trap: status error at init fades after the minimum', () => {
     const o = make({ bulkdata: { status: 'error', migrationProgress: null } });
     o.init();

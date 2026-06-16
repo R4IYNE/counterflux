@@ -116,14 +116,20 @@ export function splashScreen() {
           this.displayProgress = Math.min(15, this.displayProgress + 1);
         }
 
-        // Stall safety: if real progress hasn't advanced for 40s, let the
-        // user through (a dead connection that never emitted 'error').
+        // Stall safety: if progress hasn't advanced for 40s, let the user
+        // through. Covers BOTH a stalled mid-download AND a check/connection
+        // that never emits a single byte (realProgress stuck at 0) — the
+        // latter previously hung the splash FOREVER. lastAdvanceAt is seeded
+        // at init, so a 0-progress boot escapes 40s after mount. Excluded
+        // during an active migration, whose progress lives on its own field
+        // and which must run to completion (a hung migration is handled by
+        // the onblocked / blocking modal path, not here).
         const realProgress = this._realProgress();
         if (realProgress > this.lastProgress) {
           this.lastProgress = realProgress;
           this.lastAdvanceAt = Date.now();
         }
-        if (!this._ready && realProgress > 0 &&
+        if (!this._ready && !this._isMigration() &&
             (Date.now() - this.lastAdvanceAt) > 40000) {
           this._ready = true;
         }
