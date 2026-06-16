@@ -87,8 +87,8 @@ export function openRitualModal(options = {}) {
         <div id="ritual-partner-selected" style="display: none; margin-top: 8px;"></div>
       </div>
 
-      <!-- Step 3: SELECT COMPANION (optional, always visible) -->
-      <div>
+      <!-- Step 3: SELECT COMPANION (optional, only shown for companion commanders) -->
+      <div id="ritual-companion-section" style="display: none;">
         <label style="font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; color: #EAECEE; display: block; margin-bottom: 8px;">
           SELECT COMPANION
         </label>
@@ -190,6 +190,7 @@ export function openRitualModal(options = {}) {
   const partnerSearch = overlay.querySelector('#ritual-partner-search');
   const partnerResults = overlay.querySelector('#ritual-partner-results');
   const partnerSelected = overlay.querySelector('#ritual-partner-selected');
+  const companionSection = overlay.querySelector('#ritual-companion-section');
   const companionSearch = overlay.querySelector('#ritual-companion-search');
   const companionResults = overlay.querySelector('#ritual-companion-results');
   const companionSelected = overlay.querySelector('#ritual-companion-selected');
@@ -294,6 +295,11 @@ export function openRitualModal(options = {}) {
         selectedPartner = null;
         partnerType = null;
         partnerWithTarget = null;
+        companionSection.style.display = 'none';
+        selectedCompanion = null;
+        companionSearch.value = '';
+        companionSearch.style.display = 'block';
+        companionSelected.style.display = 'none';
         if (deckNameInput) deckNameInput.value = '';
       } else if (containerId === 'ritual-partner-selected') {
         selectedPartner = null;
@@ -400,6 +406,19 @@ export function openRitualModal(options = {}) {
         partnerWithTarget = null;
         partnerSection.style.display = 'none';
         selectedPartner = null;
+      }
+
+      // Companion field is only relevant when the commander itself has the
+      // Companion keyword (no commander truly "requires" one, but per request we
+      // surface it only for companion-capable commanders).
+      if (isCompanion(card)) {
+        companionSection.style.display = 'block';
+      } else {
+        companionSection.style.display = 'none';
+        selectedCompanion = null;
+        companionSearch.value = '';
+        companionSearch.style.display = 'block';
+        companionSelected.style.display = 'none';
       }
 
       updateColorIdentityDisplay();

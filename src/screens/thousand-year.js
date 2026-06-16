@@ -12,6 +12,7 @@ export function mount(container) {
 
   let mode = 'landing';
   let cleanupFns = [];
+  const screenCleanups = [];
 
   // Load decks list
   if (store && typeof store.loadDecks === 'function') {
@@ -58,14 +59,14 @@ export function mount(container) {
     }
   };
   document.addEventListener('deck-open', handleDeckOpen);
-  cleanupFns.push(() => document.removeEventListener('deck-open', handleDeckOpen));
+  screenCleanups.push(() => document.removeEventListener('deck-open', handleDeckOpen));
 
   // Listen for deck-back-to-landing events
   const handleBackToLanding = () => {
     renderLanding();
   };
   document.addEventListener('deck-back-to-landing', handleBackToLanding);
-  cleanupFns.push(() => document.removeEventListener('deck-back-to-landing', handleBackToLanding));
+  screenCleanups.push(() => document.removeEventListener('deck-back-to-landing', handleBackToLanding));
 
   // 260608: deep-link from dashboard widget / Preordain section. If the
   // deckgen store carries a pendingDeckId, open that deck immediately
@@ -90,6 +91,7 @@ export function mount(container) {
       else if (fn && typeof fn.cleanup === 'function') fn.cleanup();
     }
     cleanupFns = [];
+    for (const fn of screenCleanups) { try { fn(); } catch {} }
     // Remove modals
     document.getElementById('tys-modals')?.remove();
     // Editor cleanup
