@@ -7,14 +7,15 @@
  * Open the delete deck confirmation modal.
  * @param {number} deckId - ID of the deck to delete
  * @param {string} deckName - Name of the deck (for display)
+ * @param {{ afterDelete?: Function }} [options] - afterDelete runs once the
+ *   deck is removed (used by the editor to navigate back to the landing).
  */
-export function openDeleteDeckModal(deckId, deckName) {
+export function openDeleteDeckModal(deckId, deckName, options = {}) {
   // Remove existing modal if present
   document.getElementById('delete-deck-modal')?.remove();
 
   const Alpine = window.Alpine;
   const store = Alpine?.store('deck');
-  const toast = Alpine?.store('toast');
 
   const overlay = document.createElement('div');
   overlay.id = 'delete-deck-modal';
@@ -36,7 +37,7 @@ export function openDeleteDeckModal(deckId, deckName) {
 
       <!-- Confirmation text -->
       <p style="font-family: 'Space Grotesk', sans-serif; font-size: 14px; line-height: 1.5; color: #EAECEE; margin: 0;">
-        This will permanently remove this deck and all its cards. This cannot be undone.
+        This removes the deck and all its cards from your archive. You'll have a few seconds to undo it afterwards.
       </p>
 
       <!-- Action buttons -->
@@ -69,11 +70,13 @@ export function openDeleteDeckModal(deckId, deckName) {
   overlay.querySelector('#delete-deck-backdrop').addEventListener('click', closeModal);
   overlay.querySelector('#delete-deck-cancel').addEventListener('click', closeModal);
   overlay.querySelector('#delete-deck-confirm').addEventListener('click', async () => {
+    // deleteDeck removes the deck optimistically and shows its own undo toast
+    // (10s window) — no extra success toast here, that would double up.
     if (store) {
       await store.deleteDeck(deckId);
-      toast?.success('Deck deleted.');
     }
     closeModal();
+    options.afterDelete?.();
   });
 
   // Escape key

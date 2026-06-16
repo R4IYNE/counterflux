@@ -79,13 +79,32 @@ export function renderDeckLanding(container) {
                 <div :style="colorIdentityGradient(deck.color_identity) + 'position: absolute; top: 0; left: 0; width: 100%; height: 100%;'"></div>
               </template>
 
+              <!-- Overflow menu — visible, touch-friendly affordance for deck
+                   actions (open / rename / duplicate / change commander /
+                   delete). Mirrors the right-click context menu, which is
+                   invisible on touch. .stop so opening the menu never also
+                   opens the deck. A span (not a button) avoids nesting an
+                   interactive element inside the tile button. -->
+              <span
+                role="button"
+                tabindex="0"
+                aria-label="Deck actions"
+                title="Deck actions"
+                @click.stop.prevent="showContextMenu($event, deck)"
+                style="position: absolute; top: 8px; right: 8px; z-index: 3; display: inline-flex; align-items: center; justify-content: center; padding: 2px; background: rgba(20,22,28,0.85); color: var(--color-text-muted, #7A8498); cursor: pointer;"
+                onmouseenter="this.style.color='#EAECEE'"
+                onmouseleave="this.style.color='#7A8498'"
+              >
+                <span class="material-symbols-outlined" style="font-size: 18px;">more_vert</span>
+              </span>
+
               <!-- Top-left: format badge + deck name + color-identity mana
                    glyphs. 260606-fmt: format badge restored so non-Commander
                    decks (Modern, Standard, etc.) are still distinguishable
                    at a glance. Deck name lives directly underneath the
                    format chip so the visual hierarchy still reads
                    format → name → identity. -->
-              <div style="position: absolute; top: 8px; left: 8px; right: 8px; display: inline-flex; flex-direction: column; gap: 4px; align-items: flex-start; max-width: calc(100% - 16px);">
+              <div style="position: absolute; top: 8px; left: 8px; right: 44px; display: inline-flex; flex-direction: column; gap: 4px; align-items: flex-start; max-width: calc(100% - 52px);">
                 <span
                   style="padding: 2px 6px; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; color: var(--color-text-muted); background: rgba(20,22,28,0.85); text-transform: uppercase;"
                   x-text="deck.format?.toUpperCase() || 'COMMANDER'"

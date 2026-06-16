@@ -46,6 +46,32 @@ export function renderDeckEditor(container) {
   `;
   breadcrumb.appendChild(editingLabel);
 
+  // Delete this deck — right-aligned destructive action. Opens the same
+  // confirmation modal as the archive's context menu; on confirm it deletes
+  // (with the 10s undo toast) and navigates back to the landing since the
+  // open deck no longer exists.
+  const deleteBtn = document.createElement('button');
+  deleteBtn.setAttribute('aria-label', 'Delete this deck');
+  deleteBtn.title = 'Delete this deck';
+  deleteBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 16px;">delete</span><span>DELETE</span>';
+  deleteBtn.style.cssText = `
+    margin-left: auto; display: inline-flex; align-items: center; gap: 6px;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase;
+    letter-spacing: 0.15em; font-weight: 700; cursor: pointer; padding: 8px 12px;
+    background: transparent; color: #7A8498; border: 1px solid #2A2D3A;
+  `;
+  deleteBtn.onmouseenter = () => { deleteBtn.style.color = '#E23838'; deleteBtn.style.borderColor = '#E23838'; };
+  deleteBtn.onmouseleave = () => { deleteBtn.style.color = '#7A8498'; deleteBtn.style.borderColor = '#2A2D3A'; };
+  deleteBtn.addEventListener('click', async () => {
+    const deck = store?.activeDeck;
+    if (!deck) return;
+    const { openDeleteDeckModal } = await import('./delete-deck-modal.js');
+    openDeleteDeckModal(deck.id, deck.name, {
+      afterDelete: () => document.dispatchEvent(new CustomEvent('deck-back-to-landing')),
+    });
+  });
+  breadcrumb.appendChild(deleteBtn);
+
   wrapper.appendChild(breadcrumb);
 
   // Three-panel row

@@ -111,10 +111,9 @@ export function initDeckLandingContextMenu(container) {
 
     // Delete Deck (destructive)
     menuEl.appendChild(
-      createMenuItem('Delete Deck', () => {
-        const { openDeleteDeckModal } = import('./delete-deck-modal.js').then(m => {
-          m.openDeleteDeckModal(deck.id, deck.name);
-        });
+      createMenuItem('Delete Deck', async () => {
+        const { openDeleteDeckModal } = await import('./delete-deck-modal.js');
+        openDeleteDeckModal(deck.id, deck.name);
       }, true)
     );
 
