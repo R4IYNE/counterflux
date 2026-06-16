@@ -71,7 +71,8 @@ export function renderBrewReviewStack() {
         openDetail() {
           const c = this.cur();
           if (!c) return;
-          $dispatch('card-flyout', { card: this.cardMetaCache[c.scryfall_id] });
+          const meta = this.cardMetaCache[c.scryfall_id];
+          if (meta) $store.search.selectResult(meta);
         },
         get approvedCount() {
           return ($store.deckgen?.recommendations || []).filter(r => r.approved).length;

@@ -24,7 +24,7 @@ export function renderBrewReviewList() {
   const cardRow = `
     <div
       :data-brew-card="rec.scryfall_id"
-      @click="$dispatch('card-flyout', { card: cardMetaCache[rec.scryfall_id] })"
+      @click="cardMetaCache[rec.scryfall_id] && $store.search.selectResult(cardMetaCache[rec.scryfall_id])"
       :style="rec.approved
         ? 'display: flex; gap: 12px; padding: 12px; background: rgba(13,82,189,0.06); border: 1px solid rgba(13,82,189,0.4); cursor: pointer;'
         : 'display: flex; gap: 12px; padding: 12px; background: transparent; border: 1px solid #2A2D3A; opacity: 0.55; cursor: pointer;'"
@@ -65,10 +65,12 @@ export function renderBrewReviewList() {
           style="font-family: 'Space Grotesk', sans-serif; font-size: 12px; color: #7A8498; line-height: 1.45;"
           x-text="rec.reasoning"
         ></span>
-        <!-- Explicit ADD / SKIP — .stop so the row's card-flyout doesn't fire -->
+        <!-- Explicit ADD / SKIP — immediate: ADD writes the card to the deck
+             and drops it from the list; SKIP just drops it. .stop so tapping
+             a button never opens the card preview. -->
         <div style="display: flex; gap: 6px; margin-top: auto; padding-top: 4px;">
-          <button type="button" @click.stop="$store.deckgen.setApproval(rec.scryfall_id, true)" :style="btnAdd(rec.approved)">✓ Add</button>
-          <button type="button" @click.stop="$store.deckgen.setApproval(rec.scryfall_id, false)" :style="btnSkip(rec.approved)">✕ Skip</button>
+          <button type="button" @click.stop="$store.deckgen.addRecommendation(rec.scryfall_id)" :style="btnAdd(true)">✓ Add</button>
+          <button type="button" @click.stop="$store.deckgen.skipRecommendation(rec.scryfall_id)" :style="btnSkip(false)">✕ Skip</button>
         </div>
       </div>
     </div>

@@ -109,8 +109,17 @@ describe('deckgen review screen — streaming-list body', () => {
     expect(document.body.innerHTML).toMatch(/min-height:\s*0/);
   });
 
-  it('tapping a card row dispatches card-flyout', () => {
-    document.body.innerHTML = renderDeckgenReviewScreen();
+  it('tapping a card row opens the card preview via the search store', async () => {
+    // The preview path is $store.search.selectResult(card) — the universal
+    // flyout opener used across the app — NOT a `card-flyout` event (which has
+    // no listener anywhere). The row passes the hydrated card metadata.
+    const selected = [];
+    window.__cf_db = {
+      cards: {
+        where: () => ({ anyOf: () => ({ toArray: async () => [{ id: 'a1', name: 'Sol Ring' }] }) }),
+      },
+    };
+    Alpine.store('search', { selectResult(card) { selected.push(card); } });
     Alpine.store('deckgen', {
       mode: 'build',
       status: 'reviewing',
@@ -121,17 +130,25 @@ describe('deckgen review screen — streaming-list body', () => {
       approveAll() {},
       rejectAll() {},
       reset() {},
+      addRecommendation() {},
+      skipRecommendation() {},
+      addAllRemaining() {},
+      skipAllRemaining() {},
       async commitApproved() { return { ok: true }; },
     });
+    document.body.innerHTML = renderDeckgenReviewScreen();
     if (!window.__alpineStarted) {
       Alpine.start();
       window.__alpineStarted = true;
     } else {
       Alpine.initTree(document.body);
     }
-    let fired = false;
-    document.addEventListener('card-flyout', () => { fired = true; });
+    // Let the x-effect's async hydrateCardMeta resolve so cardMetaCache fills.
+    await new Promise((r) => setTimeout(r, 0));
+    await new Promise((r) => setTimeout(r, 0));
     document.querySelector('[data-brew-card="a1"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-    expect(fired).toBe(true);
+    expect(selected.length).toBe(1);
+    expect(selected[0]).toMatchObject({ id: 'a1', name: 'Sol Ring' });
+    delete window.__cf_db;
   });
 });

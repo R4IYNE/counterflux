@@ -31,6 +31,8 @@ export function initDeckgenStore() {
     error: null,                     // { code, message } when status === 'error'
     cacheHit: false,                 // true if last call returned a cached response
     brewProgress: 0,                 // cards streamed so far this brew (live progress for the thinking panel)
+    brewElapsed: 0,                  // seconds elapsed since the current brew started (drives the BREWING timer)
+    _brewTick: null,                 // setInterval handle for the elapsed counter
     brewModalOpen: false,             // Phase 18 — modal visibility, separate from status so the modal can be open while idle
     modalMode: 'build',               // Phase 20 — 'build' (brew from scratch) or 'retune' (power-level retune). Used by the modal to swap copy + hide irrelevant fields.
 
@@ -130,6 +132,12 @@ export function initDeckgenStore() {
       this.brewProgress = 0;
       this.recommendations = [];
       this.streamComplete = false;
+      // Live elapsed counter — the BREWING surface ticks this up so the
+      // user sees forward motion during the 30-90s generation. Stopped the
+      // moment the stream completes, errors, or the store is reset.
+      this.brewElapsed = 0;
+      if (this._brewTick) clearInterval(this._brewTick);
+      this._brewTick = setInterval(() => { this.brewElapsed += 1; }, 1000);
       this.activeDeckId = input.deckId;
       this.activeCommanderId = input.commanderId;
       this.mode = input.mode || 'build';
@@ -195,6 +203,17 @@ export function initDeckgenStore() {
       });
 
       if (!result.ok) {
+        this._stopBrewTick();
+        // Partial brew — the stream errored/timed out AFTER some cards had
+        // already arrived. Don't blow them away: keep what streamed and let
+        // the user act on it. Only a zero-card failure is a hard error.
+        if (this.recommendations.length > 0) {
+          this.streamComplete = true;
+          this.status = 'reviewing';
+          const n = this.recommendations.length;
+          Alpine.store('toast')?.warning?.(`Brew stopped early — ${n} card${n === 1 ? '' : 's'} ready to review.`);
+          return;
+        }
         this.status = 'error';
         this.streamComplete = false;
         this.error = { code: result.code, message: result.message };
@@ -220,6 +239,7 @@ export function initDeckgenStore() {
         if (!seen.has(r.scryfall_id)) this.recommendations.push({ ...r, approved: true });
       }
       this.streamComplete = true;
+      this._stopBrewTick();
       try {
         const intel = Alpine.store('intelligence');
         const deckCards = Alpine.store('deck')?.activeCards || [];
@@ -262,6 +282,49 @@ export function initDeckgenStore() {
       this.recommendations = this.recommendations.map((r) => ({ ...r, approved: false }));
     },
 
+    // -------------------------------------------------------------------
+    // Immediate review actions (build/fill list mode)
+    //
+    // The streaming add-list acts on each card the moment the user taps it —
+    // ADD writes the card to the deck and drops it from the list; SKIP just
+    // drops it. This works mid-stream (no waiting for the full 99) and means
+    // a timeout never strands a half-reviewed batch.
+    // -------------------------------------------------------------------
+
+    async addRecommendation(scryfallId) {
+      const rec = this.recommendations.find((r) => r.scryfall_id === scryfallId);
+      if (!rec) return;
+      // Drop from the list first so the UI responds instantly even if the
+      // Dexie write lags.
+      this.recommendations = this.recommendations.filter((r) => r.scryfall_id !== scryfallId);
+      try {
+        await this._applyRecs([rec], { toast: false });
+      } catch (err) {
+        console.warn('[deckgen] addRecommendation failed', err);
+        Alpine.store('toast')?.error?.('Could not add that card.');
+      }
+    },
+
+    skipRecommendation(scryfallId) {
+      this.recommendations = this.recommendations.filter((r) => r.scryfall_id !== scryfallId);
+    },
+
+    async addAllRemaining() {
+      const recs = this.recommendations.slice();
+      if (recs.length === 0) return;
+      this.recommendations = [];
+      try {
+        await this._applyRecs(recs, { toast: true });
+      } catch (err) {
+        console.warn('[deckgen] addAllRemaining failed', err);
+        Alpine.store('toast')?.error?.('Could not add the cards.');
+      }
+    },
+
+    skipAllRemaining() {
+      this.recommendations = [];
+    },
+
     get approvedCount() {
       return this.recommendations.filter((r) => r.approved).length;
     },
@@ -283,6 +346,75 @@ export function initDeckgenStore() {
      *
      * Returns { ok: true } on success or { ok: false, message } on failure.
      */
+    /**
+     * Shared write path: apply a list of recommendations to the active deck
+     * in a single transaction. Each rec may carry a `swap_out` scryfall_id
+     * (retune/upgrade) which is removed in the same transaction so the user
+     * gets a true SWAP rather than just an add. Returns { addedCount,
+     * swappedCount }. Used by both the immediate add buttons and the batch
+     * commit.
+     */
+    async _applyRecs(recs, { toast = true } = {}) {
+      if (!this.activeDeckId || !recs?.length) return { addedCount: 0, swappedCount: 0 };
+
+      let addedCount = 0;
+      let swappedCount = 0;
+
+      await db.transaction('rw', db.deck_cards, async () => {
+        const nowIso = new Date().toISOString();
+        for (const rec of recs) {
+          // If this is a swap (retune/upgrade mode), remove the swap_out
+          // card first. Look it up by [deck_id+scryfall_id] composite —
+          // same index addCard uses.
+          if (rec.swap_out) {
+            const oldRow = await db.deck_cards
+              .where('[deck_id+scryfall_id]')
+              .equals([this.activeDeckId, rec.swap_out])
+              .first();
+            if (oldRow) {
+              await db.deck_cards.delete(oldRow.id);
+              swappedCount++;
+            }
+          }
+
+          // Skip add if already in deck (singleton format guard or a
+          // self-swap where the LLM hallucinated the same card on
+          // both sides — already-out, now adding back).
+          const existing = await db.deck_cards
+            .where('[deck_id+scryfall_id]')
+            .equals([this.activeDeckId, rec.scryfall_id])
+            .first();
+          if (existing) continue;
+
+          await db.deck_cards.add({
+            deck_id: this.activeDeckId,
+            scryfall_id: rec.scryfall_id,
+            quantity: 1,
+            tags: [],
+            sort_order: 0,
+            updated_at: nowIso,
+            synced_at: null,
+          });
+          if (!rec.swap_out) addedCount++;
+        }
+      });
+
+      // Refresh active deck so the editor picks up the new cards
+      try {
+        await Alpine.store('deck')?.loadDeck(this.activeDeckId);
+      } catch {
+        // Non-fatal
+      }
+
+      if (toast) {
+        const toastMsg = swappedCount > 0
+          ? `Swapped ${swappedCount} card${swappedCount === 1 ? '' : 's'}${addedCount > 0 ? ` + added ${addedCount}` : ''}.`
+          : `Added ${addedCount} card${addedCount === 1 ? '' : 's'} to your deck.`;
+        Alpine.store('toast')?.success(toastMsg);
+      }
+      return { addedCount, swappedCount };
+    },
+
     async commitApproved() {
       if (!this.activeDeckId) {
         return { ok: false, message: 'No active deck.' };
@@ -294,60 +426,8 @@ export function initDeckgenStore() {
 
       this.status = 'committing';
 
-      let addedCount = 0;
-      let swappedCount = 0;
-
       try {
-        await db.transaction('rw', db.deck_cards, async () => {
-          const nowIso = new Date().toISOString();
-          for (const rec of approved) {
-            // If this is a swap (retune/upgrade mode), remove the
-            // swap_out card first. Look it up by [deck_id+scryfall_id]
-            // composite — same index addCard uses.
-            if (rec.swap_out) {
-              const oldRow = await db.deck_cards
-                .where('[deck_id+scryfall_id]')
-                .equals([this.activeDeckId, rec.swap_out])
-                .first();
-              if (oldRow) {
-                await db.deck_cards.delete(oldRow.id);
-                swappedCount++;
-              }
-            }
-
-            // Skip add if already in deck (singleton format guard or a
-            // self-swap where the LLM hallucinated the same card on
-            // both sides — already-out, now adding back).
-            const existing = await db.deck_cards
-              .where('[deck_id+scryfall_id]')
-              .equals([this.activeDeckId, rec.scryfall_id])
-              .first();
-            if (existing) continue;
-
-            await db.deck_cards.add({
-              deck_id: this.activeDeckId,
-              scryfall_id: rec.scryfall_id,
-              quantity: 1,
-              tags: [],
-              sort_order: 0,
-              updated_at: nowIso,
-              synced_at: null,
-            });
-            if (!rec.swap_out) addedCount++;
-          }
-        });
-
-        // Refresh active deck so the editor picks up the new cards
-        try {
-          await Alpine.store('deck')?.loadDeck(this.activeDeckId);
-        } catch {
-          // Non-fatal
-        }
-
-        const toastMsg = swappedCount > 0
-          ? `Swapped ${swappedCount} card${swappedCount === 1 ? '' : 's'}${addedCount > 0 ? ` + added ${addedCount}` : ''}.`
-          : `Added ${addedCount} card${addedCount === 1 ? '' : 's'} to your deck.`;
-        Alpine.store('toast')?.success(toastMsg);
+        const { addedCount, swappedCount } = await this._applyRecs(approved, { toast: true });
         this.reset();
         return { ok: true, addedCount, swappedCount };
       } catch (err) {
@@ -361,6 +441,13 @@ export function initDeckgenStore() {
     // Lifecycle
     // -------------------------------------------------------------------
 
+    _stopBrewTick() {
+      if (this._brewTick) {
+        clearInterval(this._brewTick);
+        this._brewTick = null;
+      }
+    },
+
     reset() {
       this.status = 'idle';
       this.error = null;
@@ -372,6 +459,8 @@ export function initDeckgenStore() {
       this.activeDeckId = null;
       this.activeCommanderId = null;
       this.brewModalOpen = false;
+      this.brewElapsed = 0;
+      this._stopBrewTick();
     },
 
     openBrewModal(mode) {

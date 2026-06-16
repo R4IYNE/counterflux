@@ -456,7 +456,7 @@
       <!-- Backdrop -->
       <div
         class="fixed inset-0 z-40"
-        style="background-color: rgba(11, 12, 16, 0.6);"
+        style="background-color: rgba(11, 12, 16, 0.6); z-index: 9100;"
         @click="$store.search.closeFlyout()"
         x-transition:enter="transition ease-out duration-200"
         x-transition:enter-start="opacity-0"
@@ -469,7 +469,7 @@
       <!-- Flyout panel -->
       <aside
         class="fixed top-0 right-0 bottom-0 w-[400px] z-45 bg-surface border-l border-border-ghost overflow-y-auto"
-        style="box-shadow: -4px 0 20px rgba(13, 82, 189, 0.15);"
+        style="box-shadow: -4px 0 20px rgba(13, 82, 189, 0.15); z-index: 9110;"
         x-transition:enter="transition ease-out duration-300 transform"
         x-transition:enter-start="translate-x-full"
         x-transition:enter-end="translate-x-0"
