@@ -24,7 +24,7 @@ export function renderDeckLanding(container) {
         <button
           @click="openRitual()"
           :disabled="ritualLoading"
-          :style="ritualLoading ? 'opacity: 0.7; cursor: wait;' : ''"
+          :style="{ opacity: ritualLoading ? '0.7' : '1', cursor: ritualLoading ? 'wait' : 'pointer' }"
           style="font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; cursor: pointer; padding: 8px 16px; background: #0D52BD; color: #EAECEE; border: none;"
           x-text="ritualLoading ? 'OPENING…' : 'Brew a new storm'"
         ></button>
@@ -47,7 +47,7 @@ export function renderDeckLanding(container) {
           <button
             @click="openRitual()"
             :disabled="ritualLoading"
-            :style="ritualLoading ? 'opacity: 0.7; cursor: wait;' : ''"
+            :style="{ opacity: ritualLoading ? '0.7' : '1', cursor: ritualLoading ? 'wait' : 'pointer' }"
             style="font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; cursor: pointer; padding: 8px 16px; background: #0D52BD; color: #EAECEE; border: none;"
             x-text="ritualLoading ? 'OPENING…' : 'Brew a new storm'"
           ></button>
