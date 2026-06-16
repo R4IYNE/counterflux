@@ -54,7 +54,8 @@ export function splashScreen() {
     _interval: null,
     _progressTimer: null,
     _minTimer: null,
-    _maxTimer: null,
+    lastProgress: 0,
+    lastAdvanceAt: 0,
 
     init() {
       // Rotate flavour text every 8 seconds (kept — visible on boot + migration)
@@ -62,23 +63,28 @@ export function splashScreen() {
         this.flavourIndex = (this.flavourIndex + 1) % FLAVOUR_TEXTS.length;
       }, 8000);
 
+      // Stall tracking seed: real progress is "advancing" until proven otherwise.
+      this.lastProgress = 0;
+      this.lastAdvanceAt = Date.now();
+
       // If bulk data is already loaded (or pre-errored) when the splash mounts,
-      // mark ready now so a stuck load can't trap the user for the full safety window.
+      // mark ready now so the poll/min-timer can finish at the first opportunity.
       const initStatus = this.$store?.bulkdata?.status;
       if (initStatus === 'ready' || initStatus === 'error') {
         this._ready = true;
         this._maybeFinish();
       }
 
+      // Optional fast-path: if Alpine's reactive $watch is present, react to a
+      // status flip immediately. The interval poll below is the reliable path
+      // and works on its own (so this stays testable).
       if (typeof this.$watch === 'function') {
-        // Boot path: fade once the bulk-data store reports ready.
         this.$watch('$store.bulkdata.status', (s) => {
           if (s === 'ready' || s === 'error') {
             this._ready = true;
             this._maybeFinish();
           }
         });
-        // Migration path: fade once a real migration completes.
         this.$watch('$store.bulkdata.migrationProgress', (p) => {
           if (p !== null && p >= 100) {
             this._ready = true;
@@ -93,25 +99,37 @@ export function splashScreen() {
         this._maybeFinish();
       }, 2500);
 
-      // Tween the 0→100 bar. During a real migration the bar tracks the
-      // actual migration progress; otherwise it eases up to 92% and only
-      // snaps to 100 once both ready + min-elapsed are satisfied.
+      // Poll the store (~250ms). This is the reliable mechanism: it reads the
+      // real status + download progress, advances the synthetic floor, tracks
+      // stalls, flips _ready, and tries to finish. No 8s blanket cutoff — the
+      // splash stays up until the archive is genuinely ready/error/stalled.
       this._progressTimer = setInterval(() => {
-        if (this._isMigration()) {
-          this.displayProgress = this.migrationProgress || 0;
-        } else if (this._ready && this._minElapsed) {
-          this.displayProgress = 100;
-        } else if (this.displayProgress < 92) {
-          this.displayProgress = Math.min(92, this.displayProgress + 4);
-        }
-      }, 80);
+        const status = this.$store?.bulkdata?.status;
 
-      // Safety net: a stuck/errored bulk-data load can never trap the user.
-      this._maxTimer = setTimeout(() => {
-        this._ready = true;
-        this._minElapsed = true;
+        if (status === 'ready' || status === 'error') {
+          this._ready = true;
+        }
+
+        // Advance the small synthetic floor that bridges the brief
+        // idle/checking phase before real download numbers arrive.
+        if (this.displayProgress < 15) {
+          this.displayProgress = Math.min(15, this.displayProgress + 1);
+        }
+
+        // Stall safety: if real progress hasn't advanced for 40s, let the
+        // user through (a dead connection that never emitted 'error').
+        const realProgress = this._realProgress();
+        if (realProgress > this.lastProgress) {
+          this.lastProgress = realProgress;
+          this.lastAdvanceAt = Date.now();
+        }
+        if (!this._ready && realProgress > 0 &&
+            (Date.now() - this.lastAdvanceAt) > 40000) {
+          this._ready = true;
+        }
+
         this._maybeFinish();
-      }, 8000);
+      }, 250);
     },
 
     _maybeFinish() {
@@ -127,11 +145,15 @@ export function splashScreen() {
       return this.migrationProgress !== null && this.migrationProgress < 100;
     },
 
+    _realProgress() {
+      const p = this.$store?.bulkdata?.progress;
+      return (typeof p === 'number' ? p : 0);
+    },
+
     destroy() {
       if (this._interval) clearInterval(this._interval);
       if (this._progressTimer) clearInterval(this._progressTimer);
       if (this._minTimer) clearTimeout(this._minTimer);
-      if (this._maxTimer) clearTimeout(this._maxTimer);
     },
 
     get flavourText() {
@@ -158,16 +180,27 @@ export function splashScreen() {
     },
 
     /**
-     * Boot splash now shows from mount until the fade flips on (after the
-     * ~2.5s minimum AND data ready, or the 8s safety). During a real
-     * migration the same overlay tracks migration progress instead.
+     * Boot splash shows from mount until the fade flips on: after the ~2.5s
+     * minimum AND the archive is ready (status 'ready'/'error', or a 40s
+     * stall). During a real migration the same overlay tracks migration
+     * progress instead.
      */
     get isVisible() {
       return !this.fadingOut;
     },
 
+    /**
+     * The bar shows REAL archive download progress, not a synthetic tween.
+     *  - migration in flight → migrationProgress
+     *  - archive ready → 100
+     *  - otherwise → max(real download %, small synthetic floor ≤ 15)
+     * The floor only bridges the brief idle/checking phase and can never
+     * overstate the real download %.
+     */
     get barProgress() {
-      return this._isMigration() ? (this.migrationProgress || 0) : this.displayProgress;
+      if (this._isMigration()) return this.migrationProgress || 0;
+      if (this.$store?.bulkdata?.status === 'ready') return 100;
+      return Math.max(this._realProgress(), this.displayProgress);
     },
 
     get isMigrationView() {

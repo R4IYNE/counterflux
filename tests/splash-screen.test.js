@@ -60,28 +60,54 @@ describe('splashScreen boot loading', () => {
     o.$watch = () => {}; // no reactive watcher in the test harness
     return o;
   }
-  it('is visible on boot and hides after the ~2.5s minimum once data is ready', () => {
-    const o = make({ bulkdata: { status: 'ready', migrationProgress: null } });
+
+  it('cached/instant: ready at init fades after the ~2.5s minimum', () => {
+    const o = make({ bulkdata: { status: 'ready', progress: 100, migrationProgress: null } });
     o.init();
     expect(o.isVisible).toBe(true);
-    vi.advanceTimersByTime(2500);          // min elapses; ready was set at init
-    // _maybeFinish schedules the fade 350ms later
-    vi.advanceTimersByTime(400);
+    vi.advanceTimersByTime(2500);          // min elapses; ready polled in
+    vi.advanceTimersByTime(400);           // _maybeFinish schedules the fade 350ms later
     expect(o.fadingOut).toBe(true);
     expect(o.isVisible).toBe(false);
-    expect(o.displayProgress).toBe(100);
+    expect(o.barProgress).toBe(100);
     o.destroy();
   });
-  it('stays visible while data is not ready, then the 8s safety forces it down', () => {
-    const o = make({ bulkdata: { status: 'downloading', migrationProgress: null } });
+
+  it('stays up through a long download, then fades once status flips to ready', () => {
+    const o = make({ bulkdata: { status: 'downloading', progress: 42, migrationProgress: null } });
     o.init();
     vi.advanceTimersByTime(2500);
-    expect(o.fadingOut).toBe(false);       // not ready yet → still visible
-    vi.advanceTimersByTime(6000);          // hit the 8s safety
+    expect(o.fadingOut).toBe(false);       // still downloading → still visible
+    expect(o.barProgress).toBeGreaterThanOrEqual(42); // real progress reflected
+    // archive finishes loading
+    o.$store.bulkdata.status = 'ready';
+    o.$store.bulkdata.progress = 100;
+    vi.advanceTimersByTime(300);           // a poll tick sees ready
+    vi.advanceTimersByTime(400);           // fade scheduled
+    expect(o.fadingOut).toBe(true);
+    o.destroy();
+  });
+
+  it('stall safety: a download that never advances releases after ~40s', () => {
+    const o = make({ bulkdata: { status: 'downloading', progress: 30, migrationProgress: null } });
+    o.init();
+    vi.advanceTimersByTime(2500);
+    expect(o.fadingOut).toBe(false);       // not yet — within the stall window
+    vi.advanceTimersByTime(41000);         // 40s+ with no progress advance
+    vi.advanceTimersByTime(400);           // fade scheduled
+    expect(o.fadingOut).toBe(true);
+    o.destroy();
+  });
+
+  it('error does not trap: status error at init fades after the minimum', () => {
+    const o = make({ bulkdata: { status: 'error', migrationProgress: null } });
+    o.init();
+    vi.advanceTimersByTime(2500);
     vi.advanceTimersByTime(400);
     expect(o.fadingOut).toBe(true);
     o.destroy();
   });
+
   it('uses migration copy when a migration is mid-flight', () => {
     const o = make({ bulkdata: { status: 'idle', migrationProgress: 40 } });
     o.init();
