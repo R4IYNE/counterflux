@@ -479,40 +479,74 @@ export function openRitualModal(options = {}) {
     // Create deck flow
     if (!store) return;
 
+    // Loading cover — keep the modal up (now showing a spinner) so the user
+    // doesn't see the deck list flash before the editor mounts. We close the
+    // modal only once the editor has actually rendered (deck-editor-ready).
+    const panel = overlay.querySelector('#ritual-panel');
+    if (panel) {
+      panel.innerHTML = `
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 48px 24px; text-align: center;">
+          <span class="material-symbols-outlined cf-auth-spin" style="font-size: 40px; color: #0D52BD;">progress_activity</span>
+          <div style="font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; color: #EAECEE;">Brewing your storm…</div>
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: #7A8498;">Opening the deck builder</div>
+        </div>
+      `;
+    }
+
     const name = deckNameInput?.value?.trim() || selectedCommander.name;
     const format = formatSelect?.value || 'commander';
     const deckSize = getFormatSize();
     const colorIdentity = getCurrentColorIdentity();
 
-    const newId = await store.createDeck({
-      name,
-      format,
-      deck_size: deckSize,
-      commander_id: selectedCommander.id,
-      partner_id: selectedPartner?.id || null,
-      companion_id: selectedCompanion?.id || null,
-      color_identity: colorIdentity,
-    });
+    try {
+      const newId = await store.createDeck({
+        name,
+        format,
+        deck_size: deckSize,
+        commander_id: selectedCommander.id,
+        partner_id: selectedPartner?.id || null,
+        companion_id: selectedCompanion?.id || null,
+        color_identity: colorIdentity,
+      });
 
-    // Load the new deck so addCard can operate on it
-    await store.loadDeck(newId);
+      // Load the new deck so addCard can operate on it
+      await store.loadDeck(newId);
 
-    // Auto-add commander (and partner/companion) to the deck
-    await store.addCard(selectedCommander.id, ['Commander']);
-    if (selectedPartner) {
-      await store.addCard(selectedPartner.id, ['Commander']);
+      // Auto-add commander (and partner/companion) to the deck
+      await store.addCard(selectedCommander.id, ['Commander']);
+      if (selectedPartner) {
+        await store.addCard(selectedPartner.id, ['Commander']);
+      }
+      if (selectedCompanion) {
+        await store.addCard(selectedCompanion.id, ['Companion']);
+      }
+
+      toast?.success(`Deck "${name}" created. Begin brewing.`);
+
+      // Close the modal only after the editor has rendered, so the deck list
+      // never flashes. Fallback timeout covers a missed event.
+      const onEditorReady = (e) => {
+        if (!e.detail || e.detail.deckId === newId) {
+          document.removeEventListener('deck-editor-ready', onEditorReady);
+          clearTimeout(readyFallback);
+          closeModal();
+        }
+      };
+      const readyFallback = setTimeout(() => {
+        document.removeEventListener('deck-editor-ready', onEditorReady);
+        closeModal();
+      }, 6000);
+      document.addEventListener('deck-editor-ready', onEditorReady);
+
+      // Navigate to editor (renders behind the loading cover)
+      document.dispatchEvent(
+        new CustomEvent('deck-open', { detail: { deckId: newId } })
+      );
+    } catch (err) {
+      console.warn('[ritual] create deck failed', err);
+      toast?.error?.('Could not create the deck — try again.');
+      closeModal();
     }
-    if (selectedCompanion) {
-      await store.addCard(selectedCompanion.id, ['Companion']);
-    }
-
-    toast?.success(`Deck "${name}" created. Begin brewing.`);
-    closeModal();
-
-    // Navigate to editor (deck already loaded, just render)
-    document.dispatchEvent(
-      new CustomEvent('deck-open', { detail: { deckId: newId } })
-    );
   });
 
   // ---- Abandon / close ----

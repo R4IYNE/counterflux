@@ -47,6 +47,10 @@ export function mount(container) {
     if (Alpine?.initTree) {
       Alpine.initTree(container);
     }
+
+    // Signal that the editor is mounted so the "Brew a new storm" modal can
+    // drop its loading cover without flashing the deck list (260616).
+    document.dispatchEvent(new CustomEvent('deck-editor-ready', { detail: { deckId } }));
   }
 
   // Listen for deck-open events
