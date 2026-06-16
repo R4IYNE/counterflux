@@ -475,6 +475,33 @@ describe('sync-engine push: flushQueue pipeline', () => {
     }
   });
 
+  test('flushQueue pushes an unsynced parent deck before its deck_cards (orphan-parent guard)', async () => {
+    const uid = 'user-test-uuid';
+    // seed a local parent deck that was never synced
+    await db.decks.add({ id: 'deck-orphan', name: 'Frodo', user_id: uid, updated_at: 1777000000000, synced_at: null });
+    // clear the enqueue produced by the seed add above
+    await db.sync_queue.clear();
+    // queue a deck_card for it
+    await db.sync_queue.add({
+      table_name: 'deck_cards', op: 'put', row_id: 'dc-1', user_id: uid,
+      payload: { id: 'dc-1', deck_id: 'deck-orphan', scryfall_id: 'sc-1', quantity: 1, updated_at: 1777000000000, synced_at: null },
+      attempts: 0, last_error: null, created_at: Date.now(),
+    });
+
+    await flushQueue();
+
+    const deckUpserts = upsertCalls.filter(c => c.table === 'decks');
+    const cardUpserts = upsertCalls.filter(c => c.table === 'deck_cards');
+    // the parent deck was pushed...
+    expect(deckUpserts.length).toBeGreaterThanOrEqual(1);
+    expect(deckUpserts.some(c => c.rows.some(r => r.id === 'deck-orphan'))).toBe(true);
+    // ...and the cards too
+    expect(cardUpserts.some(c => c.rows.some(r => r.id === 'dc-1'))).toBe(true);
+    // local deck got synced_at stamped
+    const d = await db.decks.get('deck-orphan');
+    expect(d.synced_at).not.toBeNull();
+  });
+
   test('new sync_queue entry added during flush triggers a follow-up flush (w54 mid-flight drain)', async () => {
     // Regression — the _flushing guard alone could strand a write that lands
     // mid-flush. The fix's finally block re-checks `db.sync_queue.count()` and

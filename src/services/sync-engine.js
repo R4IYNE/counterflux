@@ -494,6 +494,32 @@ export async function flushQueue() {
       // The spread-then-stamp ordering is deliberate: `...e.payload` spreads first,
       // then `user_id: currentUserId` OVERWRITES any stale/null value. PITFALLS §7
       // cross-user safety — the client is the authority on user_id at push time.
+      // Orphan-parent guard (260616): a deck_card can reach this seam while its
+      // parent deck never synced (local synced_at unset, absent from the cloud),
+      // which makes the upsert fail the deck_cards_deck_id_fkey FK forever. Push any
+      // referenced, not-yet-synced local deck first so the FK resolves. Synced decks
+      // are skipped (already in the cloud). A deck-upsert error is non-fatal — the
+      // card upsert below will retry via the normal transient path.
+      if (tableName === 'deck_cards') {
+        const deckIds = [...new Set(Array.from(latestByRow.values()).map(e => e.payload?.deck_id).filter(Boolean))];
+        if (deckIds.length > 0) {
+          let localDecks = [];
+          try { localDecks = await db.decks.where('id').anyOf(deckIds).toArray(); } catch { localDecks = []; }
+          const unsynced = localDecks.filter(d => d && d.synced_at == null);
+          if (unsynced.length > 0) {
+            const deckRows = unsynced.map(d => ({ ...JSON.parse(JSON.stringify(d)), user_id: currentUserId }));
+            _isoStampTimestamps(deckRows);
+            const { error: deckErr } = await supabase.schema('counterflux').from('decks').upsert(deckRows);
+            if (!deckErr) {
+              const now = Date.now();
+              for (const d of unsynced) {
+                try { withHooksSuppressed(() => db.table('decks').update(d.id, { synced_at: now })); } catch { /* non-fatal */ }
+              }
+            }
+          }
+        }
+      }
+
       if (latestByRow.size > 0) {
         const rows = Array.from(latestByRow.values()).map(e => ({ ...e.payload, user_id: currentUserId }));
         _isoStampTimestamps(rows);   // vn7 — convert Number timestamps to ISO before Supabase upsert
