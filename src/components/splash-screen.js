@@ -62,15 +62,18 @@ export function splashScreen() {
         this.flavourIndex = (this.flavourIndex + 1) % FLAVOUR_TEXTS.length;
       }, 8000);
 
-      // If bulk data is already loaded when the splash mounts, mark ready now.
-      if (this.$store?.bulkdata?.status === 'ready') {
+      // If bulk data is already loaded (or pre-errored) when the splash mounts,
+      // mark ready now so a stuck load can't trap the user for the full safety window.
+      const initStatus = this.$store?.bulkdata?.status;
+      if (initStatus === 'ready' || initStatus === 'error') {
         this._ready = true;
+        this._maybeFinish();
       }
 
       if (typeof this.$watch === 'function') {
         // Boot path: fade once the bulk-data store reports ready.
         this.$watch('$store.bulkdata.status', (s) => {
-          if (s === 'ready') {
+          if (s === 'ready' || s === 'error') {
             this._ready = true;
             this._maybeFinish();
           }
@@ -180,7 +183,8 @@ export function splashScreen() {
     },
 
     get statusLabel() {
-      const store = this.$store.bulkdata;
+      const store = this.$store?.bulkdata;
+      if (!store) return '';
       switch (store.status) {
         case 'idle':
         case 'checking':
