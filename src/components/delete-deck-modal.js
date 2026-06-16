@@ -69,22 +69,13 @@ export function openDeleteDeckModal(deckId, deckName, options = {}) {
   // Wire event handlers
   overlay.querySelector('#delete-deck-backdrop').addEventListener('click', closeModal);
   overlay.querySelector('#delete-deck-cancel').addEventListener('click', closeModal);
-  overlay.querySelector('#delete-deck-confirm').addEventListener('click', async (e) => {
-    // Immediate in-flight feedback — if the DB is busy (e.g. a sync or
-    // migration is in flight) deleteDeck can take a beat; show the click
-    // registered and block a double-fire instead of looking frozen.
-    const btn = e.currentTarget;
-    if (btn.disabled) return;
-    btn.disabled = true;
-    btn.textContent = 'DELETING…';
-    btn.style.opacity = '0.7';
-    btn.style.cursor = 'wait';
-
-    // deleteDeck removes the deck optimistically and shows its own undo toast
-    // (10s window) — no extra success toast here, that would double up.
-    if (store) {
-      await store.deleteDeck(deckId);
-    }
+  overlay.querySelector('#delete-deck-confirm').addEventListener('click', () => {
+    // deleteDeck removes the deck from the UI synchronously and shows its own
+    // undo toast (10s window). It's fired WITHOUT await so the modal closes
+    // instantly — awaiting its background snapshot reads (which can stall behind
+    // a busy Dexie) is what made delete feel slow. No success toast here; the
+    // undo toast is the single notification.
+    store?.deleteDeck(deckId);
     closeModal();
     options.afterDelete?.();
   });

@@ -272,17 +272,31 @@ export function initDeckStore() {
     },
 
     async deleteDeck(deckId) {
-      const deck = await db.decks.get(deckId);
-      if (!deck) return;
-      const deckCards = await db.deck_cards.where('deck_id').equals(deckId).toArray();
-      const deckName = deck.name;
-
-      // Remove from UI immediately (optimistic)
+      // Remove from the UI FIRST — synchronously, before any await — so the tile
+      // vanishes (and the confirm modal closes) instantly even when Dexie is
+      // busy. The snapshot reads below are tiny but can stall behind a
+      // background sync/worker transaction that locks the object stores; gating
+      // the UI on them is what made delete feel like it took ~20s. The deferred
+      // hard-delete is always scheduled below, so the UI and DB can't drift.
+      const wasActive = this.activeDeck?.id === deckId;
       this.decks = this.decks.filter(d => d.id !== deckId);
-      if (this.activeDeck?.id === deckId) {
+      if (wasActive) {
         this.activeDeck = null;
         this.activeCards = [];
       }
+
+      // Snapshot the clean DB rows for undo (best-effort), then register the
+      // 10s deferred delete + undo toast. Runs after the UI update, off the
+      // caller's critical path.
+      let deck = null;
+      let deckCards = [];
+      try {
+        deck = await db.decks.get(deckId);
+        deckCards = await db.deck_cards.where('deck_id').equals(deckId).toArray();
+      } catch {
+        // Snapshot is best-effort — the delete is still scheduled below.
+      }
+      const deckName = deck?.name || 'deck';
 
       Alpine.store('undo').push(
         'deck_delete',
@@ -296,8 +310,9 @@ export function initDeckStore() {
           logActivity('deck_edited', `Deleted deck "${deckName}"`);
         },
         async () => {
-          // Restore: re-add deck and cards
-          await db.decks.add(deck);
+          // Restore: re-add deck and cards (deck may be null if the snapshot
+          // read failed — nothing to restore in that case).
+          if (deck) await db.decks.add(deck);
           if (deckCards.length > 0) await db.deck_cards.bulkAdd(deckCards);
           await this.loadDecks();
         }
