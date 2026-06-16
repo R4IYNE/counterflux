@@ -53,7 +53,10 @@ export function mount(container) {
   const handleDeckOpen = (e) => {
     const deckId = e.detail?.deckId;
     if (deckId && store) {
-      store.loadDeck(deckId).then(() => {
+      // Render the editor once the deck DATA has loaded (loadDeck no longer
+      // blocks on the background EDHREC intelligence fetch). `.catch` first so
+      // a load failure still opens the editor rather than stranding the user.
+      store.loadDeck(deckId).catch((err) => console.warn('[tys] loadDeck failed', err)).then(() => {
         renderEditor(deckId);
       });
     }

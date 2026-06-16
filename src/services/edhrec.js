@@ -30,11 +30,11 @@ export function sanitizeCommanderName(name) {
  * spinner-never-resolved bug surfaced when an EDHREC slug 404'd via the
  * Vercel proxy and the upstream connection stalled. Without this cap the
  * intelligence store's `loading.edhrec` flag stays `true` forever, locking
- * the synergy + salt panels in a "LOADING..." state. 15s is generous —
+ * the synergy + salt panels in a "LOADING..." state. 8s is generous —
  * normal EDHREC responses arrive in <1s; anything slower deserves a
  * graceful-degradation error path, not an indefinite hang.
  */
-const FETCH_TIMEOUT_MS = 15000;
+const FETCH_TIMEOUT_MS = 8000;
 
 /**
  * Rate-limited fetch wrapper. Enforces minimum REQUEST_DELAY_MS between calls

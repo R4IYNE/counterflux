@@ -115,27 +115,33 @@ export function initDeckStore() {
       }));
       this.loading = false;
 
-      // Trigger intelligence layer fetch (non-blocking)
-      const intel = Alpine.store('intelligence');
-      if (intel && this.activeDeck?.commander_id) {
-        const commanderCard = await db.cards.get(this.activeDeck.commander_id);
-        if (commanderCard?.name) {
-          intel.fetchForCommander(commanderCard.name);
-          // Build deck info with commander name for Spellbook
-          const deckInfo = {
-            ...this.activeDeck,
-            commander_name: commanderCard.name,
-          };
-          intel.fetchCombos(deckInfo, this.activeCards);
-        }
-        intel.loadDeckThresholds(deckId);
-        // Gap detection is synchronous — runs immediately from local analytics.
-        // Phase 9 Plan 1 Task 3 (DECK-03): pass deck.tags so the creature
-        // threshold archetype-switch (Tribal/Aggro vs Spellslinger/Control)
-        // resolves correctly.
-        const analytics = computeDeckAnalytics(this.activeCards);
-        intel.updateGaps(analytics, this.activeDeck.deck_size || 100, this.activeDeck.tags || []);
-      }
+      // Intelligence + analytics layer — DEFERRED to a separate macrotask so a
+      // slow or failing EDHREC fetch (e.g. a commander EDHREC has no page for,
+      // which 403s after the full proxy timeout — twice, for synergies +
+      // combos = ~30s) can NEVER delay loadDeck resolving, and thus can never
+      // delay the deck editor opening. Fire-and-forget; the panels show their
+      // own loading/empty states and the intelligence store toasts on failure.
+      setTimeout(() => {
+        void (async () => {
+          const intel = Alpine.store('intelligence');
+          if (intel && this.activeDeck?.commander_id) {
+            const commanderCard = await db.cards.get(this.activeDeck.commander_id);
+            if (commanderCard?.name) {
+              intel.fetchForCommander(commanderCard.name);
+              // Build deck info with commander name for Spellbook
+              const deckInfo = {
+                ...this.activeDeck,
+                commander_name: commanderCard.name,
+              };
+              intel.fetchCombos(deckInfo, this.activeCards);
+            }
+            intel.loadDeckThresholds(deckId);
+            // Gap detection is synchronous — runs from local analytics.
+            const analytics = computeDeckAnalytics(this.activeCards);
+            intel.updateGaps(analytics, this.activeDeck.deck_size || 100, this.activeDeck.tags || []);
+          }
+        })().catch((err) => console.warn('[deck] intelligence load failed', err));
+      }, 0);
     },
 
     async addCard(scryfallId, tags) {
