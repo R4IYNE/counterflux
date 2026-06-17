@@ -41,6 +41,31 @@ function sortEntries(items, sortBy) {
   return sorted;
 }
 
+// ---------------------------------------------------------------------------
+// Derived-state memoisation (perf 260616).
+//
+// `filtered` / `sorted` / `grouped` / `stats` are O(n) (or O(n log n))
+// projections over the WHOLE collection. As plain getters they recomputed on
+// every access — and the render path hammers them: the grouped x-for re-reads
+// `grouped` on every reactive tick, the gallery virtual scroller reads `sorted`
+// once per visible tile per scroll frame, and the no-results check reads
+// `sorted` alongside. On a large synced collection that turned routine
+// interactions (filter / search / scroll / navigate) into multi-second
+// main-thread freezes — which in turn starved the gotrue Web-Locks release
+// callback ("lock not released within 5000ms") and the Realtime heartbeat
+// (CHANNEL_ERROR). Memoising collapses each access to O(1) when nothing changed.
+//
+// Validity = same `entries` array reference AND same input signature (entries
+// `_rev` + active filters + sort). `entries` is reassigned on every load and
+// optimistic mutation; `_rev` covers the one in-place mutation (undo restore).
+// The ref check also isolates separate store instances (test re-init).
+const _memo = {
+  filtered: { ref: null, sig: null, val: [] },
+  sorted: { ref: null, sig: null, val: [] },
+  grouped: { ref: null, sig: null, val: [] },
+  stats: { ref: null, sig: null, val: null },
+};
+
 /**
  * Initialise the Alpine collection store.
  * Call during app startup alongside initAppStore().
@@ -48,6 +73,10 @@ function sortEntries(items, sortBy) {
 export function initCollectionStore() {
   Alpine.store('collection', {
     entries: [],
+    // perf 260616 — bumped on every `entries` mutation; part of the derived-
+    // getter memo signature so `filtered`/`sorted`/`grouped`/`stats` recompute
+    // exactly once per data change instead of on every reactive access.
+    _rev: 0,
     // 260516-gly: the GROUPED view is now THE gallery — the old per-entry
     // gallery tab was removed. Internal value renamed to 'gallery' so the
     // tab label, the viewMode value, and the user's mental model all
@@ -106,8 +135,21 @@ export function initCollectionStore() {
     // depend on this to force a re-render after the dynamic import lands.
     preconMembershipsLoaded: false,
 
+    // Cheap, collision-free signature of the inputs `filtered` depends on.
+    // Reading `_rev` + each filter field here registers the reactive deps, so
+    // Alpine still re-renders when they change even on a memo cache hit.
+    _filterSig() {
+      const f = this.filters;
+      return this._rev + ':' + JSON.stringify([f.category, f.colours, f.search, f.set]);
+    },
+
     get filtered() {
-      let items = this.entries;
+      const ref = this.entries;
+      const sig = this._filterSig();
+      const m = _memo.filtered;
+      if (m.ref === ref && m.sig === sig) return m.val;
+
+      let items = ref;
       if (this.filters.category !== 'all') {
         items = items.filter(e => e.category === this.filters.category);
       }
@@ -123,11 +165,18 @@ export function initCollectionStore() {
       if (this.filters.set) {
         items = items.filter(e => e.card?.set === this.filters.set);
       }
+      m.ref = ref; m.sig = sig; m.val = items;
       return items;
     },
 
     get sorted() {
-      return sortEntries(this.filtered, this.sortBy);
+      const ref = this.entries;
+      const sig = this._filterSig() + '|' + this.sortBy;
+      const m = _memo.sorted;
+      if (m.ref === ref && m.sig === sig) return m.val;
+      const val = sortEntries(this.filtered, this.sortBy);
+      m.ref = ref; m.sig = sig; m.val = val;
+      return val;
     },
 
     /**
@@ -151,6 +200,11 @@ export function initCollectionStore() {
      * `byCondition` breakdown — the grouped tile already reserves a row for it.
      */
     get grouped() {
+      const ref = this.entries;
+      const sig = this._filterSig() + '|' + this.sortBy;
+      const m = _memo.grouped;
+      if (m.ref === ref && m.sig === sig) return m.val;
+
       const items = this.filtered;
       const groups = new Map();
       for (const entry of items) {
@@ -240,11 +294,16 @@ export function initCollectionStore() {
             return mul * (a.card?.name || '').localeCompare(b.card?.name || '');
         }
       });
+      m.ref = ref; m.sig = sig; m.val = out;
       return out;
     },
 
     get stats() {
-      return {
+      const ref = this.entries;
+      const sig = String(this._rev);
+      const m = _memo.stats;
+      if (m.ref === ref && m.sig === sig) return m.val;
+      const val = {
         totalCards: this.entries.reduce((sum, e) => sum + e.quantity, 0),
         uniqueCards: this.entries.length,
         estimatedValue: this.entries.reduce((sum, e) => {
@@ -255,6 +314,8 @@ export function initCollectionStore() {
         }, 0),
         wishlistCount: this.entries.filter(e => e.category === 'wishlist').length,
       };
+      m.ref = ref; m.sig = sig; m.val = val;
+      return val;
     },
 
     async loadEntries() {
@@ -268,6 +329,7 @@ export function initCollectionStore() {
         ...entry,
         card: cardMap[entry.scryfall_id] || null,
       }));
+      this._rev++;   // perf 260616 — invalidate derived-getter memo
       this.loading = false;
 
       // 260522-hyd: recovery sweep for entries whose db.cards row is missing
@@ -685,6 +747,7 @@ export function initCollectionStore() {
 
       // Remove from UI immediately (optimistic)
       this.entries = this.entries.filter(e => e.id !== entryId);
+      this._rev++;   // perf 260616 — invalidate derived-getter memo
 
       // Defer actual DB deletion via undo system (D-09, D-10)
       Alpine.store('undo').push(
@@ -696,9 +759,10 @@ export function initCollectionStore() {
           logActivity('card_removed', `Removed ${cardName} from collection`, entry.scryfall_id);
         },
         () => {
-          // Restore: re-add to UI
+          // Restore: re-add to UI (in-place — same array ref, so bump _rev)
           this.entries.push(entry);
           this.entries.sort((a, b) => (a.id || 0) - (b.id || 0));
+          this._rev++;   // perf 260616 — invalidate derived-getter memo
         }
       );
     },

@@ -18,6 +18,35 @@ export function renderGroupedView() {
       confirmOpen: false,
       _bump: 0,
       get groups() { return $store.collection.grouped; },
+      // perf 260617 — incremental render so a large collection (thousands of
+      // unique cards) doesn't mount every tile on first paint. We render a
+      // growing window of the groups list and extend it as a bottom sentinel
+      // scrolls into view. Selection / confirm operate on the full groups data,
+      // so select-all still covers cards that aren't rendered yet.
+      visibleCount: 120,
+      _io: null,
+      get visibleGroups() { return this.groups.slice(0, this.visibleCount); },
+      init() {
+        // Reset paging + re-arm the observer whenever the underlying group set
+        // changes (filter / sort / data load); x-if can recreate the sentinel.
+        this.$watch('groups', () => {
+          this.visibleCount = 120;
+          if (this._io) { this._io.disconnect(); this._io = null; }
+          this.$nextTick(() => this._ensureInfiniteScroll());
+        });
+        this.$nextTick(() => this._ensureInfiniteScroll());
+      },
+      _ensureInfiniteScroll() {
+        const sentinel = this.$refs.sentinel;
+        if (!sentinel || this._io) return;
+        this._io = new IntersectionObserver((entries) => {
+          if (entries.some(e => e.isIntersecting) && this.visibleCount < this.groups.length) {
+            this.visibleCount += 120;
+          }
+        }, { rootMargin: '800px' });
+        this._io.observe(sentinel);
+      },
+      destroy() { if (this._io) { this._io.disconnect(); this._io = null; } },
       get selectedCount() { return this._bump, this.selectedKeys.size; },
       isSelected(key) { return this._bump, this.selectedKeys.has(key); },
       enterSelectMode() {
@@ -155,7 +184,7 @@ export function renderGroupedView() {
             </div>
           </div>
         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-[24px]">
-          <template x-for="(g, idx) in groups" :key="g.key">
+          <template x-for="(g, idx) in visibleGroups" :key="g.key">
             <div class="card-tile-hover cursor-pointer flex flex-col"
                  tabindex="0"
                  :style="isSelected(g.key) ? 'background: #14161C; border: 2px solid var(--color-primary, #0D52BD); position: relative; box-shadow: 0 0 12px var(--color-glow-blue, rgba(13,82,189,0.4));' : 'background: #14161C; border: 1px solid #2A2D3A; position: relative;'"
@@ -243,6 +272,8 @@ export function renderGroupedView() {
             </div>
           </template>
         </div>
+        <!-- perf 260617 — infinite-scroll sentinel; extends the rendered window -->
+        <div x-ref="sentinel" aria-hidden="true" style="height:1px;"></div>
       </template>
 
       <!-- 260516-tsm on-brand confirm modal — replaces window.confirm.
