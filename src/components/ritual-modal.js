@@ -11,6 +11,49 @@ import {
   mergeColorIdentity,
 } from '../utils/commander-detection.js';
 
+// Per-session cache of partner-eligible cards by partner type. The catalog is
+// static once bulk data has loaded, so we scan it at most once per type and
+// reuse the deduped list across modal opens. `partner_with` resolves to a single
+// named card (looked up by name), so it isn't cached here.
+const _partnerCandidateCache = {};
+
+/**
+ * Enumerate the cards eligible as a partner of the given type, deduped by
+ * oracle_id and sorted by name. `type_line` is indexed, so we narrow to
+ * legendary cards (a few thousand) rather than scanning the whole ~30k catalog
+ * — this covers legendary creatures (partner / friends-forever) and
+ * "Legendary Enchantment — Background" cards.
+ *
+ * @param {'partner'|'background'|'friends_forever'} type
+ * @returns {Promise<Object[]>}
+ */
+async function loadPartnerCandidates(type) {
+  if (_partnerCandidateCache[type]) return _partnerCandidateCache[type];
+
+  const { db } = await import('../db/schema.js');
+  const legendary = await db.cards.where('type_line').startsWith('Legendary').toArray();
+
+  let pred;
+  if (type === 'background') pred = (c) => isBackground(c);
+  else if (type === 'partner') pred = (c) => isLegendary(c) && hasPartner(c);
+  else if (type === 'friends_forever') pred = (c) => isLegendary(c) && hasFriendsForever(c);
+  else pred = () => false;
+
+  const seen = new Set();
+  const out = [];
+  for (const c of legendary) {
+    if (!pred(c)) continue;
+    const key = c.oracle_id || c.name;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(c);
+  }
+  out.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+
+  _partnerCandidateCache[type] = out;
+  return out;
+}
+
 /**
  * Brew a new storm modal wizard (formerly "Initialize Ritual").
  * Opens a multi-step form for deck creation (or Change Commander flow).
@@ -67,24 +110,15 @@ export function openRitualModal(options = {}) {
         <div id="ritual-commander-selected" style="display: none; margin-top: 8px;"></div>
       </div>
 
-      <!-- Step 2: SELECT PARTNER (conditional) -->
+      <!-- Step 2: SELECT PARTNER (conditional) — dropdown + card preview -->
       <div id="ritual-partner-section" style="display: none;">
         <label id="ritual-partner-label" style="font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; color: #EAECEE; display: block; margin-bottom: 8px;">
           SELECT PARTNER
         </label>
-        <div style="position: relative;">
-          <input
-            id="ritual-partner-search"
-            type="text"
-            placeholder="SEARCH PARTNER COMMANDER..."
-            autocomplete="off"
-            style="width: 100%; box-sizing: border-box; background: #0B0C10; border: 1px solid #2A2D3A; color: #EAECEE; padding: 8px 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; outline: none;"
-            onfocus="this.style.borderColor='#0D52BD'"
-            onblur="setTimeout(() => this.style.borderColor='#2A2D3A', 200)"
-          >
-          <div id="ritual-partner-results" style="display: none; position: absolute; top: 100%; left: 0; right: 0; margin-top: 4px; background: #14161C; border: 1px solid #2A2D3A; max-height: 240px; overflow-y: auto; z-index: 20;"></div>
-        </div>
-        <div id="ritual-partner-selected" style="display: none; margin-top: 8px;"></div>
+        <select id="ritual-partner-select" style="width: 100%; box-sizing: border-box; background: #0B0C10; border: 1px solid #2A2D3A; color: #EAECEE; padding: 8px 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; outline: none; cursor: pointer;">
+          <option value="">— NONE —</option>
+        </select>
+        <div id="ritual-partner-preview" style="display: none; margin-top: 8px;"></div>
       </div>
 
       <!-- Step 3: SELECT COMPANION (optional, only shown for companion commanders) -->
@@ -105,6 +139,7 @@ export function openRitualModal(options = {}) {
           <option value="Yorion, Sky Nomad">Yorion, Sky Nomad</option>
           <option value="Zirda, the Dawnwaker">Zirda, the Dawnwaker</option>
         </select>
+        <div id="ritual-companion-preview" style="display: none; margin-top: 8px;"></div>
       </div>
 
       <!-- Step 4: NAME YOUR DECK -->
@@ -178,6 +213,8 @@ export function openRitualModal(options = {}) {
   let selectedCompanion = null;
   let partnerType = null; // 'partner' | 'friends_forever' | 'background' | 'partner_with'
   let partnerWithTarget = null; // name of the specific partner for "Partner with"
+  let partnerOptionsByName = {}; // name -> card object for the current partner dropdown
+  let partnerPopulateId = 0;     // guards against a stale async populate overwriting a newer one
   let debounceTimers = {};
   let searchIds = { commander: 0, partner: 0, companion: 0 };
 
@@ -187,11 +224,11 @@ export function openRitualModal(options = {}) {
   const commanderSelected = overlay.querySelector('#ritual-commander-selected');
   const partnerSection = overlay.querySelector('#ritual-partner-section');
   const partnerLabel = overlay.querySelector('#ritual-partner-label');
-  const partnerSearch = overlay.querySelector('#ritual-partner-search');
-  const partnerResults = overlay.querySelector('#ritual-partner-results');
-  const partnerSelected = overlay.querySelector('#ritual-partner-selected');
+  const partnerSelect = overlay.querySelector('#ritual-partner-select');
+  const partnerPreview = overlay.querySelector('#ritual-partner-preview');
   const companionSection = overlay.querySelector('#ritual-companion-section');
   const companionSelect = overlay.querySelector('#ritual-companion-select');
+  const companionPreview = overlay.querySelector('#ritual-companion-preview');
   const deckNameInput = overlay.querySelector('#ritual-deck-name');
   const formatSelect = overlay.querySelector('#ritual-format');
   const colorIdentityDisplay = overlay.querySelector('#ritual-color-identity');
@@ -284,6 +321,8 @@ export function openRitualModal(options = {}) {
     container.style.display = 'block';
 
     container.querySelector(`#${containerId}-clear`).addEventListener('click', () => {
+      // renderSelectedCard is only used for the commander now; clearing it also
+      // resets the partner + companion dropdowns and their previews.
       if (containerId === 'ritual-commander-selected') {
         selectedCommander = null;
         commanderSearch.value = '';
@@ -293,22 +332,91 @@ export function openRitualModal(options = {}) {
         selectedPartner = null;
         partnerType = null;
         partnerWithTarget = null;
+        partnerOptionsByName = {};
+        partnerSelect.innerHTML = '<option value="">— NONE —</option>';
+        renderCardPreview(null, 'ritual-partner-preview');
         companionSection.style.display = 'none';
         selectedCompanion = null;
         companionSelect.value = '';
+        renderCardPreview(null, 'ritual-companion-preview');
         if (deckNameInput) deckNameInput.value = '';
-      } else if (containerId === 'ritual-partner-selected') {
-        selectedPartner = null;
-        partnerSearch.value = '';
-        partnerSearch.style.display = 'block';
-        container.style.display = 'none';
-        if (deckNameInput && selectedCommander) {
-          deckNameInput.value = selectedCommander.name;
-        }
       }
       updateColorIdentityDisplay();
       updateConfirmButton();
     });
+  }
+
+  /**
+   * Render a card-image preview (image + name + mana + type) into a container,
+   * or hide it when card is null. Used beneath the partner & companion
+   * dropdowns so a selection shows the actual card.
+   */
+  function renderCardPreview(card, containerId) {
+    const container = overlay.querySelector(`#${containerId}`);
+    if (!container) return;
+    if (!card) {
+      container.style.display = 'none';
+      container.innerHTML = '';
+      return;
+    }
+    const img = getCardImage(card, 0, 'normal') || card.image_uris?.normal || card.image_uris?.small || '';
+    const manaCost = getCardManaCost(card);
+    const manaHtml = window.renderManaCost ? window.renderManaCost(manaCost) : manaCost;
+
+    container.innerHTML = `
+      <div style="display: flex; align-items: center; gap: 12px; padding: 8px; background: #1C1F28; border: 1px solid #2A2D3A;">
+        ${img ? `<img src="${img}" alt="" style="width: 120px; height: auto; border-radius: 4px; flex-shrink: 0;" loading="lazy" onerror="this.style.display='none'">` : ''}
+        <div style="display: flex; flex-direction: column; gap: 6px; min-width: 0;">
+          <span style="font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight: 700; color: #EAECEE;">${card.name}</span>
+          <span>${manaHtml}</span>
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: #7A8498;">${card.type_line || ''}</span>
+        </div>
+      </div>
+    `;
+    container.style.display = 'block';
+  }
+
+  /**
+   * Fill the partner dropdown for the active commander's partner type and reset
+   * any prior selection / preview. Async (scans the catalog the first time a
+   * type is needed); guarded against a stale populate clobbering a newer one.
+   */
+  async function populatePartnerSelect() {
+    const token = ++partnerPopulateId;
+    selectedPartner = null;
+    partnerOptionsByName = {};
+    renderCardPreview(null, 'ritual-partner-preview');
+    partnerSelect.innerHTML = '<option value="">— LOADING… —</option>';
+    partnerSelect.disabled = true;
+
+    let candidates = [];
+    try {
+      if (partnerType === 'partner_with' && partnerWithTarget) {
+        const matches = await searchCards(partnerWithTarget, 5);
+        candidates = matches.filter(c => c.name === partnerWithTarget);
+      } else {
+        candidates = await loadPartnerCandidates(partnerType);
+      }
+    } catch {
+      candidates = [];
+    }
+
+    if (token !== partnerPopulateId) return; // a newer populate superseded this one
+
+    // Exclude the chosen commander (by oracle_id, so a different printing of the
+    // same card can't show up as its own partner).
+    const cmdOracle = selectedCommander?.oracle_id;
+    const filtered = candidates.filter(c => c.oracle_id !== cmdOracle);
+
+    partnerSelect.innerHTML = '<option value="">— NONE —</option>';
+    for (const c of filtered) {
+      partnerOptionsByName[c.name] = c;
+      const opt = document.createElement('option');
+      opt.value = c.name;
+      opt.textContent = c.name;
+      partnerSelect.appendChild(opt);
+    }
+    partnerSelect.disabled = false;
   }
 
   function setupAutocomplete(inputEl, resultsEl, filterFn, onSelect) {
@@ -372,31 +480,32 @@ export function openRitualModal(options = {}) {
         deckNameInput.value = card.name;
       }
 
-      // Check for partner mechanics
+      // Check for partner mechanics — populate the partner dropdown by type.
       const oracleText = card.oracle_text || '';
       if (hasPartner(card) || hasFriendsForever(card)) {
         partnerType = hasPartner(card) ? 'partner' : 'friends_forever';
-        partnerSection.style.display = 'block';
         partnerLabel.textContent = 'SELECT PARTNER';
-        partnerSearch.placeholder = 'SEARCH PARTNER COMMANDER...';
+        partnerSection.style.display = 'block';
+        populatePartnerSelect();
       } else if (choosesBackground(card)) {
         partnerType = 'background';
-        partnerSection.style.display = 'block';
         partnerLabel.textContent = 'SELECT BACKGROUND';
-        partnerSearch.placeholder = 'SEARCH BACKGROUND...';
+        partnerSection.style.display = 'block';
+        populatePartnerSelect();
       } else if (/Partner with (.+?)(?:\n|$)/i.test(oracleText)) {
         partnerType = 'partner_with';
         partnerWithTarget = oracleText.match(/Partner with (.+?)(?:\n|$)/i)?.[1]?.trim() || null;
-        partnerSection.style.display = 'block';
         partnerLabel.textContent = 'SELECT PARTNER';
-        partnerSearch.placeholder = partnerWithTarget
-          ? `SEARCH FOR ${partnerWithTarget.toUpperCase()}...`
-          : 'SEARCH PARTNER COMMANDER...';
+        partnerSection.style.display = 'block';
+        populatePartnerSelect();
       } else {
         partnerType = null;
         partnerWithTarget = null;
         partnerSection.style.display = 'none';
         selectedPartner = null;
+        partnerOptionsByName = {};
+        partnerSelect.innerHTML = '<option value="">— NONE —</option>';
+        renderCardPreview(null, 'ritual-partner-preview');
       }
 
       // Companion field is only relevant when the commander itself has the
@@ -415,48 +524,40 @@ export function openRitualModal(options = {}) {
     }
   );
 
-  // ---- Partner autocomplete ----
-  setupAutocomplete(
-    partnerSearch,
-    partnerResults,
-    (card) => {
-      if (partnerType === 'background') {
-        return isBackground(card);
-      }
-      if (partnerType === 'partner_with' && partnerWithTarget) {
-        return card.name === partnerWithTarget;
-      }
-      if (partnerType === 'partner') {
-        return isLegendary(card) && hasPartner(card) && card.id !== selectedCommander?.id;
-      }
-      if (partnerType === 'friends_forever') {
-        return isLegendary(card) && hasFriendsForever(card) && card.id !== selectedCommander?.id;
-      }
-      return false;
-    },
-    (card) => {
-      selectedPartner = card;
-      partnerSearch.style.display = 'none';
-      renderSelectedCard(card, 'ritual-partner-selected');
-
-      // Update deck name suggestion
-      if (deckNameInput && selectedCommander) {
-        deckNameInput.value = `${selectedCommander.name} & ${card.name}`;
-      }
-
+  // ---- Partner dropdown ----
+  partnerSelect.addEventListener('change', () => {
+    const name = partnerSelect.value;
+    if (!name) {
+      selectedPartner = null;
+      renderCardPreview(null, 'ritual-partner-preview');
+      if (deckNameInput && selectedCommander) deckNameInput.value = selectedCommander.name;
       updateColorIdentityDisplay();
       updateConfirmButton();
+      return;
     }
-  );
+    const card = partnerOptionsByName[name] || null;
+    selectedPartner = card;
+    renderCardPreview(card, 'ritual-partner-preview');
+    if (deckNameInput && selectedCommander && card) {
+      deckNameInput.value = `${selectedCommander.name} & ${card.name}`;
+    }
+    updateColorIdentityDisplay();
+    updateConfirmButton();
+  });
 
   // ---- Companion dropdown ----
   companionSelect.addEventListener('change', async () => {
     const name = companionSelect.value;
-    if (!name) { selectedCompanion = null; return; }
+    if (!name) {
+      selectedCompanion = null;
+      renderCardPreview(null, 'ritual-companion-preview');
+      return;
+    }
     try {
       const matches = await searchCards(name, 5);
       selectedCompanion = matches.find(c => c.name === name) || matches[0] || null;
     } catch { selectedCompanion = null; }
+    renderCardPreview(selectedCompanion, 'ritual-companion-preview');
   });
 
   // ---- Confirm ----
