@@ -132,10 +132,13 @@ export function initDeckgenStore() {
       this.brewProgress = 0;
       this.recommendations = [];
       this.streamComplete = false;
-      // Abort plumbing (audit M5/M11) — cancelBrew() aborts this; the service
-      // also aborts it on its ceiling timeout.
+      // Abort plumbing (audit M5/M11) — reset() aborts this; the service also
+      // aborts it on its ceiling timeout. myAbort pins THIS brew's controller so
+      // a superseded brew's late result can't clobber a newer one (guard after
+      // the await below).
       this._brewCancelled = false;
       this._brewAbort = new AbortController();
+      const myAbort = this._brewAbort;
       // Live elapsed counter — the BREWING surface ticks this up so the
       // user sees forward motion during the 30-90s generation. Stopped the
       // moment the stream completes, errors, or the store is reset.
@@ -207,9 +210,16 @@ export function initDeckgenStore() {
         signal: this._brewAbort.signal,
       });
 
+      // Concurrency guard (review follow-up): if a newer startBrew superseded us
+      // while this fetch was still settling (cancel → re-brew on a hung request),
+      // our controller is no longer the active one. Bail before touching the
+      // shared store / brew tick so a stale {code:'aborted'} result can't wipe
+      // the brew that now owns the store.
+      if (this._brewAbort !== myAbort) return;
+
       if (!result.ok) {
         this._stopBrewTick();
-        // User cancelled (audit M5) — cancelBrew already reset to idle. Bail
+        // User cancelled (audit M5) — reset() already set status to idle. Bail
         // without surfacing an error and discard any partial stream.
         if (this._brewCancelled || result.code === 'aborted') {
           this._brewCancelled = false;

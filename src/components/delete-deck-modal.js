@@ -13,8 +13,11 @@ import { attachFocusTrap } from '../utils/focus-trap.js';
  *   deck is removed (used by the editor to navigate back to the landing).
  */
 export function openDeleteDeckModal(deckId, deckName, options = {}) {
-  // Remove existing modal if present
-  document.getElementById('delete-deck-modal')?.remove();
+  // Remove existing modal if present — detach its focus trap first so the
+  // capture-phase keydown listener doesn't leak on a re-open (audit M7 follow-up).
+  const _existingDeleteDeck = document.getElementById('delete-deck-modal');
+  _existingDeleteDeck?.__cfTrapDetach?.();
+  _existingDeleteDeck?.remove();
 
   const Alpine = window.Alpine;
   const store = Alpine?.store('deck');
@@ -89,9 +92,11 @@ export function openDeleteDeckModal(deckId, deckName, options = {}) {
 
   // Focus trap + Escape (audit M7). Default focus to CANCEL, not the destructive
   // DELETE. Also fixes the L5 leak: the old Escape listener only detached when
-  // Escape fired, so closing via button/backdrop leaked it — detachTrap() in
-  // closeModal always tears it down.
+  // Escape fired, so closing via button/backdrop leaked it — closeModal() now
+  // always tears the trap down, and the singleton guard above detaches a prior
+  // instance via overlay.__cfTrapDetach before replacing it.
   const detachTrap = attachFocusTrap(overlay, { onEscape: closeModal, initialFocus: '#delete-deck-cancel' });
+  overlay.__cfTrapDetach = detachTrap;
 }
 
 // Escape user-authored strings before interpolating into innerHTML (matches the

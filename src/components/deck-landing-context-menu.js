@@ -53,7 +53,7 @@ export function initDeckLandingContextMenu(container) {
       if (destructive) {
         btn.style.background = 'rgba(226, 56, 56, 0.1)';
       } else {
-        btn.style.color = 'var(--color-primary, #0D52BD)';
+        btn.style.color = 'var(--color-primary-text, #5B9BF5)';
       }
     };
     btn.onmouseleave = () => {

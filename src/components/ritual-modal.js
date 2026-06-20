@@ -65,8 +65,11 @@ async function loadPartnerCandidates(type) {
 export function openRitualModal(options = {}) {
   const isChangeMode = !!options.existingDeck;
 
-  // Remove existing modal if present
-  document.getElementById('ritual-modal')?.remove();
+  // Remove existing modal if present — detach its focus trap first so the
+  // capture-phase keydown listener doesn't leak (audit M7 follow-up).
+  const _existingRitual = document.getElementById('ritual-modal');
+  _existingRitual?.__cfTrapDetach?.();
+  _existingRitual?.remove();
 
   const Alpine = window.Alpine;
   const store = Alpine?.store('deck');
@@ -254,6 +257,7 @@ export function openRitualModal(options = {}) {
     onEscape: closeModal,
     initialFocus: '#ritual-commander-search',
   });
+  overlay.__cfTrapDetach = detachTrap;
 
   function getFormatSize() {
     if (!formatSelect) return 100;

@@ -683,6 +683,9 @@ function _scheduleRetry() {
   // Simple incremental backoff — 2s, 4s, 8s based on the highest attempts value in queue.
   // Cap at 8s to prevent extreme wait; after 3 attempts dead-letter kicks in anyway.
   db.sync_queue.toArray().then(rows => {
+    // L34 — if teardown ran during this async read, don't install a timer it can
+    // no longer cancel (closes the teardown-during-read race airtight).
+    if (!_initialized) return;
     const maxAttempts = rows.reduce((m, r) => Math.max(m, r.attempts || 0), 0);
     const backoffMs = Math.min(8000, Math.max(2000, maxAttempts * 2000));
     // L34 — track the handle so teardownSyncEngine can cancel it; clear any

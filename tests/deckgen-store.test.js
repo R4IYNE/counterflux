@@ -262,6 +262,42 @@ describe('deckgen store — startBrew streaming', () => {
   });
 });
 
+describe('deckgen store — brew concurrency guard', () => {
+  it('a stale aborted brew cannot clobber a newer in-flight brew', async () => {
+    const s = storeRegistry.deckgen;
+
+    // Brew A — its fetch hangs, then resolves as aborted only once released
+    // (the realistic M11 hung-request case the cancel flow targets).
+    let releaseA;
+    const aPromise = new Promise((resolve) => { releaseA = () => resolve({ ok: false, code: 'aborted' }); });
+    generateDeck.mockImplementationOnce(() => aPromise);
+
+    const brewA = s.startBrew({ deckId: 'deck-A', commanderId: 'cmd-A', mode: 'build' });
+
+    // User cancels Brew A, then immediately starts Brew B (fresh controller).
+    s.reset();
+    expect(s.status).toBe('idle');
+
+    generateDeck.mockImplementationOnce(async ({ onCard }) => {
+      onCard({ scryfall_id: 'B1', role: 'RAMP' });
+      return { ok: true, response: { recommended: [] } };
+    });
+    await s.startBrew({ deckId: 'deck-B', commanderId: 'cmd-B', mode: 'build' });
+
+    expect(s.status).toBe('reviewing');
+    expect(s.recommendations.map((r) => r.scryfall_id)).toEqual(['B1']);
+
+    // Brew A's aborted result settles late — the per-brew guard must drop it
+    // so Brew B's review state survives intact.
+    releaseA();
+    await brewA;
+    await Promise.resolve();
+
+    expect(s.status).toBe('reviewing');
+    expect(s.recommendations.map((r) => r.scryfall_id)).toEqual(['B1']);
+  });
+});
+
 describe('deckgen store — startBrew error path', () => {
   it('flips to error on budget exhaustion', async () => {
     generateDeck.mockResolvedValue({

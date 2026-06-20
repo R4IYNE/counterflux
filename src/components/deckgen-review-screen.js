@@ -263,6 +263,7 @@ export function renderDeckgenReviewScreen() {
           ></div>
           <div style="display: flex; gap: 8px;">
             <button
+              x-show="$store.deckgen?.error?.code !== 'budget_exhausted'"
               @click="$store.deckgen.closeError(); $store.deckgen.openBrewModal($store.deckgen.mode || 'build')"
               style="padding: 8px 16px; background: #0D52BD; color: #EAECEE; border: 1px solid #0D52BD; cursor: pointer; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase;"
             >TRY AGAIN</button>

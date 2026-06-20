@@ -47,7 +47,7 @@ export function initContextMenu(container) {
       text-align: left;
     `;
     btn.onmouseenter = () => {
-      btn.style.color = 'var(--color-primary, #0D52BD)';
+      btn.style.color = 'var(--color-primary-text, #5B9BF5)';
     };
     btn.onmouseleave = () => {
       btn.style.color = 'var(--color-text-primary, #EAECEE)';

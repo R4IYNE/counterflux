@@ -143,7 +143,7 @@ export function mount(container) {
               <button
                 @click="$store.collection.setViewMode('gallery')"
                 :class="$store.collection.viewMode === 'gallery'
-                  ? 'text-[#0D52BD] border-b-2 border-[#0D52BD]'
+                  ? 'text-[#5B9BF5] border-b-2 border-[#0D52BD]'
                   : 'text-[#7A8498] hover:text-[#EAECEE] border-b-2 border-transparent'"
                 :style="$store.collection.viewMode === 'gallery' ? 'background: rgba(13,82,189,0.1);' : ''"
                 class="font-mono text-[11px] uppercase tracking-[0.15em] font-bold cursor-pointer px-[16px] py-[8px] bg-transparent"
@@ -153,7 +153,7 @@ export function mount(container) {
               <button
                 @click="$store.collection.setViewMode('table')"
                 :class="$store.collection.viewMode === 'table'
-                  ? 'text-[#0D52BD] border-b-2 border-[#0D52BD]'
+                  ? 'text-[#5B9BF5] border-b-2 border-[#0D52BD]'
                   : 'text-[#7A8498] hover:text-[#EAECEE] border-b-2 border-transparent'"
                 :style="$store.collection.viewMode === 'table' ? 'background: rgba(13,82,189,0.1);' : ''"
                 class="font-mono text-[11px] uppercase tracking-[0.15em] font-bold cursor-pointer px-[16px] py-[8px] bg-transparent"
@@ -162,7 +162,7 @@ export function mount(container) {
               <button
                 @click="$store.collection.setViewMode('sets')"
                 :class="$store.collection.viewMode === 'sets'
-                  ? 'text-[#0D52BD] border-b-2 border-[#0D52BD]'
+                  ? 'text-[#5B9BF5] border-b-2 border-[#0D52BD]'
                   : 'text-[#7A8498] hover:text-[#EAECEE] border-b-2 border-transparent'"
                 :style="$store.collection.viewMode === 'sets' ? 'background: rgba(13,82,189,0.1);' : ''"
                 class="font-mono text-[11px] uppercase tracking-[0.15em] font-bold cursor-pointer px-[16px] py-[8px] bg-transparent"
