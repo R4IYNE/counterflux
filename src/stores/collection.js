@@ -836,7 +836,7 @@ export function initCollectionStore() {
         for (const entry of list) {
           const foilNum = entry.foil ? 1 : 0;
           const category = entry.category || 'owned';
-          const qty = this._clampQty(entry.quantity);
+          const qty = _clampQty(entry.quantity);
 
           const existing = await db.collection
             .where('[scryfall_id+foil]')
