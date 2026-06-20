@@ -392,12 +392,18 @@ export function initDeckStore() {
       return updated;
     },
 
-    async changeCommander(deckId, newCommanderId, newColorIdentity) {
-      await db.decks.update(deckId, {
+    async changeCommander(deckId, newCommanderId, newColorIdentity, partnerId = undefined) {
+      const patch = {
         commander_id: newCommanderId,
         color_identity: newColorIdentity,
         updated_at: new Date().toISOString(),
-      });
+      };
+      // Persist partner when the caller supplies it (audit M24 — partner_id was
+      // never updated on a commander change, so switching to a partner pair kept
+      // the merged colour identity but silently lost the partner. Pass null to
+      // explicitly clear; omit to leave partner_id untouched).
+      if (partnerId !== undefined) patch.partner_id = partnerId;
+      await db.decks.update(deckId, patch);
       if (this.activeDeck?.id === deckId) {
         this.activeDeck = await db.decks.get(deckId);
       }

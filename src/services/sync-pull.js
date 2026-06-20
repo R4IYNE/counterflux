@@ -221,6 +221,7 @@ export async function bulkPull(onProgress) {
   emit({ phase: 'counting', counts });
 
   // Phase 2 — pull each table in FK-safe order, chunked.
+  let maxUpdated = 0;   // newest server updated_at seen, for the H9 cursor seed
   for (const t of SYNCED_DATA_TABLES) {
     const total = counts[t];
     let pulled = 0;
@@ -239,11 +240,11 @@ export async function bulkPull(onProgress) {
 
       // Convert ISO updated_at → epoch ms; stamp synced_at so hooks recognise
       // this as "already pushed" data.
-      const converted = (data ?? []).map((r) => ({
-        ...r,
-        updated_at: _toTs(r.updated_at) || Date.now(),
-        synced_at: Date.now()
-      }));
+      const converted = (data ?? []).map((r) => {
+        const ms = _toTs(r.updated_at);
+        if (ms > maxUpdated) maxUpdated = ms;
+        return { ...r, updated_at: ms || Date.now(), synced_at: Date.now() };
+      });
 
       // Pitfall 11-B / Pitfall 11-A: use SYNCHRONOUS withHooksSuppressed wrapper.
       // bulkPut returns a Promise — the reference-count suppression holds the
@@ -262,8 +263,11 @@ export async function bulkPull(onProgress) {
     }
   }
 
-  // Cursor for incrementalPull.
-  await db.meta.put({ key: LAST_PULLED_KEY, value: Date.now() });
+  // Cursor for incrementalPull — seed from the newest SERVER updated_at we
+  // pulled (with a 1s overlap), NOT the client clock, so client/server clock
+  // skew can't make the first incremental pull miss rows (audit H9). Empty
+  // pull → fall back to client now (nothing to miss).
+  await db.meta.put({ key: LAST_PULLED_KEY, value: maxUpdated > 0 ? maxUpdated - 1000 : Date.now() });
   emit({ phase: 'complete' });
   // Caller clears the flag on success (reconcile() dispatches clearBulkPullFlag()).
 }
@@ -290,14 +294,26 @@ export async function incrementalPull() {
   const since = cursor?.value ?? 0;
   const sinceIso = new Date(since).toISOString();
 
+  // Advance the cursor from the newest SERVER updated_at we actually receive —
+  // NOT the client clock (audit H9: client/server clock skew silently dropped
+  // rows updated in the skew window). The merge dedups by id, so the 1s overlap
+  // on the next pull is harmless and protects against same-millisecond rows.
+  let maxSeen = since;
   for (const t of SYNCED_DATA_TABLES) {
     const { data, error } = await supabase.schema('counterflux').from(t).select('*').gt('updated_at', sinceIso);
     if (error) { console.warn(`[sync] incremental pull ${t} failed`, error); continue; }
-
-    withHooksSuppressed(() => _mergeIncomingRows(t, data ?? []));
+    const rows = data ?? [];
+    for (const r of rows) {
+      const ms = _toTs(r.updated_at);
+      if (ms > maxSeen) maxSeen = ms;
+    }
+    withHooksSuppressed(() => _mergeIncomingRows(t, rows));
   }
 
-  await db.meta.put({ key: LAST_PULLED_KEY, value: Date.now() });
+  // Only advance when something newer arrived; never move the cursor backwards.
+  if (maxSeen > since) {
+    await db.meta.put({ key: LAST_PULLED_KEY, value: Math.max(since, maxSeen - 1000) });
+  }
 }
 
 /**

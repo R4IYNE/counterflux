@@ -21,6 +21,18 @@ function _entryEurPrice(entry) {
 }
 
 /**
+ * Clamp a collection quantity to a positive integer within a sane bound
+ * (audit M26 — addCard/editEntry previously accepted negative/zero/NaN/unbounded
+ * quantities that then persisted). Non-finite → 1.
+ * @param {*} q
+ * @returns {number}
+ */
+function _clampQty(q) {
+  const n = Math.floor(Number(q));
+  return Number.isFinite(n) ? Math.max(1, Math.min(99999, n)) : 1;
+}
+
+/**
  * Sort collection entries by the given sort key.
  * @param {Array} items - Collection entries with joined card data
  * @param {string} sortBy - Sort key (e.g., 'name-asc', 'price-desc')
@@ -413,6 +425,7 @@ export function initCollectionStore() {
 
     async addCard(scryfallId, quantity, foil, category) {
       const foilNum = foil ? 1 : 0;
+      const qty = _clampQty(quantity);   // audit M26 — reject negative/zero/NaN/unbounded
       const existing = await db.collection
         .where('[scryfall_id+foil]')
         .equals([scryfallId, foilNum])
@@ -421,12 +434,12 @@ export function initCollectionStore() {
 
       if (existing) {
         await db.collection.update(existing.id, {
-          quantity: existing.quantity + quantity,
+          quantity: (existing.quantity || 0) + qty,
         });
       } else {
         await db.collection.add({
           scryfall_id: scryfallId,
-          quantity,
+          quantity: qty,
           foil: foilNum,
           category,
           added_at: new Date().toISOString(),
@@ -436,11 +449,14 @@ export function initCollectionStore() {
 
       // Log activity
       const card = await db.cards.get(scryfallId);
-      logActivity('card_added', `Added ${quantity || 1}x ${card?.name || 'card'} to collection`, scryfallId);
+      logActivity('card_added', `Added ${qty}x ${card?.name || 'card'} to collection`, scryfallId);
     },
 
     async editEntry(entryId, updates) {
-      await db.collection.update(entryId, updates);
+      // audit M26 — clamp any quantity edit to a positive integer.
+      const patch = { ...updates };
+      if ('quantity' in patch) patch.quantity = _clampQty(patch.quantity);
+      await db.collection.update(entryId, patch);
       await this.loadEntries();
     },
 

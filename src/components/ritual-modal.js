@@ -565,12 +565,14 @@ export function openRitualModal(options = {}) {
     if (!selectedCommander) return;
 
     if (isChangeMode && options.existingDeck && store) {
-      // Change Commander flow
+      // Change Commander flow — pass the partner so partner_id is persisted
+      // alongside the merged colour identity (audit M24).
       const newColorIdentity = getCurrentColorIdentity();
       await store.changeCommander(
         options.existingDeck.id,
         selectedCommander.id,
-        newColorIdentity
+        newColorIdentity,
+        selectedPartner?.id || null
       );
       toast?.success(`Commander changed to ${selectedCommander.name}.`);
       closeModal();

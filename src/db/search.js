@@ -164,10 +164,16 @@ export async function searchCards(query, limit = 12) {
     if (!existing) {
       seen.set(key, card);
     } else {
-      // Keep cheapest
-      const priceA = parseFloat(existing.prices?.usd || existing.prices?.usd_foil) || 999;
-      const priceB = parseFloat(card.prices?.usd || card.prices?.usd_foil) || 999;
-      if (priceB < priceA) seen.set(key, card);
+      // Keep cheapest. Rank by EUR (audit P2-M4: the whole valuation pipeline is
+      // EUR — ranking by USD here surfaced a printing chosen by a currency the
+      // app never shows). Missing/0 prices sort as Infinity so a genuinely
+      // priced printing always beats an unpriced one (audit L29 — the old `|| 999`
+      // mis-ranked €0/no-price rows as cheap... actually expensive).
+      const eur = (c) => {
+        const p = parseFloat(c.prices?.eur || c.prices?.eur_foil);
+        return Number.isFinite(p) && p > 0 ? p : Infinity;
+      };
+      if (eur(card) < eur(existing)) seen.set(key, card);
     }
     if (seen.size >= limit) break;
   }
