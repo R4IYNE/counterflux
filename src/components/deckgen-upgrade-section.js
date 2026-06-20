@@ -22,7 +22,10 @@ export function renderDeckgenUpgradeSection() {
           this.loading = true;
           try {
             const { fetchUndismissedRecommendations } = await import('../services/deckgen-recommendations.js');
-            this.recommendations = await fetchUndismissedRecommendations();
+            const recs = await fetchUndismissedRecommendations();
+            // L40 — drop recs for decks no longer present locally (stale deep-links).
+            const deckIds = new Set(($store.deck?.decks || []).map((d) => d.id));
+            this.recommendations = deckIds.size ? recs.filter((r) => deckIds.has(r.deck_id)) : recs;
           } catch {
             this.recommendations = [];
           }

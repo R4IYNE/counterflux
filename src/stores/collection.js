@@ -750,16 +750,35 @@ export function initCollectionStore() {
     /**
      * Quick task 260516-mss — bulk-delete multiple collection entries in a
      * single Dexie transaction. Used by the gallery multi-select toolbar.
-     * Unlike deleteEntry, this skips the undo system — mass-delete is an
-     * intentional action that the caller is expected to gate behind a
-     * confirm() dialog at the UI layer.
+     * Registers ONE batched undo entry (audit L36) so a mis-click is
+     * recoverable like single deleteEntry, even though the caller also gates
+     * the action behind a confirm() dialog.
      *
      * @param {Array} entryIds
      */
     async deleteEntries(entryIds) {
       if (!Array.isArray(entryIds) || entryIds.length === 0) return;
+      // L36 — snapshot the rows first so the bulk delete is undoable.
+      const removed = (await db.collection.bulkGet(entryIds)).filter(Boolean);
       await db.collection.bulkDelete(entryIds);
       await this.loadEntries();
+
+      const undo = (typeof window !== 'undefined') ? window.Alpine?.store?.('undo') : null;
+      if (undo?.push && removed.length) {
+        const n = removed.length;
+        undo.push(
+          'collection_remove_bulk',
+          { ids: entryIds },
+          `Removed ${n} card${n === 1 ? '' : 's'} from collection.`,
+          async () => {},
+          async () => {
+            // Re-add with synced_at cleared so the restore re-pushes to the cloud.
+            const restored = removed.map((r) => ({ ...r, synced_at: null, updated_at: new Date().toISOString() }));
+            await db.collection.bulkAdd(restored);
+            await this.loadEntries();
+          },
+        );
+      }
     },
 
     async deleteEntry(entryId) {

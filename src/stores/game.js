@@ -59,9 +59,11 @@ export async function resolveDeckIdentity(deckId) {
  * Call during app startup after other stores are initialized.
  */
 export function initGameStore() {
-  const _debouncedAutoSave = debounce(async function () {
+  // Snapshot the in-progress game to db.meta. Extracted (audit L37) so the
+  // hide/unload flush can call it immediately, not only via the 2s debounce.
+  async function _saveActiveGameNow() {
     const store = Alpine.store('game');
-    if (store.view !== 'active') return;
+    if (!store || store.view !== 'active') return;
     const snapshot = {
       view: store.view,
       selectedDeckId: store.selectedDeckId,
@@ -79,7 +81,19 @@ export function initGameStore() {
       turnStartedAt: store.turnStartedAt,
     };
     await db.meta.put({ key: 'active_game', ...snapshot });
-  }, 2000);
+  }
+  const _debouncedAutoSave = debounce(_saveActiveGameNow, 2000);
+
+  // L37 — flush the snapshot when the tab is hidden/closed so up to 2s of
+  // in-progress game state isn't lost on a background/close. visibilitychange
+  // :hidden covers tab-switch/minimise reliably; pagehide is best-effort.
+  if (typeof document !== 'undefined') {
+    const _flushGame = () => { _saveActiveGameNow().catch(() => {}); };
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') _flushGame();
+    });
+    window.addEventListener('pagehide', _flushGame);
+  }
 
   Alpine.store('game', {
     // === State ===
@@ -485,6 +499,10 @@ export function initGameStore() {
         this.activePlayerIndex = saved.activePlayerIndex ?? null;
         this.turn_laps = saved.turn_laps || [];
         this.turnStartedAt = saved.turnStartedAt ?? null;
+        // L37 — resume the live timer tick on reload of an active game (the
+        // display was frozen until the next manual action; turnStartedAt anchors
+        // the elapsed calc, and startTimer no-ops if already running).
+        if (this.view === 'active') this.startTimer();
       }
     },
 

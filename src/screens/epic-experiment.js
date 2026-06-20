@@ -1274,7 +1274,11 @@ function renderMilaUpgradesWidget(grid, cleanups) {
     render();
     try {
       const { fetchUndismissedRecommendations } = await import('../services/deckgen-recommendations.js');
-      recommendations = await fetchUndismissedRecommendations();
+      const recs = await fetchUndismissedRecommendations();
+      // L40 — drop recs whose deck was deleted locally so they don't deep-link
+      // to a deck that no longer loads (only filter once decks are available).
+      const deckIds = new Set((window.Alpine?.store?.('deck')?.decks || []).map((d) => d.id));
+      recommendations = deckIds.size ? recs.filter((r) => deckIds.has(r.deck_id)) : recs;
     } catch {
       recommendations = [];
     }
