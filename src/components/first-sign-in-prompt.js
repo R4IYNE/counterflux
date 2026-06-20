@@ -26,6 +26,8 @@
 // Accessibility contract: role="dialog", aria-modal="true",
 // aria-labelledby="welcome-back-heading", aria-describedby="welcome-back-body".
 
+import { attachFocusTrap } from '../utils/focus-trap.js';
+
 let promptEl = null;
 
 const STORAGE_KEY = 'cf_profile';
@@ -147,17 +149,10 @@ function _mountPrompt() {
   promptEl.appendChild(card);
   document.body.appendChild(promptEl);
 
-  // D-16 lockdown: Escape is a no-op. Capture-phase listener so we can block
-  // any downstream Escape handlers (e.g. a still-open settings-modal escape
-  // binding) from firing while the prompt is up.
-  const escBlocker = (e) => {
-    if (e.key === 'Escape') {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-  };
-  document.addEventListener('keydown', escBlocker, /* capture */ true);
-  promptEl._escBlocker = escBlocker;
+  // D-16 lockdown: focus trap with NO onEscape — Escape is swallowed (capture
+  // phase, so any downstream Escape handler is blocked too), Tab cycles within
+  // the prompt, and focus lands on KEEP LOCAL PROFILE (audit M7).
+  promptEl._detachTrap = attachFocusTrap(card, { initialFocus: '#first-signin-keep' });
 
   // Wire CTAs
   card.querySelector('#first-signin-keep').addEventListener('click', async () => {
@@ -198,7 +193,7 @@ function _mountPrompt() {
 
 function _unmountPrompt() {
   if (!promptEl) return;
-  if (promptEl._escBlocker) document.removeEventListener('keydown', promptEl._escBlocker, /* capture */ true);
+  if (promptEl._detachTrap) promptEl._detachTrap();
   promptEl.remove();
   promptEl = null;
 }

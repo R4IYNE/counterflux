@@ -28,6 +28,7 @@
 //   network → 'Network failure'
 
 import { db } from '../db/schema.js';
+import { attachFocusTrap } from '../utils/focus-trap.js';
 
 const MOUNT_ROOT_ID = 'cf-sync-errors-root';
 
@@ -60,8 +61,8 @@ function _formatTime(ts) {
   }
 }
 
-let _activeKeydownHandler = null;
 let _activeRoot = null;
+let _detachTrap = null;
 
 /**
  * Opens the sync-errors modal. Reads rows from db.sync_conflicts sorted
@@ -483,23 +484,17 @@ export async function openSyncErrorsModal() {
 
   // --- Close paths (Escape + backdrop + X + CLOSE button) ---
   function closeModal() {
-    if (_activeKeydownHandler) {
-      document.removeEventListener('keydown', _activeKeydownHandler);
-      _activeKeydownHandler = null;
-    }
+    if (_detachTrap) { _detachTrap(); _detachTrap = null; }
     if (_activeRoot && _activeRoot.parentNode) {
       _activeRoot.parentNode.removeChild(_activeRoot);
     }
     _activeRoot = null;
   }
 
-  _activeKeydownHandler = (e) => {
-    if (e.key === 'Escape') {
-      e.preventDefault();
-      closeModal();
-    }
-  };
-  document.addEventListener('keydown', _activeKeydownHandler);
+  // Focus trap + Escape-to-close (audit M7 — role/aria + initial focus were
+  // already present; this adds the Tab trap). Initial focus stays on the X
+  // (non-consequential landing per UI-SPEC).
+  _detachTrap = attachFocusTrap(card, { onEscape: closeModal, initialFocus: 'button[data-close="true"]' });
 
   overlay.addEventListener('click', (e) => {
     if (e.target === overlay) closeModal();
@@ -584,19 +579,11 @@ export async function openSyncErrorsModal() {
 
   mountRoot.appendChild(overlay);
   _activeRoot = overlay;
-
-  // Autofocus X close (non-consequential landing per UI-SPEC §Accessibility)
-  setTimeout(() => {
-    const closeBtn = card.querySelector('button[data-close="true"]');
-    if (closeBtn) closeBtn.focus();
-  }, 0);
+  // Initial focus is handled by the focus trap (initialFocus above).
 }
 
 export function closeSyncErrorsModal() {
-  if (_activeKeydownHandler) {
-    document.removeEventListener('keydown', _activeKeydownHandler);
-    _activeKeydownHandler = null;
-  }
+  if (_detachTrap) { _detachTrap(); _detachTrap = null; }
   if (_activeRoot && _activeRoot.parentNode) {
     _activeRoot.parentNode.removeChild(_activeRoot);
   }

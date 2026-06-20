@@ -31,6 +31,8 @@
 // D-13 + D-14: NO 'Continue with partial data' escape hatch, NO 'Skip' option.
 //   RETRY SYNC is the only exit from the error state.
 
+import { attachFocusTrap } from '../utils/focus-trap.js';
+
 const MOUNT_ROOT_ID = 'cf-sync-pull-splash-root';
 
 const TAGLINES = [
@@ -51,6 +53,7 @@ const TABLE_LABELS = {
 };
 
 let _activeRoot = null;
+let _detachTrap = null;
 let _progressTimer = null;
 let _taglineTimer = null;
 let _taglineIndex = 0;
@@ -188,6 +191,7 @@ export function openSyncPullSplash() {
 export function closeSyncPullSplash() {
   if (_taglineTimer) { clearInterval(_taglineTimer); _taglineTimer = null; }
   if (_progressTimer) { clearInterval(_progressTimer); _progressTimer = null; }
+  if (_detachTrap) { _detachTrap(); _detachTrap = null; }
   if (!_activeRoot) return;
 
   const root = _activeRoot;
@@ -321,12 +325,19 @@ export function renderSyncPullError({ pulled, total, onRetry }) {
       closeSyncPullSplash();
     });
   }
+
+  // Focus trap (audit M7) — the error state is an alertdialog; Tab cycles
+  // RETRY / SIGN OUT and Escape is swallowed (the explicit buttons are the only
+  // way out, consistent with the D-13/D-14 lockdown).
+  if (_detachTrap) _detachTrap();
+  _detachTrap = attachFocusTrap(_activeRoot, { initialFocus: '[data-role="retry"]', restoreFocus: false });
 }
 
 /** Test-only reset — clears timers + unmounts any live splash. */
 export function __resetSyncPullSplash() {
   if (_taglineTimer) { clearInterval(_taglineTimer); _taglineTimer = null; }
   if (_progressTimer) { clearInterval(_progressTimer); _progressTimer = null; }
+  if (_detachTrap) { _detachTrap(); _detachTrap = null; }
   if (_activeRoot && _activeRoot.parentNode) {
     _activeRoot.parentNode.removeChild(_activeRoot);
   }
