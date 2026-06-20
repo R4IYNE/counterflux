@@ -41,6 +41,8 @@ export function normaliseRow(row, format) {
         quantity: parseInt(row['Count'], 10) || 1,
         setName: row['Edition'] || null,
         foil: (row['Foil'] || '').toLowerCase() === 'foil',
+        condition: row['Condition'] || null,   // audit M4
+        language: row['Language'] || null,
       };
     case 'moxfield':
       return {
@@ -49,6 +51,8 @@ export function normaliseRow(row, format) {
         setCode: row['Edition'] || null,
         collectorNumber: row['Collector Number'] || null,
         foil: ['foil', 'etched'].includes((row['Foil'] || '').toLowerCase()),
+        condition: row['Condition'] || null,   // audit M4
+        language: row['Language'] || null,
       };
     case 'archidekt':
       return {
@@ -63,6 +67,8 @@ export function normaliseRow(row, format) {
         name: row['Name'] || row['name'] || row['Card Name'] || row['card_name'] || '',
         quantity: parseInt(row['Quantity'] || row['Count'] || row['qty'] || '1', 10) || 1,
         foil: false,
+        condition: row['Condition'] || row['condition'] || null,   // audit M4
+        language: row['Language'] || row['language'] || null,
       };
   }
 }

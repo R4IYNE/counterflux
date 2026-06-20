@@ -108,6 +108,8 @@ export function renderCSVImportModal() {
                   quantity: entry.quantity || 1,
                   foil: entry.foil || false,
                   category: 'owned',
+                  condition: entry.condition || null,   // audit M4 — round-trip
+                  language: entry.language || null,
                 })),
                 { label: (this.format || 'CSV').toUpperCase() }
               );

@@ -4,6 +4,7 @@ import { logActivity } from '../services/activity.js';
 import { queueScryfallRequest } from '../services/scryfall-queue.js';
 import { fetchPrecons, fetchPreconDecklist, invalidatePreconsCache } from '../services/precons.js';
 import { tsToMs } from '../utils/timestamps.js';
+import { normalizeCondition, normalizeLanguage, DEFAULT_CONDITION, DEFAULT_LANGUAGE } from '../utils/card-conditions.js';
 
 /**
  * EUR price for a collection entry, foil-aware with fallback (audit Tier 1):
@@ -423,7 +424,7 @@ export function initCollectionStore() {
       }
     },
 
-    async addCard(scryfallId, quantity, foil, category) {
+    async addCard(scryfallId, quantity, foil, category, condition = DEFAULT_CONDITION, language = DEFAULT_LANGUAGE) {
       const foilNum = foil ? 1 : 0;
       const qty = _clampQty(quantity);   // audit M26 — reject negative/zero/NaN/unbounded
       const existing = await db.collection
@@ -442,6 +443,8 @@ export function initCollectionStore() {
           quantity: qty,
           foil: foilNum,
           category,
+          condition: normalizeCondition(condition),   // audit M4 (metadata-only)
+          language: normalizeLanguage(language),       // audit M4
           added_at: new Date().toISOString(),
         });
       }
@@ -835,6 +838,8 @@ export function initCollectionStore() {
               quantity: qty,
               foil: foilNum,
               category,
+              condition: normalizeCondition(entry.condition),  // audit M4
+              language: normalizeLanguage(entry.language),      // audit M4
               added_at: nowIso,
               updated_at: nowIso,
               synced_at: null,

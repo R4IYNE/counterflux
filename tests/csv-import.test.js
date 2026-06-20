@@ -32,6 +32,8 @@ describe('normaliseRow', () => {
       quantity: 4,
       setName: 'Masters 25',
       foil: false,
+      condition: null,
+      language: null,
     });
   });
 
@@ -44,6 +46,8 @@ describe('normaliseRow', () => {
       setCode: 'cmr',
       collectorNumber: '472',
       foil: true,
+      condition: null,
+      language: null,
     });
   });
 
