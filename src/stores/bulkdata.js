@@ -124,7 +124,10 @@ export async function startBulkDataPipeline() {
     this.error = null;
     this.downloaded = 0;
     this.parsed = 0;
-    worker.postMessage({ type: 'check', cachedUpdatedAt: null });
+    // L6 — reuse the real cached freshness value so a retry after a transient
+    // failure (when the on-disk data was actually current) doesn't force a full
+    // ~100MB re-download; the worker still re-downloads when the server is newer.
+    worker.postMessage({ type: 'check', cachedUpdatedAt });
   };
 
   // Start the freshness check

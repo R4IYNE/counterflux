@@ -15,6 +15,8 @@
 
 const USER_AGENT = 'Counterflux/1.1 (MTG collection manager)';
 const MIN_DELAY_MS = 100;
+const MAX_RETRIES = 3;       // L5 — bounded retries on 429/503
+const BACKOFF_MS = 1000;
 
 let _lastRequestAt = 0;
 let _queue = Promise.resolve();
@@ -30,26 +32,41 @@ let _queue = Promise.resolve();
  * @returns {Promise<any>} Parsed JSON response body.
  */
 export function queueScryfallRequest(url, options = {}) {
-  _queue = _queue.then(async () => {
-    const now = Date.now();
-    const wait = Math.max(0, MIN_DELAY_MS - (now - _lastRequestAt));
-    if (wait > 0) {
-      await new Promise(resolve => setTimeout(resolve, wait));
-    }
-    _lastRequestAt = Date.now();
-    const response = await fetch(url, {
-      ...options,
-      headers: {
-        'User-Agent': USER_AGENT,
-        ...(options.headers || {}),
-      },
-    });
-    if (!response.ok) {
-      throw new Error(`Scryfall ${response.status}: ${url}`);
-    }
-    return response.json();
-  });
+  _queue = _queue.then(() => _fetchWithRetry(url, options, 0));
   return _queue;
+}
+
+async function _fetchWithRetry(url, options, attempt) {
+  const now = Date.now();
+  const wait = Math.max(0, MIN_DELAY_MS - (now - _lastRequestAt));
+  if (wait > 0) {
+    await new Promise(resolve => setTimeout(resolve, wait));
+  }
+  _lastRequestAt = Date.now();
+  const response = await fetch(url, {
+    ...options,
+    headers: {
+      'User-Agent': USER_AGENT,
+      ...(options.headers || {}),
+    },
+  });
+
+  // L5 — honour Retry-After on 429 (rate limit) / 503 with bounded backoff
+  // before surfacing the error; the wait holds the serial queue so we don't
+  // pile more requests onto an already-throttled endpoint.
+  if ((response.status === 429 || response.status === 503) && attempt < MAX_RETRIES) {
+    const retryAfter = parseInt(response.headers?.get?.('retry-after') || '', 10);
+    const delay = Number.isFinite(retryAfter) && retryAfter > 0
+      ? retryAfter * 1000
+      : BACKOFF_MS * (attempt + 1);
+    await new Promise(resolve => setTimeout(resolve, Math.min(delay, 10000)));
+    return _fetchWithRetry(url, options, attempt + 1);
+  }
+
+  if (!response.ok) {
+    throw new Error(`Scryfall ${response.status}: ${url}`);
+  }
+  return response.json();
 }
 
 /**
