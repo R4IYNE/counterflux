@@ -68,23 +68,15 @@ export default async function handler(req, res) {
     //    - Replace UA with our server-side string (browsers can't set UA so
     //      the inbound headers won't have one in normal flow, but we still
     //      overwrite defensively).
-    const outboundHeaders = {};
+    // L22 — allow-list outbound headers. The old deny-list forwarded every
+    // inbound header except a handful, so Authorization / Cookie / any custom
+    // header reached the third party verbatim. Forward only what the upstream
+    // needs and inject our server UA.
+    const ALLOWED_OUTBOUND = new Set(['content-type', 'accept']);
+    const outboundHeaders = { 'User-Agent': USER_AGENT };
     for (const [k, v] of Object.entries(req.headers || {})) {
-      const lower = k.toLowerCase();
-      // Strip hop-by-hop headers + content-length (re-stringifying req.body can
-      // change the byte length; let Node's fetch compute it from init.body).
-      if (
-        lower === 'host' ||
-        lower === 'connection' ||
-        lower === 'user-agent' ||
-        lower === 'content-length' ||
-        lower === 'accept-encoding'
-      ) {
-        continue;
-      }
-      outboundHeaders[k] = v;
+      if (ALLOWED_OUTBOUND.has(k.toLowerCase())) outboundHeaders[k] = v;
     }
-    outboundHeaders['User-Agent'] = USER_AGENT;
 
     const init = {
       method: req.method,

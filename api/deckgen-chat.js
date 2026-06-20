@@ -132,7 +132,8 @@ export default async function handler(req, res) {
     candidates: candidatePool,
     deckCards: cleanDeck,
     powerLevel,
-    deckDiagnostics: typeof deckDiagnostics === 'string' ? deckDiagnostics : '',
+    // L31 — per-field length cap (only other guard is the 50KB body cap).
+    deckDiagnostics: (typeof deckDiagnostics === 'string' ? deckDiagnostics : '').slice(0, 4000),
   });
 
   // 7. Anthropic dispatch — Sonnet, AbortController + hard timeout.

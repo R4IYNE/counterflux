@@ -247,9 +247,10 @@ export default async function handler(req, res) {
     partial,
     powerLevel,
     mode,
-    archetypeHint,
+    // L31 — per-field length caps (only other guard is the 50KB body cap).
+    archetypeHint: (typeof archetypeHint === 'string' ? archetypeHint : '').slice(0, 200),
     deckSize,
-    deckDiagnostics: typeof deckDiagnostics === 'string' ? deckDiagnostics : '',
+    deckDiagnostics: (typeof deckDiagnostics === 'string' ? deckDiagnostics : '').slice(0, 4000),
   });
 
   // 260615: all modes use Sonnet 4.6. Opus was killing full 99-card builds at

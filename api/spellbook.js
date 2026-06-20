@@ -58,21 +58,14 @@ export default async function handler(req, res) {
     //    (re-stringifying req.body can change the byte length; let Node's fetch
     //    compute it from init.body) + accept-encoding (Vercel may auto-decompress
     //    inbound, so the stored body is already plain). Inject our server UA.
-    const outboundHeaders = {};
+    // L22 — allow-list outbound headers (was a deny-list that forwarded
+    // Authorization / Cookie / any custom inbound header verbatim to the
+    // upstream). Forward only what it needs and inject our server UA.
+    const ALLOWED_OUTBOUND = new Set(['content-type', 'accept']);
+    const outboundHeaders = { 'User-Agent': USER_AGENT };
     for (const [k, v] of Object.entries(req.headers || {})) {
-      const lower = k.toLowerCase();
-      if (
-        lower === 'host' ||
-        lower === 'connection' ||
-        lower === 'user-agent' ||
-        lower === 'content-length' ||
-        lower === 'accept-encoding'
-      ) {
-        continue;
-      }
-      outboundHeaders[k] = v;
+      if (ALLOWED_OUTBOUND.has(k.toLowerCase())) outboundHeaders[k] = v;
     }
-    outboundHeaders['User-Agent'] = USER_AGENT;
 
     const init = {
       method: req.method,

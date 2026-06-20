@@ -196,7 +196,7 @@ describe('api/spellbook handler', () => {
     expect(ct).toBe('application/json');
   });
 
-  it('strips the inbound host header from the outbound request', async () => {
+  it('forwards only allow-listed headers (drops host, custom, and auth) — L22', async () => {
     fetch.mockResolvedValueOnce({
       ok: true,
       status: 200,
@@ -207,15 +207,20 @@ describe('api/spellbook handler', () => {
     const req = mockReq({
       method: 'GET',
       path: ['variants'],
-      headers: { host: 'counterflux.vercel.app', 'x-trace': 'abc' },
+      headers: { host: 'counterflux.vercel.app', 'x-trace': 'abc', authorization: 'Bearer secret', accept: 'application/json' },
     });
     const res = mockRes();
 
     await handler(req, res);
 
     const init = fetch.mock.calls[0][1];
+    // L22 — allow-list: host / arbitrary / sensitive headers are NOT forwarded.
     expect(findHeaderCaseInsensitive(init.headers, 'host')).toBeUndefined();
-    expect(findHeaderCaseInsensitive(init.headers, 'x-trace')).toBe('abc');
+    expect(findHeaderCaseInsensitive(init.headers, 'x-trace')).toBeUndefined();
+    expect(findHeaderCaseInsensitive(init.headers, 'authorization')).toBeUndefined();
+    // Allow-listed headers + injected UA still go through.
+    expect(findHeaderCaseInsensitive(init.headers, 'user-agent')).toBeTruthy();
+    expect(findHeaderCaseInsensitive(init.headers, 'accept')).toBe('application/json');
   });
 
   it('preserves upstream status code on non-2xx responses', async () => {

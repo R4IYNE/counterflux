@@ -156,22 +156,26 @@ describe('api/edhrec handler', () => {
   });
 
   // ---- Test 6: host header strip (with other headers retained) ----
-  it('strips the inbound host header from the outbound request', async () => {
+  it('forwards only allow-listed headers (drops host, custom, and auth) — L22', async () => {
     fetch.mockResolvedValueOnce(mockUpstreamResponse({ json: {} }));
 
     const req = mockReq({
       path: ['x'],
-      headers: { host: 'counterflux.vercel.app', 'x-custom': 'keep-me' },
+      headers: { host: 'counterflux.vercel.app', 'x-custom': 'drop-me', authorization: 'Bearer secret', accept: 'application/json' },
     });
     const res = mockRes();
     await handler(req, res);
 
     const init = fetch.mock.calls[0][1];
     const headerKeys = Object.keys(init.headers).map((k) => k.toLowerCase());
+    // L22 — allow-list: host / arbitrary / sensitive headers are NOT forwarded.
     expect(headerKeys).not.toContain('host');
-    // Custom header retained
-    const xCustom = Object.entries(init.headers).find(([k]) => k.toLowerCase() === 'x-custom');
-    expect(xCustom?.[1]).toBe('keep-me');
+    expect(headerKeys).not.toContain('x-custom');
+    expect(headerKeys).not.toContain('authorization');
+    // Allow-listed headers + the injected UA still go through.
+    expect(headerKeys).toContain('user-agent');
+    const acceptEntry = Object.entries(init.headers).find(([k]) => k.toLowerCase() === 'accept');
+    expect(acceptEntry?.[1]).toBe('application/json');
   });
 
   // ---- Test 7: status preservation on non-2xx upstream ----

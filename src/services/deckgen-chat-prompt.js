@@ -159,7 +159,7 @@ export function normalizeConversation(messages, { maxMessages = 24 } = {}) {
   const clean = messages
     .filter((m) => m && (m.role === 'user' || m.role === 'assistant')
       && typeof m.content === 'string' && m.content.trim())
-    .map((m) => ({ role: m.role, content: m.content }))
+    .map((m) => ({ role: m.role, content: m.content.slice(0, 2000) }))   // L31 — per-message length cap
     .slice(-maxMessages);
   // Anthropic requires the first message to be from the user.
   while (clean.length && clean[0].role !== 'user') clean.shift();
