@@ -132,6 +132,17 @@ async function browseCardsViaApi(colorIdentity = [], filters = {}, limit = 20) {
   }
 }
 
+// L8 — Scryfall advanced-search operators (o:, t:, pow>=, c:, is:, set:, …).
+// When present, route the raw query to /cards/search (which parses the full
+// query language) instead of the local name-prefix index. Plain name searches
+// stay on the fast Dexie path. MTG card names never contain "keyword:" or
+// comparison operators, so false positives are negligible.
+const SCRYFALL_OPERATOR_RE = /(^|\s)-?(o|oracle|t|type|c|colou?r|ci|id|identity|m|mana|r|rarity|is|not|f|format|set|e|s|kw|keyword|a|artist|ft|flavou?r|fo|pow|power|tou|toughness|cmc|mv|manavalue|loy|loyalty|devotion|year|usd|eur|tix|produces|cn|number|wm|watermark|border|frame|layout|game|in|name)(:|>=|<=|>|<|!=|=)/i;
+
+export function isAdvancedQuery(query) {
+  return typeof query === 'string' && SCRYFALL_OPERATOR_RE.test(query);
+}
+
 export async function searchCards(query, limit = 12) {
   if (!query || query.length < 2) return [];
 
@@ -140,6 +151,12 @@ export async function searchCards(query, limit = 12) {
   // legacy empty-with-flag. This restores search functionality during the
   // bulk-streaming window (was the 3-5 min dead-time the user perceived).
   if (!isBulkDataReady()) {
+    return await searchCardsViaApi(query, limit);
+  }
+
+  // L8 — advanced operator queries go to the Scryfall parser even when the
+  // local catalog is ready (the Dexie index only does name prefixes).
+  if (isAdvancedQuery(query)) {
     return await searchCardsViaApi(query, limit);
   }
 
