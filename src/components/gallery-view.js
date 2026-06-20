@@ -64,7 +64,7 @@ export function renderGalleryView() {
                       x-text="entry.card?.name || 'Unknown'"></span>
                 <span class="font-mono text-[11px] tracking-[0.15em]"
                       style="color: var(--color-primary-text, #5B9BF5);"
-                      x-text="window.__cf_eurToGbp(entry.foil ? entry.card?.prices?.eur_foil : entry.card?.prices?.eur)"></span>
+                      x-text="window.__cf_eurToGbp(entry.foil ? (entry.card?.prices?.eur_foil || entry.card?.prices?.eur) : entry.card?.prices?.eur)"></span>
                 <span class="font-mono text-[11px] tracking-[0.15em]"
                       style="color: #4A5064;"
                       x-text="(entry.card?.set_name || entry.card?.set || '').toUpperCase()"></span>
@@ -111,7 +111,7 @@ export function renderGalleryView() {
                 // 260522-img: prefer .normal for sharper rendering at tile size.
                 const imgSrc = card?.image_uris?.normal || card?.card_faces?.[0]?.image_uris?.normal || card?._thumbnail || card?.image_uris?.small || '';
                 const name = card?.name || 'Unknown';
-                const eurPrice = entry.foil ? card?.prices?.eur_foil : card?.prices?.eur;
+                const eurPrice = entry.foil ? (card?.prices?.eur_foil || card?.prices?.eur) : card?.prices?.eur;
                 const price = window.__cf_eurToGbp ? window.__cf_eurToGbp(eurPrice) : (eurPrice || '--');
                 const setName = (card?.set_name || card?.set || '').toUpperCase();
                 const qtyBadge = entry.quantity > 1 ? '<span class=\"qty-badge\">x' + entry.quantity + '</span>' : '';

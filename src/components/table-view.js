@@ -132,7 +132,7 @@ export function renderTableView() {
                 </td>
                 <td class="px-[16px] py-[8px] font-mono text-[11px] tracking-[0.15em]"
                     style="color: var(--color-primary-text, #5B9BF5);"
-                    x-text="window.__cf_eurToGbp(entry.foil ? entry.card?.prices?.eur_foil : entry.card?.prices?.eur)"></td>
+                    x-text="window.__cf_eurToGbp(entry.foil ? (entry.card?.prices?.eur_foil || entry.card?.prices?.eur) : entry.card?.prices?.eur)"></td>
                 <td class="px-[16px] py-[8px] font-mono text-[11px] tracking-[0.15em] font-bold uppercase"
                     style="color: #EAECEE;"
                     x-text="(entry.category || 'owned').toUpperCase()"></td>

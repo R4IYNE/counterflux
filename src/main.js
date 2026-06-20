@@ -32,6 +32,7 @@ import { initRouter } from './router.js';
 import { renderManaCost } from './utils/mana.js';
 import { getEurToGbpRate, eurToGbp, eurToGbpValue, isRateFallback, getCurrentRate } from './services/currency.js';
 import { syncFocusTrap } from './utils/focus-trap.js';
+import { tsToMs } from './utils/timestamps.js';
 import { runMigration } from './services/migration.js';
 import { bindBfcacheHandlers } from './services/bfcache.js';
 import { db } from './db/schema.js';
@@ -120,6 +121,8 @@ async function bootApp() {
   window.__cf_isRateApprox = () => isRateFallback() || getCurrentRate() === null;
   // audit M7 — modal focus-trap for HTML-string Alpine modals (used via x-effect).
   window.__cf_focusTrap = syncFocusTrap;
+  // audit L24 — robust timestamp parse for Alpine x-text (handles legacy numeric ms).
+  window.__cf_tsToMs = tsToMs;
 
   // Register Alpine components
   Alpine.data('splashScreen', splashScreen);

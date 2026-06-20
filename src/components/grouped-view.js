@@ -260,7 +260,7 @@ export function renderGroupedView() {
                       style="color: #4A5064;"
                       x-text="(() => {
                         const ts = (g.entries || []).reduce((m, e) => {
-                          const t = e.added_at ? Date.parse(e.added_at) : 0;
+                          const t = e.added_at ? (window.__cf_tsToMs ? window.__cf_tsToMs(e.added_at) : Date.parse(e.added_at)) : 0;
                           return (t && (!m || t < m)) ? t : m;
                         }, 0);
                         if (!ts) return '';

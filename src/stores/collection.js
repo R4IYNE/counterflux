@@ -302,7 +302,7 @@ export function initCollectionStore() {
             // Date-added on a group = newest added_at across its entries
             // (a single newly-added printing surfaces the whole group).
             const newestOf = (g) => (g.entries || []).reduce((m, e) => {
-              const t = e.added_at ? Date.parse(e.added_at) : 0;
+              const t = e.added_at ? tsToMs(e.added_at) : 0;
               return t > m ? t : m;
             }, 0);
             return mul * (newestOf(a) - newestOf(b));
@@ -814,7 +814,7 @@ export function initCollectionStore() {
         for (const entry of list) {
           const foilNum = entry.foil ? 1 : 0;
           const category = entry.category || 'owned';
-          const qty = entry.quantity || 1;
+          const qty = this._clampQty(entry.quantity);
 
           const existing = await db.collection
             .where('[scryfall_id+foil]')

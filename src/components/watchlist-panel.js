@@ -6,6 +6,7 @@
 
 import { renderSparkline } from '../utils/sparkline.js';
 import { db } from '../db/schema.js';
+import { FALLBACK_EUR_GBP_RATE } from '../services/currency.js';
 
 /**
  * Render the watchlist panel HTML string with Alpine.js bindings.
@@ -293,7 +294,7 @@ if (typeof window !== 'undefined' && window.Alpine) {
             const last = prices[prices.length - 1];
             const change = last - first;
             const pct = first !== 0 ? (change / first) * 100 : 0;
-            const eurToGbpValue = window.__cf_eurToGbpValue || ((v) => v * 0.86);
+            const eurToGbpValue = window.__cf_eurToGbpValue || ((v) => v * FALLBACK_EUR_GBP_RATE);
             const changeGbp = eurToGbpValue(Math.abs(change));
             this.trendValue = change;
             const sign = change >= 0 ? '+' : '-';

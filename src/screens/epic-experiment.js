@@ -6,6 +6,7 @@ import { fetchSets, getCachedSets } from '../services/sets.js';
 import { getActivity, logActivity } from '../services/activity.js';
 import { renderEmptyState } from '../components/empty-state.js';
 import { tsToMs } from '../utils/timestamps.js';
+import { FALLBACK_EUR_GBP_RATE } from '../services/currency.js';
 import { db } from '../db/schema.js';
 
 // Escape user-authored strings before interpolating into innerHTML. The daily
@@ -239,7 +240,7 @@ function renderPortfolioSummary(grid, cleanups) {
     }
 
     emptyOverlay.classList.add('hidden');
-    valueEl.textContent = window.__cf_eurToGbp ? window.__cf_eurToGbp(stats.estimatedValue) : `£${(stats.estimatedValue * 0.86).toFixed(2)}`;
+    valueEl.textContent = window.__cf_eurToGbp ? window.__cf_eurToGbp(stats.estimatedValue) : `£${(stats.estimatedValue * FALLBACK_EUR_GBP_RATE).toFixed(2)}`;
     uniqueEl.textContent = `UNIQUE ${stats.uniqueCards}`;
     totalCountEl.textContent = `TOTAL ${stats.totalCards}`;
 
@@ -1038,7 +1039,7 @@ function renderPriceAlerts(grid, cleanups) {
       const priceEl = document.createElement('span');
       priceEl.className = 'font-mono text-text-primary';
       priceEl.style.cssText = 'font-size: 11px; font-weight: 400; letter-spacing: 0.15em;';
-      const gbpStr = window.__cf_eurToGbp ? `£${alert.current_price_gbp.toFixed(2)}` : `£${(alert.current_price_gbp || 0).toFixed(2)}`;
+      const gbpStr = `£${(alert.current_price_gbp || 0).toFixed(2)}`;
       priceEl.textContent = gbpStr;
       row.appendChild(priceEl);
 
