@@ -2,7 +2,7 @@ import Alpine from 'alpinejs';
 import { db } from '../db/schema.js';
 import { snapshotWatchlistPrices, computeMovers, computeTrend } from '../services/price-history.js';
 import { fetchSets } from '../services/sets.js';
-import { eurToGbpValue } from '../services/currency.js';
+import { eurToGbpValue, getEurToGbpRate, isRateFallback } from '../services/currency.js';
 import { tsToMs } from '../utils/timestamps.js';
 
 // Memo for groupedSpoilerCards (audit L17 — recomputed on every reactive access
@@ -193,6 +193,7 @@ export function initMarketStore() {
           this.watchlist = await db.watchlist.toArray();
         }
         if (!this.watchlist.length) return;
+        await getEurToGbpRate();  // M21 — load the live FX rate before GBP threshold checks
         await snapshotWatchlistPrices();
         await this.checkAlerts();
       } catch (err) {
@@ -204,17 +205,30 @@ export function initMarketStore() {
       const alerts = [];
       const today = new Date().toISOString().slice(0, 10);
 
+      // L30 — batch the card lookups up front (was an N+1 db.cards.get per entry).
+      const ids = this.watchlist
+        .filter((e) => e.alert_type && e.alert_threshold != null)
+        .map((e) => e.scryfall_id);
+      const cardRows = ids.length ? await db.cards.where('id').anyOf(ids).toArray() : [];
+      const cardById = new Map(cardRows.map((c) => [c.id, c]));
+
+      // M21 — only latch the daily verdict on a real (non-fallback) FX rate; on
+      // the static fallback, re-evaluate next run once the live rate loads.
+      const rateApprox = isRateFallback();
+
       for (const entry of this.watchlist) {
         if (!entry.alert_type || entry.alert_threshold == null) continue;
 
         // Skip if already alerted today
         if (entry.last_alerted_at && entry.last_alerted_at.slice(0, 10) === today) continue;
 
-        const card = await db.cards.get(entry.scryfall_id);
+        const card = cardById.get(entry.scryfall_id);
         if (!card) continue;
 
-        const priceEur = parseFloat(card.prices?.eur || '0');
-        if (priceEur === 0) continue;
+        // L25 — fall back to the foil price for foil-only printings.
+        let priceEur = parseFloat(card.prices?.eur || '0');
+        if (!(priceEur > 0)) priceEur = parseFloat(card.prices?.eur_foil || '0');
+        if (!(priceEur > 0)) continue;
 
         const priceGbp = eurToGbpValue(priceEur);
         let triggered = false;
@@ -243,14 +257,17 @@ export function initMarketStore() {
             scryfall_id: entry.scryfall_id,
             alert_type: entry.alert_type,
             alert_threshold: entry.alert_threshold,
-            current_price_gbp: eurToGbpValue(priceEur),
+            current_price_gbp: priceGbp,
             card_name: card.name,
             change_pct: changePct,
             direction,
           });
-          await db.watchlist.update(entry.id, {
-            last_alerted_at: new Date().toISOString(),
-          });
+          // M21 — don't latch the daily verdict on the fallback FX rate.
+          if (!rateApprox) {
+            await db.watchlist.update(entry.id, {
+              last_alerted_at: new Date().toISOString(),
+            });
+          }
         }
       }
 

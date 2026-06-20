@@ -206,7 +206,7 @@ export function renderSpoilerGallery() {
                             x-text="card.name || 'Unknown'"></span>
                       <span class="font-mono text-[11px] tracking-[0.15em]"
                             style="color: var(--color-primary-text, #5B9BF5);"
-                            x-text="window.__cf_eurToGbp(card.prices?.eur)"></span>
+                            x-text="window.__cf_eurToGbp(card.prices?.eur || card.prices?.eur_foil)"></span>
                       <span class="font-mono text-[11px] tracking-[0.15em]"
                             style="color: #4A5064;"
                             x-text="(card.set_name || card.set || '').toUpperCase()"></span>

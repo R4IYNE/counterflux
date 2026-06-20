@@ -36,8 +36,10 @@ export async function snapshotWatchlistPrices() {
     const card = cardMap[entry.scryfall_id];
     if (!card) continue;
 
-    const price = parseFloat(card.prices?.eur || '0');
-    if (price === 0) continue;
+    // L25 — fall back to the foil price for foil-only printings.
+    let price = parseFloat(card.prices?.eur || '0');
+    if (!(price > 0)) price = parseFloat(card.prices?.eur_foil || '0');
+    if (!(price > 0)) continue;
 
     snapshots.push({
       scryfall_id: entry.scryfall_id,

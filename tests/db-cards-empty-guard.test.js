@@ -47,7 +47,9 @@ describe('db.cards empty-lookup audit (Phase 13 Plan 3, Pitfall 2)', () => {
   it('Test 4: src/stores/market.js guards checkAlerts with `if (!card) continue`', () => {
     const src = read('src/stores/market.js');
     // checkAlerts reads card price; must early-continue when card missing.
-    expect(src).toMatch(/const card = await db\.cards\.get\(entry\.scryfall_id\);[\s\S]{0,80}if \(!card\) continue;/);
+    // (L30: lookups are now batched into cardById via db.cards.where('id').anyOf,
+    // but the empty-safe guard contract is unchanged.)
+    expect(src).toMatch(/const card = cardById\.get\(entry\.scryfall_id\);[\s\S]{0,80}if \(!card\) continue;/);
   });
 
   it('Test 5: src/components/deck-landing.js assigns card || null', () => {
