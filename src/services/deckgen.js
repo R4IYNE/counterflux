@@ -37,6 +37,10 @@ const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
  *                                           current Supabase access token
  * @returns {Promise<{ok: true, response, cacheHit}|{ok: false, code, message}>}
  */
+// Client-side ceiling timeout for a brew request (audit M11). Set above the
+// server's ~110-120s maxDuration so it only fires on a true hang, not a slow brew.
+const CLIENT_TIMEOUT_MS = 150_000;
+
 export async function generateDeck(input) {
   const {
     commanderId,
@@ -50,6 +54,7 @@ export async function generateDeck(input) {
     getAccessToken,
     onProgress,
     onCard,
+    signal,   // optional external AbortSignal — lets the caller cancel (audit M5)
   } = input;
 
   if (!commanderId) {
@@ -84,67 +89,97 @@ export async function generateDeck(input) {
     };
   }
 
-  // 3. POST to /api/deckgen
-  let res;
+  // 3. POST to /api/deckgen under an abort signal. A ceiling timeout aborts a
+  //    hung request (M11) and an external signal lets the user cancel (M5).
+  //    The whole fetch+stream is wrapped so generateDeck NEVER throws — it
+  //    always resolves to a result object — and distinguishes timeout vs cancel
+  //    vs network so the caller can render the right state (M15).
+  const controller = new AbortController();
+  let timedOut = false;
+  const timeoutHandle = setTimeout(() => { timedOut = true; controller.abort(); }, CLIENT_TIMEOUT_MS);
+  const relayAbort = () => controller.abort();
+  if (signal) {
+    if (signal.aborted) controller.abort();
+    else signal.addEventListener('abort', relayAbort, { once: true });
+  }
+  const abortResult = () => (timedOut
+    ? { ok: false, code: 'client_timeout', message: 'The brew took too long and was stopped — try again.' }
+    : { ok: false, code: 'aborted', message: 'Brew cancelled.' });
+
   try {
-    res = await fetch(ENDPOINT, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        commanderId,
-        powerLevel,
-        mode,
-        useCollectionOnly,
-        archetypeHint,
-        partialCardIds,
-        deckDiagnostics,
-      }),
-    });
-  } catch (err) {
-    return {
-      ok: false,
-      code: 'network_error',
-      message: 'Couldn\'t reach the AI — check your connection.',
-      detail: err?.message,
-    };
-  }
+    let res;
+    try {
+      res = await fetch(ENDPOINT, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          commanderId,
+          powerLevel,
+          mode,
+          useCollectionOnly,
+          archetypeHint,
+          partialCardIds,
+          deckDiagnostics,
+        }),
+        signal: controller.signal,
+      });
+    } catch (err) {
+      if (controller.signal.aborted) return abortResult();
+      return {
+        ok: false,
+        code: 'network_error',
+        message: 'Couldn\'t reach the AI — check your connection.',
+        detail: err?.message,
+      };
+    }
 
-  // 4. Pre-stream errors (auth / budget / pool / commander) come back as a
-  //    normal JSON body with a non-2xx status. A 200 is an NDJSON STREAM:
-  //    {type:'progress',cards} lines while Mila generates, then a final
-  //    {type:'done',...} (or {type:'error',code,message} on mid-stream failure).
-  if (!res.ok) {
-    let body = null;
-    try { body = await res.json(); } catch { body = { error: 'invalid response' }; }
-    return {
-      ok: false,
-      code: mapStatusToCode(res.status),
-      message: friendlyMessage(res.status, body),
-      detail: body,
-    };
-  }
+    // 4. Pre-stream errors (auth / budget / pool / commander) come back as a
+    //    normal JSON body with a non-2xx status. A 200 is an NDJSON STREAM:
+    //    {type:'progress',cards} lines while Mila generates, then a final
+    //    {type:'done',...} (or {type:'error',code,message} on mid-stream failure).
+    if (!res.ok) {
+      let body = null;
+      try { body = await res.json(); } catch { body = { error: 'invalid response' }; }
+      return {
+        ok: false,
+        code: mapStatusToCode(res.status),
+        message: friendlyMessage(res.status, body),
+        detail: body,
+      };
+    }
 
-  const parsed = await readNdjsonStream(res, onProgress, onCard);
-  if (parsed.error) {
-    return { ok: false, code: parsed.error.code || 'server_error', message: parsed.error.message || 'Brew failed.' };
-  }
-  if (!parsed.done) {
-    return { ok: false, code: 'server_error', message: 'No result came back — try again.' };
-  }
+    let parsed;
+    try {
+      parsed = await readNdjsonStream(res, onProgress, onCard);
+    } catch (err) {
+      if (controller.signal.aborted) return abortResult();
+      return { ok: false, code: 'server_error', message: 'The brew stream broke — try again.', detail: err?.message };
+    }
 
-  // Strip the protocol field; cache + return the result body.
-  const { type, ...response } = parsed.done;
-  void type;
-  try {
-    await writeLocalCache(cacheKey, response);
-  } catch {
-    // Non-fatal — cache writes failing just means slower next-call
-  }
+    if (parsed.error) {
+      return { ok: false, code: parsed.error.code || 'server_error', message: parsed.error.message || 'Brew failed.' };
+    }
+    if (!parsed.done) {
+      return { ok: false, code: 'server_error', message: 'No result came back — try again.' };
+    }
 
-  return { ok: true, response, cacheHit: !!response.cache_hit };
+    // Strip the protocol field; cache + return the result body.
+    const { type, ...response } = parsed.done;
+    void type;
+    try {
+      await writeLocalCache(cacheKey, response);
+    } catch {
+      // Non-fatal — cache writes failing just means slower next-call
+    }
+
+    return { ok: true, response, cacheHit: !!response.cache_hit };
+  } finally {
+    clearTimeout(timeoutHandle);
+    if (signal) signal.removeEventListener('abort', relayAbort);
+  }
 }
 
 // ---------------------------------------------------------------------------

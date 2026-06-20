@@ -228,6 +228,31 @@ describe('generateDeck — error mapping', () => {
   });
 });
 
+describe('generateDeck — cancel / timeout (audit M5/M11)', () => {
+  it('returns a typed aborted result (no throw) when the caller signal aborts', async () => {
+    // The platform fetch rejects with an AbortError once its signal is aborted.
+    mockFetch((url, opts) => {
+      if (opts?.signal?.aborted) {
+        const e = new Error('aborted'); e.name = 'AbortError';
+        return Promise.reject(e);
+      }
+      return Promise.resolve(streamRes([JSON.stringify({ type: 'done', recommended: [] })]));
+    });
+    const controller = new AbortController();
+    controller.abort(); // caller cancels before the request resolves
+    const result = await generateDeck({
+      commanderId: 'cmdr-abort',
+      powerLevel: 5,
+      mode: 'build',
+      collectionHash: 'no-collection',
+      getAccessToken: async () => 'token',
+      signal: controller.signal,
+    });
+    expect(result.ok).toBe(false);
+    expect(result.code).toBe('aborted');
+  });
+});
+
 describe('generateDeck — happy path cache mirror', () => {
   it('writes the response to local cache on a successful fetch', async () => {
     const response = { recommended: [{ scryfall_id: 'c1' }], cache_hit: false };

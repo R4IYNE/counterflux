@@ -124,12 +124,12 @@ export function renderDeckgenReviewScreen() {
           }
         }
       }"
-      x-show="$store.deckgen?.status === 'brewing' || $store.deckgen?.status === 'reviewing' || $store.deckgen?.status === 'committing'"
+      x-show="$store.deckgen?.status === 'brewing' || $store.deckgen?.status === 'reviewing' || $store.deckgen?.status === 'committing' || $store.deckgen?.status === 'error'"
       x-effect="
         ($store.deckgen?.status === 'reviewing') && hydrateCardMeta()
       "
       x-cloak
-      @keydown.escape.window="if ($store.deckgen?.status !== 'brewing') $store.deckgen.reset()"
+      @keydown.escape.window="if ($store.deckgen?.status !== 'committing') $store.deckgen.reset()"
       style="position: fixed; inset: 0; z-index: 9000; display: flex; flex-direction: column; background: #0B0C10;"
     >
       <!-- Header -->
@@ -142,7 +142,7 @@ export function renderDeckgenReviewScreen() {
               x-text="titleText"
             ></h2>
             <div
-              x-show="$store.deckgen?.status !== 'brewing'"
+              x-show="$store.deckgen?.status === 'reviewing' || $store.deckgen?.status === 'committing'"
               style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.15em; color: #7A8498; text-transform: uppercase; margin-top: 4px;"
               x-text="isSwapMode
                 ? (($store.deckgen?.recommendations?.length || 0) + ' RECOMMENDED · ' + approvedCount + ' APPROVED · ' + rejectedCount + ' REJECTED')
@@ -152,7 +152,7 @@ export function renderDeckgenReviewScreen() {
         </div>
 
         <!-- Action buttons — hidden during the pre-stream BREWING state. -->
-        <div x-show="$store.deckgen?.status !== 'brewing'" style="display: flex; gap: 8px; align-items: center;">
+        <div x-show="$store.deckgen?.status === 'reviewing' || $store.deckgen?.status === 'committing'" style="display: flex; gap: 8px; align-items: center;">
           <template x-if="$store.deckgen?.cacheHit">
             <span
               style="padding: 4px 10px; background: rgba(13,82,189,0.15); color: #0D52BD; border: 1px solid #0D52BD; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase;"
@@ -237,6 +237,38 @@ export function renderDeckgenReviewScreen() {
             style="font-family: 'JetBrains Mono', monospace; font-size: 13px; letter-spacing: 0.15em; color: #0D52BD;"
             x-text="(($store.deckgen?.brewProgress || 0) > 0 ? ($store.deckgen.brewProgress + ' CARDS · ') : '') + ($store.deckgen?.brewElapsed || 0) + ' second' + ((($store.deckgen?.brewElapsed || 0) === 1) ? '' : 's')"
           ></div>
+          <!-- audit M5 — escape hatch so a hung brew isn't a trap (also Escape). -->
+          <button
+            @click="$store.deckgen.reset()"
+            style="margin-top: 8px; padding: 8px 16px; background: transparent; color: #7A8498; border: 1px solid #2A2D3A; cursor: pointer; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase;"
+            onmouseenter="this.style.color='#E23838'; this.style.borderColor='#E23838'"
+            onmouseleave="this.style.color='#7A8498'; this.style.borderColor='#2A2D3A'"
+          >CANCEL BREW</button>
+        </div>
+
+        <!-- audit M15 — error state (zero-card failure / timeout). Without this the
+             overlay's x-show excluded 'error' and the user hit a silent dead-end
+             back in the editor with no message or way to retry. -->
+        <div
+          x-show="$store.deckgen?.status === 'error'"
+          style="flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; text-align: center;"
+        >
+          <span class="material-symbols-outlined" style="font-size: 44px; color: #E23838;">error</span>
+          <div style="font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; color: #EAECEE;">BREW FAILED</div>
+          <div
+            style="font-family: 'Space Grotesk', sans-serif; font-size: 14px; color: #7A8498; line-height: 1.5; max-width: 420px;"
+            x-text="$store.deckgen?.error?.message || 'Something went wrong while brewing — try again.'"
+          ></div>
+          <div style="display: flex; gap: 8px;">
+            <button
+              @click="$store.deckgen.closeError(); $store.deckgen.openBrewModal($store.deckgen.mode || 'build')"
+              style="padding: 8px 16px; background: #0D52BD; color: #EAECEE; border: 1px solid #0D52BD; cursor: pointer; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase;"
+            >TRY AGAIN</button>
+            <button
+              @click="$store.deckgen.closeError()"
+              style="padding: 8px 16px; background: transparent; color: #7A8498; border: 1px solid #2A2D3A; cursor: pointer; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase;"
+            >CLOSE</button>
+          </div>
         </div>
 
         <!-- Review body — visible once cards stream in (or the brew finished). -->

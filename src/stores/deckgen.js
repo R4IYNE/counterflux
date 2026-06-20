@@ -132,6 +132,10 @@ export function initDeckgenStore() {
       this.brewProgress = 0;
       this.recommendations = [];
       this.streamComplete = false;
+      // Abort plumbing (audit M5/M11) — cancelBrew() aborts this; the service
+      // also aborts it on its ceiling timeout.
+      this._brewCancelled = false;
+      this._brewAbort = new AbortController();
       // Live elapsed counter — the BREWING surface ticks this up so the
       // user sees forward motion during the 30-90s generation. Stopped the
       // moment the stream completes, errors, or the store is reset.
@@ -200,10 +204,21 @@ export function initDeckgenStore() {
           const auth = Alpine.store('auth');
           return auth?.session?.access_token || null;
         },
+        signal: this._brewAbort.signal,
       });
 
       if (!result.ok) {
         this._stopBrewTick();
+        // User cancelled (audit M5) — cancelBrew already reset to idle. Bail
+        // without surfacing an error and discard any partial stream.
+        if (this._brewCancelled || result.code === 'aborted') {
+          this._brewCancelled = false;
+          this.recommendations = [];
+          this.streamComplete = false;
+          this.error = null;
+          this.status = 'idle';
+          return;
+        }
         // Partial brew — the stream errored/timed out AFTER some cards had
         // already arrived. Don't blow them away: keep what streamed and let
         // the user act on it. Only a zero-card failure is a hard error.
@@ -449,6 +464,11 @@ export function initDeckgenStore() {
     },
 
     reset() {
+      // Abort any in-flight brew so cancel / discard / escape during streaming
+      // stops the request instead of leaving a zombie that keeps pushing cards
+      // back in after the reset (audit M5).
+      this._brewCancelled = true;
+      try { this._brewAbort?.abort(); } catch { /* non-fatal */ }
       this.status = 'idle';
       this.error = null;
       this.cacheHit = false;
