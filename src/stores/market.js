@@ -5,6 +5,11 @@ import { fetchSets } from '../services/sets.js';
 import { eurToGbpValue } from '../services/currency.js';
 import { tsToMs } from '../utils/timestamps.js';
 
+// Memo for groupedSpoilerCards (audit L17 — recomputed on every reactive access
+// and read in both the x-if guard and the x-for source). `spoilerCards` is
+// reassigned when the spoiler set changes, so its reference is the cache key.
+let _groupedSpoilerMemo = { src: null, val: null };
+
 // Audit fix #7: the % alert window. Previously change_pct compared the earliest
 // vs latest snapshot across the WHOLE 90-day history with Math.abs (so it never
 // expired and hid the direction). We now evaluate a signed change over a recent
@@ -52,19 +57,22 @@ export function initMarketStore() {
     // bucket into 'unknown' and sort last. Downstream Plan 04 (spoiler
     // gallery) renders <section> per group with a date header.
     get groupedSpoilerCards() {
+      if (_groupedSpoilerMemo.src === this.spoilerCards) return _groupedSpoilerMemo.val;
       const groups = new Map();
       for (const card of this.spoilerCards) {
         const date = card && card.released_at ? card.released_at : 'unknown';
         if (!groups.has(date)) groups.set(date, []);
         groups.get(date).push(card);
       }
-      return [...groups.entries()]
+      const val = [...groups.entries()]
         .sort(([a], [b]) => {
           if (a === 'unknown') return 1;
           if (b === 'unknown') return -1;
           return b.localeCompare(a);
         })
         .map(([date, cards]) => ({ date, cards }));
+      _groupedSpoilerMemo = { src: this.spoilerCards, val };
+      return val;
     },
 
     async init() {

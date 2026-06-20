@@ -9,7 +9,13 @@
 export function renderTableView() {
   return `
     <div x-data="{
-      get items() { return $store.collection.sorted; },
+      // audit H5 — render a growing window of rows instead of one <tr> per
+      // printing (a large collection mounted every row and froze the main
+      // thread). A bottom sentinel grows the window as it scrolls into view.
+      get allItems() { return $store.collection.sorted; },
+      get items() { return this.allItems.slice(0, this.visibleCount); },
+      visibleCount: 100,
+      _io: null,
       get currentSort() { return $store.collection.sortBy; },
       toggleSort(field) {
         const [currentField, currentDir] = this.currentSort.split('-');
@@ -29,7 +35,28 @@ export function renderTableView() {
       sortDir(field) {
         if (!this.isSortedBy(field)) return '';
         return this.currentSort.split('-')[1];
-      }
+      },
+      init() {
+        // Reset paging + re-arm the observer whenever the row set changes
+        // (filter / sort / data load).
+        this.$watch('allItems', () => {
+          this.visibleCount = 100;
+          if (this._io) { this._io.disconnect(); this._io = null; }
+          this.$nextTick(() => this._ensureInfiniteScroll());
+        });
+        this.$nextTick(() => this._ensureInfiniteScroll());
+      },
+      _ensureInfiniteScroll() {
+        const sentinel = this.$refs.sentinel;
+        if (!sentinel || this._io) return;
+        this._io = new IntersectionObserver((entries) => {
+          if (entries.some(e => e.isIntersecting) && this.visibleCount < this.allItems.length) {
+            this.visibleCount += 100;
+          }
+        }, { rootMargin: '600px' });
+        this._io.observe(sentinel);
+      },
+      destroy() { if (this._io) { this._io.disconnect(); this._io = null; } }
     }">
       <div class="overflow-x-auto">
         <table class="w-full" style="border-collapse: collapse;">
@@ -111,6 +138,8 @@ export function renderTableView() {
                     x-text="(entry.category || 'owned').toUpperCase()"></td>
               </tr>
             </template>
+            <!-- audit H5 — infinite-scroll sentinel; grows the rendered window -->
+            <tr x-ref="sentinel" aria-hidden="true"><td colspan="6" style="height:1px;padding:0;border:none;"></td></tr>
           </tbody>
         </table>
       </div>

@@ -9,6 +9,13 @@ import { logActivity } from '../services/activity.js';
 // Re-export for backward compatibility
 export { computeDeckAnalytics } from '../utils/deck-analytics.js';
 
+// Memo for the deck derived getters (audit L30 — they were recomputed on every
+// reactive access, returning fresh objects each call). `activeCards` is
+// reassigned on every load/mutation so its reference is a sufficient key;
+// groupedByType also keys on the deckFilter reference (reassigned by setDeckFilter).
+let _groupedByTypeMemo = { cards: null, filter: null, val: null };
+let _analyticsMemo = { cards: null, val: null };
+
 /**
  * Initialise the Alpine deck store.
  * Call during app startup alongside initCollectionStore().
@@ -35,6 +42,9 @@ export function initDeckStore() {
     },
 
     get groupedByType() {
+      if (_groupedByTypeMemo.cards === this.activeCards && _groupedByTypeMemo.filter === this.deckFilter) {
+        return _groupedByTypeMemo.val;
+      }
       const groups = {};
       for (const entry of this.activeCards) {
         if (!matchesDeckFilter(entry, this.deckFilter)) continue;
@@ -47,11 +57,15 @@ export function initDeckStore() {
       for (const type of TYPE_ORDER) {
         if (groups[type]) sorted[type] = groups[type];
       }
+      _groupedByTypeMemo = { cards: this.activeCards, filter: this.deckFilter, val: sorted };
       return sorted;
     },
 
     get analytics() {
-      return computeDeckAnalytics(this.activeCards);
+      if (_analyticsMemo.cards === this.activeCards) return _analyticsMemo.val;
+      const val = computeDeckAnalytics(this.activeCards);
+      _analyticsMemo = { cards: this.activeCards, val };
+      return val;
     },
 
     async loadDecks() {

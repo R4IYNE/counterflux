@@ -3,6 +3,11 @@ import { db } from '../db/schema.js';
 import { computeGameStats } from '../utils/game-stats.js';
 import { spinForFirstPlayer } from '../components/first-player-spinner.js';
 
+// Memo for the stats getter (audit L13 — it was an O(n) recompute on every
+// reactive access; the history header reads it ~6x per render). `games` is
+// reassigned on every load/save, so its reference is a sufficient cache key.
+let _gameStatsMemo = { games: null, val: null };
+
 /**
  * Debounce helper for auto-save.
  * @param {Function} fn
@@ -106,7 +111,10 @@ export function initGameStore() {
 
     // === Computed ===
     get stats() {
-      return computeGameStats(this.games);
+      if (_gameStatsMemo.games === this.games) return _gameStatsMemo.val;
+      const val = computeGameStats(this.games);
+      _gameStatsMemo = { games: this.games, val };
+      return val;
     },
 
     // === Setup Methods ===

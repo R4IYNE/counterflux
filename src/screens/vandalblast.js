@@ -101,6 +101,9 @@ export function mount(container) {
   const prevCleanup = container._cleanup;
   container._cleanup = () => {
     cleanupLifeButtons();
+    // Stop the turn-timer RAF loop so it doesn't keep ticking + mutating the
+    // game store after navigating away from the tracker (audit M4).
+    try { window.Alpine?.store?.('game')?.pauseTimer?.(); } catch { /* non-fatal */ }
     if (prevCleanup) prevCleanup();
   };
 }

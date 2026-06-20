@@ -35,6 +35,10 @@ export function mount(container) {
 
   function renderEditor(deckId) {
     mode = 'editor';
+    // Tear down the PREVIOUS editor instance (Alpine effects, Chart.js, resize
+    // listener) before re-rendering — without this each deck switch / re-render
+    // leaked them (audit M8).
+    if (container._editorCleanup) { try { container._editorCleanup(); } catch { /* non-fatal */ } container._editorCleanup = null; }
     // Clean up previous
     for (const fn of cleanupFns) {
       if (typeof fn === 'function') fn();
@@ -70,6 +74,8 @@ export function mount(container) {
 
   // Listen for deck-back-to-landing events
   const handleBackToLanding = () => {
+    // Tear down the editor's resources before leaving it (audit M8).
+    if (container._editorCleanup) { try { container._editorCleanup(); } catch { /* non-fatal */ } container._editorCleanup = null; }
     renderLanding();
   };
   document.addEventListener('deck-back-to-landing', handleBackToLanding);
