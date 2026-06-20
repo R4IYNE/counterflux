@@ -86,18 +86,19 @@ export function renderMassEntryPanel() {
       }"
       x-show="$store.collection.massEntryOpen"
       x-cloak
+      x-effect="window.__cf_focusTrap && window.__cf_focusTrap($store.collection.massEntryOpen, $refs.panel, { onEscape: () => discard() })"
       style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9999; display: flex; align-items: center; justify-content: center;"
-      @keydown.escape.window="$store.collection.massEntryOpen && discard()"
     >
       <!-- Glass backdrop -->
       <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6);" @click="discard()"></div>
 
-      <!-- Panel -->
-      <div style="position: relative; z-index: 10; width: 100%; max-width: 680px; background: #14161C; border: 1px solid #2A2D3A; padding: 24px; display: flex; flex-direction: column; gap: 16px; max-height: 80vh; overflow-y: auto;"
+      <!-- Panel (audit M7: role=dialog + focus trap; Escape via the trap) -->
+      <div x-ref="panel" role="dialog" aria-modal="true" aria-labelledby="mass-entry-heading"
+           style="position: relative; z-index: 10; width: 100%; max-width: 680px; background: #14161C; border: 1px solid #2A2D3A; padding: 24px; display: flex; flex-direction: column; gap: 16px; max-height: 80vh; overflow-y: auto;"
            @click.stop>
         <!-- Heading row: title + X close (COLLECT-05 / D-23) -->
         <div style="display: flex; align-items: center; justify-content: space-between;">
-          <h2 style="font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; line-height: 1.2; letter-spacing: 0.01em; color: var(--color-text-primary); margin: 0;">
+          <h2 id="mass-entry-heading" style="font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; line-height: 1.2; letter-spacing: 0.01em; color: var(--color-text-primary); margin: 0;">
             MASS ENTRY TERMINAL
           </h2>
           <button

@@ -125,11 +125,12 @@ export function renderDeckgenReviewScreen() {
         }
       }"
       x-show="$store.deckgen?.status === 'brewing' || $store.deckgen?.status === 'reviewing' || $store.deckgen?.status === 'committing' || $store.deckgen?.status === 'error'"
+      role="dialog" aria-modal="true" aria-labelledby="deckgen-review-heading"
       x-effect="
-        ($store.deckgen?.status === 'reviewing') && hydrateCardMeta()
+        ($store.deckgen?.status === 'reviewing') && hydrateCardMeta();
+        window.__cf_focusTrap && window.__cf_focusTrap(['brewing','reviewing','committing','error'].includes($store.deckgen?.status), $el, { onEscape: () => { if ($store.deckgen?.status !== 'committing') $store.deckgen.reset(); }, restoreFocus: false });
       "
       x-cloak
-      @keydown.escape.window="if ($store.deckgen?.status !== 'committing') $store.deckgen.reset()"
       style="position: fixed; inset: 0; z-index: 9000; display: flex; flex-direction: column; background: #0B0C10;"
     >
       <!-- Header -->
@@ -138,6 +139,7 @@ export function renderDeckgenReviewScreen() {
           <span class="material-symbols-outlined" style="color: #0D52BD; font-size: 28px;" x-text="isSwapMode ? 'tune' : 'auto_awesome'"></span>
           <div>
             <h2
+              id="deckgen-review-heading"
               style="font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; color: #EAECEE; margin: 0; text-transform: uppercase; letter-spacing: 0.01em;"
               x-text="titleText"
             ></h2>

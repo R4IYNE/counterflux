@@ -104,7 +104,8 @@ export function renderDeckgenBrewModal() {
       }"
       x-show="$store.deckgen?.status === 'idle' && $store.deckgen?.brewModalOpen"
       x-cloak
-      @keydown.escape.window="$store.deckgen.brewModalOpen = false"
+      role="dialog" aria-modal="true" aria-labelledby="deckgen-brew-heading"
+      x-effect="window.__cf_focusTrap && window.__cf_focusTrap($store.deckgen?.status === 'idle' && $store.deckgen?.brewModalOpen, $el, { onEscape: () => { $store.deckgen.brewModalOpen = false; } })"
       style="position: fixed; inset: 0; z-index: 9000; display: flex; align-items: center; justify-content: center;"
     >
       <!-- Backdrop -->
@@ -123,6 +124,7 @@ export function renderDeckgenBrewModal() {
           <div style="display: flex; align-items: center; gap: 12px;">
             <span class="material-symbols-outlined" style="color: #0D52BD; font-size: 24px;" x-text="isSwapMode ? 'tune' : 'auto_awesome'"></span>
             <h2
+              id="deckgen-brew-heading"
               style="font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; color: #EAECEE; margin: 0; text-transform: uppercase; letter-spacing: 0.01em;"
               x-text="isRetune ? 'RETUNE' : (isUpgrade ? 'UPGRADE' : 'BREW')"
             ></h2>

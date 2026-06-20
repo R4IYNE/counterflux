@@ -43,13 +43,14 @@ export function renderCSVImportModal() {
       x-show="$store.collection.importOpen"
       x-cloak
       style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9999; display: flex; align-items: center; justify-content: center;"
-      @keydown.escape.window="$store.collection.importOpen && close()"
     >
       <!-- Backdrop -->
       <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6);" @click="$store.collection.importOpen = false"></div>
 
       <!-- Modal -->
       <div
+        role="dialog" aria-modal="true" aria-labelledby="csv-import-heading"
+        x-effect="window.__cf_focusTrap && window.__cf_focusTrap($store.collection.importOpen, $el, { onEscape: () => close() })"
         style="position: relative; z-index: 10; width: 100%; max-width: 580px; background: #14161C; border: 1px solid #2A2D3A; padding: 24px; display: flex; flex-direction: column; gap: 16px;"
         x-data="{
           file: null,
@@ -155,7 +156,7 @@ export function renderCSVImportModal() {
         @click.stop
       >
         <!-- Heading -->
-        <h2 style="font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; line-height: 1.2; letter-spacing: 0.01em; color: #EAECEE; margin: 0;">
+        <h2 id="csv-import-heading" style="font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; line-height: 1.2; letter-spacing: 0.01em; color: #EAECEE; margin: 0;">
           IMPORT COLLECTION
         </h2>
 

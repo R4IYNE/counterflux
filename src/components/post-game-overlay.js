@@ -101,11 +101,13 @@ export function renderPostGameOverlay() {
       x-data="postGameOverlay()"
       x-show="$store.game.view === 'summary'"
       x-cloak
+      role="dialog" aria-modal="true" aria-labelledby="post-game-heading"
+      x-effect="window.__cf_focusTrap && window.__cf_focusTrap($store.game.view === 'summary', $el, { onEscape: () => closeOverlay(), restoreFocus: false })"
       style="position: fixed; inset: 0; z-index: 50; background: #14161C; padding: 32px; overflow-y: auto;"
-      @keydown.escape.window="closeOverlay()"
     >
       <!-- Header -->
       <h1
+        id="post-game-heading"
         class="text-center mb-xl"
         style="font-family: 'Syne', sans-serif; font-size: 48px; font-weight: 700; color: #EAECEE; line-height: 1.1; letter-spacing: -0.02em;"
       >GAME OVER</h1>
