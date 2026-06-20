@@ -91,7 +91,10 @@ describe('sync-pull splash — error state (D-13)', () => {
   });
 });
 
-describe('sync-pull splash — lockdown (no escape hatches)', () => {
+// D-13/D-14 decline the PARTIAL-DATA escapes (Continue / Skip). The audit M20
+// fix adds a clean sign-out exit so a persistent failure isn't a dead-end —
+// that is NOT a partial-data escape, so these declines still hold.
+describe('sync-pull splash — no partial-data escape hatches (D-13/D-14)', () => {
   test('Test 6: no "Continue with partial data" button anywhere (D-13 decline)', () => {
     openSyncPullSplash();
     renderSyncPullError({ pulled: 100, total: 845, onRetry: vi.fn() });
@@ -124,5 +127,22 @@ describe('sync-pull splash — retry callback', () => {
     await new Promise(r => setTimeout(r, 10));
 
     expect(onRetry).toHaveBeenCalled();
+  });
+});
+
+describe('sync-pull splash — sign-out escape (audit M20)', () => {
+  test('error state offers a SIGN OUT button that signs the user out', async () => {
+    const signOut = vi.fn().mockResolvedValue({});
+    window.Alpine.store('auth', { signOut });
+    openSyncPullSplash();
+    renderSyncPullError({ pulled: 100, total: 845, onRetry: vi.fn() });
+
+    const btn = document.querySelector('[data-role="signout"]');
+    expect(btn).toBeTruthy();
+    expect(btn.textContent).toContain('SIGN OUT');
+    btn.click();
+    await new Promise(r => setTimeout(r, 10));
+
+    expect(signOut).toHaveBeenCalled();
   });
 });

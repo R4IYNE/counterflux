@@ -245,24 +245,48 @@ export function renderSyncPullError({ pulled, total, onRetry }) {
       color: var(--color-text-primary);
       margin: 0;
     ">Couldn't finish syncing your household data. Your local archive has ${Number(pulled) || 0} of ${Number(total) || 0} cards so far.</p>
-    <button
-      type="button"
-      data-role="retry"
-      style="
-        height: 40px;
-        padding: 0 24px;
-        background: var(--color-primary);
-        border: none;
-        color: var(--color-text-primary);
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 11px;
-        font-weight: 700;
-        letter-spacing: 0.15em;
-        text-transform: uppercase;
-        cursor: pointer;
-        transition: box-shadow 150ms ease-out;
-      "
-    >RETRY SYNC</button>
+    <div style="display: flex; gap: 12px; align-items: center;">
+      <button
+        type="button"
+        data-role="retry"
+        style="
+          height: 40px;
+          padding: 0 24px;
+          background: var(--color-primary);
+          border: none;
+          color: var(--color-text-primary);
+          font-family: 'JetBrains Mono', monospace;
+          font-size: 11px;
+          font-weight: 700;
+          letter-spacing: 0.15em;
+          text-transform: uppercase;
+          cursor: pointer;
+          transition: box-shadow 150ms ease-out;
+        "
+      >RETRY SYNC</button>
+      <!-- audit M20 — safe escape from a persistent failure (no dead-end). Sign
+           out returns to the auth wall; Tier 0 sign-out wipes local data + sync
+           cursor/flags, so the next attempt starts clean. We deliberately do NOT
+           offer "continue with partial data" (D-13/D-14): local is empty here, so
+           continuing would drop the user into an empty, edit-unsafe app. -->
+      <button
+        type="button"
+        data-role="signout"
+        style="
+          height: 40px;
+          padding: 0 24px;
+          background: transparent;
+          border: 1px solid var(--color-border-ghost);
+          color: var(--color-text-muted);
+          font-family: 'JetBrains Mono', monospace;
+          font-size: 11px;
+          font-weight: 700;
+          letter-spacing: 0.15em;
+          text-transform: uppercase;
+          cursor: pointer;
+        "
+      >SIGN OUT</button>
+    </div>
     <p style="
       font-family: 'JetBrains Mono', monospace;
       font-size: 11px;
@@ -271,7 +295,7 @@ export function renderSyncPullError({ pulled, total, onRetry }) {
       text-transform: uppercase;
       color: var(--color-text-muted);
       margin: 0;
-    ">CHECK YOUR CONNECTION AND TRY AGAIN.</p>
+    ">CHECK YOUR CONNECTION AND TRY AGAIN — OR SIGN OUT AND TRY LATER.</p>
   `;
 
   const retryBtn = _activeRoot.querySelector('[data-role="retry"]');
@@ -287,6 +311,15 @@ export function renderSyncPullError({ pulled, total, onRetry }) {
     });
     // Error state autofocuses RETRY SYNC per UI-SPEC §Accessibility
     setTimeout(() => retryBtn.focus(), 0);
+  }
+
+  // M20 — sign-out escape. Returns to the auth wall via a clean local reset.
+  const signoutBtn = _activeRoot.querySelector('[data-role="signout"]');
+  if (signoutBtn) {
+    signoutBtn.addEventListener('click', async () => {
+      try { await window.Alpine?.store?.('auth')?.signOut?.(); } catch { /* non-fatal */ }
+      closeSyncPullSplash();
+    });
   }
 }
 
