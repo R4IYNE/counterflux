@@ -22,6 +22,8 @@
  * this settings modal).
  */
 
+import { attachFocusTrap } from '../utils/focus-trap.js';
+
 let modalEl = null;
 
 export function openSettingsModal() {
@@ -33,6 +35,9 @@ export function openSettingsModal() {
 
   modalEl = document.createElement('div');
   modalEl.id = 'cf-settings-modal';
+  modalEl.setAttribute('role', 'dialog');
+  modalEl.setAttribute('aria-modal', 'true');
+  modalEl.setAttribute('aria-labelledby', 'cf-settings-heading');
   modalEl.style.cssText = 'position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;background:rgba(11,12,16,0.85);';
   modalEl.addEventListener('click', (e) => { if (e.target === modalEl) closeSettingsModal(); });
 
@@ -53,15 +58,13 @@ export function openSettingsModal() {
 
   card.querySelector('#settings-close').addEventListener('click', closeSettingsModal);
 
-  // Escape to close
-  const escHandler = (e) => { if (e.key === 'Escape') closeSettingsModal(); };
-  document.addEventListener('keydown', escHandler);
-  modalEl._escHandler = escHandler;
+  // Focus trap + Escape + focus restore (audit M7).
+  modalEl._detachTrap = attachFocusTrap(card, { onEscape: closeSettingsModal });
 }
 
 export function closeSettingsModal() {
   if (!modalEl) return;
-  if (modalEl._escHandler) document.removeEventListener('keydown', modalEl._escHandler);
+  if (modalEl._detachTrap) modalEl._detachTrap();
   modalEl.remove();
   modalEl = null;
 }
@@ -71,7 +74,7 @@ function _buildHeader() {
   const h = document.createElement('div');
   h.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;';
   h.innerHTML = `
-    <h2 style="font-family:'Syne',sans-serif;font-size:20px;font-weight:700;color:#EAECEE;letter-spacing:0.01em;text-transform:uppercase;">SETTINGS</h2>
+    <h2 id="cf-settings-heading" style="font-family:'Syne',sans-serif;font-size:20px;font-weight:700;color:#EAECEE;letter-spacing:0.01em;text-transform:uppercase;">SETTINGS</h2>
     <button id="settings-close" aria-label="Close settings" style="background:none;border:none;color:#7A8498;cursor:pointer;font-size:24px;">
       <span class="material-symbols-outlined">close</span>
     </button>

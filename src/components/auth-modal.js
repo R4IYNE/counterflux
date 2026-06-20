@@ -30,9 +30,10 @@
  */
 
 import { captureCurrentPreAuthRoute } from './auth-callback-overlay.js';
+import { attachFocusTrap } from '../utils/focus-trap.js';
 
 let modalEl = null;
-let escHandler = null;
+let detachTrap = null;
 
 // Strict email regex per UI-SPEC (matches Task 3.1 acceptance criteria)
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -55,6 +56,9 @@ export function openAuthModal() {
 
   modalEl = document.createElement('div');
   modalEl.id = 'cf-auth-modal';
+  modalEl.setAttribute('role', 'dialog');
+  modalEl.setAttribute('aria-modal', 'true');
+  modalEl.setAttribute('aria-labelledby', 'cf-auth-heading');
   modalEl.style.cssText = [
     'position:fixed', 'inset:0', 'z-index:60',
     'display:flex', 'align-items:center', 'justify-content:center',
@@ -101,15 +105,10 @@ export function openAuthModal() {
   // X close -----------------------------------------------------------------
   card.querySelector('#cf-auth-close').addEventListener('click', closeAuthModal);
 
-  // Escape handler ----------------------------------------------------------
-  escHandler = (e) => { if (e.key === 'Escape') closeAuthModal(); };
-  document.addEventListener('keydown', escHandler);
-
-  // Autofocus email input (keyboard-first user)
-  const emailInput = card.querySelector('#cf-auth-email');
-  if (emailInput && typeof emailInput.focus === 'function') {
-    try { emailInput.focus(); } catch { /* ignore */ }
-  }
+  // Focus trap + Escape + initial focus + focus restoration (audit M7). The
+  // helper autofocuses the email field and, on close, returns focus to whatever
+  // was focused before open (typically the sidebar SIGN IN CTA).
+  detachTrap = attachFocusTrap(card, { onEscape: closeAuthModal, initialFocus: '#cf-auth-email' });
 
   // Wire handlers
   _wireHandlers(AlpineObj);
@@ -117,18 +116,11 @@ export function openAuthModal() {
 
 export function closeAuthModal() {
   if (!modalEl) return;
-  if (escHandler) {
-    document.removeEventListener('keydown', escHandler);
-    escHandler = null;
-  }
+  // detach() also restores focus to the element focused before the modal opened
+  // (typically the sidebar SIGN IN CTA the user activated).
+  if (detachTrap) { detachTrap(); detachTrap = null; }
   modalEl.remove();
   modalEl = null;
-
-  // Focus restoration: return focus to the sidebar SIGN IN CTA if present.
-  try {
-    const sidebarCta = document.getElementById('cf-sidebar-signin-cta');
-    if (sidebarCta && typeof sidebarCta.focus === 'function') sidebarCta.focus();
-  } catch { /* ignore */ }
 }
 
 // ---------------------------------------------------------------------------

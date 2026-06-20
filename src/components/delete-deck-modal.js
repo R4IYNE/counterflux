@@ -3,6 +3,8 @@
  * Shows a destructive action confirmation dialog for removing a deck.
  */
 
+import { attachFocusTrap } from '../utils/focus-trap.js';
+
 /**
  * Open the delete deck confirmation modal.
  * @param {number} deckId - ID of the deck to delete
@@ -19,6 +21,9 @@ export function openDeleteDeckModal(deckId, deckName, options = {}) {
 
   const overlay = document.createElement('div');
   overlay.id = 'delete-deck-modal';
+  overlay.setAttribute('role', 'dialog');
+  overlay.setAttribute('aria-modal', 'true');
+  overlay.setAttribute('aria-labelledby', 'delete-deck-heading');
   overlay.style.cssText = `
     position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
     z-index: 9999; display: flex; align-items: center; justify-content: center;
@@ -32,7 +37,7 @@ export function openDeleteDeckModal(deckId, deckName, options = {}) {
     <div style="position: relative; z-index: 10; width: 100%; max-width: 400px; background: #14161C; border: 1px solid #2A2D3A; padding: 24px; display: flex; flex-direction: column; gap: 16px;">
       <!-- Heading — deckName is user-authored (rename prompt / brew) and syncs
            across the household account, so it MUST be escaped before innerHTML. -->
-      <h3 style="font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; line-height: 1.2; letter-spacing: 0.01em; color: #EAECEE; margin: 0;">
+      <h3 id="delete-deck-heading" style="font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; line-height: 1.2; letter-spacing: 0.01em; color: #EAECEE; margin: 0;">
         Delete "${_escape(deckName)}"?
       </h3>
 
@@ -64,6 +69,7 @@ export function openDeleteDeckModal(deckId, deckName, options = {}) {
   document.body.appendChild(overlay);
 
   function closeModal() {
+    detachTrap();
     overlay.remove();
   }
 
@@ -81,14 +87,11 @@ export function openDeleteDeckModal(deckId, deckName, options = {}) {
     options.afterDelete?.();
   });
 
-  // Escape key
-  const handleEscape = (e) => {
-    if (e.key === 'Escape') {
-      closeModal();
-      document.removeEventListener('keydown', handleEscape);
-    }
-  };
-  document.addEventListener('keydown', handleEscape);
+  // Focus trap + Escape (audit M7). Default focus to CANCEL, not the destructive
+  // DELETE. Also fixes the L5 leak: the old Escape listener only detached when
+  // Escape fired, so closing via button/backdrop leaked it — detachTrap() in
+  // closeModal always tears it down.
+  const detachTrap = attachFocusTrap(overlay, { onEscape: closeModal, initialFocus: '#delete-deck-cancel' });
 }
 
 // Escape user-authored strings before interpolating into innerHTML (matches the

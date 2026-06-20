@@ -1,5 +1,6 @@
 import { searchCards } from '../db/search.js';
 import { getCardImage, getCardManaCost } from '../db/card-accessor.js';
+import { attachFocusTrap } from '../utils/focus-trap.js';
 import {
   isLegendary,
   hasPartner,
@@ -73,6 +74,9 @@ export function openRitualModal(options = {}) {
 
   const overlay = document.createElement('div');
   overlay.id = 'ritual-modal';
+  overlay.setAttribute('role', 'dialog');
+  overlay.setAttribute('aria-modal', 'true');
+  overlay.setAttribute('aria-labelledby', 'ritual-heading');
   overlay.style.cssText = `
     position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
     z-index: 9999; display: flex; align-items: center; justify-content: center;
@@ -86,7 +90,7 @@ export function openRitualModal(options = {}) {
     <div id="ritual-panel" style="position: relative; z-index: 10; width: 100%; max-width: 560px; max-height: 90vh; overflow-y: auto; background: #14161C; border: 1px solid #2A2D3A; padding: 32px; display: flex; flex-direction: column; gap: 24px;">
 
       <!-- Title -->
-      <h2 style="font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; line-height: 1.2; letter-spacing: 0.01em; color: #EAECEE; margin: 0;">
+      <h2 id="ritual-heading" style="font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; line-height: 1.2; letter-spacing: 0.01em; color: #EAECEE; margin: 0;">
         ${isChangeMode ? 'Change Commander' : 'Brew a new storm'}
       </h2>
 
@@ -239,14 +243,17 @@ export function openRitualModal(options = {}) {
   // ---- Helpers ----
 
   function closeModal() {
+    if (detachTrap) detachTrap();
     overlay.remove();
-    document.removeEventListener('keydown', handleEscape);
   }
 
-  function handleEscape(e) {
-    if (e.key === 'Escape') closeModal();
-  }
-  document.addEventListener('keydown', handleEscape);
+  // Focus trap + Escape + initial focus on the commander search (audit M7).
+  // Trap the panel (not the overlay) so the backdrop isn't tabbable; focusables
+  // are re-queried live each Tab, so the autocomplete results work.
+  const detachTrap = attachFocusTrap(overlay.querySelector('#ritual-panel'), {
+    onEscape: closeModal,
+    initialFocus: '#ritual-commander-search',
+  });
 
   function getFormatSize() {
     if (!formatSelect) return 100;
