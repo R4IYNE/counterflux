@@ -196,22 +196,37 @@ function _txIncludesSyncQueue(tx) {
  * case — e.g. `db.decks.add(x)` only scopes `decks`). We hook `tx.on('complete')`
  * and open a NEW inline transaction writing to sync_queue once the data tx has
  * committed. This preserves the outbox invariant: the queue row is only
- * persisted after the data row is durable. A crash between the two commits
- * is tolerable — on next boot, the data row has no queue entry and will be
- * picked up by the reconciliation pass (Plan 11-05).
+ * persisted after the data row is durable.
+ *
+ * Durability (audit M22): the queue write lands in a SEPARATE transaction after
+ * the data commit, so a transient Dexie failure would silently drop the write
+ * from the outbox. `_addQueueEntryWithRetry` retries a couple of times before
+ * giving up. A hard crash in the window between the two commits is the remaining
+ * gap — recovering THAT needs a clean-shutdown-gated re-enqueue sweep (tracked
+ * as a follow-up; an unconditional every-boot re-enqueue would re-introduce the
+ * 14.07g dead-letter storm).
  */
 function _enqueue(tx, entry) {
   try {
     if (tx && typeof tx.on === 'function') {
-      tx.on('complete', () => {
-        db.sync_queue.add(entry).catch(e => console.warn('[sync] sync_queue.add failed', e));
-      });
+      tx.on('complete', () => { _addQueueEntryWithRetry(entry); });
       return;
     }
   } catch { /* fall through */ }
 
-  // Last-resort: fire-and-forget. Schedules a micro-task enqueue.
-  db.sync_queue.add(entry).catch(e => console.warn('[sync] sync_queue.add failed', e));
+  // Last-resort: fire-and-forget (with retry). Schedules a micro-task enqueue.
+  _addQueueEntryWithRetry(entry);
+}
+
+/** Add a sync_queue row, retrying a transient Dexie failure before giving up. */
+function _addQueueEntryWithRetry(entry, attempt = 0) {
+  db.sync_queue.add(entry).catch((e) => {
+    if (attempt < 2) {
+      setTimeout(() => _addQueueEntryWithRetry(entry, attempt + 1), 200 * (attempt + 1));
+    } else {
+      console.warn('[sync] sync_queue.add failed after retries', e);
+    }
+  });
 }
 
 // ---------------------------------------------------------------------------

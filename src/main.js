@@ -30,7 +30,7 @@ import { renderNotificationBellPopover } from './components/notification-bell-po
 import { toggleShortcutModal, isShortcutModalOpen, closeShortcutModal } from './components/shortcut-modal.js';
 import { initRouter } from './router.js';
 import { renderManaCost } from './utils/mana.js';
-import { getEurToGbpRate, eurToGbp, eurToGbpValue } from './services/currency.js';
+import { getEurToGbpRate, eurToGbp, eurToGbpValue, isRateFallback, getCurrentRate } from './services/currency.js';
 import { runMigration } from './services/migration.js';
 import { bindBfcacheHandlers } from './services/bfcache.js';
 import { db } from './db/schema.js';
@@ -113,6 +113,10 @@ async function bootApp() {
   // Expose currency converter globally for Alpine template usage
   window.__cf_eurToGbp = eurToGbp;
   window.__cf_eurToGbpValue = eurToGbpValue;
+  // audit L2 — true when GBP figures are derived from the static fallback rate
+  // (live fetch failed) or before the live rate has loaded, so surfaces can mark
+  // the value approximate ("~£") instead of implying live-rate precision.
+  window.__cf_isRateApprox = () => isRateFallback() || getCurrentRate() === null;
 
   // Register Alpine components
   Alpine.data('splashScreen', splashScreen);
