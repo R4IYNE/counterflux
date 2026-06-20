@@ -264,27 +264,41 @@ export function initGameStore() {
       _debouncedAutoSave();
     },
 
+    // audit M14 — eliminations are REVERSIBLE: recompute the flag from the live
+    // counters so lowering poison back below 10 (or commander damage below 21)
+    // clears ELIMINATED instead of leaving the player permanently out.
+    _recomputeEliminated(playerIndex) {
+      const p = this.players[playerIndex];
+      if (!p) return;
+      const byPoison = (p.poison || 0) >= 10;
+      const byCommanderDamage = Object.values(p.commander_damage || {}).some(d => (d || 0) >= 21);
+      p.eliminated = byPoison || byCommanderDamage;
+    },
+
     adjustPoison(playerIndex, amount) {
-      if (!this.players[playerIndex]) return;
-      const newVal = this.players[playerIndex].poison + amount;
-      this.players[playerIndex].poison = Math.max(0, newVal);
-      if (this.players[playerIndex].poison >= 10 && !this.players[playerIndex].eliminated) {
-        this.players[playerIndex].eliminated = true;
-        Alpine.store('toast')?.show?.(`${this.players[playerIndex].name} has 10+ poison counters!`, 'warning') ||
-          Alpine.store('toast')?.warning?.(`${this.players[playerIndex].name} has 10+ poison counters!`);
+      const p = this.players[playerIndex];
+      if (!p) return;
+      p.poison = Math.max(0, (p.poison || 0) + amount);
+      const wasEliminated = p.eliminated;
+      this._recomputeEliminated(playerIndex);
+      if (!wasEliminated && p.eliminated && p.poison >= 10) {
+        Alpine.store('toast')?.show?.(`${p.name} has 10+ poison counters!`, 'warning') ||
+          Alpine.store('toast')?.warning?.(`${p.name} has 10+ poison counters!`);
       }
       _debouncedAutoSave();
     },
 
     adjustCommanderDamage(targetIndex, sourceIndex, amount) {
-      if (!this.players[targetIndex]) return;
-      const current = this.players[targetIndex].commander_damage[sourceIndex] || 0;
+      const p = this.players[targetIndex];
+      if (!p) return;
+      const current = p.commander_damage[sourceIndex] || 0;
       const newVal = Math.max(0, current + amount);
-      this.players[targetIndex].commander_damage[sourceIndex] = newVal;
-      if (newVal >= 21 && !this.players[targetIndex].eliminated) {
-        this.players[targetIndex].eliminated = true;
-        Alpine.store('toast')?.show?.(`${this.players[targetIndex].name} has 21+ commander damage!`, 'warning') ||
-          Alpine.store('toast')?.warning?.(`${this.players[targetIndex].name} has 21+ commander damage!`);
+      p.commander_damage[sourceIndex] = newVal;
+      const wasEliminated = p.eliminated;
+      this._recomputeEliminated(targetIndex);
+      if (!wasEliminated && p.eliminated && newVal >= 21) {
+        Alpine.store('toast')?.show?.(`${p.name} has 21+ commander damage!`, 'warning') ||
+          Alpine.store('toast')?.warning?.(`${p.name} has 21+ commander damage!`);
       }
       _debouncedAutoSave();
     },

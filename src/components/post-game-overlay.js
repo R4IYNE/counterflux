@@ -129,6 +129,17 @@ export function renderPostGameOverlay() {
               :disabled="readOnly"
             ></button>
           </template>
+          <!-- audit M19 — explicit draw option so a forgotten winner tap can't
+               silently save a null winner and corrupt win-rate/streak stats. -->
+          <button
+            @click="toggleNoWinner()"
+            class="px-md py-sm cursor-pointer transition-colors"
+            :class="noWinner
+              ? 'bg-surface-hover border-2 border-primary text-text-primary'
+              : 'bg-surface border border-border-ghost text-text-muted hover:bg-surface-hover'"
+            style="font-family: 'Space Grotesk', sans-serif; font-size: 14px;"
+            :disabled="readOnly"
+          >Draw / no winner</button>
         </div>
       </div>
 
@@ -323,6 +334,7 @@ export function renderPostGameOverlay() {
 export function postGameOverlay() {
   return {
     winnerIndex: null,
+    noWinner: false,   // audit M19 — explicit "draw / no winner" choice
     eliminationOrder: [],
     showDiscardConfirm: false,
     readOnly: false,
@@ -405,6 +417,13 @@ export function postGameOverlay() {
     selectWinner(idx) {
       if (this.readOnly) return;
       this.winnerIndex = this.winnerIndex === idx ? null : idx;
+      if (this.winnerIndex !== null) this.noWinner = false;
+    },
+
+    toggleNoWinner() {
+      if (this.readOnly) return;
+      this.noWinner = !this.noWinner;
+      if (this.noWinner) this.winnerIndex = null;
     },
 
     toggleElimination(idx) {
@@ -423,6 +442,14 @@ export function postGameOverlay() {
 
     async saveAndClose() {
       if (this.readOnly) return;
+      // audit M19 — require an explicit result so a forgotten winner tap can't
+      // silently save a null winner and skew win-rate / streak stats. A genuine
+      // draw is saved via the "Draw / no winner" toggle.
+      if (this.winnerIndex === null && !this.noWinner) {
+        const toast = this.$store.toast;
+        (toast?.error || toast?.show)?.call(toast, 'Pick a winner — or mark the game a draw — before saving.');
+        return;
+      }
       await this.$store.game.saveGame(this.winnerIndex, this.eliminationOrder);
       destroyLifeChart();
       const toast = this.$store.toast;
