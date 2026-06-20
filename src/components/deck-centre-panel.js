@@ -1,4 +1,5 @@
 import { renderDeckCardTile } from './deck-card-tile.js';
+import { validateDeck } from '../services/deck-legality.js';
 import { TYPE_ORDER } from '../utils/type-classifier.js';
 import Sortable from 'sortablejs';
 import { openDeckImportModal } from './deck-import-modal.js';
@@ -158,6 +159,14 @@ export function renderDeckCentrePanel(container) {
     letter-spacing: 0.15em; font-weight: 400; color: #7A8498;
   `;
   header.appendChild(ownedBar);
+
+  // Legality warnings badge (audit M2/M22/L9) — hidden unless the deck has issues.
+  const legalityBadge = document.createElement('div');
+  legalityBadge.style.cssText = `
+    font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em;
+    text-transform: uppercase; color: #E2A838; margin-top: 4px; display: none; cursor: help;
+  `;
+  header.appendChild(legalityBadge);
 
   // Controls row: view toggle + import/export
   const controls = document.createElement('div');
@@ -402,6 +411,28 @@ export function renderDeckCentrePanel(container) {
       ? window.__cf_eurToGbp(missingCost || null)
       : (missingCost > 0 ? `€${missingCost.toFixed(2)}` : '--');
     ownedBar.textContent = `YOU OWN ${ownedCount}/${totalCount} -- MISSING COST: ${missingPriceText}`;
+
+    // Legality validation (audit M2/M22/L9) — non-blocking amber badge; full
+    // per-card detail on hover via title.
+    try {
+      const res = validateDeck({
+        format: deck?.format || 'commander',
+        commanderColorIdentity: deck?.color_identity || [],
+        deckSize,
+        cards: activeCards,
+      });
+      if (res.hasIssues) {
+        legalityBadge.textContent = '⚠ ' + res.warnings.join('  ·  ');
+        legalityBadge.title = [
+          ...res.offColor.map((c) => `${c.name}: outside colour identity (${c.colors.join('')})`),
+          ...res.illegal.map((c) => `${c.name}: ${c.status.replace('_', ' ')} in ${res.format}`),
+          ...res.overCopies.map((c) => `${c.name}: ${c.qty} copies (max ${c.limit})`),
+        ].join('\n') || res.warnings.join('\n');
+        legalityBadge.style.display = 'block';
+      } else {
+        legalityBadge.style.display = 'none';
+      }
+    } catch { legalityBadge.style.display = 'none'; }
 
     // View toggle styling
     const viewMode = store.viewMode || 'grid';
