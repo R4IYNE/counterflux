@@ -30,9 +30,10 @@ export function openDeleteDeckModal(deckId, deckName, options = {}) {
 
     <!-- Modal panel -->
     <div style="position: relative; z-index: 10; width: 100%; max-width: 400px; background: #14161C; border: 1px solid #2A2D3A; padding: 24px; display: flex; flex-direction: column; gap: 16px;">
-      <!-- Heading -->
+      <!-- Heading — deckName is user-authored (rename prompt / brew) and syncs
+           across the household account, so it MUST be escaped before innerHTML. -->
       <h3 style="font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; line-height: 1.2; letter-spacing: 0.01em; color: #EAECEE; margin: 0;">
-        Delete "${deckName}"?
+        Delete "${_escape(deckName)}"?
       </h3>
 
       <!-- Confirmation text -->
@@ -88,4 +89,15 @@ export function openDeleteDeckModal(deckId, deckName, options = {}) {
     }
   };
   document.addEventListener('keydown', handleEscape);
+}
+
+// Escape user-authored strings before interpolating into innerHTML (matches the
+// helper used in settings-modal.js / sync-errors-modal.js / sync-pull-splash.js).
+function _escape(s) {
+  return String(s ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }

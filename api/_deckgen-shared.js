@@ -84,30 +84,25 @@ export async function verifyJWT(req) {
 // ---------------------------------------------------------------------------
 
 export async function assertAndIncrementBudget(supabase, userId, budget = BREW_BUDGET) {
-  const { countColumn, resetColumn, cap } = budget;
-  const today = utcDateOnly(new Date());
+  // Audit Tier 0 — ATOMIC budget enforcement. The previous read-then-write was
+  // a TOCTOU race: N concurrent requests with the same JWT each read the
+  // pre-increment count, each passed the cap check, and each called the paid
+  // Anthropic endpoint. counterflux.try_consume_deckgen_budget does the
+  // cap-check + lazy-daily-reset + increment in ONE conditional
+  // `UPDATE ... WHERE count < cap RETURNING` statement, so concurrent calls
+  // serialise on the profile row lock and cannot exceed the cap.
+  const kind = budget.countColumn === CHAT_BUDGET.countColumn ? 'chat' : 'brew';
 
-  // Fetch current state for this budget's columns.
-  const { data: profile, error: profErr } = await supabase
-    .from('profile')
-    .select(`${countColumn}, ${resetColumn}`)
-    .eq('user_id', userId)
-    .maybeSingle();
-
-  if (profErr) {
-    console.error('[api/deckgen] profile read failed:', profErr.message);
-    return { ok: false, status: 500, body: { error: 'profile read failed' } };
+  const { data, error } = await supabase.rpc('try_consume_deckgen_budget', { p_kind: kind });
+  if (error) {
+    console.error('[api/deckgen] budget rpc failed:', error.message);
+    return { ok: false, status: 500, body: { error: 'budget check failed' } };
   }
 
-  const lastReset = profile?.[resetColumn] || null;
-  const currentCount = profile?.[countColumn] || 0;
-
-  let usedBefore = currentCount;
-  if (!lastReset || lastReset < today) {
-    usedBefore = 0;
-  }
-
-  if (usedBefore >= cap) {
+  // supabase-js returns the function's JSON return value directly in `data`.
+  const result = data || {};
+  if (!result.allowed) {
+    const cap = result.cap || budget.cap;
     return {
       ok: false,
       status: 429,
@@ -119,30 +114,8 @@ export async function assertAndIncrementBudget(supabase, userId, budget = BREW_B
     };
   }
 
-  const usedAfter = usedBefore + 1;
-  const patch = { [countColumn]: usedAfter, [resetColumn]: today, updated_at: new Date().toISOString() };
-
-  // Upsert profile row (in case it doesn't exist yet — first deckgen call)
-  if (!profile) {
-    const { error: insErr } = await supabase
-      .from('profile')
-      .upsert({ user_id: userId, ...patch });
-    if (insErr) {
-      console.error('[api/deckgen] profile insert failed:', insErr.message);
-      return { ok: false, status: 500, body: { error: 'profile insert failed' } };
-    }
-  } else {
-    const { error: updErr } = await supabase
-      .from('profile')
-      .update(patch)
-      .eq('user_id', userId);
-    if (updErr) {
-      console.error('[api/deckgen] profile update failed:', updErr.message);
-      return { ok: false, status: 500, body: { error: 'profile update failed' } };
-    }
-  }
-
-  return { ok: true, usedBefore, usedAfter };
+  const usedAfter = result.used_after || 1;
+  return { ok: true, usedBefore: usedAfter - 1, usedAfter };
 }
 
 /**

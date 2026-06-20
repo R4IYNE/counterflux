@@ -295,6 +295,11 @@ async function _enqueueAllLocalRows() {
   for (const t of SYNCABLE_TABLES) {
     const rows = await db.table(t).toArray();
     for (const row of rows) {
+      // Defense-in-depth (audit Tier 0): never re-tag + push a row owned by a
+      // DIFFERENT user under the current user's id. Sign-out wipes local data,
+      // but a failed clear (or pre-fix leftovers) must not contaminate this
+      // account's cloud rows. Unowned (null) rows are this user's new local data.
+      if (row.user_id != null && row.user_id !== userId) continue;
       await db.sync_queue.add({
         table_name: t,
         op: 'put',

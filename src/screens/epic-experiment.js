@@ -8,6 +8,19 @@ import { renderEmptyState } from '../components/empty-state.js';
 import { tsToMs } from '../utils/timestamps.js';
 import { db } from '../db/schema.js';
 
+// Escape user-authored strings before interpolating into innerHTML. The daily
+// insight message embeds the user's deck name (and an EDHREC card name), both of
+// which sync across the household account — without this they are a stored-XSS
+// sink. Mirrors the _escape helper used in the modal components.
+function _escape(s) {
+  return String(s ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 /**
  * Epic Experiment -- Dashboard (command centre).
  * 7-panel layout: portfolio, deck grid, activity, Mila insight, alerts, releases.
@@ -952,7 +965,7 @@ function renderMilaInsight(grid, cleanups) {
               ${categoryLabel}
             </span>
             <p class="font-body text-text-primary" style="font-size: 14px; line-height: 1.5;">
-              ${insight.message}
+              ${_escape(insight.message)}
             </p>
           </div>
         </div>

@@ -63,6 +63,32 @@ function callbackUrl() {
   return `${currentOrigin()}/#/auth-callback`;
 }
 
+/**
+ * Wipe all user-scoped local (Dexie) data on sign-out. Catalog tables (cards,
+ * *_cache, precons) are non-personal and intentionally kept. Synced-table
+ * clears run under hook suppression so the deleting-hooks don't enqueue a flood
+ * of 'del' ops. Sync meta (cursor, in-progress flag, per-user reconciled
+ * markers) is dropped so the next sign-in reconciles + re-pulls from the cloud.
+ * Dynamic imports keep auth.js's lazy-load discipline (no eager db/sync-engine
+ * graph at boot). Best-effort: failures are logged, never thrown.
+ */
+async function _clearLocalUserData() {
+  try {
+    const { db } = await import('../db/schema.js');
+    const { withHooksSuppressed } = await import('../services/sync-engine.js');
+    const names = new Set(db.tables.map((t) => t.name));
+    const USER_TABLES = ['collection', 'decks', 'deck_cards', 'games', 'watchlist', 'profile', 'sync_queue', 'sync_conflicts']
+      .filter((t) => names.has(t));
+    await withHooksSuppressed(() => Promise.all(USER_TABLES.map((t) => db.table(t).clear())));
+    if (names.has('meta')) {
+      await db.meta.bulkDelete(['sync_last_pulled_at', 'sync_pull_in_progress']);
+      await db.meta.where('key').startsWith('sync_reconciled_at:').delete();
+    }
+  } catch (err) {
+    console.warn('[Counterflux] sign-out local data clear failed:', err);
+  }
+}
+
 export function initAuthStore() {
   Alpine.store('auth', {
     status: 'anonymous',
@@ -161,17 +187,19 @@ export function initAuthStore() {
         const supabase = getSupabase();
         const { error } = await supabase.auth.signOut();
         // onAuthStateChange will flip status to anonymous + clear user/session.
-        // Also clear synchronously so callers that read status immediately after await get the right value.
+        // Flip to anonymous FIRST so any in-flight flush/pull timers no-op
+        // (they early-return when status !== 'authed') before we wipe Dexie.
         this.session = null;
         this.user = null;
         this.status = 'anonymous';
 
-        // Phase 14.07c — sync_reconciled_at meta keys are per-user
-        // (`sync_reconciled_at:<userId>`) so signing out doesn't need to
-        // clear them. Same account → re-sign-in → flag still present →
-        // modal stays quiet. Different account → no flag for that user →
-        // modal fires once. Per-user segregation handles the multi-account
-        // case naturally without nuking the same-account-relogin path.
+        // Audit Tier 0 — shared-device privacy: wipe all user-scoped local data
+        // so the next account on this device can't see (or accidentally re-sync
+        // under their own id) the prior user's library. The sync cursor + the
+        // per-user `sync_reconciled_at:*` markers are cleared too, so the next
+        // sign-in reconciles and re-pulls FRESH rather than short-circuiting on
+        // a stale 'reconciled' flag and leaving the account with empty data.
+        await _clearLocalUserData();
 
         return { error };
       } catch (err) {
