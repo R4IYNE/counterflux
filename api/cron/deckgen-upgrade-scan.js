@@ -38,6 +38,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import { SCRYFALL_HEADERS } from '../_deckgen-shared.js';
+import { timingSafeEqual } from 'node:crypto';
 
 const NEW_CARDS_WINDOW_DAYS = 30;
 
@@ -46,7 +47,10 @@ export default async function handler(req, res) {
   const cronSecret = process.env.CRON_SECRET;
   if (cronSecret) {
     const header = req.headers?.authorization || '';
-    if (header !== `Bearer ${cronSecret}`) {
+    // L35 — constant-time comparison to avoid a length/prefix timing oracle.
+    const a = Buffer.from(header);
+    const b = Buffer.from(`Bearer ${cronSecret}`);
+    if (a.length !== b.length || !timingSafeEqual(a, b)) {
       return res.status(401).json({ error: 'unauthorized cron call' });
     }
   } else if (process.env.NODE_ENV === 'production') {

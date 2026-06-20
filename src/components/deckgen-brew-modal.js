@@ -270,7 +270,7 @@ export function renderDeckgenBrewModal() {
             onfocus="this.style.borderColor='#0D52BD'"
             onblur="this.style.borderColor='#2A2D3A'"
           />
-          <span style="font-family: 'Space Grotesk', sans-serif; font-size: 12px; color: #4A5064;">
+          <span style="font-family: 'Space Grotesk', sans-serif; font-size: 12px; color: #7A8498;">
             Helps lean the deck in a specific direction without overriding the commander's natural identity.
           </span>
         </div>

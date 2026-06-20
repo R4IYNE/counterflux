@@ -15,7 +15,10 @@ function downloadUnresolvedCSV(rows) {
   if (!rows || !rows.length) return;
   const lines = ['Name,Quantity,Foil'];
   for (const r of rows) {
-    const name = String(r.name || '').replace(/"/g, '""');
+    // L23 — neutralise spreadsheet formula injection before CSV-quoting.
+    const raw = String(r.name || '');
+    const safe = /^[=+\-@\t\r]/.test(raw) ? `'${raw}` : raw;
+    const name = safe.replace(/"/g, '""');
     lines.push('"' + name + '",' + (r.quantity || 1) + ',' + (r.foil ? 'foil' : ''));
   }
   const blob = new Blob([lines.join('\n')], { type: 'text/csv' });

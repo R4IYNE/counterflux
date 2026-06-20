@@ -33,6 +33,7 @@ export function renderMassEntryPanel() {
             this.parsed = true;
           } catch(e) {
             console.error('[Counterflux] Mass entry parse error:', e);
+            window.Alpine?.store?.('toast')?.error?.('Could not read that list — check the format and try again.');
           }
           this.resolving = false;
         },

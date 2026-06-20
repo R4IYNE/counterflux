@@ -475,11 +475,21 @@ function _buildQuickAdd(parent, cleanups) {
         results.forEach(card => {
           const item = document.createElement('div');
           item.className = 'px-sm py-xs hover:bg-surface-hover cursor-pointer flex items-center gap-sm';
-          item.innerHTML = `
-            <span class="font-body text-text-primary" style="font-size: 14px;">${card.name}</span>
-            <span class="font-mono text-text-dim" style="font-size: 11px;">${(card.set || '').toUpperCase()}</span>
-            <span class="text-text-muted" style="font-size: 12px;">${window.renderManaCost ? window.renderManaCost(card.mana_cost || '') : ''}</span>
-          `;
+          // L39 — build with textContent for card-derived strings (defense-in-depth
+          // XSS); only the trusted renderManaCost output goes through innerHTML.
+          const nameSpan = document.createElement('span');
+          nameSpan.className = 'font-body text-text-primary';
+          nameSpan.style.fontSize = '14px';
+          nameSpan.textContent = card.name || '';
+          const setSpan = document.createElement('span');
+          setSpan.className = 'font-mono text-text-dim';
+          setSpan.style.fontSize = '11px';
+          setSpan.textContent = (card.set || '').toUpperCase();
+          const manaSpan = document.createElement('span');
+          manaSpan.className = 'text-text-muted';
+          manaSpan.style.fontSize = '12px';
+          manaSpan.innerHTML = window.renderManaCost ? window.renderManaCost(card.mana_cost || '') : '';
+          item.append(nameSpan, setSpan, manaSpan);
           item.addEventListener('click', () => {
             selectedCard = card;
             input.value = card.name;

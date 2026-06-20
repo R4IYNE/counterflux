@@ -8,18 +8,26 @@ import Papa from 'papaparse';
  */
 const EXPORT_COLUMNS = ['Name', 'Set', 'Set Code', 'Collector Number', 'Quantity', 'Foil', 'Price EUR', 'Category'];
 
+// L23 — neutralise spreadsheet formula injection: a cell beginning with one of
+// = + - @ TAB CR is treated as a formula by Excel/Sheets, so prefix it with a
+// single quote. Applied to the card/user-derived string columns.
+function _csvSafe(v) {
+  const s = v == null ? '' : String(v);
+  return /^[=+\-@\t\r]/.test(s) ? `'${s}` : s;
+}
+
 export function generateCSV(entries) {
   const rows = entries.map(e => ({
-    Name: e.card?.name || '',
-    Set: e.card?.set_name || '',
-    'Set Code': e.card?.set || '',
-    'Collector Number': e.card?.collector_number || '',
+    Name: _csvSafe(e.card?.name || ''),
+    Set: _csvSafe(e.card?.set_name || ''),
+    'Set Code': _csvSafe(e.card?.set || ''),
+    'Collector Number': _csvSafe(e.card?.collector_number || ''),
     Quantity: e.quantity,
     Foil: e.foil ? 'foil' : '',
     'Price EUR': e.foil
       ? (e.card?.prices?.eur_foil || '')
       : (e.card?.prices?.eur || ''),
-    Category: e.category,
+    Category: _csvSafe(e.category),
   }));
   // Explicitly specify fields to ensure headers are present even for empty data
   return Papa.unparse({ fields: EXPORT_COLUMNS, data: rows });

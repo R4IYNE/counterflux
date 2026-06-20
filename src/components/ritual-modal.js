@@ -192,7 +192,7 @@ export function openRitualModal(options = {}) {
             COLOUR IDENTITY
           </label>
           <div id="ritual-color-identity" style="display: flex; gap: 4px; min-height: 24px; align-items: center;">
-            <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #4A5064;">SELECT A COMMANDER</span>
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #7A8498;">SELECT A COMMANDER</span>
           </div>
         </div>
       </div>
@@ -283,7 +283,7 @@ export function openRitualModal(options = {}) {
   function updateColorIdentityDisplay() {
     const colors = getCurrentColorIdentity();
     if (colors.length === 0) {
-      colorIdentityDisplay.innerHTML = `<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #4A5064;">COLORLESS</span>`;
+      colorIdentityDisplay.innerHTML = `<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #7A8498;">COLORLESS</span>`;
       return;
     }
     const manaMap = { W: 'ms-w', U: 'ms-u', B: 'ms-b', R: 'ms-r', G: 'ms-g' };

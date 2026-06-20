@@ -90,7 +90,7 @@ export function renderMoversPanel() {
                   <span
                     class="flex-shrink-0 text-success"
                     style="font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 400; letter-spacing: 0.15em;"
-                    x-text="'+' + (card.change != null ? card.change.toFixed(2) : '0.00')"
+                    x-text="'+£' + (card.change != null && window.__cf_eurToGbpValue ? window.__cf_eurToGbpValue(card.change).toFixed(2) : '0.00')"
                   ></span>
                   <!-- Change percentage -->
                   <span
@@ -140,7 +140,7 @@ export function renderMoversPanel() {
                   <span
                     class="flex-shrink-0 text-secondary"
                     style="font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 400; letter-spacing: 0.15em;"
-                    x-text="(card.change != null ? card.change.toFixed(2) : '0.00')"
+                    x-text="(card.change != null && window.__cf_eurToGbpValue ? '-£' + Math.abs(window.__cf_eurToGbpValue(card.change)).toFixed(2) : '0.00')"
                   ></span>
                   <!-- Change percentage -->
                   <span
