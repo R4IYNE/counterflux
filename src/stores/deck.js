@@ -144,7 +144,7 @@ export function initDeckStore() {
       }, 0);
     },
 
-    async addCard(scryfallId, tags) {
+    async addCard(scryfallId, tags, quantity = 1) {
       if (!this.activeDeck) return;
       const deckId = this.activeDeck.id;
       const format = this.activeDeck.format;
@@ -186,20 +186,30 @@ export function initDeckStore() {
         }
       }
 
-      // Auto-suggest tags if not provided.
-      // Pass type_line so basic lands (Mountain, Forest, etc.) skip
-      // functional categorisation — without this guard their oracle text
-      // ("{T}: Add {R}.") matches the Ramp regex and they tag as Ramp.
+      // Fetch the card once — needed for tag auto-suggest AND the multiples rule.
+      const card = await db.cards.get(scryfallId);
+
+      // Auto-suggest tags if not provided. Pass type_line so basic lands
+      // (Mountain, Forest, etc.) skip functional categorisation — without this
+      // guard their oracle text ("{T}: Add {R}.") matches Ramp and mis-tags.
       let cardTags = tags;
       if (!cardTags) {
-        const card = await db.cards.get(scryfallId);
         cardTags = suggestTags(card?.oracle_text, card?.type_line);
       }
+
+      // Quantity (audit H1 — deck import previously dropped all quantities,
+      // collapsing every playset / basic-land count to 1). Commander singletons
+      // stay capped at 1; basic lands, "any number of cards named" cards, and
+      // every non-commander format honor the requested quantity.
+      const isBasicLand = /Basic\s+Land/i.test(card?.type_line || '');
+      const isAnyNumber = card?.oracle_text?.includes('any number of cards named');
+      const allowsMultiple = format !== 'commander' || isBasicLand || isAnyNumber;
+      const qty = allowsMultiple ? Math.max(1, Math.floor(Number(quantity)) || 1) : 1;
 
       await db.deck_cards.add({
         deck_id: deckId,
         scryfall_id: scryfallId,
-        quantity: 1,
+        quantity: qty,
         tags: cardTags || [],
         sort_order: 0,
       });
@@ -240,23 +250,33 @@ export function initDeckStore() {
       const card = await db.cards.get(deckCard.scryfall_id);
       const cardName = card?.name || 'card';
       const deckName = this.activeDeck.name;
+      // Capture the id now — the closures below must not deref this.activeDeck,
+      // which can be null/another deck by the time they run (audit L8).
+      const deckId = this.activeDeck.id;
 
       // Remove from UI immediately (optimistic)
       this.activeCards = this.activeCards.filter(c => c.id !== deckCardId);
+
+      // Delete from Dexie NOW (audit H6). Previously the delete was deferred to
+      // the 10s undo commit, so any loadDeck() in that window (add a card, +/- a
+      // basic, swap a printing) re-read the still-present row and resurrected the
+      // removed card. Undo re-adds the snapshot if invoked.
+      await db.deck_cards.delete(deckCardId);
+      await db.decks.update(deckId, { updated_at: new Date().toISOString() });
 
       Alpine.store('undo').push(
         'deck_card_remove',
         deckCard,
         `Removed ${cardName} from ${deckName}.`,
         async () => {
-          await db.deck_cards.delete(deckCardId);
-          await db.decks.update(this.activeDeck.id, { updated_at: new Date().toISOString() });
+          // Commit: the row is already gone — just record the activity.
           logActivity('deck_edited', `Removed ${cardName} from "${deckName}"`, deckCard.scryfall_id);
         },
         async () => {
-          // Restore: re-add to DB and reload
+          // Restore: re-add the snapshot and reload.
           await db.deck_cards.add(deckCard);
-          if (this.activeDeck) await this.loadDeck(this.activeDeck.id);
+          await db.decks.update(deckId, { updated_at: new Date().toISOString() });
+          if (this.activeDeck?.id === deckId) await this.loadDeck(deckId);
         }
       );
     },

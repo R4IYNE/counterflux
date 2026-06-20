@@ -24,6 +24,7 @@
 import { db } from '../db/schema.js';
 import { withHooksSuppressed } from './sync-engine.js';
 import { resolveLWW, resolveDeckCardConflict, logLocalDeleteRemoteUpdateConflict } from './sync-pull.js';
+import { tsToMs } from '../utils/timestamps.js';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -95,14 +96,10 @@ export function unsubscribeRealtime() {
 // applyRealtimeChange — unit-test-exported dispatcher + applier
 // ---------------------------------------------------------------------------
 
+// Delegates to the shared tsToMs (audit H8) — see sync-pull.js for the rationale
+// (numeric-string timestamps coerced to 0, making the cloud always win LWW).
 function _toTs(v) {
-  if (v == null) return 0;
-  if (typeof v === 'number') return v;
-  if (typeof v === 'string') {
-    const n = new Date(v).getTime();
-    return Number.isNaN(n) ? 0 : n;
-  }
-  return 0;
+  return tsToMs(v);
 }
 
 /**
@@ -149,6 +146,24 @@ export async function applyRealtimeChange(payload) {
 async function _applyIncomingRow(table, incoming) {
   const local = await db.table(table).get(incoming.id);
   if (!local) {
+    // deck_cards composite-key collision (audit H7): the same
+    // (deck_id, scryfall_id) may already exist locally under a different id.
+    // Route a composite hit through the atomic-merge resolver so we don't create
+    // a duplicate row for one logical card.
+    if (table === 'deck_cards' && incoming.deck_id != null && incoming.scryfall_id != null) {
+      const dup = await db.deck_cards
+        .where('[deck_id+scryfall_id]')
+        .equals([incoming.deck_id, incoming.scryfall_id])
+        .first();
+      if (dup) {
+        const { winner } = await resolveDeckCardConflict(dup, incoming);
+        if (winner === 'remote') {
+          await db.deck_cards.delete(dup.id);
+          await db.deck_cards.put(incoming);
+        }
+        return;
+      }
+    }
     await db.table(table).add(incoming);
     return;
   }

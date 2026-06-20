@@ -132,15 +132,19 @@ function createCollectionStore() {
     },
 
     get stats() {
+      // audit Tier 1: foil falls back to non-foil eur (no silent £0); owned
+      // stats exclude wishlist entries (they are not "owned").
+      const eurPrice = (e) => {
+        const p = e.card?.prices;
+        if (!p) return 0;
+        const raw = e.foil ? (p.eur_foil || p.eur) : p.eur;
+        return parseFloat(raw || '0') || 0;
+      };
+      const owned = this.entries.filter(e => e.category !== 'wishlist');
       return {
-        totalCards: this.entries.reduce((sum, e) => sum + e.quantity, 0),
-        uniqueCards: this.entries.length,
-        estimatedValue: this.entries.reduce((sum, e) => {
-          const price = e.foil
-            ? parseFloat(e.card?.prices?.eur_foil || '0')
-            : parseFloat(e.card?.prices?.eur || '0');
-          return sum + e.quantity * price;
-        }, 0),
+        totalCards: owned.reduce((sum, e) => sum + (e.quantity || 0), 0),
+        uniqueCards: owned.length,
+        estimatedValue: owned.reduce((sum, e) => sum + (e.quantity || 0) * eurPrice(e), 0),
         wishlistCount: this.entries.filter(e => e.category === 'wishlist').length,
       };
     },
@@ -378,15 +382,28 @@ describe('Collection Store', () => {
   });
 
   describe('stats', () => {
-    it('computes correct totals', async () => {
-      await store.addCard('bolt-001', 3, false, 'owned');    // 3 * 1.50 = 4.50
-      await store.addCard('sol-001', 2, false, 'owned');      // 2 * 2.00 = 4.00
-      await store.addCard('counter-001', 1, false, 'wishlist'); // 1 * 0.80 = 0.80
+    // audit Tier 1: owned stats exclude wishlist. Previously the wishlist copy
+    // below was counted in totalCards (6) / estimatedValue (9.30), overstating
+    // what the user actually owns. Correct owned totals: 5 cards, €8.50.
+    it('computes owned totals, excluding wishlist', async () => {
+      await store.addCard('bolt-001', 3, false, 'owned');       // 3 * 1.50 = 4.50
+      await store.addCard('sol-001', 2, false, 'owned');         // 2 * 2.00 = 4.00
+      await store.addCard('counter-001', 1, false, 'wishlist');  // wishlist — excluded
 
-      expect(store.stats.totalCards).toBe(6);
-      expect(store.stats.uniqueCards).toBe(3);
-      expect(store.stats.estimatedValue).toBeCloseTo(9.30, 1);
+      expect(store.stats.totalCards).toBe(5);
+      expect(store.stats.uniqueCards).toBe(2);
+      expect(store.stats.estimatedValue).toBeCloseTo(8.50, 1);
       expect(store.stats.wishlistCount).toBe(1);
+    });
+
+    it('values a foil with no eur_foil at the non-foil price (no silent €0)', async () => {
+      // A printing with eur but no eur_foil; owned as a foil.
+      await db.cards.put({
+        id: 'nofoil-001', name: 'No Foil Price', oracle_id: 'oracle-nf',
+        set: 'x', collector_number: '1', prices: { eur: '4.00' },
+      });
+      await store.addCard('nofoil-001', 1, true, 'owned'); // foil, eur_foil missing
+      expect(store.stats.estimatedValue).toBeCloseTo(4.00, 2);
     });
   });
 });

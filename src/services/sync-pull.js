@@ -32,6 +32,7 @@
 
 import { db } from '../db/schema.js';
 import { withHooksSuppressed } from './sync-engine.js';
+import { tsToMs } from '../utils/timestamps.js';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -70,14 +71,13 @@ export class BulkPullError extends Error {
 // LWW resolvers (SYNC-05, CONTEXT D-02 — row-level, tie → cloud)
 // ---------------------------------------------------------------------------
 
+// Delegates to the shared tsToMs (audit H8). The previous local impl returned 0
+// for epoch-ms numeric STRINGS ("1777662820234") because new Date(numericString)
+// is Invalid Date — so LWW treated those rows as epoch 0 and the cloud copy
+// ALWAYS won, silently overwriting genuine local (offline) edits. tsToMs handles
+// number, ISO-8601, AND numeric-string forms consistently.
 function _toTs(v) {
-  if (v == null) return 0;
-  if (typeof v === 'number') return v;
-  if (typeof v === 'string') {
-    const n = new Date(v).getTime();
-    return Number.isNaN(n) ? 0 : n;
-  }
-  return 0;
+  return tsToMs(v);
 }
 
 /**
@@ -319,6 +319,25 @@ async function _mergeIncomingRows(tableName, remoteRows) {
     };
     const local = await db.table(tableName).get(r.id);
     if (!local) {
+      // deck_cards composite-key collision (audit H7): the same
+      // (deck_id, scryfall_id) may already exist locally under a DIFFERENT id
+      // (the card was added to this deck on another device offline). Adding by
+      // id alone produces TWO rows for one logical card — inflated counts. Route
+      // a composite hit through the atomic-merge resolver instead.
+      if (tableName === 'deck_cards' && incoming.deck_id != null && incoming.scryfall_id != null) {
+        const dup = await db.deck_cards
+          .where('[deck_id+scryfall_id]')
+          .equals([incoming.deck_id, incoming.scryfall_id])
+          .first();
+        if (dup) {
+          const { winner } = await resolveDeckCardConflict(dup, incoming);
+          if (winner === 'remote') {
+            await db.deck_cards.delete(dup.id);
+            await db.deck_cards.put(incoming);
+          }
+          continue;
+        }
+      }
       await db.table(tableName).add(incoming);
       continue;
     }

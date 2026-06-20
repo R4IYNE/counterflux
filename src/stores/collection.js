@@ -6,6 +6,21 @@ import { fetchPrecons, fetchPreconDecklist, invalidatePreconsCache } from '../se
 import { tsToMs } from '../utils/timestamps.js';
 
 /**
+ * EUR price for a collection entry, foil-aware with fallback (audit Tier 1):
+ * a foil entry whose card has no `eur_foil` falls back to the non-foil `eur`
+ * price instead of silently contributing 0 to valuations. Returns 0 for
+ * missing/unparseable prices.
+ * @param {{foil?: boolean, card?: {prices?: {eur?: string, eur_foil?: string}}}} entry
+ * @returns {number}
+ */
+function _entryEurPrice(entry) {
+  const prices = entry?.card?.prices;
+  if (!prices) return 0;
+  const raw = entry.foil ? (prices.eur_foil || prices.eur) : prices.eur;
+  return parseFloat(raw || '0') || 0;
+}
+
+/**
  * Sort collection entries by the given sort key.
  * @param {Array} items - Collection entries with joined card data
  * @param {string} sortBy - Sort key (e.g., 'name-asc', 'price-desc')
@@ -21,13 +36,7 @@ function sortEntries(items, sortBy) {
       case 'name':
         return mul * (a.card?.name || '').localeCompare(b.card?.name || '');
       case 'price': {
-        const priceA = a.foil
-          ? parseFloat(a.card?.prices?.eur_foil || '0')
-          : parseFloat(a.card?.prices?.eur || '0');
-        const priceB = b.foil
-          ? parseFloat(b.card?.prices?.eur_foil || '0')
-          : parseFloat(b.card?.prices?.eur || '0');
-        return mul * (priceA - priceB);
+        return mul * (_entryEurPrice(a) - _entryEurPrice(b));
       }
       case 'set':
         return mul * (a.card?.released_at || '').localeCompare(b.card?.released_at || '');
@@ -238,10 +247,7 @@ export function initCollectionStore() {
         if (entry.scryfall_id) g.printings.add(entry.scryfall_id);
         g.entries.push(entry);
 
-        const eurStr = entry.foil
-          ? card?.prices?.eur_foil
-          : card?.prices?.eur;
-        g.estimatedValue += qty * (parseFloat(eurStr || '0') || 0);
+        g.estimatedValue += qty * _entryEurPrice(entry);
 
         // Prefer the most expensive printing's card object as the
         // representative so the tile image isn't whatever Dexie returned first.
@@ -303,15 +309,13 @@ export function initCollectionStore() {
       const sig = String(this._rev);
       const m = _memo.stats;
       if (m.ref === ref && m.sig === sig) return m.val;
+      // Owned stats exclude wishlist entries (audit Tier 1 — wishlist cards were
+      // counted in Total Cards + Estimated Value, overstating what the user owns).
+      const owned = this.entries.filter(e => e.category !== 'wishlist');
       const val = {
-        totalCards: this.entries.reduce((sum, e) => sum + e.quantity, 0),
-        uniqueCards: this.entries.length,
-        estimatedValue: this.entries.reduce((sum, e) => {
-          const price = e.foil
-            ? parseFloat(e.card?.prices?.eur_foil || '0')
-            : parseFloat(e.card?.prices?.eur || '0');
-          return sum + e.quantity * price;
-        }, 0),
+        totalCards: owned.reduce((sum, e) => sum + (e.quantity || 0), 0),
+        uniqueCards: owned.length,
+        estimatedValue: owned.reduce((sum, e) => sum + (e.quantity || 0) * _entryEurPrice(e), 0),
         wishlistCount: this.entries.filter(e => e.category === 'wishlist').length,
       };
       m.ref = ref; m.sig = sig; m.val = val;

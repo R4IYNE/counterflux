@@ -158,14 +158,18 @@ export function openDeckImportModal(deckId) {
       const parsed = parseDecklist(text);
       const { resolved, unresolved } = await resolveDecklist(parsed, searchCards);
 
-      // Add resolved cards to deck
+      // Add resolved cards to deck. Honor the parsed per-line quantity (audit
+      // H1 — every copy past the first was previously dropped, collapsing 4x
+      // playsets and basic-land counts to 1). addCard enforces the singleton
+      // rule, so commander non-basic cards still cap at 1 internally.
       for (const entry of resolved) {
         if (entry.isCommander && store?.activeDeck) {
           // Set as commander
           const ci = entry.card?.color_identity || [];
           await store.changeCommander(store.activeDeck.id, entry.scryfallId, ci);
         }
-        await store?.addCard(entry.scryfallId, []);
+        const qty = Math.max(1, Math.floor(Number(entry.qty)) || 1);
+        await store?.addCard(entry.scryfallId, [], qty);
       }
 
       // Show results

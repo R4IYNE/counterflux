@@ -129,7 +129,7 @@ function createDeckStore() {
       this.loading = false;
     },
 
-    async addCard(scryfallId, tags) {
+    async addCard(scryfallId, tags, quantity = 1) {
       if (!this.activeDeck) return;
       const deckId = this.activeDeck.id;
       const format = this.activeDeck.format;
@@ -168,17 +168,24 @@ function createDeckStore() {
       }
 
       // Auto-suggest tags if not provided
+      const card = await db.cards.get(scryfallId);
       let cardTags = tags;
       if (!cardTags) {
-        const card = await db.cards.get(scryfallId);
         const { suggestTags } = await import('../src/utils/tag-heuristics.js');
         cardTags = suggestTags(card?.oracle_text);
       }
 
+      // Quantity (audit H1): commander singletons cap at 1; basic lands,
+      // "any number of cards named", and non-commander formats honor quantity.
+      const isBasicLand = /Basic\s+Land/i.test(card?.type_line || '');
+      const isAnyNumber = card?.oracle_text?.includes('any number of cards named');
+      const allowsMultiple = format !== 'commander' || isBasicLand || isAnyNumber;
+      const qty = allowsMultiple ? Math.max(1, Math.floor(Number(quantity)) || 1) : 1;
+
       await db.deck_cards.add({
         deck_id: deckId,
         scryfall_id: scryfallId,
-        quantity: 1,
+        quantity: qty,
         tags: cardTags || [],
         sort_order: 0,
       });
@@ -338,6 +345,30 @@ describe('Deck Store', () => {
       await store.addCard('bolt-001', ['Removal']);
       expect(store.activeCards).toHaveLength(1);
       expect(store.activeCards[0].quantity).toBe(2);
+    });
+
+    // audit H1 — deck import previously dropped all quantities (every playset and
+    // basic-land count collapsed to 1). addCard now honors a quantity argument.
+    it('honors the requested quantity in a 60-card format (import playset)', async () => {
+      const deckId = await store.createDeck({ name: 'Standard Deck', format: 'standard', deck_size: 60 });
+      await store.loadDeck(deckId);
+      await store.addCard('bolt-001', ['Removal'], 4);
+      expect(store.activeCards).toHaveLength(1);
+      expect(store.activeCards[0].quantity).toBe(4);
+    });
+
+    it('caps a commander singleton at 1 regardless of requested quantity', async () => {
+      const deckId = await store.createDeck({ name: 'Commander Deck', format: 'commander' });
+      await store.loadDeck(deckId);
+      await store.addCard('bolt-001', ['Removal'], 4);
+      expect(store.activeCards[0].quantity).toBe(1);
+    });
+
+    it('honors quantity for "any number of cards named" cards in commander', async () => {
+      const deckId = await store.createDeck({ name: 'Commander Deck', format: 'commander' });
+      await store.loadDeck(deckId);
+      await store.addCard('rats-001', [], 9);
+      expect(store.activeCards[0].quantity).toBe(9);
     });
   });
 
