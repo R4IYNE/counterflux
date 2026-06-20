@@ -136,7 +136,7 @@ export function renderDeckgenReviewScreen() {
       <!-- Header -->
       <div style="flex-shrink: 0; padding: 24px 32px; border-bottom: 1px solid #2A2D3A; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
         <div style="display: flex; align-items: center; gap: 16px;">
-          <span class="material-symbols-outlined" style="color: #0D52BD; font-size: 28px;" x-text="isSwapMode ? 'tune' : 'auto_awesome'"></span>
+          <span class="material-symbols-outlined" style="color: var(--color-primary-text, #5B9BF5); font-size: 28px;" x-text="isSwapMode ? 'tune' : 'auto_awesome'"></span>
           <div>
             <h2
               id="deckgen-review-heading"
@@ -157,7 +157,7 @@ export function renderDeckgenReviewScreen() {
         <div x-show="$store.deckgen?.status === 'reviewing' || $store.deckgen?.status === 'committing'" style="display: flex; gap: 8px; align-items: center;">
           <template x-if="$store.deckgen?.cacheHit">
             <span
-              style="padding: 4px 10px; background: rgba(13,82,189,0.15); color: #0D52BD; border: 1px solid #0D52BD; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase;"
+              style="padding: 4px 10px; background: rgba(13,82,189,0.15); color: var(--color-primary-text, #5B9BF5); border: 1px solid #0D52BD; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase;"
               title="Same parameters returned a cached brew — no credits spent."
             >CACHED</span>
           </template>
@@ -230,13 +230,13 @@ export function renderDeckgenReviewScreen() {
           x-show="$store.deckgen?.status === 'brewing'"
           style="flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; text-align: center;"
         >
-          <span class="material-symbols-outlined" style="font-size: 44px; color: #0D52BD;">auto_awesome</span>
+          <span class="material-symbols-outlined" style="font-size: 44px; color: var(--color-primary-text, #5B9BF5);">auto_awesome</span>
           <div style="font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; color: #EAECEE;">BREWING…</div>
           <div style="font-family: 'Space Grotesk', sans-serif; font-size: 14px; color: #7A8498; line-height: 1.5; max-width: 360px;">
             Reading EDHREC and slotting your deck. Cards stream in as they're picked — a full brew usually takes 30–90 seconds.
           </div>
           <div
-            style="font-family: 'JetBrains Mono', monospace; font-size: 13px; letter-spacing: 0.15em; color: #0D52BD;"
+            style="font-family: 'JetBrains Mono', monospace; font-size: 13px; letter-spacing: 0.15em; color: var(--color-primary-text, #5B9BF5);"
             x-text="(($store.deckgen?.brewProgress || 0) > 0 ? ($store.deckgen.brewProgress + ' CARDS · ') : '') + ($store.deckgen?.brewElapsed || 0) + ' second' + ((($store.deckgen?.brewElapsed || 0) === 1) ? '' : 's')"
           ></div>
           <!-- audit M5 — escape hatch so a hung brew isn't a trap (also Escape). -->

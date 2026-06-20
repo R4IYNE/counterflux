@@ -246,7 +246,7 @@ export function renderGroupedView() {
 
                 <!-- Estimated value (rolled up across printings) -->
                 <span class="font-mono text-[11px] tracking-[0.15em]"
-                      style="color: #0D52BD;"
+                      style="color: var(--color-primary-text, #5B9BF5);"
                       x-text="window.__cf_eurToGbpValue
                         ? window.__cf_eurToGbpValue(g.estimatedValue).toFixed(2).replace(/^/, '£')
                         : ('€' + g.estimatedValue.toFixed(2))"></span>

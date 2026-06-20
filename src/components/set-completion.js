@@ -158,7 +158,7 @@ export function renderSetCompletionView() {
                       style="color: #7A8498;"
                       x-text="setData.owned + '/' + setData.total"></span>
                 <span class="font-mono text-[11px] tracking-[0.15em] font-bold"
-                      style="color: #0D52BD;"
+                      style="color: var(--color-primary-text, #5B9BF5);"
                       x-text="setData.pct + '% COMPLETE'"></span>
               </div>
               <!-- Progress bar -->
@@ -182,7 +182,7 @@ export function renderSetCompletionView() {
               </template>
               <template x-if="!lastError && catalogEmpty && $store.bulkdata && $store.bulkdata.status !== 'ready'">
                 <div class="flex flex-col items-center gap-[8px]">
-                  <span class="material-symbols-outlined" style="color: #0D52BD; font-size: 24px;">cloud_sync</span>
+                  <span class="material-symbols-outlined" style="color: var(--color-primary-text, #5B9BF5); font-size: 24px;">cloud_sync</span>
                   <span class="font-mono text-[11px] uppercase tracking-[0.15em]" style="color: #7A8498;">
                     Catalog still loading — set completion will appear once cards finish indexing.
                   </span>

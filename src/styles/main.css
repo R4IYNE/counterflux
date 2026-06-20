@@ -2,6 +2,9 @@
 
 @theme {
   --color-primary: #0D52BD;
+  /* Accent text on dark surfaces — #0D52BD fails WCAG AA as text, so text uses
+     this lightened blue (audit M6). Backgrounds/borders keep --color-primary. */
+  --color-primary-text: #5B9BF5;
   --color-secondary: #E23838;
   --color-secondary-hover: #FF5555;
   --color-secondary-active: #C42424;
@@ -492,7 +495,7 @@ body {
   font-size: 48px;
   font-weight: 700;
   letter-spacing: 0.15em;
-  color: var(--color-primary, #0D52BD);
+  color: var(--color-primary-text, #5B9BF5);
   text-transform: uppercase;
   z-index: 100;
   pointer-events: none;

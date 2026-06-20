@@ -41,7 +41,7 @@ export function renderDeckSearchPanel(container) {
   overline.textContent = 'CARD RETRIEVAL';
   overline.style.cssText = `
     font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase;
-    letter-spacing: 0.15em; font-weight: 700; color: #0D52BD; margin-bottom: 16px;
+    letter-spacing: 0.15em; font-weight: 700; color: var(--color-primary-text, #5B9BF5); margin-bottom: 16px;
   `;
   container.appendChild(overline);
 

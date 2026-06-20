@@ -115,7 +115,7 @@ export function renderDeckEditor(container) {
   const analyticsHeader = document.createElement('div');
   analyticsHeader.style.cssText = 'margin-bottom: 24px;';
   analyticsHeader.innerHTML = `
-    <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; color: #0D52BD;">
+    <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; color: var(--color-primary-text, #5B9BF5);">
       ARCHIVE ANALYTICS
     </span>
   `;

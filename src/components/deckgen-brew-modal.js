@@ -122,7 +122,7 @@ export function renderDeckgenBrewModal() {
         <!-- Header -->
         <div style="display: flex; align-items: center; justify-content: space-between;">
           <div style="display: flex; align-items: center; gap: 12px;">
-            <span class="material-symbols-outlined" style="color: #0D52BD; font-size: 24px;" x-text="isSwapMode ? 'tune' : 'auto_awesome'"></span>
+            <span class="material-symbols-outlined" style="color: var(--color-primary-text, #5B9BF5); font-size: 24px;" x-text="isSwapMode ? 'tune' : 'auto_awesome'"></span>
             <h2
               id="deckgen-brew-heading"
               style="font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; color: #EAECEE; margin: 0; text-transform: uppercase; letter-spacing: 0.01em;"
@@ -157,7 +157,7 @@ export function renderDeckgenBrewModal() {
               POWER LEVEL
             </span>
             <span
-              style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.15em; font-weight: 700; color: #0D52BD; text-transform: uppercase;"
+              style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.15em; font-weight: 700; color: var(--color-primary-text, #5B9BF5); text-transform: uppercase;"
               x-text="powerLevel + '/10 · ' + powerLabel"
             ></span>
           </div>
@@ -227,7 +227,7 @@ export function renderDeckgenBrewModal() {
              user landed in. -->
         <div x-show="isSwapMode" style="display: flex; flex-direction: column; gap: 8px; padding: 12px 16px; background: rgba(13,82,189,0.06); border: 1px solid rgba(13,82,189,0.3);">
           <div
-            style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; font-weight: 700; color: #0D52BD;"
+            style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; font-weight: 700; color: var(--color-primary-text, #5B9BF5);"
             x-text="isRetune ? 'RETUNE MODE' : 'UPGRADE MODE'"
           ></div>
           <div

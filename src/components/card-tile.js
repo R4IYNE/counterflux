@@ -75,7 +75,7 @@ export function renderCardTile(entry, index) {
         <span class="text-[14px] font-bold leading-[1.3] truncate"
               style="font-family: 'Space Grotesk', sans-serif; color: #EAECEE;">${name}</span>
         <span class="font-mono text-[11px] tracking-[0.15em]"
-              style="color: #0D52BD;">${priceDisplay}</span>
+              style="color: var(--color-primary-text, #5B9BF5);">${priceDisplay}</span>
         <span class="font-mono text-[11px] tracking-[0.15em]"
               style="color: #4A5064;">${setName}</span>
       </div>

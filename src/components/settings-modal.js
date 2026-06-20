@@ -198,7 +198,7 @@ function _buildAvatarRow(profile, authed, googleAvatar) {
     <button id="settings-use-google-avatar" style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;background:#1C1F28;color:#EAECEE;border:1px solid #2A2D3A;padding:4px 8px;cursor:pointer;margin-left:8px;">USE GOOGLE AVATAR</button>
   ` : '';
   controls.innerHTML = `
-    <label style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:#0D52BD;cursor:pointer;display:inline-block;padding:4px 8px;border:1px solid #2A2D3A;background:#1C1F28;">
+    <label style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color: var(--color-primary-text, #5B9BF5);cursor:pointer;display:inline-block;padding:4px 8px;border:1px solid #2A2D3A;background:#1C1F28;">
       UPLOAD PHOTO
       <input type="file" id="settings-avatar-input" accept="image/*" style="display:none;">
     </label>
@@ -244,7 +244,7 @@ function _buildField(label, id, value, placeholder) {
   const group = document.createElement('div');
   group.style.cssText = 'margin-bottom:16px;';
   group.innerHTML = `
-    <label for="${id}" style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:#0D52BD;display:block;margin-bottom:8px;">${label}</label>
+    <label for="${id}" style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color: var(--color-primary-text, #5B9BF5);display:block;margin-bottom:8px;">${label}</label>
     <input type="text" id="${id}" value="${value ? String(value).replace(/"/g, '&quot;') : ''}" placeholder="${placeholder}"
       style="width:100%;box-sizing:border-box;font-family:'Space Grotesk',sans-serif;font-size:14px;background:#0B0C10;border:1px solid #2A2D3A;color:#EAECEE;padding:8px 12px;height:40px;">
   `;

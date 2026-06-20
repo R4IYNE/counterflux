@@ -175,7 +175,7 @@ export function renderCSVImportModal() {
             <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; color: #7A8498;">
               DETECTED FORMAT:
             </span>
-            <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; color: #0D52BD;"
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; color: var(--color-primary-text, #5B9BF5);"
                   x-text="format === 'generic' ? 'GENERIC CSV' : format.toUpperCase()">
             </span>
           </div>

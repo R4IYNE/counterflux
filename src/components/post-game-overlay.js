@@ -184,7 +184,7 @@ export function renderPostGameOverlay() {
               style="font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: #7A8498;"
             >LONGEST TURN</span>
             <span
-              style="font-family: 'JetBrains Mono', monospace; font-size: 32px; font-weight: 700; color: #0D52BD; line-height: 1;"
+              style="font-family: 'JetBrains Mono', monospace; font-size: 32px; font-weight: 700; color: var(--color-primary-text, #5B9BF5); line-height: 1;"
               x-text="pacing.longestTurnDisplay"
             ></span>
             <span
@@ -202,7 +202,7 @@ export function renderPostGameOverlay() {
               style="font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: #7A8498;"
             >AVG TURN</span>
             <span
-              style="font-family: 'JetBrains Mono', monospace; font-size: 32px; font-weight: 700; color: #0D52BD; line-height: 1;"
+              style="font-family: 'JetBrains Mono', monospace; font-size: 32px; font-weight: 700; color: var(--color-primary-text, #5B9BF5); line-height: 1;"
               x-text="pacing.avgTurnDisplay"
             ></span>
           </div>
@@ -222,7 +222,7 @@ export function renderPostGameOverlay() {
                     x-text="p.name"
                   ></span>
                   <span
-                    style="font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700; color: #0D52BD; flex-shrink: 0;"
+                    style="font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700; color: var(--color-primary-text, #5B9BF5); flex-shrink: 0;"
                     x-text="p.avgDisplay"
                   ></span>
                 </div>

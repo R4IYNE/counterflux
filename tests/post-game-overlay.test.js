@@ -96,9 +96,9 @@ describe('renderPostGameOverlay TURN PACING section', () => {
     expect(html).toContain('pacing.perPlayerAvg');
   });
 
-  it('uses brand primary blue #0D52BD for value text', () => {
+  it('uses the accessible accent-text colour for value text (audit M6)', () => {
     const html = renderPostGameOverlay();
-    expect(html).toMatch(/font-size: 32px[^"]*color: #0D52BD/);
+    expect(html).toMatch(/font-size: 32px[^"]*color: var\(--color-primary-text/);
   });
 });
 

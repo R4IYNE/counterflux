@@ -57,7 +57,7 @@ export function renderBrewReviewList() {
             <span class="combo-badge material-symbols-outlined" title="Combo piece">bolt</span>
           </template>
           <template x-if="rec.source === 'synergy'">
-            <span class="material-symbols-outlined" title="Synergy" style="color:#0D52BD; font-size:16px;">hub</span>
+            <span class="material-symbols-outlined" title="Synergy" style="color: var(--color-primary-text, #5B9BF5); font-size:16px;">hub</span>
           </template>
         </span>
         <span
@@ -81,7 +81,7 @@ export function renderBrewReviewList() {
       <div style="margin-bottom: 32px;">
         <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
           <span
-            style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.15em; font-weight: 700; color: #0D52BD; text-transform: uppercase;"
+            style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.15em; font-weight: 700; color: var(--color-primary-text, #5B9BF5); text-transform: uppercase;"
             x-text="group.role.replace(/_/g, ' ')"
           ></span>
           <span
@@ -102,7 +102,7 @@ export function renderBrewReviewList() {
       <div style="margin-bottom: 32px;">
         <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
           <span
-            style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.15em; font-weight: 700; color: #0D52BD; text-transform: uppercase;"
+            style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.15em; font-weight: 700; color: var(--color-primary-text, #5B9BF5); text-transform: uppercase;"
           >ALSO WORTH IT</span>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-[12px]">

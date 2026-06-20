@@ -48,17 +48,17 @@ export function renderFilterBar() {
               style="color: #7A8498;">CATEGORY:</span>
         <button
           @click="$store.collection.setCategory('all')"
-          :style="$store.collection.filters.category === 'all' ? 'color: #0D52BD;' : 'color: #7A8498;'"
+          :style="$store.collection.filters.category === 'all' ? 'color: var(--color-primary-text, #5B9BF5);' : 'color: #7A8498;'"
           class="font-mono text-[11px] uppercase tracking-[0.15em] font-bold cursor-pointer bg-transparent border-0 hover:text-[#EAECEE]"
         >ALL</button>
         <button
           @click="$store.collection.setCategory('owned')"
-          :style="$store.collection.filters.category === 'owned' ? 'color: #0D52BD;' : 'color: #7A8498;'"
+          :style="$store.collection.filters.category === 'owned' ? 'color: var(--color-primary-text, #5B9BF5);' : 'color: #7A8498;'"
           class="font-mono text-[11px] uppercase tracking-[0.15em] font-bold cursor-pointer bg-transparent border-0 hover:text-[#EAECEE]"
         >OWNED</button>
         <button
           @click="$store.collection.setCategory('wishlist')"
-          :style="$store.collection.filters.category === 'wishlist' ? 'color: #0D52BD;' : 'color: #7A8498;'"
+          :style="$store.collection.filters.category === 'wishlist' ? 'color: var(--color-primary-text, #5B9BF5);' : 'color: #7A8498;'"
           class="font-mono text-[11px] uppercase tracking-[0.15em] font-bold cursor-pointer bg-transparent border-0 hover:text-[#EAECEE]"
         >WISHLIST</button>
       </div>
@@ -69,7 +69,7 @@ export function renderFilterBar() {
         <button
           @click="$store.collection.clearSetFilter()"
           class="flex items-center gap-[6px] font-mono text-[11px] uppercase tracking-[0.15em] font-bold cursor-pointer px-[10px] py-[4px]"
-          style="background: rgba(13,82,189,0.15); color: #0D52BD; border: 1px solid #0D52BD;"
+          style="background: rgba(13,82,189,0.15); color: var(--color-primary-text, #5B9BF5); border: 1px solid #0D52BD;"
           title="Clear set filter"
         >
           <i class="ss" :class="'ss-' + $store.collection.filters.set"></i>

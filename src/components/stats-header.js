@@ -16,7 +16,7 @@ export function renderStatsHeader() {
         <span class="font-mono uppercase text-[11px] tracking-[0.15em] font-bold"
               style="color: #7A8498;">TOTAL CARDS</span>
         <span class="syne-header text-[48px] font-bold leading-[1.1] tracking-[-0.02em]"
-              style="color: #0D52BD;"
+              style="color: var(--color-primary-text, #5B9BF5);"
               x-text="($store.collection.stats.totalCards || 0).toLocaleString()">0</span>
       </div>
 
@@ -25,7 +25,7 @@ export function renderStatsHeader() {
         <span class="font-mono uppercase text-[11px] tracking-[0.15em] font-bold"
               style="color: #7A8498;">UNIQUE CARDS</span>
         <span class="syne-header text-[48px] font-bold leading-[1.1] tracking-[-0.02em]"
-              style="color: #0D52BD;"
+              style="color: var(--color-primary-text, #5B9BF5);"
               x-text="($store.collection.stats.uniqueCards || 0).toLocaleString()">0</span>
       </div>
 
@@ -34,7 +34,7 @@ export function renderStatsHeader() {
         <span class="font-mono uppercase text-[11px] tracking-[0.15em] font-bold"
               style="color: #7A8498;">ESTIMATED VALUE</span>
         <span class="syne-header text-[48px] font-bold leading-[1.1] tracking-[-0.02em]"
-              style="color: #0D52BD;"
+              style="color: var(--color-primary-text, #5B9BF5);"
               :title="(window.__cf_isRateApprox && window.__cf_isRateApprox()) ? 'Approximate — live EUR→GBP rate unavailable; using a fallback rate' : ''"
               x-text="((window.__cf_isRateApprox && window.__cf_isRateApprox()) ? '~£' : '£') + (window.__cf_eurToGbpValue ? window.__cf_eurToGbpValue($store.collection.stats.estimatedValue || 0) : ($store.collection.stats.estimatedValue || 0)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })">£0.00</span>
       </div>
@@ -44,7 +44,7 @@ export function renderStatsHeader() {
         <span class="font-mono uppercase text-[11px] tracking-[0.15em] font-bold"
               style="color: #7A8498;">WISHLIST</span>
         <span class="syne-header text-[48px] font-bold leading-[1.1] tracking-[-0.02em]"
-              style="color: #0D52BD;"
+              style="color: var(--color-primary-text, #5B9BF5);"
               x-text="($store.collection.stats.wishlistCount || 0).toLocaleString()">0</span>
       </div>
 

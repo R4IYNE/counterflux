@@ -596,7 +596,7 @@ export function openRitualModal(options = {}) {
     if (panel) {
       panel.innerHTML = `
         <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 48px 24px; text-align: center;">
-          <span class="material-symbols-outlined cf-auth-spin" style="font-size: 40px; color: #0D52BD;">progress_activity</span>
+          <span class="material-symbols-outlined cf-auth-spin" style="font-size: 40px; color: var(--color-primary-text, #5B9BF5);">progress_activity</span>
           <div style="font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; color: #EAECEE;">Brewing your storm…</div>
           <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: #7A8498;">Opening the deck builder</div>
         </div>

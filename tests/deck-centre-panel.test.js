@@ -139,7 +139,7 @@ describe('deck-centre-panel COMMANDER section (DECK-05)', () => {
     expect(commanderGroup.textContent.toUpperCase()).toContain('COMMANDER');
   });
 
-  it('Commander label uses primary blue (#0D52BD) per D-07 typography spec', () => {
+  it('Commander label uses the accessible accent-text colour (D-07 typography spec + audit M6)', () => {
     const store = makeStore();
     window.Alpine = {
       store: (name) => (name === 'deck' ? store : null),
@@ -151,9 +151,9 @@ describe('deck-centre-panel COMMANDER section (DECK-05)', () => {
 
     const commanderGroup = container.querySelector('[data-type-group="Commander"]');
     const labelEl = commanderGroup.querySelector('span');
-    // jsdom normalises hex → rgb. Both are acceptable.
-    const colour = labelEl.style.color.toLowerCase();
-    expect(colour === '#0d52bd' || colour === 'rgb(13, 82, 189)').toBe(true);
+    // M6: accent text uses the accessible --color-primary-text token. jsdom does
+    // not resolve var() via .style.color, so assert the raw style attribute.
+    expect(labelEl.getAttribute('style')).toMatch(/color:\s*var\(--color-primary-text/);
   });
 
   it('falls back to first Legendary Creature when commander_id is null', () => {

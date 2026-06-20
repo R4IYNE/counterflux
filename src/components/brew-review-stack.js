@@ -109,7 +109,7 @@ export function renderBrewReviewStack() {
               <span class="combo-badge material-symbols-outlined" title="Combo piece">bolt</span>
             </template>
             <template x-if="cur()?.source === 'synergy'">
-              <span class="material-symbols-outlined" title="Synergy" style="position: absolute; top: 8px; right: 8px; z-index: 10; color: #0D52BD; font-size: 18px;">hub</span>
+              <span class="material-symbols-outlined" title="Synergy" style="position: absolute; top: 8px; right: 8px; z-index: 10; color: var(--color-primary-text, #5B9BF5); font-size: 18px;">hub</span>
             </template>
 
             <!-- OUT (card being removed) -->
@@ -139,7 +139,7 @@ export function renderBrewReviewStack() {
             <!-- Arrow + role -->
             <template x-if="cur()?.swap_out">
               <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; flex-shrink: 0;">
-                <span class="material-symbols-outlined" style="font-size: 24px; color: #0D52BD;">east</span>
+                <span class="material-symbols-outlined" style="font-size: 24px; color: var(--color-primary-text, #5B9BF5);">east</span>
                 <span style="font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.1em; color: #4A5064; text-transform: uppercase;" x-text="(cur()?.role || '').replace(/_/g, ' ')"></span>
               </div>
             </template>

@@ -119,7 +119,7 @@ export function renderCounterPanel() {
             @click.stop="dayNight = dayNight === 'DAY' ? 'NIGHT' : 'DAY'"
           >DAY/NIGHT</button>
           <span class="font-mono text-[11px] tracking-[0.15em] font-bold"
-                :style="dayNight === 'DAY' ? 'color: #F39C12;' : 'color: #0D52BD;'"
+                :style="dayNight === 'DAY' ? 'color: #F39C12;' : 'color: var(--color-primary-text, #5B9BF5);'"
                 x-text="dayNight"></span>
         </div>
 

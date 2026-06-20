@@ -197,7 +197,7 @@ export function renderPlayerGrid() {
                   :title="player.name || 'Player'"
                   x-text="player.name || 'Player'"></span>
             <span class="material-symbols-outlined transition-transform"
-                  :style="$store.game.expandedPlayer === pIdx ? 'transform: rotate(180deg); color: #0D52BD;' : 'color: #7A8498;'"
+                  :style="$store.game.expandedPlayer === pIdx ? 'transform: rotate(180deg); color: var(--color-primary-text, #5B9BF5);' : 'color: #7A8498;'"
                   style="font-size: 20px; flex-shrink: 0;">expand_more</span>
           </div>
 
@@ -300,7 +300,7 @@ export function renderPlayerGrid() {
                           style="color: #EAECEE;" x-text="val"></span>
                   </template>
                   <template x-if="typeof val === 'boolean'">
-                    <span class="material-symbols-outlined" style="font-size: 12px; color: #0D52BD;">check</span>
+                    <span class="material-symbols-outlined" style="font-size: 12px; color: var(--color-primary-text, #5B9BF5);">check</span>
                   </template>
                 </div>
               </template>

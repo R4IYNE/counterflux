@@ -63,7 +63,7 @@ export function renderGalleryView() {
                       style="font-family: 'Space Grotesk', sans-serif; color: #EAECEE;"
                       x-text="entry.card?.name || 'Unknown'"></span>
                 <span class="font-mono text-[11px] tracking-[0.15em]"
-                      style="color: #0D52BD;"
+                      style="color: var(--color-primary-text, #5B9BF5);"
                       x-text="window.__cf_eurToGbp(entry.foil ? entry.card?.prices?.eur_foil : entry.card?.prices?.eur)"></span>
                 <span class="font-mono text-[11px] tracking-[0.15em]"
                       style="color: #4A5064;"
@@ -136,7 +136,7 @@ export function renderGalleryView() {
                   + '</div>'
                   + '<div class=\"p-[8px] flex flex-col gap-[2px]\">'
                   + '<span class=\"text-[14px] font-bold leading-[1.3] truncate\" style=\"font-family: Space Grotesk, sans-serif; color: #EAECEE;\">' + name + '</span>'
-                  + '<span class=\"font-mono text-[11px] tracking-[0.15em]\" style=\"color: #0D52BD;\">' + price + '</span>'
+                  + '<span class=\"font-mono text-[11px] tracking-[0.15em]\" style=\"color: var(--color-primary-text, #5B9BF5);\">' + price + '</span>'
                   + '<span class=\"font-mono text-[11px] tracking-[0.15em]\" style=\"color: #4A5064;\">' + setName + '</span>'
                   + addedLine
                   + '</div></div>';

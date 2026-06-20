@@ -147,7 +147,7 @@ function _renderBody(body) {
     </div>
 
     <!-- EMAIL field -->
-    <label for="cf-auth-email" style="display:block;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;letter-spacing:0.15em;color:#0D52BD;text-transform:uppercase;margin-bottom:8px;">EMAIL</label>
+    <label for="cf-auth-email" style="display:block;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;letter-spacing:0.15em;color: var(--color-primary-text, #5B9BF5);text-transform:uppercase;margin-bottom:8px;">EMAIL</label>
     <input type="email" id="cf-auth-email" placeholder="you@email.com" autocomplete="email"
       style="width:100%;height:40px;background:#0B0C10;border:1px solid #2A2D3A;color:#EAECEE;padding:0 12px;font-family:'Space Grotesk',sans-serif;font-size:14px;box-sizing:border-box;outline:none;"
       onfocus="this.style.borderColor='#0D52BD';this.style.boxShadow='0 0 12px rgba(13,82,189,0.3)';"
@@ -155,7 +155,7 @@ function _renderBody(body) {
     >
 
     <!-- PASSWORD field -->
-    <label for="cf-auth-password" style="display:block;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;letter-spacing:0.15em;color:#0D52BD;text-transform:uppercase;margin-top:16px;margin-bottom:8px;">PASSWORD</label>
+    <label for="cf-auth-password" style="display:block;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;letter-spacing:0.15em;color: var(--color-primary-text, #5B9BF5);text-transform:uppercase;margin-top:16px;margin-bottom:8px;">PASSWORD</label>
     <input type="password" id="cf-auth-password" placeholder="••••••••" autocomplete="current-password"
       style="width:100%;height:40px;background:#0B0C10;border:1px solid #2A2D3A;color:#EAECEE;padding:0 12px;font-family:'Space Grotesk',sans-serif;font-size:14px;box-sizing:border-box;outline:none;"
       onfocus="this.style.borderColor='#0D52BD';this.style.boxShadow='0 0 12px rgba(13,82,189,0.3)';"

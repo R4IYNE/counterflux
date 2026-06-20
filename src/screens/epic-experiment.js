@@ -961,7 +961,7 @@ function renderMilaInsight(grid, cleanups) {
         <div class="flex items-start gap-sm">
           <img src="/assets/assetsmila-izzet.png" alt="Mila" class="object-cover" style="width: 32px; height: 32px;">
           <div class="flex-1">
-            <span class="font-mono inline-block mb-xs" style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.15em; background: rgba(13, 82, 189, 0.1); color: #0D52BD; padding: 2px 8px;">
+            <span class="font-mono inline-block mb-xs" style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.15em; background: rgba(13, 82, 189, 0.1); color: var(--color-primary-text, #5B9BF5); padding: 2px 8px;">
               ${categoryLabel}
             </span>
             <p class="font-body text-text-primary" style="font-size: 14px; line-height: 1.5;">
@@ -1194,7 +1194,7 @@ function renderMilaUpgradesWidget(grid, cleanups) {
 
       const icon = document.createElement('span');
       icon.className = 'material-symbols-outlined';
-      icon.style.cssText = 'color: #0D52BD; font-size: 18px; margin-top: 2px;';
+      icon.style.cssText = 'color: var(--color-primary-text, #5B9BF5); font-size: 18px; margin-top: 2px;';
       icon.textContent = 'auto_awesome';
       row.appendChild(icon);
 
@@ -1218,7 +1218,7 @@ function renderMilaUpgradesWidget(grid, cleanups) {
       actions.style.cssText = 'display: flex; gap: 8px; margin-top: 4px;';
 
       const reviewBtn = document.createElement('button');
-      reviewBtn.style.cssText = 'padding: 4px 10px; background: transparent; color: #0D52BD; border: 1px solid #0D52BD; cursor: pointer; font-family: JetBrains Mono, monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;';
+      reviewBtn.style.cssText = 'padding: 4px 10px; background: transparent; color: var(--color-primary-text, #5B9BF5); border: 1px solid #0D52BD; cursor: pointer; font-family: JetBrains Mono, monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;';
       reviewBtn.textContent = 'REVIEW';
       reviewBtn.addEventListener('click', () => {
         // 260608: deep-link the deck editor with upgrade mode pre-loaded

@@ -73,7 +73,7 @@ export function openDeckImportModal(deckId) {
   formatLabel.textContent = 'DETECTED FORMAT:';
   formatLabel.style.color = '#7A8498';
   const formatValue = document.createElement('span');
-  formatValue.style.cssText = 'color: #0D52BD; font-weight: 700;';
+  formatValue.style.cssText = 'color: var(--color-primary-text, #5B9BF5); font-weight: 700;';
   formatBadge.appendChild(formatLabel);
   formatBadge.appendChild(formatValue);
   modal.appendChild(formatBadge);

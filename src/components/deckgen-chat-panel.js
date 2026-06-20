@@ -60,7 +60,7 @@ export function renderDeckgenChatPanel() {
         <!-- Header -->
         <div style="flex-shrink: 0; padding: 20px 24px; border-bottom: 1px solid #2A2D3A; display: flex; align-items: center; justify-content: space-between; gap: 12px;">
           <div style="display: flex; align-items: center; gap: 12px; min-width: 0;">
-            <span class="material-symbols-outlined" style="color: #0D52BD; font-size: 24px;">forum</span>
+            <span class="material-symbols-outlined" style="color: var(--color-primary-text, #5B9BF5); font-size: 24px;">forum</span>
             <div style="min-width: 0;">
               <h2 style="font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; color: #EAECEE; margin: 0; text-transform: uppercase; letter-spacing: 0.01em;">BREW CHAT</h2>
               <div
@@ -189,7 +189,7 @@ export function renderDeckgenChatPanel() {
           <!-- Thinking indicator -->
           <template x-if="$store.deckgenChat?.status === 'thinking'">
             <div style="display: flex; align-items: center; gap: 8px; color: #7A8498; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;">
-              <span class="material-symbols-outlined" style="font-size: 16px; color: #0D52BD;">pets</span> THINKING…
+              <span class="material-symbols-outlined" style="font-size: 16px; color: var(--color-primary-text, #5B9BF5);">pets</span> THINKING…
             </div>
           </template>
         </div>

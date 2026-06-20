@@ -65,7 +65,7 @@ export function renderTableView() {
             <tr style="border-bottom: 1px solid #2A2D3A;">
               <th @click="toggleSort('name')"
                   class="text-left px-[16px] py-[8px] font-mono text-[11px] uppercase tracking-[0.15em] font-bold cursor-pointer select-none"
-                  :style="isSortedBy('name') ? 'color: #0D52BD;' : 'color: #7A8498;'">
+                  :style="isSortedBy('name') ? 'color: var(--color-primary-text, #5B9BF5);' : 'color: #7A8498;'">
                 NAME
                 <template x-if="isSortedBy('name')">
                   <span class="material-symbols-outlined align-middle" style="font-size: 11px;"
@@ -74,7 +74,7 @@ export function renderTableView() {
               </th>
               <th @click="toggleSort('set')"
                   class="text-left px-[16px] py-[8px] font-mono text-[11px] uppercase tracking-[0.15em] font-bold cursor-pointer select-none"
-                  :style="isSortedBy('set') ? 'color: #0D52BD;' : 'color: #7A8498;'">
+                  :style="isSortedBy('set') ? 'color: var(--color-primary-text, #5B9BF5);' : 'color: #7A8498;'">
                 SET
                 <template x-if="isSortedBy('set')">
                   <span class="material-symbols-outlined align-middle" style="font-size: 11px;"
@@ -91,7 +91,7 @@ export function renderTableView() {
               </th>
               <th @click="toggleSort('price')"
                   class="text-left px-[16px] py-[8px] font-mono text-[11px] uppercase tracking-[0.15em] font-bold cursor-pointer select-none"
-                  :style="isSortedBy('price') ? 'color: #0D52BD;' : 'color: #7A8498;'">
+                  :style="isSortedBy('price') ? 'color: var(--color-primary-text, #5B9BF5);' : 'color: #7A8498;'">
                 PRICE (GBP)
                 <template x-if="isSortedBy('price')">
                   <span class="material-symbols-outlined align-middle" style="font-size: 11px;"
@@ -100,7 +100,7 @@ export function renderTableView() {
               </th>
               <th @click="toggleSort('date')"
                   class="text-left px-[16px] py-[8px] font-mono text-[11px] uppercase tracking-[0.15em] font-bold cursor-pointer select-none"
-                  :style="isSortedBy('date') ? 'color: #0D52BD;' : 'color: #7A8498;'">
+                  :style="isSortedBy('date') ? 'color: var(--color-primary-text, #5B9BF5);' : 'color: #7A8498;'">
                 CATEGORY
                 <template x-if="isSortedBy('date')">
                   <span class="material-symbols-outlined align-middle" style="font-size: 11px;"
@@ -131,7 +131,7 @@ export function renderTableView() {
                   </template>
                 </td>
                 <td class="px-[16px] py-[8px] font-mono text-[11px] tracking-[0.15em]"
-                    style="color: #0D52BD;"
+                    style="color: var(--color-primary-text, #5B9BF5);"
                     x-text="window.__cf_eurToGbp(entry.foil ? entry.card?.prices?.eur_foil : entry.card?.prices?.eur)"></td>
                 <td class="px-[16px] py-[8px] font-mono text-[11px] tracking-[0.15em] font-bold uppercase"
                     style="color: #EAECEE;"

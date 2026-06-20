@@ -43,8 +43,8 @@ export function renderDeckgenUpgradeSection() {
     >
       <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
         <div style="display: flex; align-items: center; gap: 12px;">
-          <span class="material-symbols-outlined" style="color: #0D52BD; font-size: 18px;">auto_awesome</span>
-          <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; color: #0D52BD; text-transform: uppercase;">
+          <span class="material-symbols-outlined" style="color: var(--color-primary-text, #5B9BF5); font-size: 18px;">auto_awesome</span>
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; color: var(--color-primary-text, #5B9BF5); text-transform: uppercase;">
             UPGRADE AVAILABLE
           </span>
           <span
@@ -72,7 +72,7 @@ export function renderDeckgenUpgradeSection() {
                 $store.deckgen?.queueAction({ deckId: rec.deck_id, action: 'upgrade' });
                 if (window.__counterflux_router) window.__counterflux_router.navigate('/thousand-year-storm');
               "
-              style="padding: 4px 10px; background: transparent; color: #0D52BD; border: 1px solid #0D52BD; cursor: pointer; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;"
+              style="padding: 4px 10px; background: transparent; color: var(--color-primary-text, #5B9BF5); border: 1px solid #0D52BD; cursor: pointer; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;"
             >REVIEW</button>
             <button
               @click="dismiss(rec.id)"

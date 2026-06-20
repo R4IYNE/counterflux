@@ -103,7 +103,7 @@ export function renderDiceRoller() {
                   x-text="diceType + ' - HIGH ROLL'"></span>
             <template x-for="(hr, i) in highRollResults" :key="i">
               <div class="flex items-center justify-between px-[8px] py-[4px]"
-                   :style="hr.isMax ? 'color: #0D52BD; font-weight: 700;' : 'color: #7A8498;'">
+                   :style="hr.isMax ? 'color: var(--color-primary-text, #5B9BF5); font-weight: 700;' : 'color: #7A8498;'">
                 <span class="font-mono text-[11px] tracking-[0.15em] uppercase" x-text="hr.name"></span>
                 <span style="font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700;"
                       x-text="hr.value"></span>

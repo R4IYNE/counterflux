@@ -180,7 +180,7 @@ function renderGridTile(entry, card, cardName, typeGroup) {
   // Set code
   if (card?.set) {
     const setEl = document.createElement('span');
-    setEl.innerHTML = `<span style="border-bottom: 1px dotted #7A8498;">${card.set.toUpperCase()}</span> <span style="font-size: 8px; color: #0D52BD;">▼</span>`;
+    setEl.innerHTML = `<span style="border-bottom: 1px dotted #7A8498;">${card.set.toUpperCase()}</span> <span style="font-size: 8px; color: var(--color-primary-text, #5B9BF5);">▼</span>`;
     setEl.title = 'Click to change printing';
     setEl.style.cssText = `
       font-family: 'JetBrains Mono', monospace; font-size: 9px; text-transform: uppercase;
@@ -334,7 +334,7 @@ function renderListRow(entry, card, cardName, typeGroup) {
   priceCell.textContent = priceText;
   priceCell.style.cssText = `
     padding: 8px 16px; font-family: 'JetBrains Mono', monospace; font-size: 11px;
-    text-transform: uppercase; letter-spacing: 0.15em; color: #0D52BD;
+    text-transform: uppercase; letter-spacing: 0.15em; color: var(--color-primary-text, #5B9BF5);
   `;
   row.appendChild(priceCell);
 
@@ -410,7 +410,7 @@ async function showSetSwitcher(entry, currentCard, anchorEl) {
   header.textContent = 'CHANGE PRINTING';
   header.style.cssText = `
     font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase;
-    letter-spacing: 0.15em; font-weight: 700; color: #0D52BD; padding: 8px 12px;
+    letter-spacing: 0.15em; font-weight: 700; color: var(--color-primary-text, #5B9BF5); padding: 8px 12px;
     border-bottom: 1px solid #2A2D3A;
   `;
   popover.appendChild(header);

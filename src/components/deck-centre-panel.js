@@ -202,7 +202,7 @@ export function renderDeckCentrePanel(container) {
   brewBtn.style.cssText = `
     font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase;
     letter-spacing: 0.15em; font-weight: 700; cursor: pointer; padding: 8px 16px;
-    background: rgba(13,82,189,0.12); color: #0D52BD; border: 1px solid rgba(13,82,189,0.6);
+    background: rgba(13,82,189,0.12); color: var(--color-primary-text, #5B9BF5); border: 1px solid rgba(13,82,189,0.6);
     display: inline-flex; align-items: center; gap: 8px;
     transition: background 120ms ease-out, border-color 120ms ease-out;
   `;
@@ -447,7 +447,7 @@ export function renderDeckCentrePanel(container) {
       cmdLabel.style.cssText = `
         font-family: 'JetBrains Mono', monospace; font-size: 11px;
         text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700;
-        color: #0D52BD;
+        color: var(--color-primary-text, #5B9BF5);
       `;
       cmdLabel.textContent = `COMMANDER (1)`;
       cmdHeader.appendChild(cmdLabel);

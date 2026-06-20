@@ -146,14 +146,14 @@ export function openAuthWall() {
       <div style="flex:1;height:1px;background:#2A2D3A;"></div>
     </div>
 
-    <label for="cf-auth-wall-email" style="display:block;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;letter-spacing:0.15em;color:#0D52BD;text-transform:uppercase;margin-bottom:8px;">EMAIL</label>
+    <label for="cf-auth-wall-email" style="display:block;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;letter-spacing:0.15em;color: var(--color-primary-text, #5B9BF5);text-transform:uppercase;margin-bottom:8px;">EMAIL</label>
     <input type="email" id="cf-auth-wall-email" placeholder="you@email.com" autocomplete="email"
       style="width:100%;height:40px;background:#0B0C10;border:1px solid #2A2D3A;color:#EAECEE;padding:0 12px;font-family:'Space Grotesk',sans-serif;font-size:14px;box-sizing:border-box;outline:none;"
       onfocus="this.style.borderColor='#0D52BD';this.style.boxShadow='0 0 12px rgba(13,82,189,0.3)';"
       onblur="this.style.borderColor='#2A2D3A';this.style.boxShadow='none';"
     >
 
-    <label for="cf-auth-wall-password" style="display:block;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;letter-spacing:0.15em;color:#0D52BD;text-transform:uppercase;margin-top:16px;margin-bottom:8px;">PASSWORD</label>
+    <label for="cf-auth-wall-password" style="display:block;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;letter-spacing:0.15em;color: var(--color-primary-text, #5B9BF5);text-transform:uppercase;margin-top:16px;margin-bottom:8px;">PASSWORD</label>
     <input type="password" id="cf-auth-wall-password" placeholder="••••••••" autocomplete="current-password"
       style="width:100%;height:40px;background:#0B0C10;border:1px solid #2A2D3A;color:#EAECEE;padding:0 12px;font-family:'Space Grotesk',sans-serif;font-size:14px;box-sizing:border-box;outline:none;"
       onfocus="this.style.borderColor='#0D52BD';this.style.boxShadow='0 0 12px rgba(13,82,189,0.3)';"
