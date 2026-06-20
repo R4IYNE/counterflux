@@ -75,6 +75,16 @@ async function bootApp() {
       console.warn('[Counterflux] chunk preload failed — app was updated, reloading');
       setTimeout(() => window.location.reload(), 500);
     });
+
+    // audit L11 — last-resort handlers so background-flow rejections (auth.init,
+    // loadRecommendations, the Alpine.effect IIFEs) surface in logs instead of
+    // vanishing silently. Kept lightweight (no toast) to avoid noise.
+    window.addEventListener('unhandledrejection', (event) => {
+      console.error('[Counterflux] unhandled promise rejection:', event.reason);
+    });
+    window.addEventListener('error', (event) => {
+      if (event?.error) console.error('[Counterflux] uncaught error:', event.error);
+    });
   }
 
   try {

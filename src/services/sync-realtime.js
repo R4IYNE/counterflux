@@ -44,13 +44,20 @@ let _channel = null;
 // sneak through the `if (_channel)` check. We memoise the in-flight subscribe
 // promise so concurrent calls all resolve to the same channel creation.
 let _subscribeInFlight = null;
+// L44 — set by unsubscribeRealtime so an in-flight subscribe that resolves AFTER
+// teardown doesn't create a channel unsubscribe can no longer see.
+let _teardownRequested = false;
 
 export async function subscribeRealtime() {
   if (_channel) return; // already subscribed
   if (_subscribeInFlight) return _subscribeInFlight; // subscribe in progress
+  _teardownRequested = false;
 
   _subscribeInFlight = (async () => {
     const { getSupabase } = await import('./supabase.js');
+    // L44 — teardown raced our dynamic import; abort before creating a channel
+    // (getSupabase + .channel() below are synchronous, so this guard is enough).
+    if (_teardownRequested) return;
     const supabase = getSupabase();
 
     _channel = supabase
@@ -84,6 +91,8 @@ export async function subscribeRealtime() {
 }
 
 export function unsubscribeRealtime() {
+  _teardownRequested = true;   // L44 — bail an in-flight subscribe that settles after us
+  _subscribeInFlight = null;   // L44 — was leaked, which blocked re-subscribe after re-auth
   if (_channel) {
     try {
       _channel.unsubscribe();

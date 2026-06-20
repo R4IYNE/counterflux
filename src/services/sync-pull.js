@@ -230,8 +230,14 @@ export async function bulkPull(onProgress) {
     while (pulled < total) {
       const chain = supabase.schema('counterflux').from(t).select('*');
       // Chain supports .order().range() per supabase-js. Our tests' mock returns
-      // a self-chaining object; the live client does the same.
-      const ordered = typeof chain.order === 'function' ? chain.order('updated_at', { ascending: true }) : chain;
+      // a self-chaining object; the live client does the same. L42 — add a unique
+      // `id` tiebreaker so rows sharing an updated_at can't be skipped/duplicated
+      // across offset pages (non-unique sort order = unstable pagination).
+      let ordered = chain;
+      if (typeof chain.order === 'function') {
+        ordered = chain.order('updated_at', { ascending: true });
+        if (typeof ordered.order === 'function') ordered = ordered.order('id', { ascending: true });
+      }
       const { data, error } = await ordered.range(from, from + CHUNK_SIZE - 1);
 
       if (error) {
