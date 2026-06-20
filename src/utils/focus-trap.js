@@ -90,3 +90,23 @@ export function attachFocusTrap(containerEl, { onEscape, initialFocus, restoreFo
     }
   };
 }
+
+/**
+ * Idempotent attach/detach for HTML-string Alpine modals. Call from an x-effect
+ * with the modal's reactive visibility flag; the detach handle is stashed on the
+ * panel element so re-running the effect (every reactive tick) never stacks
+ * traps. Exposed on window.__cf_focusTrap by main.js for use inside x-effect.
+ *
+ * @param {boolean} visible
+ * @param {HTMLElement} panelEl
+ * @param {{ onEscape?: Function, initialFocus?: HTMLElement|string, restoreFocus?: boolean }} [opts]
+ */
+export function syncFocusTrap(visible, panelEl, opts) {
+  if (!panelEl) return;
+  if (visible && !panelEl.__cfTrapDetach) {
+    panelEl.__cfTrapDetach = attachFocusTrap(panelEl, opts || {});
+  } else if (!visible && panelEl.__cfTrapDetach) {
+    panelEl.__cfTrapDetach();
+    panelEl.__cfTrapDetach = null;
+  }
+}

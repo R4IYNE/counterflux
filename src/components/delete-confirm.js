@@ -34,22 +34,23 @@ export function renderDeleteConfirm() {
         }
       }"
       @collection-delete-confirm.document="openDelete($event.detail.entry)"
-      @keydown.escape.window="deleteVisible && closeDelete()"
     >
       <!-- Modal overlay -->
       <div
         x-show="deleteVisible"
         x-cloak
+        x-effect="window.__cf_focusTrap && window.__cf_focusTrap(deleteVisible, $refs.panel, { onEscape: () => closeDelete(), initialFocus: '[data-default-focus]' })"
         style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9999; display: flex; align-items: center; justify-content: center;"
       >
         <!-- Glass backdrop -->
         <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6);" @click="closeDelete()"></div>
 
-        <!-- Modal panel -->
-        <div style="position: relative; z-index: 10; width: 100%; max-width: 400px; background: #14161C; border: 1px solid #2A2D3A; padding: 24px; display: flex; flex-direction: column; gap: 16px;"
+        <!-- Modal panel (audit M7: role=dialog + focus trap; Escape via the trap) -->
+        <div x-ref="panel" role="dialog" aria-modal="true" aria-labelledby="delete-confirm-heading"
+             style="position: relative; z-index: 10; width: 100%; max-width: 400px; background: #14161C; border: 1px solid #2A2D3A; padding: 24px; display: flex; flex-direction: column; gap: 16px;"
              @click.stop>
           <!-- Heading -->
-          <h3 style="font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; line-height: 1.2; letter-spacing: 0.01em; color: #EAECEE; margin: 0;">
+          <h3 id="delete-confirm-heading" style="font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; line-height: 1.2; letter-spacing: 0.01em; color: #EAECEE; margin: 0;">
             CONFIRM REMOVAL
           </h3>
 
@@ -71,6 +72,7 @@ export function renderDeleteConfirm() {
             </button>
             <button
               @click="closeDelete()"
+              data-default-focus
               style="flex: 1; padding: 8px 16px; font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; background: #1C1F28; color: #EAECEE; border: 1px solid #2A2D3A; cursor: pointer;"
             >
               KEEP CARD

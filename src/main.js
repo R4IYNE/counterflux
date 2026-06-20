@@ -31,6 +31,7 @@ import { toggleShortcutModal, isShortcutModalOpen, closeShortcutModal } from './
 import { initRouter } from './router.js';
 import { renderManaCost } from './utils/mana.js';
 import { getEurToGbpRate, eurToGbp, eurToGbpValue, isRateFallback, getCurrentRate } from './services/currency.js';
+import { syncFocusTrap } from './utils/focus-trap.js';
 import { runMigration } from './services/migration.js';
 import { bindBfcacheHandlers } from './services/bfcache.js';
 import { db } from './db/schema.js';
@@ -117,6 +118,8 @@ async function bootApp() {
   // (live fetch failed) or before the live rate has loaded, so surfaces can mark
   // the value approximate ("~£") instead of implying live-rate precision.
   window.__cf_isRateApprox = () => isRateFallback() || getCurrentRate() === null;
+  // audit M7 — modal focus-trap for HTML-string Alpine modals (used via x-effect).
+  window.__cf_focusTrap = syncFocusTrap;
 
   // Register Alpine components
   Alpine.data('splashScreen', splashScreen);
