@@ -7,6 +7,7 @@
 
 import { detectFormat, parseDecklist, resolveDecklist } from '../services/deck-import.js';
 import { searchCards } from '../db/search.js';
+import { attachFocusTrap } from '../utils/focus-trap.js';
 
 let activeModal = null;
 
@@ -31,6 +32,9 @@ export function openDeckImportModal(deckId) {
 
   // Modal container
   const modal = document.createElement('div');
+  modal.setAttribute('role', 'dialog');
+  modal.setAttribute('aria-modal', 'true');
+  modal.setAttribute('aria-labelledby', 'deck-import-heading');
   modal.style.cssText = `
     position: relative; z-index: 10; width: 100%; max-width: 620px;
     background: #14161C; border: 1px solid #2A2D3A; padding: 24px;
@@ -40,6 +44,7 @@ export function openDeckImportModal(deckId) {
 
   // Title
   const title = document.createElement('h2');
+  title.id = 'deck-import-heading';
   title.textContent = 'Import Decklist';
   title.style.cssText = `
     font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700;
@@ -215,24 +220,19 @@ export function openDeckImportModal(deckId) {
     }
   });
 
-  // Escape to close
-  const handleEscape = e => {
-    if (e.key === 'Escape') closeModal();
-  };
-  document.addEventListener('keydown', handleEscape);
-
   // Click backdrop to close
   backdrop.addEventListener('click', closeModal);
 
   backdrop.appendChild(modal);
   document.body.appendChild(backdrop);
-  activeModal = { backdrop, handleEscape };
-  textarea.focus();
+  // Focus trap + Escape + initial focus on the textarea (audit M7).
+  const detachTrap = attachFocusTrap(modal, { onEscape: closeModal, initialFocus: textarea });
+  activeModal = { backdrop, detachTrap };
 }
 
 function closeModal() {
   if (!activeModal) return;
-  document.removeEventListener('keydown', activeModal.handleEscape);
+  activeModal.detachTrap?.();
   activeModal.backdrop.remove();
   activeModal = null;
 }

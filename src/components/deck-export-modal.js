@@ -6,6 +6,7 @@
 
 import { exportPlaintext, exportMTGO, exportArena, exportCSV } from '../services/deck-export.js';
 import { db } from '../db/schema.js';
+import { attachFocusTrap } from '../utils/focus-trap.js';
 
 let activeModal = null;
 
@@ -48,6 +49,9 @@ export async function openDeckExportModal() {
 
   // Modal container
   const modal = document.createElement('div');
+  modal.setAttribute('role', 'dialog');
+  modal.setAttribute('aria-modal', 'true');
+  modal.setAttribute('aria-labelledby', 'deck-export-heading');
   modal.style.cssText = `
     position: relative; z-index: 10; width: 100%; max-width: 620px;
     background: #14161C; border: 1px solid #2A2D3A; padding: 24px;
@@ -57,6 +61,7 @@ export async function openDeckExportModal() {
 
   // Title
   const title = document.createElement('h2');
+  title.id = 'deck-export-heading';
   title.textContent = 'Export Decklist';
   title.style.cssText = `
     font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700;
@@ -188,16 +193,13 @@ export async function openDeckExportModal() {
     }
   }
 
-  // Escape to close
-  const handleEscape = e => {
-    if (e.key === 'Escape') closeModal();
-  };
-  document.addEventListener('keydown', handleEscape);
   backdrop.addEventListener('click', closeModal);
 
   backdrop.appendChild(modal);
   document.body.appendChild(backdrop);
-  activeModal = { backdrop, handleEscape };
+  // Focus trap + Escape (audit M7).
+  const detachTrap = attachFocusTrap(modal, { onEscape: closeModal });
+  activeModal = { backdrop, detachTrap };
 
   // Initial state
   updateFormatButtons();
@@ -206,7 +208,7 @@ export async function openDeckExportModal() {
 
 function closeModal() {
   if (!activeModal) return;
-  document.removeEventListener('keydown', activeModal.handleEscape);
+  activeModal.detachTrap?.();
   activeModal.backdrop.remove();
   activeModal = null;
 }

@@ -38,6 +38,9 @@ function openShortcutModal() {
   // Backdrop
   modalEl = document.createElement('div');
   modalEl.className = 'fixed inset-0 z-50 flex items-center justify-center';
+  modalEl.setAttribute('role', 'dialog');
+  modalEl.setAttribute('aria-modal', 'true');
+  modalEl.setAttribute('aria-labelledby', 'shortcut-modal-heading');
   modalEl.style.backgroundColor = 'rgba(11, 12, 16, 0.8)';
   modalEl.style.backdropFilter = 'blur(8px)';
   modalEl.addEventListener('click', (e) => {
@@ -53,6 +56,7 @@ function openShortcutModal() {
 
   // Title
   const title = document.createElement('h2');
+  title.id = 'shortcut-modal-heading';
   title.className =
     'syne-header text-text-primary text-[20px] font-bold leading-[1.2] tracking-[0.01em] mb-lg';
   title.textContent = 'KEYBOARD SHORTCUTS';
@@ -94,8 +98,10 @@ function openShortcutModal() {
   hint.textContent = 'Press Escape or ? to close';
   box.appendChild(hint);
 
+  box.tabIndex = -1;
   modalEl.appendChild(box);
   document.body.appendChild(modalEl);
+  try { box.focus(); } catch { /* non-fatal */ }
 }
 
 export function closeShortcutModal() {

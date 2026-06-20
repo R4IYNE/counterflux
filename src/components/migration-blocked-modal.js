@@ -17,6 +17,9 @@ export function showBlockingModal({ title, body }) {
   if (modalEl) return;
   modalEl = document.createElement('div');
   modalEl.id = 'cf-migration-blocked-modal';
+  modalEl.setAttribute('role', 'dialog');
+  modalEl.setAttribute('aria-modal', 'true');
+  modalEl.setAttribute('aria-labelledby', 'cf-migration-blocked-heading');
   modalEl.style.cssText =
     'position:fixed;inset:0;background:rgba(11,12,16,0.95);z-index:99999;display:flex;align-items:center;justify-content:center;font-family:"Space Grotesk",system-ui,sans-serif;color:#E8E6E3;';
 
@@ -25,6 +28,7 @@ export function showBlockingModal({ title, body }) {
     'max-width:440px;padding:32px;background:#14161C;border:1px solid #2A2D3A;border-radius:8px;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,0.5);';
 
   const h2 = document.createElement('h2');
+  h2.id = 'cf-migration-blocked-heading';
   h2.style.cssText = 'font-size:20px;font-weight:700;margin:0 0 16px 0;';
   h2.textContent = title;
 
@@ -34,8 +38,13 @@ export function showBlockingModal({ title, body }) {
 
   card.appendChild(h2);
   card.appendChild(p);
+  // No interactive controls — make the card focusable and move focus to it so
+  // the dialog is announced and keyboard focus isn't stranded behind this
+  // non-dismissible blocker (audit M7). No Tab trap needed (no focusables).
+  card.tabIndex = -1;
   modalEl.appendChild(card);
   document.body.appendChild(modalEl);
+  try { card.focus(); } catch { /* non-fatal */ }
 }
 
 export function hideBlockingModal() {
