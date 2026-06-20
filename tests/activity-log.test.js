@@ -8,6 +8,9 @@ vi.mock('../src/db/schema.js', () => ({
       get: vi.fn(async (key) => mockMetaStore[key] || undefined),
       put: vi.fn(async (obj) => { mockMetaStore[obj.key] = obj; }),
     },
+    // L13 — logActivity now serializes its read-modify-write in a Dexie
+    // transaction; the mock runs the scope fn directly (real db has .transaction).
+    transaction: vi.fn(async (_mode, _table, fn) => fn()),
   },
 }));
 

@@ -150,8 +150,9 @@ export function initDeckStore() {
               intel.fetchCombos(deckInfo, this.activeCards);
             }
             intel.loadDeckThresholds(deckId);
-            // Gap detection is synchronous — runs from local analytics.
-            const analytics = computeDeckAnalytics(this.activeCards);
+            // Gap detection is synchronous — reuse the memoized analytics getter
+            // instead of recomputing (L33).
+            const analytics = this.analytics;
             intel.updateGaps(analytics, this.activeDeck.deck_size || 100, this.activeDeck.tags || []);
           }
         })().catch((err) => console.warn('[deck] intelligence load failed', err));

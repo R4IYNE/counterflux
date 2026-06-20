@@ -280,39 +280,49 @@ export async function bulkPull(onProgress) {
  * Fetches rows with `updated_at > sync_last_pulled_at` from each synced table
  * and applies LWW merge locally under suppression.
  */
+// L21 — re-entrancy guard so the 60s interval and the window 'focus' trigger
+// can't run two overlapping pulls that race the shared cursor / merge.
+let _pulling = false;
+
 export async function incrementalPull() {
-  // Guards — match RESEARCH §Pattern 3
-  const authStore = typeof window !== 'undefined' ? window.Alpine?.store?.('auth') : null;
-  if (authStore?.status !== 'authed') return;
-  if (typeof navigator !== 'undefined' && navigator.onLine === false) return;
-  if (await isBulkPullInProgress()) return; // don't race the bulkPull
+  if (_pulling) return;
+  _pulling = true;
+  try {
+    // Guards — match RESEARCH §Pattern 3
+    const authStore = typeof window !== 'undefined' ? window.Alpine?.store?.('auth') : null;
+    if (authStore?.status !== 'authed') return;
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) return;
+    if (await isBulkPullInProgress()) return; // don't race the bulkPull
 
-  const { getSupabase } = await import('./supabase.js');
-  const supabase = getSupabase();
+    const { getSupabase } = await import('./supabase.js');
+    const supabase = getSupabase();
 
-  const cursor = await db.meta.get(LAST_PULLED_KEY);
-  const since = cursor?.value ?? 0;
-  const sinceIso = new Date(since).toISOString();
+    const cursor = await db.meta.get(LAST_PULLED_KEY);
+    const since = cursor?.value ?? 0;
+    const sinceIso = new Date(since).toISOString();
 
-  // Advance the cursor from the newest SERVER updated_at we actually receive —
-  // NOT the client clock (audit H9: client/server clock skew silently dropped
-  // rows updated in the skew window). The merge dedups by id, so the 1s overlap
-  // on the next pull is harmless and protects against same-millisecond rows.
-  let maxSeen = since;
-  for (const t of SYNCED_DATA_TABLES) {
-    const { data, error } = await supabase.schema('counterflux').from(t).select('*').gt('updated_at', sinceIso);
-    if (error) { console.warn(`[sync] incremental pull ${t} failed`, error); continue; }
-    const rows = data ?? [];
-    for (const r of rows) {
-      const ms = _toTs(r.updated_at);
-      if (ms > maxSeen) maxSeen = ms;
+    // Advance the cursor from the newest SERVER updated_at we actually receive —
+    // NOT the client clock (audit H9: client/server clock skew silently dropped
+    // rows updated in the skew window). The merge dedups by id, so the 1s overlap
+    // on the next pull is harmless and protects against same-millisecond rows.
+    let maxSeen = since;
+    for (const t of SYNCED_DATA_TABLES) {
+      const { data, error } = await supabase.schema('counterflux').from(t).select('*').gt('updated_at', sinceIso);
+      if (error) { console.warn(`[sync] incremental pull ${t} failed`, error); continue; }
+      const rows = data ?? [];
+      for (const r of rows) {
+        const ms = _toTs(r.updated_at);
+        if (ms > maxSeen) maxSeen = ms;
+      }
+      withHooksSuppressed(() => _mergeIncomingRows(t, rows));
     }
-    withHooksSuppressed(() => _mergeIncomingRows(t, rows));
-  }
 
-  // Only advance when something newer arrived; never move the cursor backwards.
-  if (maxSeen > since) {
-    await db.meta.put({ key: LAST_PULLED_KEY, value: Math.max(since, maxSeen - 1000) });
+    // Only advance when something newer arrived; never move the cursor backwards.
+    if (maxSeen > since) {
+      await db.meta.put({ key: LAST_PULLED_KEY, value: Math.max(since, maxSeen - 1000) });
+    }
+  } finally {
+    _pulling = false;
   }
 }
 

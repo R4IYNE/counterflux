@@ -41,7 +41,9 @@ export function extractRecommendedCards(buffer) {
       if (obj && obj.scryfall_id) {
         out.push({ scryfall_id: obj.scryfall_id, role: obj.role, reasoning: obj.reasoning, swap_out: obj.swap_out || null });
       }
-    } catch { /* malformed slice — stop, wait for more */ break; }
+    } catch { /* L43 — slice is closed but malformed; skip it and keep parsing
+                 later cards (a genuinely incomplete object already broke above
+                 via end === -1). */ i = end + 1; continue; }
     i = end + 1;
   }
   return out;

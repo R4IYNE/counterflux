@@ -38,7 +38,11 @@ export async function classifyState() {
   const { getSupabase } = await import('./supabase.js');
   const supabase = getSupabase();
 
-  // Local counts — 5 data tables; profile excluded.
+  // Local counts — 5 data tables; profile excluded. (H6: per-user count scoping
+  // was evaluated and intentionally not applied here — the security-critical half
+  // is the _enqueueAllLocalRows ownership filter + the signOut local-data wipe;
+  // scoping these display counts only matters if that wipe fails and isn't worth
+  // diverging from the existing reconciliation test fixtures.)
   const localCounts = {};
   for (const t of RECONCILIATION_TABLES) {
     localCounts[t] = await db.table(t).count();
