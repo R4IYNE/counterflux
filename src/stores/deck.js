@@ -407,7 +407,7 @@ export function initDeckStore() {
       return updated;
     },
 
-    async changeCommander(deckId, newCommanderId, newColorIdentity, partnerId = undefined) {
+    async changeCommander(deckId, newCommanderId, newColorIdentity, partnerId = undefined, companionId = undefined) {
       const patch = {
         commander_id: newCommanderId,
         color_identity: newColorIdentity,
@@ -418,6 +418,8 @@ export function initDeckStore() {
       // the merged colour identity but silently lost the partner. Pass null to
       // explicitly clear; omit to leave partner_id untouched).
       if (partnerId !== undefined) patch.partner_id = partnerId;
+      // Likewise companion_id (audit M16 — set when importing a // Companion section).
+      if (companionId !== undefined) patch.companion_id = companionId;
       await db.decks.update(deckId, patch);
       if (this.activeDeck?.id === deckId) {
         this.activeDeck = await db.decks.get(deckId);

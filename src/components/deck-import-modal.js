@@ -7,6 +7,8 @@
 
 import { detectFormat, parseDecklist, resolveDecklist } from '../services/deck-import.js';
 import { searchCards } from '../db/search.js';
+import { validateDeck } from '../services/deck-legality.js';
+import { mergeColorIdentity } from '../utils/commander-detection.js';
 import { attachFocusTrap } from '../utils/focus-trap.js';
 
 let activeModal = null;
@@ -163,51 +165,80 @@ export function openDeckImportModal(deckId) {
       const parsed = parseDecklist(text);
       const { resolved, unresolved } = await resolveDecklist(parsed, searchCards);
 
-      // Add resolved cards to deck. Honor the parsed per-line quantity (audit
-      // H1 — every copy past the first was previously dropped, collapsing 4x
-      // playsets and basic-land counts to 1). addCard enforces the singleton
-      // rule, so commander non-basic cards still cap at 1 internally.
-      for (const entry of resolved) {
-        if (entry.isCommander && store?.activeDeck) {
-          // Set as commander
-          const ci = entry.card?.color_identity || [];
-          await store.changeCommander(store.activeDeck.id, entry.scryfallId, ci);
-        }
+      // Partition the resolved list (audit M16): commander(s)/companion/sideboard
+      // are not plain maindeck cards.
+      const commanders = resolved.filter((e) => e.isCommander);
+      const companionEntry = resolved.find((e) => e.isCompanion);
+      const sideboard = resolved.filter((e) => e.isSideboard);
+      const maindeck = resolved.filter((e) => !e.isCommander && !e.isCompanion && !e.isSideboard);
+
+      // Commander (+ partner) — merge colour identity and persist partner_id +
+      // companion_id (audit M29: import previously set CI to the first commander's
+      // colours only and never wrote partner_id/companion_id).
+      if (commanders.length && store?.activeDeck) {
+        const [cmd, partner] = commanders;
+        const ci = partner
+          ? mergeColorIdentity(cmd.card?.color_identity || [], partner.card?.color_identity || [])
+          : (cmd.card?.color_identity || []);
+        await store.changeCommander(
+          store.activeDeck.id,
+          cmd.scryfallId,
+          ci,
+          partner?.scryfallId || null,
+          companionEntry?.scryfallId || null,
+        );
+      }
+
+      // Add commander(s) + companion + maindeck as deck_cards. Honor the parsed
+      // per-line quantity (audit H1). Sideboard cards are NOT added to the 99 (M16).
+      const toAdd = [...commanders, ...(companionEntry ? [companionEntry] : []), ...maindeck];
+      for (const entry of toAdd) {
         const qty = Math.max(1, Math.floor(Number(entry.qty)) || 1);
         await store?.addCard(entry.scryfallId, [], qty);
       }
 
-      // Show results
-      if (unresolved.length > 0) {
+      // Legality summary on the resulting deck (audit H5).
+      const deck = store?.activeDeck;
+      const legality = validateDeck({
+        format: deck?.format || 'commander',
+        commanderColorIdentity: deck?.color_identity || [],
+        deckSize: deck?.deck_size || 100,
+        cards: store?.activeCards || [],
+      });
+
+      // Show results — legality warnings, skipped sideboard, and unresolved cards.
+      const hasResults = legality.hasIssues || sideboard.length > 0 || unresolved.length > 0;
+      if (hasResults) {
         resultsArea.innerHTML = '';
         resultsArea.style.display = 'flex';
 
-        const header = document.createElement('span');
-        header.textContent = 'COULD NOT BE RESOLVED';
-        header.style.cssText = `
-          font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase;
-          letter-spacing: 0.15em; font-weight: 700; color: #E23838;
-        `;
-        resultsArea.appendChild(header);
+        const section = (label, colour, lines) => {
+          if (!lines.length) return;
+          const h = document.createElement('span');
+          h.textContent = label;
+          h.style.cssText = `font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; color: ${colour};`;
+          resultsArea.appendChild(h);
+          for (const line of lines) {
+            const row = document.createElement('div');
+            row.style.cssText = `padding: 4px 8px; background: #1C1F28; border: 1px solid #2A2D3A; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #EAECEE;`;
+            row.textContent = line;
+            resultsArea.appendChild(row);
+          }
+        };
 
-        for (const u of unresolved) {
-          const row = document.createElement('div');
-          row.style.cssText = `
-            padding: 4px 8px; background: #1C1F28; border: 1px solid #2A2D3A;
-            font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #EAECEE;
-          `;
-          row.textContent = `${u.qty}x ${u.name}`;
-          resultsArea.appendChild(row);
-        }
+        section('DECK LEGALITY', '#E2A838', legality.warnings);
+        section('SIDEBOARD (NOT ADDED)', '#7A8498', sideboard.map((s) => `${s.qty}x ${s.name}`));
+        section('COULD NOT BE RESOLVED', '#E23838', unresolved.map((u) => `${u.qty}x ${u.name}`));
       }
 
       // Dispatch change event for centre panel refresh
       document.dispatchEvent(new CustomEvent('deck-cards-changed'));
 
-      const msg = `Decklist imported. ${resolved.length} cards resolved, ${unresolved.length} need review.`;
-      toast?.show(msg, unresolved.length > 0 ? 'warning' : 'success');
+      const added = resolved.length - sideboard.length;
+      const msg = `Decklist imported. ${added} card${added === 1 ? '' : 's'} added, ${unresolved.length} need review.`;
+      toast?.show(msg, (unresolved.length > 0 || legality.hasIssues) ? 'warning' : 'success');
 
-      if (unresolved.length === 0) {
+      if (unresolved.length === 0 && !legality.hasIssues && sideboard.length === 0) {
         closeModal();
       }
     } catch (err) {
