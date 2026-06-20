@@ -75,6 +75,7 @@ let _flushing = false;
 
 let _hooksInstalled = false;
 let _flushTimer = null;
+let _retryTimer = null;  // L34 — tracked so teardown/reset can cancel a pending backoff retry
 let _initialized = false;
 
 // ---------------------------------------------------------------------------
@@ -684,7 +685,11 @@ function _scheduleRetry() {
   db.sync_queue.toArray().then(rows => {
     const maxAttempts = rows.reduce((m, r) => Math.max(m, r.attempts || 0), 0);
     const backoffMs = Math.min(8000, Math.max(2000, maxAttempts * 2000));
-    setTimeout(() => {
+    // L34 — track the handle so teardownSyncEngine can cancel it; clear any
+    // prior pending retry first so repeated _scheduleRetry calls don't leak.
+    if (_retryTimer !== null) clearTimeout(_retryTimer);
+    _retryTimer = setTimeout(() => {
+      _retryTimer = null;
       flushQueue().catch(err => console.error('[sync] retry flush failed', err));
     }, backoffMs);
   }).catch(() => {});
@@ -755,6 +760,10 @@ export async function teardownSyncEngine() {
     clearTimeout(_flushTimer);
     _flushTimer = null;
   }
+  if (_retryTimer !== null) {
+    clearTimeout(_retryTimer);
+    _retryTimer = null;
+  }
 
   // Plan 11-05 — unsubscribe Realtime channel.
   try {
@@ -789,6 +798,10 @@ export function __resetSyncEngineForTests() {
   if (_flushTimer !== null) {
     clearTimeout(_flushTimer);
     _flushTimer = null;
+  }
+  if (_retryTimer !== null) {
+    clearTimeout(_retryTimer);
+    _retryTimer = null;
   }
   if (_pullInterval !== null) {
     clearInterval(_pullInterval);
