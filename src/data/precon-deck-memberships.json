@@ -1,11 +1,11 @@
 {
   "$schema": "precon-deck-memberships v1",
-  "generated_at": "2026-06-14T07:15:44.814Z",
+  "generated_at": "2026-06-21T07:24:44.727Z",
   "generator": "scripts/sync-precon-decks.mjs",
   "source": "https://mtgjson.com/api/v5/DeckList.json",
   "bundle_count": 46,
-  "deck_count": 171,
-  "card_count": 17100,
+  "deck_count": 173,
+  "card_count": 17300,
   "memberships": {
     "40k": {
       "Forces of the Imperium": [
@@ -48714,6 +48714,408 @@
           "name": "Mountain"
         }
       ],
+      "Doom Prevails": [
+        {
+          "id": "099ed408-9178-4403-8b2d-479ca3cbda9b",
+          "name": "Doctor Doom, King of Latveria"
+        },
+        {
+          "id": "ee64d0dd-e3d8-4abc-b9d6-b19c505fbfa1",
+          "name": "Molecule Man"
+        },
+        {
+          "id": "11aaa7c6-c79d-48f9-af66-3b360d3b15b5",
+          "name": "Extract Power"
+        },
+        {
+          "id": "d78f2105-030f-4951-aa02-0d4db3d34f59",
+          "name": "Glorious Purpose"
+        },
+        {
+          "id": "545f7f8d-f6a3-4e85-a53c-3eb9b28ebd14",
+          "name": "Helmut Zemo, Mastermind"
+        },
+        {
+          "id": "5e4223df-c9fc-410a-913a-17bbfd054b57",
+          "name": "Kang Dynasty"
+        },
+        {
+          "id": "54050442-c9b1-481a-a1cd-77c147e9013e",
+          "name": "Age of Ultron"
+        },
+        {
+          "id": "89936964-7131-4ebf-b956-9692659866c1",
+          "name": "Damocles Base, Sword of Kang"
+        },
+        {
+          "id": "27da10b3-a131-4afc-ab84-5df93160d81f",
+          "name": "Endless Ranks of HYDRA"
+        },
+        {
+          "id": "3e792132-de96-47aa-bcd5-58f1e9be5932",
+          "name": "The Frightful Four"
+        },
+        {
+          "id": "799554d1-d1fb-4206-af9a-80d3582bedc0",
+          "name": "Iron Monger, Sadistic Tycoon"
+        },
+        {
+          "id": "5c589d94-7cea-4d4c-91a8-4d939634a5e5",
+          "name": "Klaw, Master of Sound"
+        },
+        {
+          "id": "fddd2e68-8e1e-4162-a2c7-49da2c86d471",
+          "name": "Abomination, World Ravager"
+        },
+        {
+          "id": "e34e33ea-042e-409c-b304-52644ec5b1f5",
+          "name": "Batroc the Leaper"
+        },
+        {
+          "id": "0ec1ec8b-24d7-40e4-9e9d-4d9ec4f0a4f8",
+          "name": "Killmonger, Ruthless Usurper"
+        },
+        {
+          "id": "44ac85d4-0429-4813-b7fe-eed1f6575b7d",
+          "name": "Lady Loki, Agent of Chaos"
+        },
+        {
+          "id": "595ee0b4-393f-4bda-bcb4-f0fa43cf7ed2",
+          "name": "Living Laser"
+        },
+        {
+          "id": "57e90938-9225-4c15-b4fb-aad2cced2e6a",
+          "name": "Loki's Scepter"
+        },
+        {
+          "id": "ab888daa-1161-4917-bca0-efd5c430b2d9",
+          "name": "Puppet Master, String Puller"
+        },
+        {
+          "id": "7ffa820c-ac05-4b3d-a0ec-5cbd3c42ac9c",
+          "name": "Stilt-Man, Towering Terror"
+        },
+        {
+          "id": "31255422-9afa-416c-90b2-62baf1d02cca",
+          "name": "Titania, Proud Pummeler"
+        },
+        {
+          "id": "b440109f-af52-415e-94d3-d4997f5bee3e",
+          "name": "Archnemesis"
+        },
+        {
+          "id": "88cf0311-d7e3-40bb-85fa-3cca973c5e44",
+          "name": "Kang Prime"
+        },
+        {
+          "id": "c0cd3d41-909b-4f20-a44b-db82807d10ae",
+          "name": "Loki, the Deceiver"
+        },
+        {
+          "id": "35bae013-51e9-4047-91e3-3b366ad0764e",
+          "name": "Red Ghost, Intangible Genius"
+        },
+        {
+          "id": "96714d95-baef-45e3-a2b0-00a8bdb3a76d",
+          "name": "The Squadron Sinister"
+        },
+        {
+          "id": "6880df6d-2ec3-459d-aa4f-92f595fab9b8",
+          "name": "Typhoid Mary, Fractured"
+        },
+        {
+          "id": "bf5b410f-d6cb-4a74-a975-372975cf21f6",
+          "name": "Ultron, Unlimited"
+        },
+        {
+          "id": "6f7935d1-d588-40ca-804f-bac56d986d74",
+          "name": "Doom's Time Platform"
+        },
+        {
+          "id": "a4960ab8-fac3-4a11-a3f6-46527cf228ea",
+          "name": "Tri-Sentinel, Act of Vengeance"
+        },
+        {
+          "id": "9d9ca869-e68a-4f53-9f52-85c714dac6f3",
+          "name": "Black Market Connections"
+        },
+        {
+          "id": "f6cd7c08-f5d4-4bdc-a254-809d900b0fc3",
+          "name": "Kindred Dominance"
+        },
+        {
+          "id": "b2d9c467-6e56-401c-ade1-95dad7e4e766",
+          "name": "Lethal Scheme"
+        },
+        {
+          "id": "de5afccc-8d42-4bd6-b068-b9ea2361655e",
+          "name": "Toxic Deluge"
+        },
+        {
+          "id": "7d4b1d44-126e-4987-9a9f-f0f9627a09cb",
+          "name": "Blasphemous Act"
+        },
+        {
+          "id": "57f61970-382e-415c-868b-6bbb6c78825d",
+          "name": "Chaos Warp"
+        },
+        {
+          "id": "985b9779-b8f6-4d7e-9490-5d2b91ee8db2",
+          "name": "Bedevil"
+        },
+        {
+          "id": "4eab054c-93f8-4da4-afb9-8f4c73c19213",
+          "name": "Currency Converter"
+        },
+        {
+          "id": "55a7f877-dc7c-4c1b-b233-900958c9e8f5",
+          "name": "Progenitor's Icon"
+        },
+        {
+          "id": "1d8b007b-3169-4ee3-80c7-781fc096fc7a",
+          "name": "Skullclamp"
+        },
+        {
+          "id": "587cc3ba-75c2-46a0-bd44-6f953fe1eb01",
+          "name": "Canyon Slough"
+        },
+        {
+          "id": "0c37e84e-e7e0-4dfe-bf17-daeb2e434861",
+          "name": "Choked Estuary"
+        },
+        {
+          "id": "d2a70a9d-2d9f-4afd-9393-8d6518936ee2",
+          "name": "Coastal Peak"
+        },
+        {
+          "id": "d20e433a-eb62-4301-bc20-bfe27468b033",
+          "name": "Dragonskull Summit"
+        },
+        {
+          "id": "ebea49ab-e5cf-46d9-ae35-226a7321ede0",
+          "name": "Drowned Catacomb"
+        },
+        {
+          "id": "8853ff94-bf44-4cfd-9d3a-0743c361fb0d",
+          "name": "Exotic Orchard"
+        },
+        {
+          "id": "5fa4556f-2fdc-42e6-98cb-291cee2ca3ac",
+          "name": "Fetid Pools"
+        },
+        {
+          "id": "76fdf6be-e13b-49ee-9d50-8625edb49951",
+          "name": "Foreboding Ruins"
+        },
+        {
+          "id": "ae705a26-5371-4236-904c-fe3e58b4721d",
+          "name": "Frostboil Snarl"
+        },
+        {
+          "id": "3c409d1e-f634-44a2-8fcf-dcdcb0babc3f",
+          "name": "Luxury Suite"
+        },
+        {
+          "id": "9fbe68ba-ffe5-4fe0-ac0a-0b3221e4f395",
+          "name": "Scavenger Grounds"
+        },
+        {
+          "id": "43abdfba-0a55-4b8a-858e-3372ee40a579",
+          "name": "Scorched Geyser"
+        },
+        {
+          "id": "d707c477-440f-417c-970a-0e7426a58045",
+          "name": "Smoldering Marsh"
+        },
+        {
+          "id": "c762f475-7e58-4477-839b-b3c55434b88f",
+          "name": "Sulfur Falls"
+        },
+        {
+          "id": "3a8eef9b-9b03-42cd-a27a-07021bf0b33f",
+          "name": "Sunken Hollow"
+        },
+        {
+          "id": "c0bd188b-7fb9-4070-a92b-80b81ba71c61",
+          "name": "Spark Double"
+        },
+        {
+          "id": "6ac8eb8a-01b8-41b2-b725-01a1fc17fcb7",
+          "name": "Titan of Littjara"
+        },
+        {
+          "id": "eaf2251a-ffaf-4055-9474-7e3d08d89609",
+          "name": "Baron Strucker, HYDRA Overlord"
+        },
+        {
+          "id": "1a1b2bd0-e17d-4b34-a8ee-7c913a6bc945",
+          "name": "Moonstone, Harsh Mistress"
+        },
+        {
+          "id": "fb96ee86-5139-472a-9c4b-8a8a4280fc7e",
+          "name": "Kang, Temporal Tyrant"
+        },
+        {
+          "id": "e94ccedb-1d27-4098-8823-d8d99b30387c",
+          "name": "Madame Hydra"
+        },
+        {
+          "id": "822b0249-e1df-453d-8b60-75a5196ed818",
+          "name": "Villainous Hideout"
+        },
+        {
+          "id": "050c52b1-5dea-4aae-aa32-e501d61b56e7",
+          "name": "Containment Construct"
+        },
+        {
+          "id": "dcc50ba7-c4be-4c20-a1fc-466194aab7c2",
+          "name": "Chameleon, Master of Disguise"
+        },
+        {
+          "id": "ac943e31-26bc-4b54-b73f-460e6e402d86",
+          "name": "Propaganda"
+        },
+        {
+          "id": "1ed2b60b-5f20-4ae6-93fb-51540ad9c9e7",
+          "name": "Night's Whisper"
+        },
+        {
+          "id": "be3f418b-25c3-4370-a1de-50e8e88c2ef6",
+          "name": "Syphon Mind"
+        },
+        {
+          "id": "d3cd086b-8ffe-452f-9bb1-cc235058a3af",
+          "name": "Tombstone, Career Criminal"
+        },
+        {
+          "id": "06d44ada-f98e-405f-89d3-ac1002bfb854",
+          "name": "Withering Torment"
+        },
+        {
+          "id": "bb759a0b-df7b-43c8-8e8e-bd52535cdbc0",
+          "name": "Superior Foes of Spider-Man"
+        },
+        {
+          "id": "71067239-d46f-4201-a91c-6aa4c41fa8b1",
+          "name": "Vandalblast"
+        },
+        {
+          "id": "08d18fce-e250-4bcb-9acf-08a8a6e4f1e2",
+          "name": "Prowler, Clawed Thief"
+        },
+        {
+          "id": "379ffc67-4142-4ead-a871-0f851523745e",
+          "name": "Terminate"
+        },
+        {
+          "id": "09cb4254-b88c-4231-b604-a144a20187a2",
+          "name": "Arcane Signet"
+        },
+        {
+          "id": "537ea7e7-e8e8-4736-bdd9-1085f1a7c259",
+          "name": "Patchwork Banner"
+        },
+        {
+          "id": "a7fc546e-7e3c-436d-a0b9-9ac3548ec344",
+          "name": "Sol Ring"
+        },
+        {
+          "id": "6675632d-d74a-4b1e-8539-ac678d5545a5",
+          "name": "Swiftfoot Boots"
+        },
+        {
+          "id": "00d4a1d4-b86a-4c05-9ecc-130e011e0486",
+          "name": "Talisman of Dominance"
+        },
+        {
+          "id": "ccacf88d-407d-465d-958a-1389b7d700e6",
+          "name": "Talisman of Indulgence"
+        },
+        {
+          "id": "a508330c-f223-4ee3-8610-e2c394519ae6",
+          "name": "Command Tower"
+        },
+        {
+          "id": "d28542af-936f-44e5-a4e3-119f23c9f0d6",
+          "name": "Crumbling Necropolis"
+        },
+        {
+          "id": "836b8f52-10d2-4716-9f7b-38fb23bc68de",
+          "name": "Path of Ancestry"
+        },
+        {
+          "id": "c0d17d04-cf0b-4918-bfec-b34b0d98a602",
+          "name": "Secluded Courtyard"
+        },
+        {
+          "id": "719704eb-04b2-4e2f-9954-50f77dd9bf08",
+          "name": "Terramorphic Expanse"
+        },
+        {
+          "id": "d3782952-3839-4a94-95bc-716611d3ece6",
+          "name": "Unclaimed Territory"
+        },
+        {
+          "id": "5a74175b-2418-4226-8435-1490532e644f",
+          "name": "Island"
+        },
+        {
+          "id": "5a74175b-2418-4226-8435-1490532e644f",
+          "name": "Island"
+        },
+        {
+          "id": "5a74175b-2418-4226-8435-1490532e644f",
+          "name": "Island"
+        },
+        {
+          "id": "5a74175b-2418-4226-8435-1490532e644f",
+          "name": "Island"
+        },
+        {
+          "id": "74414c62-4b68-4e1b-9241-feff3231b9ee",
+          "name": "Swamp"
+        },
+        {
+          "id": "74414c62-4b68-4e1b-9241-feff3231b9ee",
+          "name": "Swamp"
+        },
+        {
+          "id": "74414c62-4b68-4e1b-9241-feff3231b9ee",
+          "name": "Swamp"
+        },
+        {
+          "id": "74414c62-4b68-4e1b-9241-feff3231b9ee",
+          "name": "Swamp"
+        },
+        {
+          "id": "74414c62-4b68-4e1b-9241-feff3231b9ee",
+          "name": "Swamp"
+        },
+        {
+          "id": "74414c62-4b68-4e1b-9241-feff3231b9ee",
+          "name": "Swamp"
+        },
+        {
+          "id": "4bdbae27-9a55-485f-a1fc-3fa988184e9d",
+          "name": "Mountain"
+        },
+        {
+          "id": "4bdbae27-9a55-485f-a1fc-3fa988184e9d",
+          "name": "Mountain"
+        },
+        {
+          "id": "4bdbae27-9a55-485f-a1fc-3fa988184e9d",
+          "name": "Mountain"
+        },
+        {
+          "id": "4bdbae27-9a55-485f-a1fc-3fa988184e9d",
+          "name": "Mountain"
+        },
+        {
+          "id": "4bdbae27-9a55-485f-a1fc-3fa988184e9d",
+          "name": "Mountain"
+        }
+      ],
       "The Fantastic Four": [
         {
           "id": "d8e13ecb-98be-4d9b-86a2-24eaa98f7f0d",
@@ -49094,6 +49496,408 @@
         {
           "id": "4bdbae27-9a55-485f-a1fc-3fa988184e9d",
           "name": "Mountain"
+        },
+        {
+          "id": "22463284-2478-4b1e-9a37-6dd2383266cf",
+          "name": "Forest"
+        },
+        {
+          "id": "22463284-2478-4b1e-9a37-6dd2383266cf",
+          "name": "Forest"
+        },
+        {
+          "id": "22463284-2478-4b1e-9a37-6dd2383266cf",
+          "name": "Forest"
+        },
+        {
+          "id": "22463284-2478-4b1e-9a37-6dd2383266cf",
+          "name": "Forest"
+        },
+        {
+          "id": "22463284-2478-4b1e-9a37-6dd2383266cf",
+          "name": "Forest"
+        }
+      ],
+      "Wakanda Forever": [
+        {
+          "id": "c1c8ad61-b7e1-446c-8b74-6e29371ea1d5",
+          "name": "T'Challa, the Black Panther"
+        },
+        {
+          "id": "1d1e00e3-7f3c-4a49-859b-398283c38e61",
+          "name": "Dora Milaje Elite"
+        },
+        {
+          "id": "dd33edfe-578f-4b24-bd27-5a965b6c14ad",
+          "name": "Everett K. Ross, Hapless Attaché"
+        },
+        {
+          "id": "d96a9ecd-86a3-49ae-851c-ce93b0dca6af",
+          "name": "Hatut Zeraze Strike Force"
+        },
+        {
+          "id": "6908808f-e47e-4acb-a405-41b8018a5729",
+          "name": "King Solomon's Frogs"
+        },
+        {
+          "id": "5b5b87ba-c6cc-4f25-a5c9-22464a41de65",
+          "name": "Midnight Angel Armor"
+        },
+        {
+          "id": "6b971f0b-42de-46bc-8e26-51eb5be447ec",
+          "name": "Queen Mother Ramonda"
+        },
+        {
+          "id": "e94da91d-6c76-4909-91e3-2f8d97398654",
+          "name": "Royal Talon Fighter Jet"
+        },
+        {
+          "id": "b8cc0703-f626-4d42-90bb-1a26e331a9de",
+          "name": "The Spear of Bashenga"
+        },
+        {
+          "id": "ad4224f8-ee83-4833-99a1-71e3ecbe9718",
+          "name": "Ancestral Communion"
+        },
+        {
+          "id": "6da747ef-4d8f-49a2-8682-52ab87e6ad6e",
+          "name": "Fight for the Throne"
+        },
+        {
+          "id": "2e330643-5714-4724-a65c-0873ce9cc5a6",
+          "name": "M'Baku, Jabari Chieftain"
+        },
+        {
+          "id": "6cd88c80-a445-4f88-95e3-e370620c90fc",
+          "name": "Nakia, Wakandan Operative"
+        },
+        {
+          "id": "9fb292a4-cf71-4aeb-b92e-eab2e3177653",
+          "name": "W'Kabi, Shield of the Nation"
+        },
+        {
+          "id": "8b893d46-25f0-4c6a-b9a3-ff25277be918",
+          "name": "Wakanda Forever!"
+        },
+        {
+          "id": "b8225b51-d5a4-4b46-9a10-b581362b6a11",
+          "name": "Zuri, Warrior of Wakanda"
+        },
+        {
+          "id": "c53a05f1-8e95-4a39-b2a3-a21d3d19b5b3",
+          "name": "Bast, Panther Goddess"
+        },
+        {
+          "id": "18ee486e-dc25-4de7-a71f-f11fdf100176",
+          "name": "Okoye, Mighty and Adored"
+        },
+        {
+          "id": "bb9efb2e-3fe8-4f21-82c5-e089d835bdd5",
+          "name": "Shuri, the Black Panther"
+        },
+        {
+          "id": "0a61d843-2a7c-459c-9018-1ee4488c90a9",
+          "name": "Storm, Queen of Wakanda"
+        },
+        {
+          "id": "28deeaf6-c32b-41f1-b94f-0ae303377ea0",
+          "name": "T'Chaka, Venerable King"
+        },
+        {
+          "id": "1725b91a-bac4-4f91-b2b5-bb66086b54a3",
+          "name": "Heart-Shaped Herb"
+        },
+        {
+          "id": "1138096a-0d7c-461b-af83-3c90f681722d",
+          "name": "Kimoyo Beads"
+        },
+        {
+          "id": "3ae767c5-fc28-4d9f-9e5a-ee28735f4054",
+          "name": "N'Yami-Class Mother Ship"
+        },
+        {
+          "id": "111f2e18-43b7-4a80-b53a-ed1cc14e500d",
+          "name": "Panther Habit"
+        },
+        {
+          "id": "8bb7185d-fc07-4f2f-9762-aa7e7c287cba",
+          "name": "Panther Robot"
+        },
+        {
+          "id": "ace834f0-7f64-4716-8599-f96f674e61a1",
+          "name": "Shuri's Fabricator"
+        },
+        {
+          "id": "2212e15b-5deb-4ab8-9f6f-7991e750e21a",
+          "name": "Vibranium Mining Mech"
+        },
+        {
+          "id": "2b47e8b0-471c-4429-8273-d114fdf95e13",
+          "name": "Vibranium Strike Gauntlets"
+        },
+        {
+          "id": "11b3f96c-138e-431e-a1d6-5ebae4cb6b2f",
+          "name": "The Great Mound"
+        },
+        {
+          "id": "dabd95db-b4ca-446b-bb68-6f52cec9ed2a",
+          "name": "Divine Visitation"
+        },
+        {
+          "id": "3092e715-36cf-4b41-95c1-cf271646db39",
+          "name": "Loyal Retainers"
+        },
+        {
+          "id": "a0660e74-6973-41d7-a20b-8d71fed1495a",
+          "name": "Martial Coup"
+        },
+        {
+          "id": "f392782b-7464-4617-b421-6b5d0e2880fc",
+          "name": "Vanquish the Horde"
+        },
+        {
+          "id": "492c2f9a-51e7-4e0f-9899-23bf43ea988b",
+          "name": "Birds of Paradise"
+        },
+        {
+          "id": "8380eb8d-d1c3-4f96-b3b9-54845188c1d1",
+          "name": "Conduit of Worlds"
+        },
+        {
+          "id": "9dd8b16f-3dfd-4e04-a2e9-ec87d0e007c9",
+          "name": "Greater Good"
+        },
+        {
+          "id": "7afc4a15-5ff8-457a-aa62-803b2d78d912",
+          "name": "Nature's Lore"
+        },
+        {
+          "id": "6996b9c4-e78c-4970-91c7-9025a0a4f670",
+          "name": "Overwhelming Stampede"
+        },
+        {
+          "id": "06a7ad3b-87d4-47f0-9450-facac00dfe97",
+          "name": "Coveted Jewel"
+        },
+        {
+          "id": "28e619e6-ecc1-49c3-8fa9-ce42becdb9ba",
+          "name": "Gilded Lotus"
+        },
+        {
+          "id": "70ffc71f-328d-421d-926b-6f2e45ffb812",
+          "name": "Helm of the Host"
+        },
+        {
+          "id": "d7e2d686-1fbc-449a-9af4-f00a71ff7911",
+          "name": "Metalwork Colossus"
+        },
+        {
+          "id": "daafd816-f7c1-4630-9e5c-a1e5db570a35",
+          "name": "Solemn Simulacrum"
+        },
+        {
+          "id": "03499a72-e865-46ff-bcb2-75e53e4b600e",
+          "name": "Trading Post"
+        },
+        {
+          "id": "f0b11ba3-68ba-4067-af40-2a55e31b395e",
+          "name": "Bountiful Promenade"
+        },
+        {
+          "id": "369e6485-fbc7-45f9-ac9d-2e26dd94f2d5",
+          "name": "Canopy Vista"
+        },
+        {
+          "id": "15f81ac6-a550-4782-a3a9-22d7fef1c206",
+          "name": "Fortified Village"
+        },
+        {
+          "id": "df1233de-4449-4c32-944b-e19bed666324",
+          "name": "Razorverge Thicket"
+        },
+        {
+          "id": "6bd38442-854d-43b1-a80c-9d841c3a304d",
+          "name": "Scattered Groves"
+        },
+        {
+          "id": "9fbe68ba-ffe5-4fe0-ac0a-0b3221e4f395",
+          "name": "Scavenger Grounds"
+        },
+        {
+          "id": "841f369e-6532-469c-8565-78094b33a3d9",
+          "name": "Sungrass Prairie"
+        },
+        {
+          "id": "e83092ee-4a90-4eac-915f-3fd01b7d9bd0",
+          "name": "Sunpetal Grove"
+        },
+        {
+          "id": "6aac7a6d-90c7-4fe7-b6d3-f63a7170ee96",
+          "name": "Throne of the High City"
+        },
+        {
+          "id": "bd961730-9e55-418e-904d-0443b1bf1114",
+          "name": "Scourglass"
+        },
+        {
+          "id": "13a8b618-6e8f-46cf-b456-dffa35831a67",
+          "name": "Fleecemane Lion"
+        },
+        {
+          "id": "e1aae864-cad1-48b2-bb33-8c2dbb53f5ec",
+          "name": "Hammer of Nazahn"
+        },
+        {
+          "id": "708ad400-fa01-4473-aa9e-ba3db965b521",
+          "name": "Mind's Eye"
+        },
+        {
+          "id": "ff890d40-710d-4b28-b303-37f4b7adcf42",
+          "name": "Sword of the Animist"
+        },
+        {
+          "id": "873d52a8-f10e-4116-8511-bf63aeb2e413",
+          "name": "Thran Dynamo"
+        },
+        {
+          "id": "99d30a21-b003-4a17-a4c5-97811f230896",
+          "name": "Dispatch"
+        },
+        {
+          "id": "c3f9b454-97e9-4c77-b37a-e974221ae385",
+          "name": "Generous Gift"
+        },
+        {
+          "id": "2962e4d3-3f01-47d4-abe3-75658700c132",
+          "name": "Ingenious Smith"
+        },
+        {
+          "id": "3a8c2a84-e0f2-4611-af3d-42f4578ad4e3",
+          "name": "Palace Jailer"
+        },
+        {
+          "id": "f726d332-6961-403d-83f8-25c997f4dffc",
+          "name": "Valorous Stance"
+        },
+        {
+          "id": "400b43aa-c1d2-4435-b863-061f43889422",
+          "name": "Beast Within"
+        },
+        {
+          "id": "bd7138fb-6aa7-455e-b1f7-ca08d747277d",
+          "name": "Harmonize"
+        },
+        {
+          "id": "6d81eda0-2520-4531-815a-8dea27306776",
+          "name": "Loyal Guardian"
+        },
+        {
+          "id": "ec924d56-d1d9-4226-9e73-cfcc5ab4f708",
+          "name": "Arcane Signet"
+        },
+        {
+          "id": "a1a1cfec-72ca-499b-b621-fa2d8502ea20",
+          "name": "Meteor Golem"
+        },
+        {
+          "id": "a739dd30-1fce-49db-99fb-15e346f4f2db",
+          "name": "Sol Ring"
+        },
+        {
+          "id": "a3f31ac4-09ca-4712-a311-50d28824bfad",
+          "name": "Whispersilk Cloak"
+        },
+        {
+          "id": "ef8ac50e-251b-411b-aee9-e5102843d1ed",
+          "name": "Command Tower"
+        },
+        {
+          "id": "c0318a48-30e4-4ef7-be3d-5e561c5ce428",
+          "name": "Evolving Wilds"
+        },
+        {
+          "id": "836b8f52-10d2-4716-9f7b-38fb23bc68de",
+          "name": "Path of Ancestry"
+        },
+        {
+          "id": "719704eb-04b2-4e2f-9954-50f77dd9bf08",
+          "name": "Terramorphic Expanse"
+        },
+        {
+          "id": "5f029c91-f20b-4aa5-a7d9-dd6ddef1c877",
+          "name": "Plains"
+        },
+        {
+          "id": "5f029c91-f20b-4aa5-a7d9-dd6ddef1c877",
+          "name": "Plains"
+        },
+        {
+          "id": "5f029c91-f20b-4aa5-a7d9-dd6ddef1c877",
+          "name": "Plains"
+        },
+        {
+          "id": "5f029c91-f20b-4aa5-a7d9-dd6ddef1c877",
+          "name": "Plains"
+        },
+        {
+          "id": "5f029c91-f20b-4aa5-a7d9-dd6ddef1c877",
+          "name": "Plains"
+        },
+        {
+          "id": "5f029c91-f20b-4aa5-a7d9-dd6ddef1c877",
+          "name": "Plains"
+        },
+        {
+          "id": "5f029c91-f20b-4aa5-a7d9-dd6ddef1c877",
+          "name": "Plains"
+        },
+        {
+          "id": "5f029c91-f20b-4aa5-a7d9-dd6ddef1c877",
+          "name": "Plains"
+        },
+        {
+          "id": "5f029c91-f20b-4aa5-a7d9-dd6ddef1c877",
+          "name": "Plains"
+        },
+        {
+          "id": "5f029c91-f20b-4aa5-a7d9-dd6ddef1c877",
+          "name": "Plains"
+        },
+        {
+          "id": "5f029c91-f20b-4aa5-a7d9-dd6ddef1c877",
+          "name": "Plains"
+        },
+        {
+          "id": "5f029c91-f20b-4aa5-a7d9-dd6ddef1c877",
+          "name": "Plains"
+        },
+        {
+          "id": "22463284-2478-4b1e-9a37-6dd2383266cf",
+          "name": "Forest"
+        },
+        {
+          "id": "22463284-2478-4b1e-9a37-6dd2383266cf",
+          "name": "Forest"
+        },
+        {
+          "id": "22463284-2478-4b1e-9a37-6dd2383266cf",
+          "name": "Forest"
+        },
+        {
+          "id": "22463284-2478-4b1e-9a37-6dd2383266cf",
+          "name": "Forest"
+        },
+        {
+          "id": "22463284-2478-4b1e-9a37-6dd2383266cf",
+          "name": "Forest"
+        },
+        {
+          "id": "22463284-2478-4b1e-9a37-6dd2383266cf",
+          "name": "Forest"
+        },
+        {
+          "id": "22463284-2478-4b1e-9a37-6dd2383266cf",
+          "name": "Forest"
         },
         {
           "id": "22463284-2478-4b1e-9a37-6dd2383266cf",
