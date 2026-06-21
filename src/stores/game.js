@@ -78,6 +78,7 @@ export function initGameStore() {
       // Plan 3 (D-17, D-18): persist active player + lap history + wall-clock anchor
       activePlayerIndex: store.activePlayerIndex,
       turn_laps: [...(store.turn_laps || [])],
+      turn_lap_players: [...(store.turn_lap_players || [])],  // M23
       turnStartedAt: store.turnStartedAt,
     };
     await db.meta.put({ key: 'active_game', ...snapshot });
@@ -118,6 +119,10 @@ export function initGameStore() {
     // GAME-09 (D-17): per-turn lap durations in ms. Schema field exists since
     // Phase 7 v6 migration; this store field mirrors what gets persisted.
     turn_laps: [],
+    // M23 — acting player index per lap (parallel to turn_laps) so the post-game
+    // pacing stats attribute each turn to the right player (random first player +
+    // skipped eliminations break the old lap-index-modulo assumption).
+    turn_lap_players: [],
     // GAME-10 (D-18): wall-clock anchor for turn timer (Date.now() snapshot at
     // turn start). Replaces setInterval accumulation which is throttled to 1Hz
     // in background tabs (Pitfall P-1).
@@ -226,6 +231,7 @@ export function initGameStore() {
 
       // GAME-09 + GAME-10 init: clear lap history, snapshot wall-clock anchor.
       this.turn_laps = [];
+      this.turn_lap_players = [];
       this.turnStartedAt = Date.now();
 
       // Auto-save initial state BEFORE spinner so a partial game survives crash
@@ -349,7 +355,11 @@ export function initGameStore() {
       // GAME-09 (D-17): push wall-clock lap onto turn_laps before re-anchoring
       if (this.turnStartedAt != null) {
         const lap = Date.now() - this.turnStartedAt;
-        if (lap >= 0) this.turn_laps.push(lap);
+        if (lap >= 0) {
+          this.turn_laps.push(lap);
+          // M23 — the lap belongs to the player active BEFORE we advance below.
+          this.turn_lap_players.push(this.activePlayerIndex);
+        }
       }
       // GAME-10 (D-18): re-anchor for the next turn
       this.turnStartedAt = Date.now();
@@ -433,7 +443,10 @@ export function initGameStore() {
       // GAME-09: push final lap before saving (turn that ended without nextTurn)
       if (this.turnStartedAt != null) {
         const finalLap = Date.now() - this.turnStartedAt;
-        if (finalLap >= 0) this.turn_laps.push(finalLap);
+        if (finalLap >= 0) {
+          this.turn_laps.push(finalLap);
+          this.turn_lap_players.push(this.activePlayerIndex);  // M23
+        }
         this.turnStartedAt = null;
       }
 
@@ -498,6 +511,7 @@ export function initGameStore() {
         // Plan 3: restore lap state + active player + wall-clock anchor
         this.activePlayerIndex = saved.activePlayerIndex ?? null;
         this.turn_laps = saved.turn_laps || [];
+        this.turn_lap_players = saved.turn_lap_players || [];  // M23
         this.turnStartedAt = saved.turnStartedAt ?? null;
         // L37 — resume the live timer tick on reload of an active game (the
         // display was frozen until the next manual action; turnStartedAt anchors
@@ -529,6 +543,7 @@ export function initGameStore() {
       // Plan 3: clear new fields
       this.activePlayerIndex = null;
       this.turn_laps = [];
+      this.turn_lap_players = [];
       this.turnStartedAt = null;
       this.pauseTimer();
     },

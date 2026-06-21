@@ -38,8 +38,10 @@ function formatLap(ms) {
  * Per CONTEXT D-19 + RESEARCH GAME-09 third row.
  *
  * @param {number[]} turnLaps - per-turn durations in ms
- * @param {Array} players - $store.game.players (we use .name; lap index modulo
- *   players.length identifies which player owned which turn)
+ * @param {Array} players - $store.game.players (we use .name)
+ * @param {number[]} [lapPlayers] - acting player index per lap (M23). When it
+ *   lines up 1:1 with turnLaps, laps are attributed to the recorded player;
+ *   otherwise we fall back to the legacy filtered-index-modulo assumption.
  * @returns {{
  *   longestTurn: number,
  *   longestPlayerName: string,
@@ -47,32 +49,37 @@ function formatLap(ms) {
  *   perPlayerAvg: Array<{ name: string, avgMs: number }>,
  * }}
  */
-export function computePacingStats(turnLaps, players) {
-  const laps = (turnLaps || []).filter(
-    (n) => typeof n === 'number' && n > 0 && !isNaN(n)
-  );
-  if (laps.length === 0 || !players || players.length === 0) {
+export function computePacingStats(turnLaps, players, lapPlayers) {
+  const allLaps = turnLaps || [];
+  // Only trust recorded acting-player indices when they align 1:1 with the laps
+  // (M23); legacy saved games / mismatched arrays fall back to index-modulo.
+  const aligned = Array.isArray(lapPlayers) && lapPlayers.length === allLaps.length;
+
+  const raw = allLaps
+    .map((ms, i) => ({ ms, p: aligned ? lapPlayers[i] : undefined }))
+    .filter((x) => typeof x.ms === 'number' && x.ms > 0 && !isNaN(x.ms));
+
+  if (raw.length === 0 || !players || players.length === 0) {
     return { longestTurn: 0, longestPlayerName: '', avgTurn: 0, perPlayerAvg: [] };
   }
 
-  // longestTurn + which player took it (lap index modulo player count maps to
-  // player index — turn order rotates predictably from activePlayerIndex=0)
+  // Acting player for a (filtered) lap: recorded index when valid (M23), else
+  // the legacy filtered-index modulo.
+  const playerOf = (x, idx) =>
+    (typeof x.p === 'number' && x.p >= 0 && x.p < players.length) ? x.p : (idx % players.length);
+
   let longestIdx = 0;
-  for (let i = 1; i < laps.length; i++) {
-    if (laps[i] > laps[longestIdx]) longestIdx = i;
+  for (let i = 1; i < raw.length; i++) {
+    if (raw[i].ms > raw[longestIdx].ms) longestIdx = i;
   }
-  const longestTurn = laps[longestIdx];
-  const longestPlayerIndex = longestIdx % players.length;
+  const longestTurn = raw[longestIdx].ms;
+  const longestPlayerIndex = playerOf(raw[longestIdx], longestIdx);
   const longestPlayerName = players[longestPlayerIndex]?.name || `Player ${longestPlayerIndex + 1}`;
 
-  // avgTurn (overall mean)
-  const avgTurn = laps.reduce((sum, n) => sum + n, 0) / laps.length;
+  const avgTurn = raw.reduce((sum, x) => sum + x.ms, 0) / raw.length;
 
-  // perPlayerAvg: group by index modulo player count
   const buckets = players.map(() => []);
-  for (let i = 0; i < laps.length; i++) {
-    buckets[i % players.length].push(laps[i]);
-  }
+  raw.forEach((x, idx) => { buckets[playerOf(x, idx)].push(x.ms); });
   const perPlayerAvg = players.map((p, idx) => {
     const playerLaps = buckets[idx];
     const avgMs =
@@ -381,7 +388,8 @@ export function postGameOverlay() {
     _computePacing() {
       const stats = computePacingStats(
         this.$store.game.turn_laps,
-        this.$store.game.players
+        this.$store.game.players,
+        this.$store.game.turn_lap_players  // M23 — correct per-player attribution
       );
       this.pacing = {
         longestTurn: stats.longestTurn,

@@ -78,6 +78,23 @@ describe('computePacingStats (GAME-09)', () => {
     expect(s.avgTurn).toBe(0);
     expect(s.perPlayerAvg).toEqual([]);
   });
+
+  it('attributes laps to the RECORDED acting player when lapPlayers aligns (M23)', () => {
+    // 3-player game that started on Carol (index 2): the legacy modulo would
+    // misattribute every lap; the recorded indices put them right.
+    const p3 = [{ name: 'Alice' }, { name: 'Bob' }, { name: 'Carol' }];
+    const laps = [90000, 30000, 60000];
+    const lapPlayers = [2, 0, 1]; // Carol, Alice, Bob
+    const s = computePacingStats(laps, p3, lapPlayers);
+    expect(s.longestPlayerName).toBe('Carol'); // 90000 lap belonged to Carol, not Alice
+    expect(s.perPlayerAvg.find((x) => x.name === 'Carol').avgMs).toBe(90000);
+    expect(s.perPlayerAvg.find((x) => x.name === 'Alice').avgMs).toBe(30000);
+  });
+
+  it('falls back to legacy index-modulo when lapPlayers length mismatches (M23)', () => {
+    const s = computePacingStats([60000, 30000, 90000, 45000], players, [0, 1]); // wrong length
+    expect(s.longestPlayerName).toBe('Alice'); // identical to the legacy modulo path
+  });
 });
 
 describe('renderPostGameOverlay TURN PACING section', () => {
