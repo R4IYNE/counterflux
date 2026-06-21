@@ -199,6 +199,9 @@ export function initAuthStore() {
         // per-user `sync_reconciled_at:*` markers are cleared too, so the next
         // sign-in reconciles and re-pulls FRESH rather than short-circuiting on
         // a stale 'reconciled' flag and leaving the account with empty data.
+        // L28 — stop the market sync-error poll (2s interval) on sign-out so it
+        // doesn't run unbounded for the session; market.init() restarts it next time.
+        try { window.Alpine?.store?.('market')?._stopSyncErrorPoll?.(); } catch { /* non-fatal */ }
         await _clearLocalUserData();
 
         return { error };

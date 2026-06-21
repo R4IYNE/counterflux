@@ -122,8 +122,15 @@ async function bootApp() {
   // Expose db globally for Alpine inline expressions (flyout, etc.)
   window.__cf_db = db;
 
-  // Expose currency converter globally for Alpine template usage
-  window.__cf_eurToGbp = eurToGbp;
+  // Expose currency converter globally for Alpine template usage. The window
+  // wrapper marks approximate values with a leading "~" (audit L3) so EVERY price
+  // surface (movers, watchlist, spoiler, deck tiles, search…) signals when the
+  // GBP figure came from the fallback FX rate — not just the dashboard headline.
+  // The core eurToGbp (imports + tests) is unchanged; '--' (no price) is left as-is.
+  window.__cf_eurToGbp = (eur) => {
+    const s = eurToGbp(eur);
+    return (s && s[0] === '£' && (isRateFallback() || getCurrentRate() === null)) ? '~' + s : s;
+  };
   window.__cf_eurToGbpValue = eurToGbpValue;
   // audit L2 — true when GBP figures are derived from the static fallback rate
   // (live fetch failed) or before the live rate has loaded, so surfaces can mark

@@ -108,6 +108,9 @@ export function initDeckContextMenu(container) {
               });
             });
           });
+        } else {
+          // L27 — give feedback on invalid input instead of silently doing nothing.
+          toastStore?.error('Enter a whole number greater than 0.');
         }
       }
     }));
