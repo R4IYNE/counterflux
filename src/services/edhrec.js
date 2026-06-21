@@ -4,6 +4,9 @@ import { db } from '../db/schema.js';
 // dev → Vite proxy (vite.config.js:7-12); prod → Vercel Function (api/edhrec/[...path].js).
 const EDHREC_BASE = '/api/edhrec';
 const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+const NEGATIVE_TTL_MS = 60 * 60 * 1000; // 1h — short TTL for a failed fetch so a
+                                        // pageless commander doesn't refetch +
+                                        // re-toast on every deck open (audit M17)
 const REQUEST_DELAY_MS = 200; // Rate limit: 5 req/sec max
 
 let lastRequestTime = 0;
@@ -77,10 +80,15 @@ export async function getCommanderSynergies(commanderName) {
   const sanitized = sanitizeCommanderName(commanderName);
 
   try {
-    // Check cache
+    // Check cache (incl. M17 negative cache — skip refetching a recent failure).
     const cached = await db.edhrec_cache.get(sanitized);
-    if (cached && Date.now() - cached.fetched_at < CACHE_TTL_MS) {
-      return cached.data;
+    if (cached) {
+      if (cached.negative && Date.now() - cached.fetched_at < NEGATIVE_TTL_MS) {
+        return { synergies: [], commanderSalt: null, colorIdentity: [], error: true };
+      }
+      if (!cached.negative && Date.now() - cached.fetched_at < CACHE_TTL_MS) {
+        return cached.data;
+      }
     }
 
     // Fetch fresh
@@ -115,6 +123,11 @@ export async function getCommanderSynergies(commanderName) {
 
     return result;
   } catch {
+    // M17 — negative-cache the failure (short TTL) so the next deck open within
+    // the hour doesn't refetch + re-toast for a pageless commander.
+    try {
+      await db.edhrec_cache.put({ commander: sanitized, negative: true, fetched_at: Date.now() });
+    } catch { /* non-fatal */ }
     return { synergies: [], commanderSalt: null, colorIdentity: [], error: true };
   }
 }
@@ -274,8 +287,13 @@ export async function getCommanderCombos(commanderName) {
 
   try {
     const cached = await db.edhrec_cache.get('combos:' + sanitized);
-    if (cached && Date.now() - cached.fetched_at < COMBOS_TTL_MS) {
-      return cached.data;
+    if (cached) {
+      if (cached.negative && Date.now() - cached.fetched_at < NEGATIVE_TTL_MS) {
+        return { combos: [], error: true };
+      }
+      if (!cached.negative && Date.now() - cached.fetched_at < COMBOS_TTL_MS) {
+        return cached.data;
+      }
     }
 
     const data = await rateLimitedFetch(
@@ -322,6 +340,10 @@ export async function getCommanderCombos(commanderName) {
 
     return result;
   } catch {
+    // M17 — negative-cache the failure (short TTL).
+    try {
+      await db.edhrec_cache.put({ commander: 'combos:' + sanitized, negative: true, fetched_at: Date.now() });
+    } catch { /* non-fatal */ }
     return { combos: [], error: true };
   }
 }

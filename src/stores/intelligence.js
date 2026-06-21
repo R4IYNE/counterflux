@@ -31,6 +31,11 @@ import {
  */
 const COMBO_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 
+// M17 — commanders already toasted "intelligence/combo unavailable" this session,
+// so the warning fires at most once per commander (the edhrec negative cache
+// returns error on every subsequent open without a refetch).
+const _intelToasted = new Set();
+
 /**
  * Initialize the intelligence Alpine store.
  * Orchestrates EDHREC synergies, Spellbook combos, salt scores,
@@ -70,9 +75,14 @@ export function initIntelligenceStore() {
         this.synergies = [];
         this.saltScore = null;
         this.saltLabel = '';
-        Alpine.store('toast')?.warning(
-          'Intelligence unavailable \u2014 using local heuristics.'
-        );
+        // M17 \u2014 toast at most once per commander per session.
+        const tk = 'edhrec:' + commanderName;
+        if (!_intelToasted.has(tk)) {
+          _intelToasted.add(tk);
+          Alpine.store('toast')?.warning(
+            'Intelligence unavailable \u2014 using local heuristics.'
+          );
+        }
       } else {
         // Filter synergies to cards with at least one paper-legal commander printing
         const filtered = [];
@@ -191,7 +201,12 @@ export function initIntelligenceStore() {
             this.error.spellbook = true;
             this.combos = { included: [], almostIncluded: [] };
             this.comboMap = {};
-            Alpine.store('toast')?.warning('Combo detection unavailable.');
+            // M17 — toast at most once per commander per session.
+            const tk = 'combos:' + commanderNames[0];
+            if (!_intelToasted.has(tk)) {
+              _intelToasted.add(tk);
+              Alpine.store('toast')?.warning('Combo detection unavailable.');
+            }
             this.loading.spellbook = false;
             return;
           }
