@@ -135,8 +135,16 @@ export async function resolveImportEntries(entries) {
     if (!match && entry.setName && cards.length) {
       match = cards.find(c => c.set_name?.toLowerCase() === entry.setName.toLowerCase());
     }
-    // Fallback to first result
-    if (!match && cards.length) match = cards[0];
+    // M28 — name-only fallback auto-resolves ONLY on an exact (case-insensitive)
+    // name match (full name or DFC front-face). A non-exact first fuzzy hit is
+    // left unresolved for review rather than silently importing the wrong card
+    // (e.g. a typo or a prefix that matched several printings).
+    if (!match && cards.length) {
+      const target = searchName.toLowerCase();
+      match = cards.find(c => (c.name || '').toLowerCase() === target)
+        || cards.find(c => (c.name || '').split(' // ')[0].trim().toLowerCase() === target)
+        || null;
+    }
 
     results.push({ ...entry, resolved: !!match, card: match || null });
   }
