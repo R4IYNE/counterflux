@@ -39,6 +39,7 @@ import {
   SYSTEM_PROMPT,
   buildUserPrompt,
 } from '../src/services/deckgen-prompt.js';
+import { humanize } from '../src/services/humanize.js';
 // v1.3.x — JWT/budget/lookup helpers moved to a shared module so
 // /api/deckgen and /api/deckgen-chat share one implementation.
 import {
@@ -276,7 +277,10 @@ export default async function handler(req, res) {
   const emitProgress = () => {
     const complete = extractRecommendedCards(accumulated);
     for (let k = emittedCards; k < complete.length; k++) {
-      writeEvent(res, { type: 'card', card: complete[k] });
+      writeEvent(res, {
+        type: 'card',
+        card: { ...complete[k], reasoning: humanize(complete[k].reasoning) },
+      });
     }
     emittedCards = complete.length;
     const cards = (accumulated.match(/"scryfall_id"/g) || []).length;
@@ -486,7 +490,7 @@ function parseClaudeResponse(claudeResponse) {
     .map((r) => ({
       scryfall_id: r.scryfall_id,
       role: typeof r.role === 'string' ? r.role : 'SUPPORT',
-      reasoning: typeof r.reasoning === 'string' ? r.reasoning : '',
+      reasoning: typeof r.reasoning === 'string' ? humanize(r.reasoning) : '',
       swap_out: typeof r.swap_out === 'string' ? r.swap_out : null,
     }));
 

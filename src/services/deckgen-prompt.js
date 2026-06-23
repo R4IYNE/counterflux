@@ -89,6 +89,7 @@ export const SYSTEM_PROMPT = [
   `5. Never recommend the commander itself.`,
   `6. Default to lower-CMC ramp over higher-CMC ramp. Default to evergreen draw engines over draw spells.`,
   `7. If the user provides an archetype hint, weight the SUPPORT bucket toward it. Don't override their commander's natural identity to chase the hint.`,
+  `8. When you write a "reasoning" sentence: British English, plain and direct. Never use em-dashes or en-dashes (the "—" or "–" characters); use a comma or full stop instead. No promotional filler (vibrant, seamless, robust, pivotal), no "not just X, it's Y" phrasing.`,
   ``,
   `You will receive the commander's name and colour identity, the candidate pool as a structured list, the target power level, the mode, an optional archetype hint, and an optional partial deck (cards already chosen). Build from there.`,
 ].join('\n');
