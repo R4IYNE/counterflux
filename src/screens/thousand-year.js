@@ -1,6 +1,9 @@
 import { renderDeckLanding } from '../components/deck-landing.js';
 import { initDeckLandingContextMenu } from '../components/deck-landing-context-menu.js';
-import { renderDeckEditor } from '../components/deck-editor.js';
+// deck-editor is the heavy three-panel editor + the v1.3 deckgen AI surfaces.
+// It is only needed once a deck is opened (editor mode), never on the landing
+// grid that first render shows — so it is dynamically imported inside
+// renderEditor() to keep it out of the screen chunk (bundle-budget: screen 42 KB gz).
 
 /**
  * Thousand-Year Storm -- Deck Builder screen.
@@ -33,7 +36,7 @@ export function mount(container) {
     }
   }
 
-  function renderEditor(deckId) {
+  async function renderEditor(deckId) {
     mode = 'editor';
     // Tear down the PREVIOUS editor instance (Alpine effects, Chart.js, resize
     // listener) before re-rendering — without this each deck switch / re-render
@@ -46,6 +49,7 @@ export function mount(container) {
     }
     cleanupFns = [];
 
+    const { renderDeckEditor } = await import('../components/deck-editor.js');
     renderDeckEditor(container);
 
     if (Alpine?.initTree) {

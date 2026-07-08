@@ -79,7 +79,7 @@ function classifyChunk(name) {
   if (/^(chart|vendor|supabase|papaparse|alpinejs|dexie|navigo|sortablejs)/.test(name)) {
     return 'vendor';
   }
-  if (/modal|panel|overlay|splash|sync-|schema|scryfall|sparkline|preload-helper|rolldown|empty-state|mass-entry|ritual/.test(name)) {
+  if (/modal|panel|overlay|splash|sync-|schema|scryfall|sparkline|preload-helper|rolldown|empty-state|mass-entry|ritual|deck-editor/.test(name)) {
     return 'component';
   }
   return 'default';
