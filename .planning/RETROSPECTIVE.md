@@ -184,3 +184,18 @@ EDHREC + Spellbook CORS proxies via two catch-all Vercel Functions (`api/edhrec/
 5. Web Worker stream parsing for large JSON is non-negotiable. Pattern recurs anywhere we touch >10MB structured data — already a candidate again for SEED-001's wa-sqlite catalog (eligible at v1.3 scoping; Phase 11 sync engine has now been live 10+ days without regressions)
 6. **(NEW v1.2)** When a phase's real engineering is < 30 min and the rest is documentation closure, bypass the phase mechanism entirely. The "collapse inline" branch is now part of the GSD vocabulary
 7. **(NEW v1.2)** Reality-check before scoping cleanup milestones. Production-state queries (`vercel list-deployments`, `curl -sI`, sibling UAT audits) BEFORE writing CONTEXT.md / REQUIREMENTS.md / ROADMAP.md prevents writing artifacts against a stale premise
+
+---
+
+## v1.3 + Landing (2026-07-08)
+
+### What happened
+
+v1.3 "Brew with the Familiar" (AI deck generation, Phases 17-20) was built in an autonomous overnight session 2026-06-07/08, hardened + audit-remediated through 2026-06-23, and deployed to production — but never landed into the planning docs or tagged. STATE.md/ROADMAP.md/MILESTONES.md sat frozen at v1.2 for ~6 weeks while a whole milestone shipped underneath them. This session reconciled the docs, retired the GSD workflow references, pruned debris, and discovered that HEAD had been silently failing its own `build:check` bundle gate since v1.3 landed.
+
+### Lessons (durable)
+
+1. **An autonomous/overnight build still has to /land, or the next session inherits a spec that lies.** The `v1.3-OVERNIGHT-NOTES.md` handoff was excellent, but STATE/ROADMAP/MILESTONES were never touched — so for six weeks the live spec said "v1.2 shipped, awaiting v1.3 scoping" while v1.3 was already in production. A build that skips the close-out gate defers the cost to whoever reads the docs next, at a premium (they must reverse-engineer reality from git).
+2. **`npm test` green is not `build:check` green — and a check you flagged-but-didn't-run is an unlanded check.** The overnight notes literally said "I haven't run build:check to confirm we're within budget." Nobody ran it, so the Thousand-Year Storm screen chunk sat at 46.2 KB gz over its 42 KB budget on deployed HEAD for six weeks, unnoticed. The land gate must run `build:check`, not just the test suite.
+3. **Re-verify every load-bearing claim in a handoff brief against git/fs before acting — briefs rot fast.** The NEXT-SESSION.md brief (written one day earlier) was already ~40% stale: it claimed 2 unpushed commits (already pushed), queued a humanize() fix (already landed as d259901), and missed the entire v1.3 milestone. The brief instructed re-verification; obeying that instruction is what surfaced the real, much larger scope. Trusting the brief verbatim would have produced a confidently wrong session.
+4. **A stale `origin/master` ref bites at push time.** Local believed it was in sync (`origin/master..HEAD` empty) but had never fetched; the weekly precon-sync GitHub Action had pushed two commits. Fetch before assuming "nothing to integrate," and rebase (never force) when a bot has moved the remote.
