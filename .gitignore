@@ -19,3 +19,6 @@ lighthouse-report/
 
 # superpowers brainstorming visual companion (mockups + state, per-session)
 .superpowers/
+
+# Playwright MCP session output (screenshots, traces — regenerates per run)
+.playwright-mcp/

@@ -5,6 +5,7 @@
 - [x] **v1.0 The Aetheric Archive** — Phases 1-6 (shipped 2026-04-13) — [archive](milestones/v1.0-ROADMAP.md)
 - [x] **v1.1 Second Sunrise** — Phases 7-14 (shipped 2026-04-27) — [archive](milestones/v1.1-ROADMAP.md)
 - [x] **v1.2 Deploy the Gatewatch** — Phase 15 + Phase 16 collapse (shipped 2026-04-28) — [archive](milestones/v1.2-ROADMAP.md)
+- [~] **v1.3 Brew with the Familiar** — Phases 17-20 (AI deck generation; built + deployed 2026-06, never tagged/archived) — [PRD](milestones/v1.3-PRD.md) · [overnight notes](milestones/v1.3-OVERNIGHT-NOTES.md)
 
 ## Phases
 
@@ -47,13 +48,31 @@ Full phase details, scope-reset history, and plan-by-plan breakdown: [milestones
 
 </details>
 
-### v1.3 (TBD)
+<details>
+<summary>⚑ v1.3 Brew with the Familiar (Phases 17-20) — BUILT + DEPLOYED 2026-06 (not tagged/archived)</summary>
 
-Run `/gsd:new-milestone` to scope the next milestone. Three seeds with explicit re-trigger conditions surface automatically during scoping:
+AI-powered deck generation. Built overnight 2026-06-07/08, hardened + audit-remediated through 2026-06-23, deployed to production. Never closed through the GSD milestone ceremony (now retired). Full spec: [milestones/v1.3-PRD.md](milestones/v1.3-PRD.md); build report + open follow-ups: [milestones/v1.3-OVERNIGHT-NOTES.md](milestones/v1.3-OVERNIGHT-NOTES.md).
+
+- [x] Phase 17: AI infra — `/api/deckgen` (Anthropic SDK + prompt cache), per-user daily budget, hash response cache (Supabase + Dexie v11 `deckgen_cache`), dual-model dispatch (Opus brew/upgrade, Sonnet retune)
+- [x] Phase 18: Brew from commander — BREW WITH AI button + modal + review screen (approve/reject, atomic commit), NDJSON streaming
+- [x] Phase 19: Upgrade-scan cron — daily new-release scan surfaced on the Dashboard widget, Preordain section, and notification bell
+- [x] Phase 20: Power-level retune — RETUNE button + retune-mode modal, surgical swaps with reasoning
+- Plus June hardening: splash boot screen, deck-builder filter UX, a11y focus traps, legality engine, condition/language tracking, advanced Scryfall search, and the 86-finding AUDIT-2026-06-17.md remediation (Tier 0 → L-tail)
+
+</details>
+
+### Next (TBD)
+
+No active milestone. GSD scoping ceremony retired; open the next one through the workspace pipeline (/idea → /spec). Standing seeds with explicit re-trigger conditions:
 
 - [SEED-001](seeds/SEED-001-catalog-userdata-storage-split.md) — Catalog-vs-userdata storage split (wa-sqlite + OPFS for catalog, keep Dexie for user data). Trigger: after Phase 11 Cloud Sync Engine has been live for a meaningful period without regressions
 - [SEED-002](seeds/SEED-002-nyquist-revisit.md) — Revisit Nyquist `VALIDATION.md` gate. Re-enable for v1.3 if backfilling phases 7–14 makes sense, otherwise leave disabled permanently
 - [SEED-003](seeds/SEED-003-lhci-preview-url.md) — Wire `@lhci/cli` soft-gate to a real Vercel Preview URL (UAT-01 deferred from v1.2 Phase 16). Trigger when CDN edge perf becomes a real concern OR when Counterflux gains SSR / per-request server logic
+
+Immediate cleanup candidates (not yet specced):
+- **`npm run build:check` is RED on HEAD** — the Thousand-Year Storm screen chunk is 46.2 KB gz vs its 42 KB budget (v1.3 brew UI growth, never checked when v1.3 landed). Decide: bump the budget, or lazy-split the brew modal/review-screen out of the screen chunk. `npm test` itself is green (1339 pass).
+- The 4 non-fatal router-test Alpine reactive-effect errors (undefined `$store.collection.precons.length`; recurring bug class).
+- PWA service worker + manifest to make the works-offline claim real.
 
 Plus two backlog candidates (999.1 MTGJSON Tokens, 999.2 MTGJSON AllPrices) waiting for production-traffic-driven user demand.
 
@@ -65,6 +84,7 @@ Plus two backlog candidates (999.1 MTGJSON Tokens, 999.2 MTGJSON AllPrices) wait
 | 7-14 | v1.1 | 47/47 | Shipped | 2026-04-27 |
 | 15 | v1.2 | 3/3 | Shipped | 2026-04-28 |
 | 16 | v1.2 | 0/0 | Collapsed inline | 2026-04-28 |
+| 17-20 | v1.3 | built | Deployed (untagged) | 2026-06 |
 
 ## Backlog
 
@@ -87,4 +107,4 @@ Plans:
 - [ ] TBD (promote with /gsd:review-backlog when ready)
 
 ---
-*Last updated: 2026-04-28 — v1.2 Deploy the Gatewatch shipped and archived. Three milestones in two months: v1.0 (2026-04-13), v1.1 (2026-04-27), v1.2 (2026-04-28). Run `/gsd:new-milestone` to scope v1.3.*
+*Last updated: 2026-07-08 — reconciled to record v1.3 "Brew with the Familiar" (Phases 17-20, AI deck generation) built + deployed 2026-06 but never tagged/archived; GSD workflow retired in favour of the workspace pipeline. Tagged releases: v1.0 (2026-04-13), v1.1 (2026-04-27), v1.2 (2026-04-28).*

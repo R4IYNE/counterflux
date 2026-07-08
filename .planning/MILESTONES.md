@@ -1,5 +1,25 @@
 # Milestones
 
+## v1.3 Brew with the Familiar (Built + deployed: 2026-06 — never formally tagged/archived)
+
+**Phases:** 4 phases (17-20), built overnight 2026-06-07/08, then hardened + audit-remediated through 2026-06-23
+**Tag:** none — v1.3 was never closed through the GSD milestone ceremony (retired in favour of the workspace /idea → /land pipeline)
+**Spec:** [milestones/v1.3-PRD.md](milestones/v1.3-PRD.md) · **Build report:** [milestones/v1.3-OVERNIGHT-NOTES.md](milestones/v1.3-OVERNIGHT-NOTES.md)
+
+**Key accomplishments:**
+
+- **AI deck generation (`/api/deckgen`)** — Anthropic SDK on a Vercel Function with prompt-caching, reusing the existing origin guard. EDHREC supplies the deterministic candidate pool (so Claude can't hallucinate cards that don't exist); Claude does role-slotting + natural-language reasoning. Dual-model dispatch: Opus 4.8 for brew/upgrade, Sonnet for retune. Per-user daily budget on `counterflux.profile`; hash response cache in `counterflux.deckgen_cache` + a Dexie v11 mirror for offline reads.
+- **Three interactive brew modes (Phases 18, 20)** — build-from-commander, fill-missing-slots, and power-level retune. BREW WITH AI + RETUNE buttons on the Thousand-Year Storm editor, a brew modal, and an approve/reject review screen with atomic commit — the user is always the editorial veto. Responses stream as NDJSON so long brews don't hit the function timeout.
+- **Daily upgrade-scan cron (Phase 19)** — a service-role cron flags new-release cards against existing decks and surfaces upgrade recommendations on the Dashboard widget, a Preordain section, and the notification bell. The cron itself calls no LLM (zero background cost until a user clicks through).
+- **June hardening pass (2026-06-14 → 2026-06-23)** — branded splash boot screen, deck-builder filter UX, an a11y focus-trap pass across modals, a deck legality engine + warnings badge, collection condition/language tracking, advanced Scryfall query syntax, weekly precon membership sync, and humanize() on generated reasoning.
+- **AUDIT-2026-06-17.md remediation** — the 86-finding adversarial audit closed end to end: Tier 0 security (XSS, sign-out hygiene, atomic LLM budget, RLS lockdown), Tier 1 data-integrity, Tier 2 perf (table virtualization, memoized getters, editor/timer leak fixes), Tier 3 UX, and the full M/L tail.
+
+**Deployment:** live on production. 7 deckgen Supabase migrations run (`20260607` → `20260617`); Vercel env vars (`ANTHROPIC_API_KEY` / `SUPABASE_SERVICE_ROLE_KEY` / `CRON_SECRET`) set.
+
+**Known deferrals / open follow-ups** (see v1.3-OVERNIGHT-NOTES.md): retune review-screen swap-pair visual indicator; `/api/deckgen` hard timeout (AbortController); dashboard-widget deep-link with upgrade-mode preload; the 4 non-fatal router-test Alpine reactive-effect errors (pre-existing, out of scope).
+
+---
+
 ## v1.2 Deploy the Gatewatch (Shipped: 2026-04-28)
 
 **Phases completed:** 1 phase shipped (15) + 1 phase collapsed inline (16), 3 plans, 6 tasks, 1-day timeline (2026-04-27 → 2026-04-28)

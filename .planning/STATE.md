@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.2
-milestone_name: Deploy the Gatewatch — SHIPPED + ARCHIVED 2026-04-28
-status: archived
-stopped_at: v1.2 archived (commit b6025d5, tag v1.2 pushed). 6 post-archive hot-fixes also shipped — EDHREC combos integration (Spellbook fallback), gap-badge UX, Phase 13 path-resolution test, basic-land Ramp tag fix, basic-land singleton exemption, deck-builder UX batch (sticky LHS, +/- on basic lands, smaller commander tile, group counts use quantity, no DnD). All pushed to origin master.
-last_updated: "2026-05-11T00:35:00.000Z"
-last_activity: 2026-05-11
+milestone: v1.3
+milestone_name: Brew with the Familiar — BUILT + DEPLOYED (never formally tagged/archived)
+status: shipped-untagged
+stopped_at: "v1.3 (Phases 17-20: AI deck generation) built overnight 2026-06-07/08, then hardened + audit-remediated through 2026-06-23 and deployed to production (7 deckgen Supabase migrations run, Vercel env vars set, live-debugged 2026-06-14/15). Never tagged or milestone-archived — only v1.0/v1.1/v1.2 git tags exist. GSD workflow retired in favour of the workspace pipeline (/idea → /land). All commits pushed to origin/master (HEAD d259901)."
+last_updated: "2026-07-08T00:00:00.000Z"
+last_activity: 2026-06-23
 progress:
-  total_phases: 2
-  completed_phases: 2
-  total_plans: 3
-  completed_plans: 3
+  total_phases: 4
+  completed_phases: 4
+  total_plans: 4
+  completed_plans: 4
   percent: 100
 ---
 
@@ -18,26 +18,27 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-04-28 with v1.2 completion)
+See: .planning/PROJECT.md and .planning/milestones/v1.3-PRD.md (Brew with the Familiar)
 
-**Core value:** The deck builder knows what you own, and the collection knows what's in your decks — one interconnected data layer that eliminates tab-juggling. Multi-device when signed in (v1.1). Production EDHREC + Spellbook integrations now functional (v1.2).
-**Current focus:** v1.2 milestone shipped. Awaiting `/gsd:complete-milestone` archival or `/gsd:new-milestone` for v1.3.
+**Core value:** The deck builder knows what you own, and the collection knows what's in your decks — one interconnected data layer that eliminates tab-juggling. Multi-device when signed in (v1.1). Production EDHREC + Spellbook proxies (v1.2). AI-powered brewing, upgrades, and power-level retuning (v1.3).
+**Current focus:** v1.3 built and deployed; no active build in flight. Unstarted next candidates: (a) `npm run build:check` is RED on HEAD — the Thousand-Year Storm screen chunk is 46.2 KB gz vs its 42 KB budget (v1.3 brew UI growth, never checked at v1.3 landing); decide bump-budget vs code-split the brew modal/review out of the screen chunk; (b) the 4 non-fatal router-test Alpine reactive-effect errors (recurring bug class); (c) PWA service worker + manifest to make the works-offline claim real. NB: `npm test` is green (1339 pass).
 
 ## Current Position
 
-Phase: — (v1.2 complete)
+Phase: — (v1.3 Phases 17-20 built + deployed; not formally closed)
 Plan: —
-Status: Milestone complete; ready for archive
-Last activity: 2026-05-15 - Completed quick task 260515-05m: UI cleanup (topbar dropdown grid layout + sticky add-card-panel header + Archive Manifest -> Treasure Cruise rename)
-Progress: ██████████ 100% (2/2 phases — 1 shipped, 1 collapsed inline)
+Status: Deployed to production, untagged. GSD milestone ceremony retired in favour of the workspace pipeline.
+Last activity: 2026-06-23 — humanize() wired into the deckgen chat path (commit d259901); the June pass closed the 86-finding AUDIT-2026-06-17.md remediation (Tier 0 security through the L-tail).
+Progress: ██████████ 100% (v1.3 Phases 17-20 built)
 
 ## Milestone Progress
 
 | Milestone | Phases | Status |
 |-----------|--------|--------|
-| v1.0 The Aetheric Archive | 6/6 | ✅ Shipped 2026-04-13 |
-| v1.1 Second Sunrise | 8/8 | ✅ Shipped 2026-04-27 |
-| v1.2 Deploy the Gatewatch | 2/2 | ✅ Shipped 2026-04-28 (Phase 15 + Phase 16 collapse) |
+| v1.0 The Aetheric Archive | 6/6 | ✅ Shipped 2026-04-13 (tag v1.0) |
+| v1.1 Second Sunrise | 8/8 | ✅ Shipped 2026-04-27 (tag v1.1) |
+| v1.2 Deploy the Gatewatch | 2/2 | ✅ Shipped 2026-04-28 (tag v1.2; Phase 15 + Phase 16 collapse) |
+| v1.3 Brew with the Familiar | 4/4 built | ⚑ Deployed 2026-06 — AI deck generation (Phases 17-20). NOT tagged/archived; GSD ceremony retired |
 
 ## Backlog & Seeds
 
@@ -94,7 +95,7 @@ Full decision log in PROJECT.md Key Decisions table.
 
 ### Pending Todos
 
-None — v1.2 milestone shipped. Run `/gsd:complete-milestone` for archival, or `/gsd:new-milestone` to scope v1.3.
+None in flight. v1.3 built + deployed. Unstarted next candidates (see Current focus): the 4 non-fatal router-test Alpine reactive-effect errors; PWA service worker + manifest.
 
 ### Blockers/Concerns (carry-over to v1.3)
 
@@ -116,6 +117,14 @@ None — v1.2 milestone shipped. Run `/gsd:complete-milestone` for archival, or 
 | 260515-05m | UI cleanup: topbar dropdown row layout + sticky add-card-panel header + rename Archive Manifest to Treasure Cruise | 2026-05-15 | 15b304a | [260515-05m-ui-cleanup-topbar-dropdown-row-layout-st](./quick/260515-05m-ui-cleanup-topbar-dropdown-row-layout-st/) |
 
 ## Session Continuity
+
+Last build activity: 2026-06 — v1.3 "Brew with the Familiar" (AI deck generation) built overnight 2026-06-07/08 (Phases 17-20: `/api/deckgen` infra + Dexie v11 `deckgen_cache`, brew-from-commander modal + review screen, daily upgrade-scan cron, Sonnet power-level retune), then hardened through 2026-06-23: NDJSON streaming brew review, branded splash boot screen, deck-builder filter UX, a11y focus-trap pass, deck legality engine, condition/language tracking, advanced Scryfall search, humanize() on generated reasoning, and full remediation of the 86-finding AUDIT-2026-06-17.md (Tier 0 security through the L-tail). Deployed to production: 7 deckgen Supabase migrations run; Vercel env vars (ANTHROPIC_API_KEY / SUPABASE_SERVICE_ROLE_KEY / CRON_SECRET) set. Never tagged or milestone-archived. Overnight report + open follow-ups: .planning/milestones/v1.3-OVERNIGHT-NOTES.md.
+
+This session — 2026-07-08 (landing + doc-truth only, no product code touched): committed the CLAUDE.md 210→17-line rewrite, mirrored AGENTS.md to it, reconciled STATE.md/ROADMAP.md/MILESTONES.md to record v1.3, dropped retired GSD references, pruned debris (cf-boot.png, .playwright-mcp/), pushed. Tests green (1339 pass; 4 known non-fatal router-test Alpine errors remain, deliberately out of scope).
+
+Resume next session: (1) fix the 4 router-test Alpine reactive-effect errors (undefined `$store.collection.precons.length`; recurring bug class, same as quick-task 260511-0k0) as a tracked requirement; (2) PWA service worker + manifest to make the works-offline claim true (behind /spec). Optional: retroactively tag v1.3 if a formal release marker is wanted.
+
+### Prior snapshot — 2026-05-11 (pre-v1.3, retained as history)
 
 Last session: 2026-05-11 — Completed quick task 260511-0k0: Fix Alpine reactivity gotcha in deck-landing (pre-init `_cardCount`/`_commanderCard` reactive keys in `loadDecks` + drop `=== undefined` guards and hoist dynamic import in `enrichDecks`). Two atomic commits: 6d8ca6b RED, 70b500b GREEN. 5/5 new tests pass. Zero regressions in deck-store + deck-feature sweep + full project suite (1074/1074 attributable tests pass). Deferred broader reactivity audit to v1.3 SEED-007.
 Stopped at: v1.2 archived (b6025d5, v1.2 tag pushed). Eight post-archive feature/fix commits since the archive — EDHREC combos integration as Spellbook fallback (26d2ded), gap-badge UX iteration (05d9fab → a319953 → 956090b), basic-land Ramp tag fix + commander singleton exemption (a877852), deck-builder UX batch — sticky LHS + basic-land +/- + smaller commander + group counts by quantity + no DnD (5200baf), quick-task fix (260510-k4t, commit 33d920a) for bulk-pull resume branch in `src/services/sync-reconciliation.js:131` now calling `_markReconciled(userId)` on success (modal-loop trap fix for users with a large household collection after an interrupted MERGE EVERYTHING). Plus today's vn7 hot-fix (commits d7fd67c + 4cbda85): `flushQueue` in `src/services/sync-engine.js` now serialises Number-typed timestamptz payload fields to ISO-8601 strings via the new `_isoStampTimestamps(rows)` helper called at the upsert seam (~L466). Whitelist covers all 8 timestamptz columns (`updated_at`, `synced_at`, `deleted_at`, `added_at`, `created_at`, `started_at`, `ended_at`, `last_alerted_at`) across the 6 synced tables. Dexie creating/updating hooks at lines 220/243 deliberately untouched (LWW resolver `sync-pull.js:_toTs` is already tolerant of both shapes). RED-then-GREEN regression coverage in `tests/sync-engine-push.test.js`. Unblocks the user's 90 dead-lettered `deck_cards` conflicts — once deployed, "Retry All" in the Sync Errors modal drains the backlog. Production EDHREC + Spellbook integrations functional via EDHREC fallback path; Spellbook proxy debug deferred to v1.3 via SEED-004; local Dexie row migration (Number → ISO) deferred to v1.3 via SEED-006.
