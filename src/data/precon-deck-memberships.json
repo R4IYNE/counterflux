@@ -1,6 +1,6 @@
 {
   "$schema": "precon-deck-memberships v1",
-  "generated_at": "2026-07-05T06:29:12.658Z",
+  "generated_at": "2026-07-12T05:47:01.162Z",
   "generator": "scripts/sync-precon-decks.mjs",
   "source": "https://mtgjson.com/api/v5/DeckList.json",
   "bundle_count": 46,
@@ -48662,15 +48662,15 @@
           "name": "Plains"
         },
         {
-          "id": "5f029c91-f20b-4aa5-a7d9-dd6ddef1c877",
+          "id": "f29448c0-3126-4018-a934-5a4ed019ea76",
           "name": "Plains"
         },
         {
-          "id": "5f029c91-f20b-4aa5-a7d9-dd6ddef1c877",
+          "id": "f29448c0-3126-4018-a934-5a4ed019ea76",
           "name": "Plains"
         },
         {
-          "id": "5f029c91-f20b-4aa5-a7d9-dd6ddef1c877",
+          "id": "f29448c0-3126-4018-a934-5a4ed019ea76",
           "name": "Plains"
         },
         {
@@ -48686,11 +48686,11 @@
           "name": "Island"
         },
         {
-          "id": "5a74175b-2418-4226-8435-1490532e644f",
+          "id": "02f76514-9e0d-4d74-a224-15a2d7b44ae1",
           "name": "Island"
         },
         {
-          "id": "5a74175b-2418-4226-8435-1490532e644f",
+          "id": "02f76514-9e0d-4d74-a224-15a2d7b44ae1",
           "name": "Island"
         },
         {
@@ -48706,11 +48706,11 @@
           "name": "Mountain"
         },
         {
-          "id": "4bdbae27-9a55-485f-a1fc-3fa988184e9d",
+          "id": "f7752159-06bd-4f6c-b3d2-c4c7616acfbb",
           "name": "Mountain"
         },
         {
-          "id": "4bdbae27-9a55-485f-a1fc-3fa988184e9d",
+          "id": "f7752159-06bd-4f6c-b3d2-c4c7616acfbb",
           "name": "Mountain"
         }
       ],
@@ -49064,11 +49064,11 @@
           "name": "Island"
         },
         {
-          "id": "5a74175b-2418-4226-8435-1490532e644f",
+          "id": "02f76514-9e0d-4d74-a224-15a2d7b44ae1",
           "name": "Island"
         },
         {
-          "id": "5a74175b-2418-4226-8435-1490532e644f",
+          "id": "02f76514-9e0d-4d74-a224-15a2d7b44ae1",
           "name": "Island"
         },
         {
@@ -49084,15 +49084,15 @@
           "name": "Swamp"
         },
         {
-          "id": "74414c62-4b68-4e1b-9241-feff3231b9ee",
+          "id": "3dc20c2b-7344-43d1-8ea0-22bab837657e",
           "name": "Swamp"
         },
         {
-          "id": "74414c62-4b68-4e1b-9241-feff3231b9ee",
+          "id": "3dc20c2b-7344-43d1-8ea0-22bab837657e",
           "name": "Swamp"
         },
         {
-          "id": "74414c62-4b68-4e1b-9241-feff3231b9ee",
+          "id": "3dc20c2b-7344-43d1-8ea0-22bab837657e",
           "name": "Swamp"
         },
         {
@@ -49108,11 +49108,11 @@
           "name": "Mountain"
         },
         {
-          "id": "4bdbae27-9a55-485f-a1fc-3fa988184e9d",
+          "id": "f7752159-06bd-4f6c-b3d2-c4c7616acfbb",
           "name": "Mountain"
         },
         {
-          "id": "4bdbae27-9a55-485f-a1fc-3fa988184e9d",
+          "id": "f7752159-06bd-4f6c-b3d2-c4c7616acfbb",
           "name": "Mountain"
         }
       ],
@@ -49426,7 +49426,7 @@
           "name": "Hull Breach"
         },
         {
-          "id": "1cad1bd2-7c56-4ce0-99a6-b2a49c1288dd",
+          "id": "1bbc3ce9-f3df-41b4-b238-37319546c595",
           "name": "Arcane Signet"
         },
         {
@@ -49434,11 +49434,11 @@
           "name": "Lightning Greaves"
         },
         {
-          "id": "91fdb56b-54d5-4272-8319-505ff987fe9b",
+          "id": "5bef0790-aa1b-4144-8391-338e59e86115",
           "name": "Sol Ring"
         },
         {
-          "id": "0548fb60-c843-4f8f-a029-6f10efc63a41",
+          "id": "d24f611b-87b1-4406-9829-1b663f52fcb6",
           "name": "Command Tower"
         },
         {
@@ -49462,11 +49462,11 @@
           "name": "Plains"
         },
         {
-          "id": "5f029c91-f20b-4aa5-a7d9-dd6ddef1c877",
+          "id": "f29448c0-3126-4018-a934-5a4ed019ea76",
           "name": "Plains"
         },
         {
-          "id": "5f029c91-f20b-4aa5-a7d9-dd6ddef1c877",
+          "id": "f29448c0-3126-4018-a934-5a4ed019ea76",
           "name": "Plains"
         },
         {
@@ -49478,11 +49478,11 @@
           "name": "Island"
         },
         {
-          "id": "5a74175b-2418-4226-8435-1490532e644f",
+          "id": "02f76514-9e0d-4d74-a224-15a2d7b44ae1",
           "name": "Island"
         },
         {
-          "id": "5a74175b-2418-4226-8435-1490532e644f",
+          "id": "02f76514-9e0d-4d74-a224-15a2d7b44ae1",
           "name": "Island"
         },
         {
@@ -49494,7 +49494,7 @@
           "name": "Mountain"
         },
         {
-          "id": "4bdbae27-9a55-485f-a1fc-3fa988184e9d",
+          "id": "f7752159-06bd-4f6c-b3d2-c4c7616acfbb",
           "name": "Mountain"
         },
         {
@@ -49510,11 +49510,11 @@
           "name": "Forest"
         },
         {
-          "id": "22463284-2478-4b1e-9a37-6dd2383266cf",
+          "id": "c9d637ac-e0d3-4c62-9f00-08270f3c1e91",
           "name": "Forest"
         },
         {
-          "id": "22463284-2478-4b1e-9a37-6dd2383266cf",
+          "id": "c9d637ac-e0d3-4c62-9f00-08270f3c1e91",
           "name": "Forest"
         }
       ],
@@ -49848,27 +49848,27 @@
           "name": "Plains"
         },
         {
-          "id": "5f029c91-f20b-4aa5-a7d9-dd6ddef1c877",
+          "id": "f29448c0-3126-4018-a934-5a4ed019ea76",
           "name": "Plains"
         },
         {
-          "id": "5f029c91-f20b-4aa5-a7d9-dd6ddef1c877",
+          "id": "f29448c0-3126-4018-a934-5a4ed019ea76",
           "name": "Plains"
         },
         {
-          "id": "5f029c91-f20b-4aa5-a7d9-dd6ddef1c877",
+          "id": "f29448c0-3126-4018-a934-5a4ed019ea76",
           "name": "Plains"
         },
         {
-          "id": "5f029c91-f20b-4aa5-a7d9-dd6ddef1c877",
+          "id": "f29448c0-3126-4018-a934-5a4ed019ea76",
           "name": "Plains"
         },
         {
-          "id": "5f029c91-f20b-4aa5-a7d9-dd6ddef1c877",
+          "id": "f29448c0-3126-4018-a934-5a4ed019ea76",
           "name": "Plains"
         },
         {
-          "id": "5f029c91-f20b-4aa5-a7d9-dd6ddef1c877",
+          "id": "f29448c0-3126-4018-a934-5a4ed019ea76",
           "name": "Plains"
         },
         {
@@ -49896,27 +49896,27 @@
           "name": "Forest"
         },
         {
-          "id": "22463284-2478-4b1e-9a37-6dd2383266cf",
+          "id": "c9d637ac-e0d3-4c62-9f00-08270f3c1e91",
           "name": "Forest"
         },
         {
-          "id": "22463284-2478-4b1e-9a37-6dd2383266cf",
+          "id": "c9d637ac-e0d3-4c62-9f00-08270f3c1e91",
           "name": "Forest"
         },
         {
-          "id": "22463284-2478-4b1e-9a37-6dd2383266cf",
+          "id": "c9d637ac-e0d3-4c62-9f00-08270f3c1e91",
           "name": "Forest"
         },
         {
-          "id": "22463284-2478-4b1e-9a37-6dd2383266cf",
+          "id": "c9d637ac-e0d3-4c62-9f00-08270f3c1e91",
           "name": "Forest"
         },
         {
-          "id": "22463284-2478-4b1e-9a37-6dd2383266cf",
+          "id": "c9d637ac-e0d3-4c62-9f00-08270f3c1e91",
           "name": "Forest"
         },
         {
-          "id": "22463284-2478-4b1e-9a37-6dd2383266cf",
+          "id": "c9d637ac-e0d3-4c62-9f00-08270f3c1e91",
           "name": "Forest"
         }
       ]
