@@ -18,6 +18,11 @@ on:
       - '.github/workflows/perf-soft-gate.yml'
       - 'scripts/lhci-warn-summary.cjs'
 
+# Cancel a superseded Lighthouse run when the PR gets a newer push.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   lighthouse:
     runs-on: ubuntu-latest
