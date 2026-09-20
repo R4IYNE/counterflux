@@ -1,11 +1,11 @@
 {
   "$schema": "precon-deck-memberships v1",
-  "generated_at": "2026-09-13T07:44:13.907Z",
+  "generated_at": "2026-09-20T08:00:36.671Z",
   "generator": "scripts/sync-precon-decks.mjs",
   "source": "https://mtgjson.com/api/v5/DeckList.json",
   "bundle_count": 46,
-  "deck_count": 173,
-  "card_count": 17300,
+  "deck_count": 174,
+  "card_count": 17400,
   "memberships": {
     "40k": {
       "Forces of the Imperium": [
@@ -49048,7 +49048,7 @@
           "name": "Secluded Courtyard"
         },
         {
-          "id": "719704eb-04b2-4e2f-9954-50f77dd9bf08",
+          "id": "a81f924b-0527-4311-8120-9bfff71524f6",
           "name": "Terramorphic Expanse"
         },
         {
@@ -49362,7 +49362,7 @@
           "name": "Sunpetal Grove"
         },
         {
-          "id": "719704eb-04b2-4e2f-9954-50f77dd9bf08",
+          "id": "a81f924b-0527-4311-8120-9bfff71524f6",
           "name": "Terramorphic Expanse"
         },
         {
@@ -49406,7 +49406,7 @@
           "name": "Cultivate"
         },
         {
-          "id": "598f6334-4baf-4f9a-a70c-0cc1e8af68c9",
+          "id": "c1aac0f5-1d01-4673-b8d3-878d9a1d423c",
           "name": "Farseek"
         },
         {
@@ -49820,7 +49820,7 @@
           "name": "Path of Ancestry"
         },
         {
-          "id": "719704eb-04b2-4e2f-9954-50f77dd9bf08",
+          "id": "a81f924b-0527-4311-8120-9bfff71524f6",
           "name": "Terramorphic Expanse"
         },
         {
@@ -60786,6 +60786,408 @@
         {
           "id": "eef2a9c2-2079-4a34-80f0-f0ca7f882498",
           "name": "Mountain"
+        }
+      ],
+      "Hatsune Miku": [
+        {
+          "id": "6ab6e6c9-fe20-40d3-997e-fe3480081f03",
+          "name": "Trostani, Selesnya's Voice"
+        },
+        {
+          "id": "4ce95099-9032-4c44-af25-ab02e60af168",
+          "name": "Archangel of Thune"
+        },
+        {
+          "id": "af542837-77a1-462e-8dd6-b4fa8b21bb33",
+          "name": "Halo Fountain"
+        },
+        {
+          "id": "59e34237-1ef5-4376-b671-11692693fc61",
+          "name": "Grand Crescendo"
+        },
+        {
+          "id": "b459b25c-647b-4353-932e-f590f26ab973",
+          "name": "Shalai, Voice of Plenty"
+        },
+        {
+          "id": "ea9d7b34-7c68-470e-88e1-6d3216fea368",
+          "name": "Song of the Worldsoul"
+        },
+        {
+          "id": "53b54485-37e2-4ae0-be91-c77ec02c5fe0",
+          "name": "Soul Warden"
+        },
+        {
+          "id": "acfe026f-75a7-45b9-b7e8-e1a76855ea94",
+          "name": "Break Down"
+        },
+        {
+          "id": "ff0d8624-1f83-4150-8ef4-ce8345f8067f",
+          "name": "Cultivate"
+        },
+        {
+          "id": "721ea98f-4150-4fde-a0af-4f454695e927",
+          "name": "Finale of Devastation"
+        },
+        {
+          "id": "6aebcc3b-504e-40fc-b232-a2aa21a0521b",
+          "name": "Vorinclex, Voice of Hunger"
+        },
+        {
+          "id": "91ede26e-8784-4631-b9e7-f8f97b2904ac",
+          "name": "Bountiful Promenade"
+        },
+        {
+          "id": "3dfccb9c-e098-4f5b-817c-08403d0d27ef",
+          "name": "Angel of Indemnity"
+        },
+        {
+          "id": "06271dfc-e1af-4a98-a647-41873fc0046e",
+          "name": "Angelic Chorus"
+        },
+        {
+          "id": "65587afb-4edd-4a57-9968-8a91a1b07861",
+          "name": "Boon Reflection"
+        },
+        {
+          "id": "668eae14-fead-4264-9e16-a63a7815c954",
+          "name": "Crested Sunmare"
+        },
+        {
+          "id": "1b8e0e7a-a37b-4b20-a843-413a6da740f0",
+          "name": "Dazzling Theater // Prop Room"
+        },
+        {
+          "id": "a0b21a6d-5f3c-41e3-b994-42a6a7af538f",
+          "name": "Elenda's Hierophant"
+        },
+        {
+          "id": "ff1f6e62-eb7b-4d9b-8034-f227f655431f",
+          "name": "Excavation Technique"
+        },
+        {
+          "id": "5e234ce4-e179-45b8-851c-76a7371044aa",
+          "name": "Hour of Reckoning"
+        },
+        {
+          "id": "b4899ae9-4375-4c58-bd27-fbb32df1b53d",
+          "name": "Nykthos Paragon"
+        },
+        {
+          "id": "1740ef90-42a6-454d-bb85-b495bb149ca6",
+          "name": "Resplendent Angel"
+        },
+        {
+          "id": "8a256374-7a0d-4ae2-9c9b-fb962a6d9fc4",
+          "name": "Silverquill Lecturer"
+        },
+        {
+          "id": "362e5d97-a20e-47b6-9d28-818faa3804de",
+          "name": "Soul of Eternity"
+        },
+        {
+          "id": "cd39083e-f67e-4be1-9c1d-29df27e1ff1a",
+          "name": "Speaker of the Heavens"
+        },
+        {
+          "id": "e4a25752-9155-44be-a7eb-865755c2f915",
+          "name": "Storm Herd"
+        },
+        {
+          "id": "53f70ada-935d-4c46-bb37-8093b679dcf2",
+          "name": "Voice of the Blessed"
+        },
+        {
+          "id": "1c21b711-9f2b-460a-86fb-6f1ef0de3037",
+          "name": "Ancient Cornucopia"
+        },
+        {
+          "id": "d75a8f9b-e16c-496c-80a2-6fc857e9d159",
+          "name": "Arasta of the Endless Web"
+        },
+        {
+          "id": "abccd29b-02c9-429e-a9c4-c18008e8b578",
+          "name": "Blossoming Bogbeast"
+        },
+        {
+          "id": "72549b49-4eca-4852-b145-f4bb18e2d7cb",
+          "name": "Bramble Sovereign"
+        },
+        {
+          "id": "15844392-111e-4bab-91eb-4fe53c52c34c",
+          "name": "Fanatic of Rhonas"
+        },
+        {
+          "id": "7d094fd4-2b7d-479f-a1af-4610a8349847",
+          "name": "Gruff Triplets"
+        },
+        {
+          "id": "27b36061-a6d1-4d80-80fc-f536757eebee",
+          "name": "Healing Technique"
+        },
+        {
+          "id": "4a45bf1f-748d-4075-976d-cc355fce1862",
+          "name": "Pest Infestation"
+        },
+        {
+          "id": "4a6d7336-6713-442b-a10d-a357f306b604",
+          "name": "Shamanic Revelation"
+        },
+        {
+          "id": "d2b7763c-8820-46aa-9ced-65d8803f9b7d",
+          "name": "Camaraderie"
+        },
+        {
+          "id": "5a7c5405-a20c-4385-b91c-7bda787533c2",
+          "name": "Conclave Evangelist"
+        },
+        {
+          "id": "05e1189b-837d-4c1f-85a2-35d229c4dee8",
+          "name": "Ghalta and Mavren"
+        },
+        {
+          "id": "3396f676-d990-42ea-b40a-7da6548cca0a",
+          "name": "Growing Ranks"
+        },
+        {
+          "id": "744a260d-d546-48e8-8991-c355c719f2b3",
+          "name": "Lathiel, the Bounteous Dawn"
+        },
+        {
+          "id": "92736247-ba8d-47dd-91e9-30ae47212cb9",
+          "name": "Mirari's Wake"
+        },
+        {
+          "id": "af107542-ebf3-4a35-a313-b8803d8eda0c",
+          "name": "Rhys the Redeemed"
+        },
+        {
+          "id": "5af28ad7-5736-44f0-81ae-67ec82d03ee2",
+          "name": "Voice of Resurgence"
+        },
+        {
+          "id": "8542d37d-99cd-4b64-a524-94d2b2a4d9c3",
+          "name": "Aetherflux Reservoir"
+        },
+        {
+          "id": "a2e35d8d-050f-4f7a-809a-c0aea30c0dbb",
+          "name": "Phyrexian Processor"
+        },
+        {
+          "id": "79ca8982-826a-4c23-9e3a-04721d2e6466",
+          "name": "Canopy Vista"
+        },
+        {
+          "id": "fe0dbf31-79b1-4c8a-ba24-8ed3730724bf",
+          "name": "Gavony Township"
+        },
+        {
+          "id": "d41f7539-738f-4e27-a538-a442e0d2fe84",
+          "name": "Grove of the Guardian"
+        },
+        {
+          "id": "22bf056b-24bb-4f32-93af-088817f42ce8",
+          "name": "Lazotep Quarry"
+        },
+        {
+          "id": "5d61ebe0-e115-49d8-a97d-53b81b8acdc5",
+          "name": "Overgrown Farmland"
+        },
+        {
+          "id": "fb36f34f-11b0-495a-8304-c98b692e3bc8",
+          "name": "Restless Prairie"
+        },
+        {
+          "id": "8ba06faa-01b5-4939-b790-97fd26b22584",
+          "name": "Sungrass Prairie"
+        },
+        {
+          "id": "a6ee978a-1cde-4661-bfe0-4c0d24211fa1",
+          "name": "Sunpetal Grove"
+        },
+        {
+          "id": "ba751c9b-d6a1-40d4-b74c-b8d0e511eeaa",
+          "name": "Temple of Plenty"
+        },
+        {
+          "id": "fade917b-5e44-438e-949c-d3909cb6d037",
+          "name": "Invincible Hymn"
+        },
+        {
+          "id": "814bc057-dc2d-4630-86d2-6dfaadeba4c7",
+          "name": "Ajani's Pridemate"
+        },
+        {
+          "id": "48e8de7c-3e9a-4569-8968-c4a5fc81acaa",
+          "name": "Cleric Class"
+        },
+        {
+          "id": "1e73f893-b8ab-4c1f-821a-c7dc8de99351",
+          "name": "Congregate"
+        },
+        {
+          "id": "02bfeace-61d9-4db3-ae48-87334151a496",
+          "name": "Path to Exile"
+        },
+        {
+          "id": "50f1b7ba-7888-4f0d-a515-23dcf96bf87e",
+          "name": "Rootborn Defenses"
+        },
+        {
+          "id": "f1229d97-bd56-4b53-802d-be74c3374aaf",
+          "name": "Suture Priest"
+        },
+        {
+          "id": "7430b1e0-b91d-412b-8b0c-d480c3ce4165",
+          "name": "Swords to Plowshares"
+        },
+        {
+          "id": "716a6199-5bcd-45f5-8e9c-1cd1b67f6029",
+          "name": "Avacyn's Pilgrim"
+        },
+        {
+          "id": "bb2d6c1a-16f9-4807-aab2-73fed094a2a6",
+          "name": "Explore"
+        },
+        {
+          "id": "204476df-d5b1-4d0b-b0d3-a4c3fc7efcab",
+          "name": "Farseek"
+        },
+        {
+          "id": "0d903049-adaa-4c41-b790-28f2303ed564",
+          "name": "Llanowar Elves"
+        },
+        {
+          "id": "deb0e799-1920-4cd9-acd2-2df9df333712",
+          "name": "Nature's Lore"
+        },
+        {
+          "id": "ef5793d2-58e7-4da2-9777-8db45abc09c0",
+          "name": "Prosperous Innkeeper"
+        },
+        {
+          "id": "dc2e59ad-7592-44e2-86d7-7a20d0a10775",
+          "name": "Song of Freyalise"
+        },
+        {
+          "id": "6dfde7ce-4741-4ace-b6b3-6e90f62d235c",
+          "name": "Sundering Growth"
+        },
+        {
+          "id": "f8692db5-6f2d-4330-9e23-1c3246898a35",
+          "name": "Idol of Oblivion"
+        },
+        {
+          "id": "43b5b24f-316a-406d-b30a-0f6252f6590d",
+          "name": "Selesnya Signet"
+        },
+        {
+          "id": "cb3d9604-ed75-49b6-be67-bd66cddaa971",
+          "name": "Skullclamp"
+        },
+        {
+          "id": "3b6a6593-b08f-4627-99a5-45d68f6e1c59",
+          "name": "Sol Ring"
+        },
+        {
+          "id": "4b2ec79e-a545-4b26-9c81-e81626fd7073",
+          "name": "Springleaf Drum"
+        },
+        {
+          "id": "a5fab5db-0b2c-4721-9692-f0a402cb26a8",
+          "name": "Blossoming Sands"
+        },
+        {
+          "id": "86e21f70-c4de-4e1e-b3e4-0c823376da41",
+          "name": "Brokers Hideout"
+        },
+        {
+          "id": "e11a301d-27a3-4306-82e8-9e9b0b437415",
+          "name": "Command Tower"
+        },
+        {
+          "id": "f5130ca9-d8b4-4d0c-a0fa-9b7ce7c2a548",
+          "name": "Graypelt Refuge"
+        },
+        {
+          "id": "e29cd7be-b6b3-4f04-9951-b25bb1b94eef",
+          "name": "Krosan Verge"
+        },
+        {
+          "id": "41caa041-a5f3-44ba-a509-681a2fcdf5ed",
+          "name": "Radiant Fountain"
+        },
+        {
+          "id": "f5fc17a9-4e12-40b1-b08a-0322bbcf8718",
+          "name": "Rogue's Passage"
+        },
+        {
+          "id": "ec4e782f-55fa-448d-9c9e-ed2d1a8972d0",
+          "name": "Sapseep Forest"
+        },
+        {
+          "id": "048b055e-e045-43b3-9bba-e8fd366be45b",
+          "name": "Selesnya Sanctuary"
+        },
+        {
+          "id": "e6ed2004-936c-4967-a9c2-82f270ac5bb6",
+          "name": "Seraph Sanctuary"
+        },
+        {
+          "id": "e2289fd7-19bb-4034-a6dd-267c4914975b",
+          "name": "Plains"
+        },
+        {
+          "id": "e2289fd7-19bb-4034-a6dd-267c4914975b",
+          "name": "Plains"
+        },
+        {
+          "id": "e2289fd7-19bb-4034-a6dd-267c4914975b",
+          "name": "Plains"
+        },
+        {
+          "id": "e2289fd7-19bb-4034-a6dd-267c4914975b",
+          "name": "Plains"
+        },
+        {
+          "id": "e2289fd7-19bb-4034-a6dd-267c4914975b",
+          "name": "Plains"
+        },
+        {
+          "id": "e2289fd7-19bb-4034-a6dd-267c4914975b",
+          "name": "Plains"
+        },
+        {
+          "id": "e2289fd7-19bb-4034-a6dd-267c4914975b",
+          "name": "Plains"
+        },
+        {
+          "id": "8dd6cfef-6eac-4fa2-b9f3-808bd5502f27",
+          "name": "Forest"
+        },
+        {
+          "id": "8dd6cfef-6eac-4fa2-b9f3-808bd5502f27",
+          "name": "Forest"
+        },
+        {
+          "id": "8dd6cfef-6eac-4fa2-b9f3-808bd5502f27",
+          "name": "Forest"
+        },
+        {
+          "id": "8dd6cfef-6eac-4fa2-b9f3-808bd5502f27",
+          "name": "Forest"
+        },
+        {
+          "id": "8dd6cfef-6eac-4fa2-b9f3-808bd5502f27",
+          "name": "Forest"
+        },
+        {
+          "id": "8dd6cfef-6eac-4fa2-b9f3-808bd5502f27",
+          "name": "Forest"
+        },
+        {
+          "id": "8dd6cfef-6eac-4fa2-b9f3-808bd5502f27",
+          "name": "Forest"
         }
       ],
       "Heads I Win, Tails You Lose": [
