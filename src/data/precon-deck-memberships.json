@@ -1,11 +1,11 @@
 {
   "$schema": "precon-deck-memberships v1",
-  "generated_at": "2026-10-11T09:26:03.679Z",
+  "generated_at": "2026-10-18T07:30:15.702Z",
   "generator": "scripts/sync-precon-decks.mjs",
   "source": "https://mtgjson.com/api/v5/DeckList.json",
   "bundle_count": 47,
-  "deck_count": 179,
-  "card_count": 17900,
+  "deck_count": 180,
+  "card_count": 18000,
   "memberships": {
     "40k": {
       "Forces of the Imperium": [
@@ -63602,6 +63602,408 @@
         {
           "id": "688b294f-c252-4655-a153-ccc7dec1a36d",
           "name": "Temple of the False God"
+        }
+      ],
+      "Odds and Ends": [
+        {
+          "id": "0ba9362f-eb35-4e72-8c51-7047c0a3f648",
+          "name": "Yennett, Cryptic Sovereign"
+        },
+        {
+          "id": "b88492e7-ce33-4a7f-9706-61b186e8d04e",
+          "name": "Void Winnower"
+        },
+        {
+          "id": "f8b6c532-b837-42b6-9ed2-0231d0779626",
+          "name": "Esper Sentinel"
+        },
+        {
+          "id": "68dad9ea-2333-427d-9bec-3d840e24bc3a",
+          "name": "Reconnaissance"
+        },
+        {
+          "id": "84a4a532-538e-428c-bd62-d0b997895c31",
+          "name": "Swords to Plowshares"
+        },
+        {
+          "id": "e4f780bb-8f0c-46af-a53d-abae2e1f4f26",
+          "name": "Weathered Wayfarer"
+        },
+        {
+          "id": "fccfb909-63bf-44eb-a1cb-21d0edb17074",
+          "name": "Misleading Signpost"
+        },
+        {
+          "id": "835c60fd-7a25-4d51-b230-069ea68bb8a2",
+          "name": "Breach the Multiverse"
+        },
+        {
+          "id": "0e48e154-a1e0-49c8-888a-a1f6b568aa39",
+          "name": "Virtue of Persistence // Locthwain Scorn"
+        },
+        {
+          "id": "cf3e5f36-b024-4342-846d-2cf1d4965ca1",
+          "name": "Shadrix Silverquill"
+        },
+        {
+          "id": "2c71926c-678a-491a-9929-c5b77f2a3de9",
+          "name": "Sensei's Divining Top"
+        },
+        {
+          "id": "bf6b187e-5ad0-4731-9c39-638451ac1e30",
+          "name": "Sol Ring"
+        },
+        {
+          "id": "ada4e3fe-366a-42a8-b534-4c8d0d631c50",
+          "name": "Aboleth Spawn"
+        },
+        {
+          "id": "7b06c8a8-6e6d-40a2-b843-e3d6aac3f399",
+          "name": "Adarkar Wastes"
+        },
+        {
+          "id": "a9802aee-912f-438c-a91f-cadeae6e9add",
+          "name": "Aeon Engine"
+        },
+        {
+          "id": "2d270018-fd57-444b-a58d-9bc993ce1005",
+          "name": "Aerial Extortionist"
+        },
+        {
+          "id": "b7599783-c240-4425-9f3d-bd6970658a82",
+          "name": "Aminatou, the Fateshifter"
+        },
+        {
+          "id": "245def62-e8f4-4db9-9b0a-c50979c41348",
+          "name": "Approach of the Second Sun"
+        },
+        {
+          "id": "af8c6d4d-8db6-4be6-a496-0743b3530383",
+          "name": "Arcane Sanctum"
+        },
+        {
+          "id": "5a34240b-92fd-4e53-89ef-36cb968ed0bd",
+          "name": "Arcane Signet"
+        },
+        {
+          "id": "42a87213-2210-418a-9c48-562c80093a96",
+          "name": "Brainstorm"
+        },
+        {
+          "id": "0cde880b-ecd7-4f1c-a851-c52304b68e85",
+          "name": "Breena, the Demagogue"
+        },
+        {
+          "id": "04936a6a-d032-411e-a18f-ee9ef2293a29",
+          "name": "Caves of Koilos"
+        },
+        {
+          "id": "2a9ae558-e6cd-4cf6-b204-8ff6f6914d0a",
+          "name": "Chaos Wand"
+        },
+        {
+          "id": "7cf06ce6-8bc0-4511-974f-859cedb727ec",
+          "name": "Claim Jumper"
+        },
+        {
+          "id": "3d1b788e-c982-42f8-9076-20fccb820228",
+          "name": "Coalition Relic"
+        },
+        {
+          "id": "f0ccfbe0-f0bc-4f1e-bab7-a1fc0e6dcf82",
+          "name": "Command Beacon"
+        },
+        {
+          "id": "0f4b203f-7df6-47e2-aa52-3a802ab0fb3a",
+          "name": "Command Tower"
+        },
+        {
+          "id": "9d6fa4ca-8e5c-4f24-8287-88e825ebaceb",
+          "name": "Commander's Sphere"
+        },
+        {
+          "id": "5f7f2661-b37e-4588-bb48-89f0fbd0ed69",
+          "name": "Contaminated Landscape"
+        },
+        {
+          "id": "77629b3c-2bd3-4f42-9bf0-086ec3e9dcce",
+          "name": "Dazzling Sphinx"
+        },
+        {
+          "id": "b2d2d1eb-628f-49ba-bb61-ce94a0d98fad",
+          "name": "Doom Whisperer"
+        },
+        {
+          "id": "af99bfed-6e42-41b8-b57c-f15c2e861d57",
+          "name": "Drowned Catacomb"
+        },
+        {
+          "id": "835e569b-93ef-40a8-89fe-6b40c8adb866",
+          "name": "Enigma Sphinx"
+        },
+        {
+          "id": "c05ba178-e1dd-4fed-a8f8-44f52902d57b",
+          "name": "Ethersworn Sphinx"
+        },
+        {
+          "id": "513a97a3-dfdd-4e32-9c4c-3d174d797963",
+          "name": "Evolving Wilds"
+        },
+        {
+          "id": "965976b0-2027-4b31-a295-f414381637f2",
+          "name": "Exchange of Words"
+        },
+        {
+          "id": "34140807-3029-46ed-b008-10b0e5c7b9dd",
+          "name": "Exotic Orchard"
+        },
+        {
+          "id": "b11f0049-41c7-4e9a-bd0c-19cae1ed9e78",
+          "name": "Extinction Event"
+        },
+        {
+          "id": "84d63b9c-d820-4903-a892-16be1141e267",
+          "name": "Fabled Passage"
+        },
+        {
+          "id": "33bd5541-0ffb-4e82-ab17-f64ad555ddb6",
+          "name": "Fatespinner"
+        },
+        {
+          "id": "c2fbca4a-c7a9-4faf-bb4e-d28e66042dc3",
+          "name": "Fractured Identity"
+        },
+        {
+          "id": "ff07df55-dadf-45ac-bd21-41aa58909c22",
+          "name": "Glacial Fortress"
+        },
+        {
+          "id": "9da0e2e3-e7bb-409a-a58b-293361595ccc",
+          "name": "Imprisoned in the Moon"
+        },
+        {
+          "id": "01aa7fc8-f9be-485c-bc9c-dc4019d1d1a5",
+          "name": "Inniaz, the Gale Force"
+        },
+        {
+          "id": "fe5c382c-56a0-4606-9030-3f66e186befd",
+          "name": "Isolated Chapel"
+        },
+        {
+          "id": "b92419ef-f1a2-42b0-9f77-85c5572f62c8",
+          "name": "Jeskai Infiltrator"
+        },
+        {
+          "id": "d1869426-3dad-4ffb-8ddb-e018f02d6d68",
+          "name": "Leadership Vacuum"
+        },
+        {
+          "id": "10dc06d8-02bf-4227-b6c3-a2bda8df3878",
+          "name": "Loran of the Third Path"
+        },
+        {
+          "id": "1356512e-6ec1-4d1a-85dc-681e2c776741",
+          "name": "Marvo, Deep Operative"
+        },
+        {
+          "id": "d62ea584-2b80-4a0d-83ba-fb13c34e4924",
+          "name": "Master of Predicaments"
+        },
+        {
+          "id": "fc57bd2a-785c-4025-b713-f07c204c68c0",
+          "name": "Mirage Mirror"
+        },
+        {
+          "id": "bafabaa6-7a36-4cb3-81e5-c7bfa87c61e2",
+          "name": "Myriad Landscape"
+        },
+        {
+          "id": "aeede3be-9191-4f74-81d8-f487b5658315",
+          "name": "Mystic Gate"
+        },
+        {
+          "id": "81690a2f-29a7-4476-a245-e6c8a9d19757",
+          "name": "Nadir Kraken"
+        },
+        {
+          "id": "96ccfecd-0dab-426a-8897-86c73934d21d",
+          "name": "Oubliette"
+        },
+        {
+          "id": "48e56000-5f03-431a-bc1f-7359aaf439c1",
+          "name": "Path of Ancestry"
+        },
+        {
+          "id": "7d8cd6d0-deb1-45de-a925-88d4bd53db1e",
+          "name": "Planeswalker's Mischief"
+        },
+        {
+          "id": "b1951e0a-893c-4c89-93c7-601b579acb1d",
+          "name": "Ponder"
+        },
+        {
+          "id": "5158b6ab-15c2-4abb-93ce-e07d7ca74d4b",
+          "name": "Prairie Stream"
+        },
+        {
+          "id": "67d5197d-031d-4b6b-8aa2-be34d6ca2d9c",
+          "name": "Profane Transfusion"
+        },
+        {
+          "id": "66ee6102-2490-4469-8237-ac58bf0ede03",
+          "name": "Promise of Loyalty"
+        },
+        {
+          "id": "b7188655-508f-4803-9fd8-0dba3d226249",
+          "name": "Psychic Battle"
+        },
+        {
+          "id": "1dd85561-28b9-464c-a1b5-81c3a43a4f38",
+          "name": "Rapid Hybridization"
+        },
+        {
+          "id": "ed0ac581-ec60-42c6-b802-fc4729d50774",
+          "name": "Reliquary Tower"
+        },
+        {
+          "id": "59ae6feb-6456-4a5b-9bfe-fcc56bdde574",
+          "name": "Shared Fate"
+        },
+        {
+          "id": "ebe3272f-93ad-4042-b782-3d37eac37266",
+          "name": "Silent Clearing"
+        },
+        {
+          "id": "5865cede-e19e-4132-8060-862b00c1052a",
+          "name": "Skyclave Apparition"
+        },
+        {
+          "id": "e3160e30-2e25-4ceb-9224-5ddca7342f0d",
+          "name": "Skyclave Relic"
+        },
+        {
+          "id": "b835e0c3-7d63-402e-8752-7e55e974b777",
+          "name": "Smuggler's Share"
+        },
+        {
+          "id": "b74388fe-73a5-43d5-8826-eb077596a4a9",
+          "name": "Soothsaying"
+        },
+        {
+          "id": "4ddaa8d0-e266-4a9f-a649-0ccc03d4a346",
+          "name": "Space Beleren"
+        },
+        {
+          "id": "0fb7d469-d01a-4633-b06e-70050a5448bc",
+          "name": "Sunken Hollow"
+        },
+        {
+          "id": "e0dc555a-b8cd-45f8-b6af-4860c0e37e8c",
+          "name": "Swift Reconfiguration"
+        },
+        {
+          "id": "45e6f929-be9f-4b24-af3b-fae185693a4d",
+          "name": "Talisman of Progress"
+        },
+        {
+          "id": "646a980c-9226-412a-ba58-c2b52a721c99",
+          "name": "Temple of Deceit"
+        },
+        {
+          "id": "6fc87136-b602-4b96-830e-3262998959f0",
+          "name": "Temple of Enlightenment"
+        },
+        {
+          "id": "f87aedfe-b5b6-4f97-b58d-da0144443e28",
+          "name": "Temple of Silence"
+        },
+        {
+          "id": "28c2c62c-3767-42b1-bdb7-e8769fe6d543",
+          "name": "Terramorphic Expanse"
+        },
+        {
+          "id": "7709fa8a-82cd-4ffe-a033-731c550c694f",
+          "name": "Thief of Sanity"
+        },
+        {
+          "id": "7691542e-c92d-4e2c-b3c7-cb340ce6c2aa",
+          "name": "Time Stop"
+        },
+        {
+          "id": "d8f8567a-7fb3-43f5-88c8-f403cc85fc25",
+          "name": "Toxrill, the Corrosive"
+        },
+        {
+          "id": "904f3dc9-8935-4982-be62-6d5d5dd79b97",
+          "name": "Underground River"
+        },
+        {
+          "id": "c46c55bb-b603-41ac-a2f6-c8f3cee12ed4",
+          "name": "Vega, the Watcher"
+        },
+        {
+          "id": "94eceb0c-8c59-45b7-9caa-6f6027733e73",
+          "name": "Venser's Journal"
+        },
+        {
+          "id": "98593ef6-6aff-406d-9d35-d4e4e4fd7dc2",
+          "name": "Vesuvan Drifter"
+        },
+        {
+          "id": "a0eac775-5652-406e-9a06-8d20d693098c",
+          "name": "Wayfarer's Bauble"
+        },
+        {
+          "id": "ef59fa4b-a116-431c-a946-31007f0f034d",
+          "name": "Yavimaya, Cradle of Growth"
+        },
+        {
+          "id": "20d35e6b-ee5a-47cd-8e65-175a9df607a7",
+          "name": "Plains"
+        },
+        {
+          "id": "20d35e6b-ee5a-47cd-8e65-175a9df607a7",
+          "name": "Plains"
+        },
+        {
+          "id": "20d35e6b-ee5a-47cd-8e65-175a9df607a7",
+          "name": "Plains"
+        },
+        {
+          "id": "20d35e6b-ee5a-47cd-8e65-175a9df607a7",
+          "name": "Plains"
+        },
+        {
+          "id": "7a191d35-1d61-404c-b518-6c4188e8afce",
+          "name": "Island"
+        },
+        {
+          "id": "7a191d35-1d61-404c-b518-6c4188e8afce",
+          "name": "Island"
+        },
+        {
+          "id": "7a191d35-1d61-404c-b518-6c4188e8afce",
+          "name": "Island"
+        },
+        {
+          "id": "7a191d35-1d61-404c-b518-6c4188e8afce",
+          "name": "Island"
+        },
+        {
+          "id": "fdfb7347-04cd-437f-955f-aab99e32b679",
+          "name": "Swamp"
+        },
+        {
+          "id": "fdfb7347-04cd-437f-955f-aab99e32b679",
+          "name": "Swamp"
+        },
+        {
+          "id": "fdfb7347-04cd-437f-955f-aab99e32b679",
+          "name": "Swamp"
+        },
+        {
+          "id": "fdfb7347-04cd-437f-955f-aab99e32b679",
+          "name": "Swamp"
         }
       ],
       "Raining Cats and Dogs": [
